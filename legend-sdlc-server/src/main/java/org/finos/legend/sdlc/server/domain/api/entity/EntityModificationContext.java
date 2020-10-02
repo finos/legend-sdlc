@@ -84,8 +84,9 @@ public interface EntityModificationContext
      * Perform the given changes and return the new revision. Returns null if the
      * changes do not result in a new revision.
      *
-     * @param changes entity changes to perform
-     * @param message change message
+     * @param changes    entity changes to perform
+     * @param revisionId reference revision id
+     * @param message    change message
      * @return new revision or null
      */
     Revision performChanges(List<? extends EntityChange> changes, String revisionId, String message);

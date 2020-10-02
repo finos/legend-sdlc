@@ -63,10 +63,10 @@ public interface ProjectFileAccessProvider
     /**
      * Get a file access context. The project id must always be supplied, but workspace
      * and revision ids are optional. If workspace is specified, workspace access type is also required
-     * </p>
+     * <p>
      * If a workspace id is supplied, then the access context is for that workspace.
      * Otherwise, it is for the trunk or master branch of the project.
-     * </p>
+     * <p>
      * If a revision id is supplied, then the access context is for that particular
      * revision of the project or workspace. Otherwise, the access context is for
      * the current state of the project or workspace. Note that as the current
@@ -239,7 +239,7 @@ public interface ProjectFileAccessProvider
     /**
      * Get a revision access context for a version of a project. Both the project id and
      * version id must be supplied, but path is optional.
-     * </p>
+     * <p>
      * If path is supplied, then the revision access context is for that path. The path can
      * be either a file or directory path. It should use the slash character ('/') to separate
      * directories, and it should start with a slash.
@@ -255,10 +255,10 @@ public interface ProjectFileAccessProvider
      * Get a revision access context. The project id must always be supplied, but workspace id
      * and path are optional. If workspace Id is specified, we must also specify a workspace
      * access type.
-     * </p>
+     * <p>
      * If a workspace id is supplied, then the revision access context is for that workspace.
      * Otherwise, it is for the trunk or master branch of the project.
-     * </p>
+     * <p>
      * If path is supplied, then the revision access context is for that path. The path can
      * be either a file or directory path. It should use the slash character ('/') to separate
      * directories, and it should start with a slash.
@@ -313,11 +313,11 @@ public interface ProjectFileAccessProvider
     /**
      * Get a modification context. The project id must always be supplied, but workspace
      * and revision ids are optional.
-     * </p>
+     * <p>
      * If a workspace id is supplied, then the modification context is for that workspace.
      * Otherwise, it is for the trunk or master branch of the project. Note that it is
      * generally advisable to perform modifications within a workspace.
-     * </p>
+     * <p>
      * If a revision id is supplied, it is used to validate the current revision of the
      * project or workspace before making any modifications.
      *

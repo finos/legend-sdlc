@@ -461,7 +461,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * - If rebase failed, further check if we need to enter conflict resolution mode.
      * This check makes sure the conflict that causes rebase to fail does not come from intermediate
      * commits by squashing these commits and attempt to do another rebase there. If this still fails
-     * it means the workspace in overall truly has merge conflicts while updating -> enter conflict resolution mode
+     * it means the workspace in overall truly has merge conflicts while updating, so entering conflict resolution mode
      */
     @Override
     public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId)

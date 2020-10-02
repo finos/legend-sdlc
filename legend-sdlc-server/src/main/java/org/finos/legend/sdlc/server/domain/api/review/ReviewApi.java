@@ -133,14 +133,14 @@ public interface ReviewApi
      * Try to update an open review. That is, try to bring the review up to date
      * with the latest revision of the project. If the review is not open, this
      * method will throw an exception.
-     * </p>
+     * <p>
      * This method does not wait for the update to complete. It starts the update
      * and returns an initial status. Use {@link #getReviewUpdateStatus} for
      * subsequent status checks.
-     * </p>
+     * <p>
      * If an update is already in progress or if the review is already up to
      * date, this returns the current update status but is otherwise a no-op.
-     * </p>
+     * <p>
      * It is not always possible to update a review. In case the update fails,
      * the review will be left in the pre-update state.
      *
