@@ -3,44 +3,30 @@
 
 # legend-sdlc
 
-Short blurb about what your project does.
+The Legend SDLC Server provides a rich REST API allowing users to safely manage metadata. Most SDLCs are file- and text-centric, but the Legend SDLC is model-centric. That is, users interact with model entities rather than with files and folders.
 
-## Installation
-
-OS X & Linux:
-
-```sh
-npm install my-crazy-module --save
-```
-
-Windows:
-
-```sh
-edit autoexec.bat
-```
+To this end, the Legend SDLC enables:
+* Users to develop with tools designed for editing models (rather than files or code)
+* Users to view changes with tools designed for viewing model-level changes (rather than text changes)
+* Clients to create their own tools for their own particular use cases
 
 ## Usage example
 
-A few motivating and useful examples of how your project can be used. Spice this up with code blocks and potentially screenshots / videos ([LiceCap](https://www.cockos.com/licecap/) is great for this kind of thing).
+Start by creating a configuration file (which can be JSON or YAML) based on your particular environment. Once you have that, you can start the server is with a command such as this:
 
-_For more examples and usage, please refer to the [Wiki][wiki]._
+```
+java -cp legend-sdlc-server-0.5.0-shaded.jar org.finos.legend.sdlc.server.MetadataSDLCServer server $CONFIG_DIR/config.yaml
+```
+
+Additional libraries may be included on the classpath to add functionality extensions. Additional JVM arguments may be required depending on your needs (such as specifying a krb5.conf if you are using Kerberos authentication).
 
 ## Development setup
 
-Describe how to install all development dependencies and how to run an automated test-suite of some kind. Potentially do this for multiple platforms.
-
-```sh
-make install
-npm test
-```
+This application uses Maven 3.6+ and JDK 8. Simply run `mvn install` to compile.
 
 ## Roadmap
 
-List the roadmap steps; alternatively link the Confluence Wiki page where the project roadmap is published.
-
-1. Item 1
-2. Item 2
-3. ....
+Visit [alloy.finos.org/docs/roadmap](https://alloy.finos.org/docs/roadmap) to know more about the roadmap.
 
 ## Contributing
 
