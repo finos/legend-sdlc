@@ -24,7 +24,9 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the creation of the workspace
      * to the current revision of the workspace
      *
-     * @return Returns Comparison
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between workspace HEAD and BASE
      */
     Comparison getWorkspaceCreationComparison(String projectId, String workspaceId);
 
@@ -34,7 +36,9 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the current revision of the
      * project to the current revision of the workspace
      *
-     * @return Returns Comparison
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between workspace HEAD and project HEAD
      */
     Comparison getWorkspaceProjectComparison(String projectId, String workspaceId);
 
@@ -44,7 +48,9 @@ public interface ComparisonApi
      * Given a review, returns the comparison for that review
      * Uses the diff ref (start and end revision id for review) to get revisions ids for comparison
      *
-     * @return Returns Comparison
+     * @param projectId project id
+     * @param reviewId  review id
+     * @return comparison between review workspace HEAD and project HEAD
      */
     Comparison getReviewComparison(String projectId, String reviewId);
 
@@ -52,7 +58,9 @@ public interface ComparisonApi
     /**
      * Get the comparison for a given review (between review workspace HEAD and workspace BASE)
      *
-     * @return Returns Comparison
+     * @param projectId project id
+     * @param reviewId  review id
+     * @return comparison between review workspace HEAD and BASE
      */
     Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId);
 }

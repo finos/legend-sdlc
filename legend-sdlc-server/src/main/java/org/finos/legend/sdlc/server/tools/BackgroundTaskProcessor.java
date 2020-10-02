@@ -65,7 +65,7 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
      * If a task throws an exception, then it is not resubmitted.
@@ -79,10 +79,10 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
-     * </p>
+     * <p>
      * If a task throws an exception, then the exception is tested with the predicate
      * {@code isExceptionRetryable} to see if it is retryable. If it is, the task is
      * resubmitted. If {@code isExceptionRetryable} is null, then no exceptions are
@@ -98,11 +98,11 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
      * If a task throws an exception, then it is not resubmitted.
-     * </p>
+     * <p>
      * When a task is resubmitted, it will wait at least {@code minWaitBetweenRetriesMillis}
      * before the task is actually retried.
      *
@@ -116,7 +116,7 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
      * If a task throws an exception, then it is not resubmitted.
@@ -131,13 +131,13 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
-     * </p>
+     * <p>
      * When a task is resubmitted, it will wait at least {@code minWaitBetweenRetriesMillis}
      * before the task is actually retried.
-     * </p>
+     * <p>
      * If a task throws an exception, then the exception is tested with the predicate
      * {@code isExceptionRetryable} to see if it is retryable. If it is, the task is
      * resubmitted. If {@code isExceptionRetryable} is null, then no exceptions are
@@ -154,10 +154,10 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
-     * </p>
+     * <p>
      * If a task throws an exception, then the exception is tested with the predicate
      * {@code isExceptionRetryable} to see if it is retryable. If it is, the task is
      * resubmitted. If {@code isExceptionRetryable} is null, then no exceptions are
@@ -174,11 +174,11 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
      * If a task throws an exception, then it is not resubmitted.
-     * </p>
+     * <p>
      * When a task is resubmitted, it will wait at least {@code minWaitBetweenRetriesMillis}
      * before the task is actually retried.
      *
@@ -193,13 +193,13 @@ public class BackgroundTaskProcessor
 
     /**
      * Submit a retryable task for background execution.
-     * </p>
+     * <p>
      * When the task is run, it returns a boolean indicating whether it completed.
      * If it did not complete (i.e., if it returns false), then the task is resubmitted.
-     * </p>
+     * <p>
      * When a task is resubmitted, it will wait at least {@code minWaitBetweenRetriesMillis}
      * before the task is actually retried.
-     * </p>
+     * <p>
      * If a task throws an exception, then the exception is tested with the predicate
      * {@code isExceptionRetryable} to see if it is retryable. If it is, the task is
      * resubmitted. If {@code isExceptionRetryable} is null, then no exceptions are
@@ -313,11 +313,11 @@ public class BackgroundTaskProcessor
     {
         /**
          * Try to run the task.
-         * </p>
+         * <p>
          * If the task completed, the method should return true. If the
          * task did not complete and should be retried, the method should
          * return false.
-         * </p>
+         * <p>
          * An exception should be thrown if something went wrong while
          * trying to perform the task. Whether the task is retried after
          * an exception depends on whether the exception is deemed

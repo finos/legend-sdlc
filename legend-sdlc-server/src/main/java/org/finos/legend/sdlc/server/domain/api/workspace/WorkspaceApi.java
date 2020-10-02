@@ -106,12 +106,16 @@ public interface WorkspaceApi
         WorkspaceUpdateReportStatus getStatus();
 
         /**
-         * The project revision ID where the updated or conflict resolution workspace stems from.
+         * Get the project revision id where the updated or conflict resolution workspace stems from.
+         *
+         * @return merge base revision id of the workspace
          */
         String getWorkspaceMergeBaseRevisionId();
 
         /**
-         * The current revision ID of the updated or conflict resolution workspace.
+         * Get the current revision id of the updated or conflict resolution workspace.
+         *
+         * @return current workspace revision id
          */
         String getWorkspaceRevisionId();
     }
