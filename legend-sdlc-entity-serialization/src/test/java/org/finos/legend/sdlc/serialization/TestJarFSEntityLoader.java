@@ -26,7 +26,7 @@ public class TestJarFSEntityLoader extends TestEntityLoaderWithZipFile
     protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
     {
         Path jarPath = writeToTempZipFile(fileContentByPath, true);
-        FileSystem jarFS = FileSystems.newFileSystem(jarPath, null);
+        FileSystem jarFS = FileSystems.newFileSystem(jarPath, (ClassLoader) null);
         registerCloseable(jarFS);
         return EntityLoader.newEntityLoader(jarFS.getPath(jarFS.getSeparator()));
     }
