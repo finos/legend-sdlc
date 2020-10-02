@@ -13,3 +13,11 @@ docs/contributing.md
 
 # We use YARN
 website/package-lock.json
+
+# Project and build files
+.idea/**
+**/*.iml
+**/target
+**/lib
+**/surefire-reports-aggregate
+**/dependency-reduced-pom.xml
