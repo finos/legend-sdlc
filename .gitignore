@@ -21,3 +21,9 @@ website/package-lock.json
 **/lib
 **/surefire-reports-aggregate
 **/dependency-reduced-pom.xml
+
+# VS Code
+.vscode
+.classpath
+.settings
+.project

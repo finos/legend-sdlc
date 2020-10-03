@@ -39,7 +39,7 @@
     </modules>
 
     <properties>
-        <sonar.projectKey>legend</sonar.projectKey>
+        <sonar.projectKey>legend-sdlc</sonar.projectKey>
         <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
 
         <!-- work around bug where maven.build.timestamp doesn't get propagated to filtering -->
