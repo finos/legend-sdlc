@@ -21,6 +21,8 @@ import java.time.format.DateTimeFormatter;
 
 public abstract class BaseSession implements Session
 {
+    private static final long serialVersionUID = -5374017688208975327L;
+
     private final String userId;
     private final Instant creationTime;
 

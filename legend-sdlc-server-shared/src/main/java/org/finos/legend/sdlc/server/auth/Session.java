@@ -14,9 +14,10 @@
 
 package org.finos.legend.sdlc.server.auth;
 
+import java.io.Serializable;
 import java.time.Instant;
 
-public interface Session
+public interface Session extends Serializable
 {
     /**
      * Id of the user that owns the session. May be null

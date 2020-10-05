@@ -25,6 +25,8 @@ import javax.security.auth.kerberos.KerberosTicket;
 
 public class BaseKerberosSession<P extends KerberosProfile> extends BaseCommonProfileSession<P> implements KerberosSession
 {
+    private static final long serialVersionUID = -6612267881934440411L;
+
     protected BaseKerberosSession(P profile, String kerberosId, Instant creationTime)
     {
         super(profile, kerberosId, creationTime);

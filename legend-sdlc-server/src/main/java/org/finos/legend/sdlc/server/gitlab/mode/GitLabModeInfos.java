@@ -16,13 +16,16 @@ package org.finos.legend.sdlc.server.gitlab.mode;
 
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 
+import java.io.Serializable;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-public class GitLabModeInfos
+public class GitLabModeInfos implements Serializable
 {
+    private static final long serialVersionUID = 5478794417406325731L;
+
     private final Map<GitLabMode, GitLabModeInfo> modeInfos;
 
     private GitLabModeInfos(Map<GitLabMode, GitLabModeInfo> modeConfigs)

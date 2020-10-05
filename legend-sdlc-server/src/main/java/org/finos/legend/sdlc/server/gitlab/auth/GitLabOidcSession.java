@@ -30,6 +30,7 @@ import java.util.Set;
 
 public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> implements GitLabSession
 {
+    private static final long serialVersionUID = -7376645595174820197L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOidcSession.class);
 
     private final GitLabTokenManager tokenManager;
