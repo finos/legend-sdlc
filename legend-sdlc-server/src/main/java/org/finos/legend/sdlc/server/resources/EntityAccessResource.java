@@ -135,16 +135,19 @@ abstract class EntityAccessResource extends BaseResource
                     regex = (delimIndex == taggedValueRegex.length() - 1) ? "" : taggedValueRegex.substring(delimIndex + 1).trim();
                 }
                 Pattern pattern = compileRegex(regex);
-                Pattern old = taggedValuePatterns.put(tag, pattern);
-                if (old != null)
+                if (pattern != null)
                 {
-                    String oldRegex = old.pattern();
-                    if (!oldRegex.equals(regex))
+                    Pattern old = taggedValuePatterns.put(tag, pattern);
+                    if (old != null)
                     {
-                        // combine patterns disjunctively
-                        String newRegex = (((old.flags() & Pattern.LITERAL) == Pattern.LITERAL) ? Pattern.quote(oldRegex) : oldRegex) + "|" + (((pattern.flags() & Pattern.LITERAL) == Pattern.LITERAL) ? Pattern.quote(regex) : regex);
-                        Pattern newPattern = Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE);
-                        taggedValuePatterns.put(tag, newPattern);
+                        String oldRegex = old.pattern();
+                        if (!oldRegex.equals(regex))
+                        {
+                            // combine patterns disjunctively
+                            String newRegex = (((old.flags() & Pattern.LITERAL) == Pattern.LITERAL) ? Pattern.quote(oldRegex) : oldRegex) + "|" + (((pattern.flags() & Pattern.LITERAL) == Pattern.LITERAL) ? Pattern.quote(regex) : regex);
+                            Pattern newPattern = Pattern.compile(newRegex, Pattern.CASE_INSENSITIVE);
+                            taggedValuePatterns.put(tag, newPattern);
+                        }
                     }
                 }
             }

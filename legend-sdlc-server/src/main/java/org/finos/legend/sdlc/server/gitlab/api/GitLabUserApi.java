@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.user.UserApi;
@@ -130,26 +131,37 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
     @Override
     public User getCurrentUserInfo()
     {
-        try
+        List<Exception> exceptions = Lists.mutable.empty();
+        for (GitLabMode mode : getValidGitLabModes())
         {
-            User user = null;
-            for (GitLabMode mode : getValidGitLabModes())
+            try
             {
-                user = fromGitLabAbstractUser(getGitLabApi(mode).getUserApi().getCurrentUser());
-                break;
+                User user = fromGitLabAbstractUser(getGitLabApi(mode).getUserApi().getCurrentUser());
+                if (user != null)
+                {
+                    return user;
+                }
             }
-            if (user == null)
+            catch (Exception e)
             {
-                throw new MetadataException("Error getting current user information");
+                exceptions.add(e);
             }
-            return user;
         }
-        catch (Exception e)
+        if (exceptions.isEmpty())
         {
-            throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get current user information",
-                    null,
-                    () -> "Error getting current user information");
+            throw new MetadataException("Could not get current user information");
         }
+        Exception e = exceptions.get(0);
+        for (Exception other : exceptions)
+        {
+            if (other != e)
+            {
+                e.addSuppressed(other);
+            }
+        }
+        throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get current user information",
+                null,
+                () -> "Error getting current user information");
     }
 }
