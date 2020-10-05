@@ -47,7 +47,7 @@ public final class GitLabProjectId
         {
             return true;
         }
-        if (other.getClass() != getClass())
+        if ((other == null) || (other.getClass() != getClass()))
         {
             return false;
         }
