@@ -18,8 +18,12 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 
-public class GitLabModeInfo
+import java.io.Serializable;
+
+public class GitLabModeInfo implements Serializable
 {
+    private static final long serialVersionUID = -5848030620016152622L;
+
     private final GitLabMode mode;
     private final GitLabAppInfo appInfo;
 

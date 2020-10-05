@@ -19,12 +19,15 @@ import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
 
+import java.io.Serializable;
 import java.util.EnumMap;
 import java.util.Map;
 import java.util.Set;
 
-class GitLabTokenManager
+class GitLabTokenManager implements Serializable
 {
+    private static final long serialVersionUID = 4579663645788521787L;
+
     private final GitLabModeInfos modeInfos;
     private final Map<GitLabMode, String> tokens = new EnumMap<>(GitLabMode.class);
 

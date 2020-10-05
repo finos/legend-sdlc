@@ -26,6 +26,8 @@ import java.util.Set;
 
 public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> implements GitLabSession
 {
+    private static final long serialVersionUID = 7521009570390907467L;
+
     private final GitLabTokenManager tokenManager;
 
     GitLabKerberosSession(KerberosProfile profile, String kerberosId, Instant creationTime, GitLabTokenManager tokenManager)

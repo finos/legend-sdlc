@@ -21,6 +21,8 @@ import java.util.Objects;
 
 public class BaseCommonProfileSession<P extends CommonProfile> extends BaseSession implements CommonProfileSession<P>
 {
+    private static final long serialVersionUID = -7205488467779202821L;
+    
     private final P profile;
 
     protected BaseCommonProfileSession(P profile, String userId, Instant creationTime)

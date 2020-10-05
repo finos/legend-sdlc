@@ -16,10 +16,12 @@ package org.finos.legend.sdlc.server.gitlab;
 
 import org.apache.http.client.utils.URIBuilder;
 
+import java.io.Serializable;
 import java.util.Objects;
 
-public class GitLabServerInfo
+public class GitLabServerInfo implements Serializable
 {
+    private static final long serialVersionUID = -3058713373597247765L;
     private static final String DEFAULT_SCHEME = "https";
 
     private final String scheme;

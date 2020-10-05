@@ -14,8 +14,12 @@
 
 package org.finos.legend.sdlc.server.gitlab;
 
-public class GitLabAppInfo
+import java.io.Serializable;
+
+public class GitLabAppInfo implements Serializable
 {
+    private static final long serialVersionUID = -1162395682634986743L;
+
     private final GitLabServerInfo serverInfo;
     private final String appId;
     private final String appSecret;
