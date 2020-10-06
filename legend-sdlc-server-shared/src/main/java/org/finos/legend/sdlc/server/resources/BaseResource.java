@@ -24,19 +24,24 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 
 public abstract class BaseResource
 {
+    private static final Pattern UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile("[^ \\w\\p{Punct}]");
+    private static final Pattern NEWLINES_PATTERN = Pattern.compile("\\v+");
+
     protected <T> T executeWithLogging(String description, Supplier<T> supplier)
     {
         Logger logger = getLogger();
         boolean isInfoLogging = logger.isInfoEnabled();
+        String sanitizedDescription = isInfoLogging ? sanitizeForLogging(description, "_") : null;
         long start = System.nanoTime();
         if (isInfoLogging)
         {
-            logger.info("Starting {}", description);
+            logger.info("Starting {}", sanitizedDescription);
         }
         try
         {
@@ -44,7 +49,7 @@ public abstract class BaseResource
             if (isInfoLogging)
             {
                 long duration = System.nanoTime() - start;
-                StringBuilder builder = new StringBuilder(description.length() + 32).append("Finished ").append(description).append(" (");
+                StringBuilder builder = new StringBuilder(sanitizedDescription.length() + 32).append("Finished ").append(sanitizedDescription).append(" (");
                 StringTools.formatDurationInNanos(builder, duration);
                 builder.append("s)");
                 logger.info(builder.toString());
@@ -60,7 +65,7 @@ public abstract class BaseResource
                 {
                     long duration = System.nanoTime() - start;
                     String redirectLocation = String.valueOf(e.getMessage());
-                    StringBuilder builder = new StringBuilder(description.length() + redirectLocation.length() + 39).append("Redirected ").append(description).append(" to: ").append(redirectLocation).append(" (");
+                    StringBuilder builder = new StringBuilder(sanitizedDescription.length() + redirectLocation.length() + 39).append("Redirected ").append(sanitizedDescription).append(" to: ").append(redirectLocation).append(" (");
                     StringTools.formatDurationInNanos(builder, duration);
                     builder.append("s)");
                     logger.info(builder.toString());
@@ -68,13 +73,29 @@ public abstract class BaseResource
             }
             else
             {
-                logError(logger, e, description, start);
+                if (logger.isErrorEnabled())
+                {
+                    long duration = System.nanoTime() - start;
+                    if (sanitizedDescription == null)
+                    {
+                        sanitizedDescription = sanitizeForLogging(description, "_");
+                    }
+                    logger.error(buildLoggingErrorMessage(e, sanitizedDescription, duration), e);
+                }
             }
             throw e;
         }
         catch (Throwable t)
         {
-            logError(logger, t, description, start);
+            if (logger.isErrorEnabled())
+            {
+                long duration = System.nanoTime() - start;
+                if (sanitizedDescription == null)
+                {
+                    sanitizedDescription = sanitizeForLogging(description, "_");
+                }
+                logger.error(buildLoggingErrorMessage(t, sanitizedDescription, duration), t);
+            }
             throw t;
         }
     }
@@ -121,15 +142,22 @@ public abstract class BaseResource
         return LoggerFactory.getLogger(getClass());
     }
 
-    private void logError(Logger logger, Throwable t, String description, long start)
+    private String buildLoggingErrorMessage(Throwable t, String description, long durationNanos)
     {
-        if (logger.isErrorEnabled())
+        StringBuilder builder = new StringBuilder(description.length() + 29).append("Error ").append(description).append(" (");
+        StringTools.formatDurationInNanos(builder, durationNanos);
+        builder.append("s)");
+        String message = t.getMessage();
+        if (message != null)
         {
-            long duration = System.nanoTime() - start;
-            StringBuilder builder = new StringBuilder(description.length() + 29).append("Error ").append(description).append(" (");
-            StringTools.formatDurationInNanos(builder, duration);
-            builder.append("s)");
-            logger.error(builder.toString(), t);
+            builder.append(": ").append(NEWLINES_PATTERN.matcher(message).replaceAll(" "));
         }
+        return builder.toString();
+    }
+
+    // package private for testing
+    static String sanitizeForLogging(String string, String replacement)
+    {
+        return ((string == null) || string.isEmpty()) ? "" : UNSAFE_LOG_MESSAGE_PATTERN.matcher(string).replaceAll(replacement);
     }
 }
