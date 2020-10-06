@@ -25,10 +25,10 @@ import org.gitlab4j.api.models.Commit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response.Status;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.LongUnaryOperator;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabApiTools
 {
@@ -75,7 +75,8 @@ public class GitLabApiTools
                 }
                 catch (InterruptedException e)
                 {
-                    LOGGER.debug("Interrupted while waiting: ignoring interruption", e);
+                    LOGGER.warn("Interrupted while waiting", e);
+                    Thread.currentThread().interrupt();
                 }
             }
 

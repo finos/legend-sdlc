@@ -44,13 +44,13 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements WorkspaceApi
 {
@@ -803,9 +803,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                     Thread.sleep(1000);
                     mergeRequestWithRebaseStatus = withRetries(() -> mergeRequestApi.getRebaseStatus(gitLabProjectId.getGitLabId(), mergeRequest.getIid()));
                 }
-                catch (InterruptedException ignore)
+                catch (InterruptedException e)
                 {
-                    // ignore interrupt
+                    LOGGER.warn("Interrupted while waiting", e);
+                    Thread.currentThread().interrupt();
                 }
             }
             // Check if there is merge conflict
