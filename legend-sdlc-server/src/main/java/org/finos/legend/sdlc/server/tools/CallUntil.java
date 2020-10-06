@@ -14,10 +14,15 @@
 
 package org.finos.legend.sdlc.server.tools;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.function.Predicate;
 
 public class CallUntil<T, E extends Exception>
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CallUntil.class);
+
     private final ThrowingSupplier<? extends T, ? extends E> supplier;
     private final Predicate<? super T> predicate;
     private int tryCount = 0;
@@ -43,9 +48,10 @@ public class CallUntil<T, E extends Exception>
                 {
                     Thread.sleep(waitIntervalMillis);
                 }
-                catch (InterruptedException ignore)
+                catch (InterruptedException e)
                 {
-                    // ignore sleep interruption
+                    LOGGER.warn("Interrupted while waiting", e);
+                    Thread.currentThread().interrupt();
                 }
             }
 
