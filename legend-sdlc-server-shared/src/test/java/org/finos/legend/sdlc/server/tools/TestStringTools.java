@@ -122,4 +122,93 @@ public class TestStringTools
         Assert.assertEquals(expected, StringTools.formatDurationInNanos(new StringBuilder(20), durationInNanos).toString());
         Assert.assertEquals(expected, StringTools.formatDurationInNanos(durationInNanos));
     }
+
+    @Test
+    public void testSanitizeForLogging()
+    {
+        // safe strings
+        String[] safeStrings = {
+                "",
+                "the quick brown fox jumped over the lazy dog",
+                "Tom, Tom the piper's son, stole a pig and away did run!",
+                " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~",
+                "\\n\\t\\r\\f"
+        };
+        for (String string : safeStrings)
+        {
+            Assert.assertSame(string, string, StringTools.sanitizeForLogging(string, "_", true));
+            Assert.assertSame(string, string, StringTools.sanitizeForLogging(string, "_", false));
+        }
+
+        // unsafe strings
+        Assert.assertEquals(
+                "Tom, Tom the piper's son,*stole a pig and away did run!",
+                StringTools.sanitizeForLogging("Tom, Tom the piper's son,\nstole a pig and away did run!", "*", true));
+        Assert.assertEquals(
+                "Tom, Tom the piper's son,*stole a pig and away did run!",
+                StringTools.sanitizeForLogging("Tom, Tom the piper's son,\nstole a pig and away did run!", "*", false));
+        Assert.assertEquals(
+                "Charley, Charley stole the barley,%from the baker's shop!",
+                StringTools.sanitizeForLogging("Charley, Charley stole the barley,\r\nfrom the baker's shop!", "%", true));
+        Assert.assertEquals(
+                "Charley, Charley stole the barley,%%from the baker's shop!",
+                StringTools.sanitizeForLogging("Charley, Charley stole the barley,\r\nfrom the baker's shop!", "%", false));
+        Assert.assertEquals(
+                "Hot cross buns! Hot cross buns!",
+                StringTools.sanitizeForLogging("Hot\tcross\tbuns!\t\tHot\tcross\tbuns!", " ", true));
+        Assert.assertEquals(
+                "Hot cross buns!  Hot cross buns!",
+                StringTools.sanitizeForLogging("Hot\tcross\tbuns!\t\tHot\tcross\tbuns!", " ", false));
+        Assert.assertEquals(
+                "",
+                StringTools.sanitizeForLogging("\n\f\r\u2028\u2029\t", "", true));
+        Assert.assertEquals(
+                "",
+                StringTools.sanitizeForLogging("\n\f\r\u2028\u2029\t", "", false));
+    }
+
+    @Test
+    public void testReplaceVerticalWhitespace()
+    {
+        // without vertical whitespace
+        String[] noVWSStrings = {
+                "",
+                "abcd",
+                "the quick brown fox jumped over the lazy dog"
+        };
+        for (String noVWS : noVWSStrings)
+        {
+            Assert.assertSame(noVWS, StringTools.replaceVerticalWhitespace(noVWS, " ", true));
+            Assert.assertSame(noVWS, StringTools.replaceVerticalWhitespace(noVWS, " ", false));
+        }
+
+        // with vertical whitespace
+        Assert.assertEquals(
+                " ",
+                StringTools.replaceVerticalWhitespace("\n", " ", true));
+        Assert.assertEquals(
+                " ",
+                StringTools.replaceVerticalWhitespace("\n", " ", false));
+
+        Assert.assertEquals(
+                "%",
+                StringTools.replaceVerticalWhitespace("\r\n", "%", true));
+        Assert.assertEquals(
+                "%%",
+                StringTools.replaceVerticalWhitespace("\r\n", "%", false));
+
+        Assert.assertEquals(
+                "*\t*",
+                StringTools.replaceVerticalWhitespace("\n\f\r\u2028\t\u2029", "*", true));
+        Assert.assertEquals(
+                "****\t*",
+                StringTools.replaceVerticalWhitespace("\n\f\r\u2028\t\u2029", "*", false));
+
+        Assert.assertEquals(
+                "the *quick *brown *fox",
+                StringTools.replaceVerticalWhitespace("the \n\f\rquick \u2028brown \u2029fox", "*", true));
+        Assert.assertEquals(
+                "the ***quick *brown *fox",
+                StringTools.replaceVerticalWhitespace("the \n\f\rquick \u2028brown \u2029fox", "*", false));
+    }
 }

@@ -24,20 +24,16 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.core.Response.Status.Family;
 
 public abstract class BaseResource
 {
-    private static final Pattern UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile("[^ \\w\\p{Punct}]");
-    private static final Pattern NEWLINES_PATTERN = Pattern.compile("\\v+");
-
     protected <T> T executeWithLogging(String description, Supplier<T> supplier)
     {
         Logger logger = getLogger();
         boolean isInfoLogging = logger.isInfoEnabled();
-        String sanitizedDescription = isInfoLogging ? sanitizeForLogging(description, "_") : null;
+        String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(description, "_", false) : null;
         long start = System.nanoTime();
         if (isInfoLogging)
         {
@@ -78,7 +74,7 @@ public abstract class BaseResource
                     long duration = System.nanoTime() - start;
                     if (sanitizedDescription == null)
                     {
-                        sanitizedDescription = sanitizeForLogging(description, "_");
+                        sanitizedDescription = StringTools.sanitizeForLogging(description, "_", false);
                     }
                     logger.error(buildLoggingErrorMessage(e, sanitizedDescription, duration), e);
                 }
@@ -92,7 +88,7 @@ public abstract class BaseResource
                 long duration = System.nanoTime() - start;
                 if (sanitizedDescription == null)
                 {
-                    sanitizedDescription = sanitizeForLogging(description, "_");
+                    sanitizedDescription = StringTools.sanitizeForLogging(description, "_", false);
                 }
                 logger.error(buildLoggingErrorMessage(t, sanitizedDescription, duration), t);
             }
@@ -150,14 +146,8 @@ public abstract class BaseResource
         String message = t.getMessage();
         if (message != null)
         {
-            builder.append(": ").append(NEWLINES_PATTERN.matcher(message).replaceAll(" "));
+            builder.append(": ").append(StringTools.replaceVerticalWhitespace(message, " ", true));
         }
         return builder.toString();
-    }
-
-    // package private for testing
-    static String sanitizeForLogging(String string, String replacement)
-    {
-        return ((string == null) || string.isEmpty()) ? "" : UNSAFE_LOG_MESSAGE_PATTERN.matcher(string).replaceAll(replacement);
     }
 }

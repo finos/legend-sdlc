@@ -17,15 +17,17 @@ package org.finos.legend.sdlc.server.tools;
 import java.net.UnknownHostException;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 public class StringTools
 {
-    private static final String DEFAULT_EX_MESSAGE_SEPARATOR = ": ";
-    private static final String ZERO_SECONDS_WITH_NANOS_STRING = "0.000000000";
-
     private StringTools()
     {
     }
+
+    // Exception message utilities
+
+    private static final String DEFAULT_EX_MESSAGE_SEPARATOR = ": ";
 
     public static String appendThrowableMessageIfPresent(String prefix, Throwable t)
     {
@@ -95,6 +97,10 @@ public class StringTools
         return builder;
     }
 
+    // Duration formatting
+
+    private static final String ZERO_SECONDS_WITH_NANOS_STRING = "0.000000000";
+
     public static String formatDurationInNanos(long durationInNanos)
     {
         return (durationInNanos == 0) ? ZERO_SECONDS_WITH_NANOS_STRING : formatDurationInNanos(new StringBuilder(20), durationInNanos).toString();
@@ -147,5 +153,27 @@ public class StringTools
             builder.append('0');
         }
         return builder;
+    }
+
+    // Log sanitizing
+
+    private static final Pattern SINGLE_UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile("[^ \\w\\p{Punct}]");
+    private static final Pattern MULTI_UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile(SINGLE_UNSAFE_LOG_MESSAGE_PATTERN.pattern() + "+");
+
+    public static String sanitizeForLogging(String string, String replacement, boolean replaceGroups)
+    {
+        Pattern pattern = replaceGroups ? MULTI_UNSAFE_LOG_MESSAGE_PATTERN : SINGLE_UNSAFE_LOG_MESSAGE_PATTERN;
+        return pattern.matcher(string).replaceAll(replacement);
+    }
+
+    // Vertical whitespace replacement
+
+    private static final Pattern SINGLE_VERTICAL_WHITESPACE_PATTERN = Pattern.compile("\\v");
+    private static final Pattern MULTI_VERTICAL_WHITESPACE_PATTERN = Pattern.compile(SINGLE_VERTICAL_WHITESPACE_PATTERN.pattern() + "+");
+
+    public static String replaceVerticalWhitespace(String string, String replacement, boolean replaceGroups)
+    {
+        Pattern pattern = replaceGroups ? MULTI_VERTICAL_WHITESPACE_PATTERN : SINGLE_VERTICAL_WHITESPACE_PATTERN;
+        return pattern.matcher(string).replaceAll(replacement);
     }
 }
