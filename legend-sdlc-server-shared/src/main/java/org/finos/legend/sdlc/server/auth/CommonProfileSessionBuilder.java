@@ -45,6 +45,7 @@ public abstract class CommonProfileSessionBuilder<P extends CommonProfile, T ext
         return this;
     }
 
+    @Override
     public CommonProfileSessionBuilder<P, T> withCreationTime(Instant creationTime)
     {
         super.withCreationTime(creationTime);
@@ -77,14 +78,14 @@ public abstract class CommonProfileSessionBuilder<P extends CommonProfile, T ext
     public void validate()
     {
         super.validate();
-        P profile = getProfile();
-        if (profile == null)
+        P p = getProfile();
+        if (p == null)
         {
             throw new IllegalStateException("profile may not be null");
         }
-        if (!Objects.equals(profile.getId(), getUserId()))
+        if (!Objects.equals(p.getId(), getUserId()))
         {
-            throw new IllegalStateException("User id (" + getUserId() + ") does not match profile: " + profile);
+            throw new IllegalStateException("User id (" + getUserId() + ") does not match profile: " + p);
         }
     }
 }

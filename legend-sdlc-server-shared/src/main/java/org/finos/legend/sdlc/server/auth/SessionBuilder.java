@@ -51,9 +51,9 @@ public abstract class SessionBuilder<T extends Session>
 
     public SessionBuilder<T> fromToken(Token.TokenReader reader)
     {
-        String userId = reader.getString();
-        Instant creationTime = Instant.ofEpochSecond(reader.getLong());
-        return withUserId(userId).withCreationTime(creationTime);
+        String userIdFromToken = reader.getString();
+        Instant creationTimeFromToken = Instant.ofEpochSecond(reader.getLong());
+        return withUserId(userIdFromToken).withCreationTime(creationTimeFromToken);
     }
 
     /**
