@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.serialization;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -29,14 +31,14 @@ import java.util.Map;
 
 class JsonEntitySerializer implements EntityTextSerializer
 {
-    private static final ObjectMapper JSON = new ObjectMapper()
+    static final JsonEntitySerializer INSTANCE = new JsonEntitySerializer();
+
+    private final ObjectMapper objectMapper = new ObjectMapper()
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
             .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
             .configure(SerializationFeature.INDENT_OUTPUT, true)
             .configure(SerializationFeature.CLOSE_CLOSEABLE, false);
-    private static final JavaType ENTITY_FILE_TYPE = JSON.getTypeFactory().constructType(EntityFile.class);
-
-    static final JsonEntitySerializer INSTANCE = new JsonEntitySerializer();
+    private final JavaType entityFileType = this.objectMapper.getTypeFactory().constructType(EntityFile.class);
 
     private JsonEntitySerializer()
     {
@@ -53,25 +55,25 @@ class JsonEntitySerializer implements EntityTextSerializer
     @Override
     public void serialize(Entity entity, OutputStream stream) throws IOException
     {
-        JSON.writeValue(stream, toEntityFile(entity));
+        this.objectMapper.writeValue(stream, toEntityFile(entity));
     }
 
     @Override
     public void serialize(Entity entity, Writer writer) throws IOException
     {
-        JSON.writeValue(writer, toEntityFile(entity));
+        this.objectMapper.writeValue(writer, toEntityFile(entity));
     }
 
     @Override
     public byte[] serializeToBytes(Entity entity) throws IOException
     {
-        return JSON.writeValueAsBytes(toEntityFile(entity));
+        return this.objectMapper.writeValueAsBytes(toEntityFile(entity));
     }
 
     @Override
     public String serializeToString(Entity entity) throws IOException
     {
-        return JSON.writeValueAsString(toEntityFile(entity));
+        return this.objectMapper.writeValueAsString(toEntityFile(entity));
     }
 
     // Deserialization
@@ -79,32 +81,32 @@ class JsonEntitySerializer implements EntityTextSerializer
     @Override
     public Entity deserialize(InputStream stream) throws IOException
     {
-        return toEntity(JSON.readValue(stream, ENTITY_FILE_TYPE));
+        return toEntity(this.objectMapper.readValue(stream, this.entityFileType));
     }
 
     @Override
     public Entity deserialize(Reader reader) throws IOException
     {
-        return toEntity(JSON.readValue(reader, ENTITY_FILE_TYPE));
+        return toEntity(this.objectMapper.readValue(reader, this.entityFileType));
     }
 
     @Override
     public Entity deserialize(byte[] content) throws IOException
     {
-        return toEntity(JSON.readValue(content, ENTITY_FILE_TYPE));
+        return toEntity(this.objectMapper.readValue(content, this.entityFileType));
     }
 
     @Override
     public Entity deserialize(String content) throws IOException
     {
-        return toEntity(JSON.readValue(content, ENTITY_FILE_TYPE));
+        return toEntity(this.objectMapper.readValue(content, this.entityFileType));
     }
 
     // Helpers
 
     private static EntityFile toEntityFile(Entity entity)
     {
-        return new EntityFile(entity.getClassifierPath(), entity.getContent());
+        return EntityFile.newEntityFile(entity.getClassifierPath(), entity.getContent());
     }
 
     private static Entity toEntity(EntityFile entityFile)
@@ -117,11 +119,18 @@ class JsonEntitySerializer implements EntityTextSerializer
         Map<String, ?> content = entityFile.content;
         if (content != null)
         {
-            Object pkg = content.get("package");
             Object name = content.get("name");
-            if ((pkg instanceof String) && (name instanceof String))
+            if (name instanceof String)
             {
-                return pkg + "::" + name;
+                Object pkg = content.get("package");
+                if (pkg == null)
+                {
+                    return (String) name;
+                }
+                if (pkg instanceof String)
+                {
+                    return pkg + "::" + name;
+                }
             }
         }
         throw new RuntimeException("Could not compute entity path");
@@ -129,17 +138,22 @@ class JsonEntitySerializer implements EntityTextSerializer
 
     private static class EntityFile
     {
-        public String classifierPath;
-        public Map<String, ?> content;
+        @JsonProperty
+        private final String classifierPath;
 
-        EntityFile()
-        {
-        }
+        @JsonProperty
+        private final Map<String, ?> content;
 
-        EntityFile(String classifierPath, Map<String, ?> content)
+        private EntityFile(String classifierPath, Map<String, ?> content)
         {
             this.classifierPath = classifierPath;
             this.content = content;
+        }
+
+        @JsonCreator
+        static EntityFile newEntityFile(@JsonProperty("classifierPath") String classifierPath, @JsonProperty("content") Map<String, ?> content)
+        {
+            return new EntityFile(classifierPath, content);
         }
     }
 }
