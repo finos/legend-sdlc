@@ -27,6 +27,9 @@ import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 
+import java.util.Set;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -34,9 +37,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 @Path("/auth")
 public class GitLabAuthResource extends BaseResource
@@ -120,11 +120,13 @@ public class GitLabAuthResource extends BaseResource
     @GET
     @Path("termsOfServiceAcceptance")
     @Produces(MediaType.APPLICATION_JSON)
-    public Set<String> termsOfServiceAcceptance()
+    public Set<String> termsOfServiceAcceptance(@QueryParam("mode")
+                                                @ApiParam("GitLab modes to accept terms of service for (defaults to all)") Set<GitLabMode> modes)
     {
         return executeWithLogging("checking acceptance of terms of service", () ->
                 this.userContext.getValidGitLabModes()
                         .stream()
+                        .filter(m -> (modes == null) || modes.isEmpty() || modes.contains(m))
                         .map(this.userContext::getGitLabAPI)
                         .filter(api ->
                         {
