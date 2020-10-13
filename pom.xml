@@ -73,7 +73,6 @@
         <jetty.version>9.4.18.v20190429</jetty.version>
         <junit.version>4.13</junit.version>
         <legend.shared.version>0.0.6</legend.shared.version>
-        <log4j.version>1.2.17</log4j.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
@@ -273,10 +272,7 @@
                                         <include>org.slf4j:jul-to-slf4j:${slf4j.version}</include>
                                         <include>org.slf4j:slf4j-api:${slf4j.version}</include>
                                         <include>org.slf4j:jcl-over-slf4j:${slf4j.version}</include>
-                                        <include>org.slf4j:slf4j-jdk14:${slf4j.version}</include>
                                         <include>org.slf4j:slf4j-ext:${slf4j.version}</include>
-                                        <include>log4j:log4j:${log4j.version}</include>
-                                        <include>log4j:apache-log4j-extras:${log4j.version}</include>
                                     </includes>
                                 </bannedDependencies>
                             </rules>
