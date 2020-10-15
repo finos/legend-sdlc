@@ -33,12 +33,12 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-public abstract class MetadataWebFilter<P extends CommonProfile> implements Filter
+public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Filter
 {
     public static final String SESSION_TOKEN_COOKIE_NAME = "LegendSDLCSession";
     public static final String SESSION_ATTRIBUTE = "org.finos.legend.sdlc.server.Session";
 
-    protected static final Logger LOGGER = LoggerFactory.getLogger(MetadataWebFilter.class);
+    protected static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCWebFilter.class);
 
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException

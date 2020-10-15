@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-applicationName: Metadata SDLC
+applicationName: Legend SDLC
 
 server:
   applicationConnectors:
@@ -86,6 +86,6 @@ logging:
 
 swagger:
   resourcePackage: org.finos.legend.sdlc.server.resources
-  title: Metadata SDLC
+  title: Legend SDLC
   version: local-snapshot
   schemes: []

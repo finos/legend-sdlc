@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import com.google.inject.servlet.RequestScoped;
 import org.finos.legend.sdlc.server.auth.KerberosSession;
-import org.finos.legend.sdlc.server.auth.MetadataWebFilter;
+import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
@@ -50,7 +50,7 @@ public class GitLabUserContext extends UserContext
         GitLabSession gitLabSession = getGitLabSession();
         if (gitLabSession.gitLabOAuthCallback(mode, code))
         {
-            MetadataWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+            LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
         }
     }
 
@@ -84,7 +84,7 @@ public class GitLabUserContext extends UserContext
                             {
                                 accessToken = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthToken(((KerberosSession)gitLabSession).getSubject());
                                 gitLabSession.putAccessToken(mode, accessToken);
-                                MetadataWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+                                LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
                             {
@@ -136,7 +136,7 @@ public class GitLabUserContext extends UserContext
                                 String accessToken = GitLabOAuthAuthenticator.newAuthenticator(gitLabSession.getModeInfo(mode)).getOAuthToken(((KerberosSession) gitLabSession).getSubject());
                                 // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
                                 gitLabSession.putAccessToken(mode, accessToken);
-                                MetadataWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+                                LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
                             {
@@ -162,7 +162,7 @@ public class GitLabUserContext extends UserContext
             this.apiCache.clear();
             GitLabSession gitLabSession = getGitLabSession();
             gitLabSession.clearAccessTokens();
-            MetadataWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+            LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
         }
     }
 
