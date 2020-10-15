@@ -18,7 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.user.UserApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -75,7 +75,7 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
     @Override
     public User getUserById(String userId)
     {
-        MetadataException.validateNonNull(userId, "userId cannot be null");
+        LegendSDLCServerException.validateNonNull(userId, "userId cannot be null");
         Exception exception = null;
         for (GitLabMode mode : getValidGitLabModes())
         {
@@ -101,13 +101,13 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
                     () -> "Unknown user: " + userId,
                     () -> "Error getting user " + userId);
         }
-        throw new MetadataException("Unknown user: " + userId, Status.NOT_FOUND);
+        throw new LegendSDLCServerException("Unknown user: " + userId, Status.NOT_FOUND);
     }
 
     @Override
     public List<User> findUsers(String search)
     {
-        MetadataException.validateNonNull(search, "search cannot be null");
+        LegendSDLCServerException.validateNonNull(search, "search cannot be null");
         try
         {
             Map<String, User> usersById = Maps.mutable.empty();
@@ -149,7 +149,7 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
         }
         if (exceptions.isEmpty())
         {
-            throw new MetadataException("Could not get current user information");
+            throw new LegendSDLCServerException("Could not get current user information");
         }
         Exception e = exceptions.get(0);
         for (Exception other : exceptions)

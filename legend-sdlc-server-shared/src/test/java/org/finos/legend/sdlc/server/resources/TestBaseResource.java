@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources;
 
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -64,27 +64,27 @@ public class TestBaseResource
     }
 
     @Test
-    public void testExecuteWithLogging_MetadataException()
+    public void testExecuteWithLogging_LegendSDLCServerException()
     {
-        testExecuteWithLogging_MetadataException(
+        testExecuteWithLogging_LegendSDLCServerException(
                 "getting workspace WS1 for project X",
                 "getting workspace WS1 for project X",
                 "Something went wrong",
                 "Something went wrong",
                 Response.Status.INTERNAL_SERVER_ERROR);
-        testExecuteWithLogging_MetadataException(
+        testExecuteWithLogging_LegendSDLCServerException(
                 "Changing the following things:\n\t- one\n\t- two\n\t- three",
                 "Changing the following things:__- one__- two__- three",
                 "There is a conflict in:\n- this\n\n- that\n\n\n- the other",
                 "There is a conflict in: - this - that - the other",
                 Response.Status.CONFLICT);
-        testExecuteWithLogging_MetadataException(
+        testExecuteWithLogging_LegendSDLCServerException(
                 "getting projects",
                 "getting projects",
                 null,
                 null,
                 Response.Status.FORBIDDEN);
-        testExecuteWithLogging_MetadataException(
+        testExecuteWithLogging_LegendSDLCServerException(
                 "getting projects",
                 "getting projects",
                 "http://some.url/somewhere?with=parameter",
@@ -92,13 +92,13 @@ public class TestBaseResource
                 Response.Status.FOUND);
     }
 
-    private void testExecuteWithLogging_MetadataException(String description, String descriptionInLog, String exceptionMessage, String exceptionMessageInLog, Response.Status status)
+    private void testExecuteWithLogging_LegendSDLCServerException(String description, String descriptionInLog, String exceptionMessage, String exceptionMessageInLog, Response.Status status)
     {
         TestResource resource = new TestResource();
 
-        MetadataException e = Assert.assertThrows(MetadataException.class, () -> resource.executeWithLogging(description, () ->
+        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> resource.executeWithLogging(description, () ->
         {
-            throw new MetadataException(exceptionMessage, status);
+            throw new LegendSDLCServerException(exceptionMessage, status);
         }));
         Assert.assertSame(exceptionMessage, e.getMessage());
         Assert.assertSame(status, e.getStatus());

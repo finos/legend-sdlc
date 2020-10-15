@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.application.issue.CreateIssueCommand;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -74,7 +74,7 @@ public class IssuesResource extends BaseResource
     @ApiOperation("Create a new issue for the project")
     public Issue createIssue(@PathParam("projectId") String projectId, CreateIssueCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to create issue");
+        LegendSDLCServerException.validateNonNull(command, "Input required to create issue");
         return executeWithLogging(
                 "creating new issue \"" + command.getTitle() + "\" for project " + projectId,
                 () -> this.issueApi.createIssue(projectId, command.getTitle(), command.getDescription())

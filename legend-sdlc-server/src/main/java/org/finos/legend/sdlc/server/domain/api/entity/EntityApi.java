@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.entity;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -48,7 +48,7 @@ public interface EntityApi
         }
         catch (IllegalArgumentException e)
         {
-            throw new MetadataException(e.getMessage(), Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException(e.getMessage(), Status.BAD_REQUEST, e);
         }
         return getVersionEntityAccessContext(projectId, versionId);
     }

@@ -22,7 +22,7 @@ import org.finos.legend.sdlc.server.LegendSDLCServer;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
-import org.finos.legend.sdlc.server.error.MetadataExceptionMapper;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -201,7 +201,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private void bindExceptionMappers(Binder binder)
     {
-        binder.bind(MetadataExceptionMapper.class).toConstructor(defaultConstructor(MetadataExceptionMapper.class));
+        binder.bind(LegendSDLCServerExceptionMapper.class).toConstructor(defaultConstructor(LegendSDLCServerExceptionMapper.class));
     }
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()

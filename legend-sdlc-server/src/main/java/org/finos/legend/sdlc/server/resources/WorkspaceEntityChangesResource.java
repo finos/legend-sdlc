@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -47,7 +47,7 @@ public class WorkspaceEntityChangesResource extends BaseResource
     @ApiOperation("Perform entity changes")
     public Revision performEntityChanges(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to perform entity changes");
+        LegendSDLCServerException.validateNonNull(command, "Input required to perform entity changes");
         return executeWithLogging(
                 "performing changes in workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())

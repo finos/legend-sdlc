@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -86,14 +86,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public Project getProject(String id)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
             org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
             if (!isPureProject(gitLabProject))
             {
-                throw new MetadataException("Failed to get project " + id);
+                throw new LegendSDLCServerException("Failed to get project " + id);
             }
             return fromGitLabProject(gitLabProject, projectId.getGitLabMode());
         }
@@ -175,11 +175,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags)
     {
-        MetadataException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
-        MetadataException.validateNonNull(description, "description may not be null");
-        MetadataException.validateNonNull(type, "type may not be null");
-        MetadataException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
-        MetadataException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
+        LegendSDLCServerException.validateNonNull(description, "description may not be null");
+        LegendSDLCServerException.validateNonNull(type, "type may not be null");
+        LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
+        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
 
         validateProjectCreation(name, description, type, groupId, artifactId);
 
@@ -206,7 +206,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project gitLabProject = gitLabApi.getProjectApi().createProject(gitLabProjectSpec);
             if (gitLabProject == null)
             {
-                throw new MetadataException("Failed to create project: " + name);
+                throw new LegendSDLCServerException("Failed to create project: " + name);
             }
 
             // protect from commits on master
@@ -235,10 +235,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
-        MetadataException.validateNonNull(type, "type may not be null");
-        MetadataException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
-        MetadataException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(type, "type may not be null");
+        LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
+        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
 
         // Get project id
         GitLabProjectId projectId;
@@ -251,7 +251,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             projectId = parseProjectId(id);
             if (projectId.getGitLabMode() != getGitLabModeFromProjectType(type))
             {
-                throw new MetadataException("Invalid project id \"" + id + "\" for project type " + type, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Invalid project id \"" + id + "\" for project type " + type, Status.BAD_REQUEST);
             }
         }
 
@@ -290,7 +290,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
         if (workspaceBranch == null)
         {
-            throw new MetadataException("Failed to create workspace " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create workspace " + workspaceId + " in project " + projectId);
         }
 
         // Configure project in workspace
@@ -317,7 +317,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 // Existing project structure: update
                 if (currentConfig.getProjectType() != type)
                 {
-                    throw new MetadataException("Mismatch between requested project type (" + type + ") and found project type (" + currentConfig.getProjectType() + ")", Status.BAD_REQUEST);
+                    throw new LegendSDLCServerException("Mismatch between requested project type (" + type + ") and found project type (" + currentConfig.getProjectType() + ")", Status.BAD_REQUEST);
                 }
                 ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
                 if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
@@ -455,7 +455,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public void deleteProject(String id)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
@@ -474,8 +474,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public void changeProjectName(String id, String newName)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
-        MetadataException.validate(newName, n -> (n != null) && !n.isEmpty(), "newName may not be null or empty");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validate(newName, n -> (n != null) && !n.isEmpty(), "newName may not be null or empty");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
@@ -501,8 +501,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public void changeProjectDescription(String id, String newDescription)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
-        MetadataException.validateNonNull(newDescription, "newDescription may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(newDescription, "newDescription may not be null");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
@@ -512,7 +512,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withDescription(newDescription);
             withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().updateProject(updatedProject));
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }
@@ -528,7 +528,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public void updateProjectTags(String id, Iterable<String> tagsToRemove, Iterable<String> tagsToAdd)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
@@ -567,8 +567,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public void setProjectTags(String id, Iterable<String> tags)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
-        MetadataException.validateNonNull(tags, "tags may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(tags, "tags may not be null");
 
         try
         {
@@ -606,14 +606,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public AccessRole getCurrentUserAccessRole(String id)
     {
-        MetadataException.validateNonNull(id, "id may not be null");
+        LegendSDLCServerException.validateNonNull(id, "id may not be null");
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
             org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
             if (!isPureProject(gitLabProject))
             {
-                throw new MetadataException("Failed to get project " + id);
+                throw new LegendSDLCServerException("Failed to get project " + id);
             }
 
             Permissions permissions = gitLabProject.getPermissions();
@@ -667,19 +667,19 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 {
                     message = "Projects of type " + type + " may not be created through this server.";
                 }
-                throw new MetadataException(message, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException(message, Status.BAD_REQUEST);
             }
 
             Pattern groupIdPattern = projectCreationConfig.getGroupIdPattern();
             if ((groupIdPattern != null) && !groupIdPattern.matcher(groupId).matches())
             {
-                throw new MetadataException("groupId must match \"" + groupIdPattern.pattern() + "\", got: " + groupId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("groupId must match \"" + groupIdPattern.pattern() + "\", got: " + groupId, Status.BAD_REQUEST);
             }
 
             Pattern artifactIdPattern = projectCreationConfig.getArtifactIdPattern();
             if ((artifactIdPattern != null) && !artifactIdPattern.matcher(artifactId).matches())
             {
-                throw new MetadataException("artifactId must match \"" + artifactIdPattern.pattern() + "\", got: " + artifactId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("artifactId must match \"" + artifactIdPattern.pattern() + "\", got: " + artifactId, Status.BAD_REQUEST);
             }
         }
     }
@@ -703,7 +703,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project project = withRetries(() -> gitLabApi.getProjectApi().getProject(projectId.getGitLabId()));
             if (!isPureProject(project))
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.NOT_FOUND);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND);
             }
             return project;
         }

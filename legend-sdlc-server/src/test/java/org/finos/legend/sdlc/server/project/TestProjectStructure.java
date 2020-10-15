@@ -28,7 +28,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.junit.Assert;
 import org.junit.Before;
@@ -1267,7 +1267,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .updateProjectConfiguration();
             Assert.fail();
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Assert.assertEquals("There were issues with one or more added artifact generations: generation types Entity, Service Execution, Versioned Entity are not allowed", e.getMessage());
         }
@@ -1288,7 +1288,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .updateProjectConfiguration();
             Assert.fail();
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Assert.assertEquals("There were issues with one or more added artifact generations: generations to add contain duplicates", e.getMessage());
         }
@@ -1308,7 +1308,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .updateProjectConfiguration();
             Assert.fail();
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Assert.assertEquals("There were issues with one or more added artifact generations: generations to add contain duplicates", e.getMessage());
         }
@@ -1324,7 +1324,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .updateProjectConfiguration();
             Assert.fail();
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Assert.assertEquals("There were issues with one or more added artifact generations: generations to add contain duplicates", e.getMessage());
         }
@@ -1345,7 +1345,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .updateProjectConfiguration();
             Assert.fail();
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Assert.assertEquals("There were issues with one or more added artifact generations: trying to add duplicate artifact generations", e.getMessage());
         }

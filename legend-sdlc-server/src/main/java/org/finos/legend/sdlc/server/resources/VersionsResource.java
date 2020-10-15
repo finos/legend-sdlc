@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -131,7 +131,7 @@ public class VersionsResource extends BaseResource
     @ApiOperation("Create a new version of a project")
     public Version createVersion(@PathParam("projectId") String projectId, CreateVersionCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to create version");
+        LegendSDLCServerException.validateNonNull(command, "Input required to create version");
         return executeWithLogging(
                 "creating new " + command.getVersionType().name().toLowerCase() + " version",
                 () -> this.versionApi.newVersion(projectId, command.getVersionType(), command.getRevisionId(), command.getNotes())

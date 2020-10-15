@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectConfigurationCommand;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -61,7 +61,7 @@ public class WorkspaceProjectConfigurationResource extends BaseResource
     @ApiOperation("Update the project configuration of a project in a workspace")
     public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to update project structure");
+        LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
         return executeWithLogging(
                 "updating configuration for project " + projectId + " in workspace " + workspaceId,
                 () -> this.projectConfigurationApi.updateProjectConfiguration(

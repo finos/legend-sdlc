@@ -28,12 +28,12 @@ import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class MetadataExceptionMapper implements ExceptionMapper<MetadataException>
+public class LegendSDLCServerExceptionMapper implements ExceptionMapper<LegendSDLCServerException>
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataExceptionMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerExceptionMapper.class);
 
     @Override
-    public Response toResponse(MetadataException exception)
+    public Response toResponse(LegendSDLCServerException exception)
     {
         Status status = exception.getStatus();
         ResponseBuilder builder = Response.status(status);
@@ -78,12 +78,12 @@ public class MetadataExceptionMapper implements ExceptionMapper<MetadataExceptio
         return builder.build();
     }
 
-    private ErrorMessage buildErrorMessage(MetadataException exception)
+    private ErrorMessage buildErrorMessage(LegendSDLCServerException exception)
     {
         return new ErrorMessage(exception.getStatus().getStatusCode(), getMessage(exception));
     }
 
-    private String getMessage(MetadataException exception)
+    private String getMessage(LegendSDLCServerException exception)
     {
         String message = exception.getMessage();
         if (message == null)
@@ -96,12 +96,12 @@ public class MetadataExceptionMapper implements ExceptionMapper<MetadataExceptio
         return message;
     }
 
-    private URI getRedirectLocation(MetadataException exception)
+    private URI getRedirectLocation(LegendSDLCServerException exception)
     {
         String message = exception.getMessage();
         if (message == null)
         {
-            LOGGER.warn("A MetadataException with status {} should have the redirect location as its message, found null", exception.getStatus());
+            LOGGER.warn("A LegendSDLCServerException with status {} should have the redirect location as its message, found null", exception.getStatus());
             return null;
         }
 
@@ -111,7 +111,7 @@ public class MetadataExceptionMapper implements ExceptionMapper<MetadataExceptio
         }
         catch (URISyntaxException e)
         {
-            LOGGER.warn("Invalid redirect location for MetadataException with status {}: {}", exception.getStatus(), message);
+            LOGGER.warn("Invalid redirect location for LegendSDLCServerException with status {}: {}", exception.getStatus(), message);
             return null;
         }
     }

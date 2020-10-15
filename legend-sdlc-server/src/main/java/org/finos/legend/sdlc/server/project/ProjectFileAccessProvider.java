@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.project;
 
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.IOTools;
 
 import java.io.IOException;
@@ -41,22 +41,22 @@ public interface ProjectFileAccessProvider
 
     default FileAccessContext getProjectRevisionFileAccessContext(String projectId, String revisionId)
     {
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         return getFileAccessContext(projectId, null, revisionId, WorkspaceAccessType.WORKSPACE);
     }
 
     default FileAccessContext getWorkspaceFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         return getFileAccessContext(projectId, workspaceId, null, workspaceAccessType);
     }
 
     default FileAccessContext getWorkspaceRevisionFileAccessContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         return getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType);
     }
 
@@ -206,22 +206,22 @@ public interface ProjectFileAccessProvider
 
     default RevisionAccessContext getProjectPathRevisionAccessContext(String projectId, String path)
     {
-        MetadataException.validateNonNull(path, "path may not be null");
+        LegendSDLCServerException.validateNonNull(path, "path may not be null");
         return getRevisionAccessContext(projectId, (String) null, path, WorkspaceAccessType.WORKSPACE);
     }
 
     default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         return getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType);
     }
 
     default RevisionAccessContext getWorkspacePathRevisionAccessContext(String projectId, String workspaceId, String path, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(path, "path may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(path, "path may not be null");
         return getRevisionAccessContext(projectId, workspaceId, path, workspaceAccessType);
     }
 
@@ -232,7 +232,7 @@ public interface ProjectFileAccessProvider
 
     default RevisionAccessContext getVersionPathRevisionAccessContext(String projectId, VersionId versionId, String path)
     {
-        MetadataException.validateNonNull(path, "path may not be null");
+        LegendSDLCServerException.validateNonNull(path, "path may not be null");
         return getRevisionAccessContext(projectId, versionId, path);
     }
 
@@ -291,22 +291,22 @@ public interface ProjectFileAccessProvider
 
     default FileModificationContext getProjectFileModificationContext(String projectId, String revisionId)
     {
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         return getFileModificationContext(projectId, null, revisionId, WorkspaceAccessType.WORKSPACE);
     }
 
     default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         return getFileModificationContext(projectId, workspaceId, null, workspaceAccessType);
     }
 
     default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         return getFileModificationContext(projectId, workspaceId, revisionId, workspaceAccessType);
     }
 

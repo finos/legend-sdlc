@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.application.project.ImportProjectCommand;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectCommand;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi.ImportReport;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -89,7 +89,7 @@ public class ProjectsResource extends BaseResource
     @ApiOperation("Create a new project")
     public Project createProject(CreateProjectCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to create project");
+        LegendSDLCServerException.validateNonNull(command, "Input required to create project");
         return executeWithLogging(
                 "creating new project \"" + command.getName() + "\"",
                 () -> this.projectApi.createProject(command.getName(), command.getDescription(), command.getType(), command.getGroupId(), command.getArtifactId(), command.getTags())
@@ -101,7 +101,7 @@ public class ProjectsResource extends BaseResource
     @ApiOperation("Update existing project")
     public void updateProject(@PathParam("id") String id, UpdateProjectCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to update project");
+        LegendSDLCServerException.validateNonNull(command, "Input required to update project");
         executeWithLogging(
                 "updating project " + id,
                 () ->
@@ -144,7 +144,7 @@ public class ProjectsResource extends BaseResource
     @ApiOperation(value = "Import a project", notes = "Import a project which exists in the underlying system. The supplied id need not be the same as what the final project id will be; it need only be sufficient to identify the project in the underlying system.")
     public ImportReport importProject(ImportProjectCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to import project");
+        LegendSDLCServerException.validateNonNull(command, "Input required to import project");
         return executeWithLogging(
                 "importing project " + command.getId() + " (type: " + command.getType() + ", groupId: " + command.getGroupId() + ", artifactId: " + command.getArtifactId() + ")",
                 () -> this.projectApi.importProject(command.getId(), command.getType(), command.getGroupId(), command.getArtifactId())

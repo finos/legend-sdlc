@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -55,7 +55,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getProjectBuildAccessContext(String projectId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
@@ -81,8 +81,8 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
@@ -108,8 +108,8 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getVersionBuildAccessContext(String projectId, VersionId versionId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(versionId, "versionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
@@ -165,7 +165,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
 
             if (!getRef().equals(pipeline.getRef()))
             {
-                throw new MetadataException("Unknown build in " + getRefInfoForException() + ": " + buildId, Status.NOT_FOUND);
+                throw new LegendSDLCServerException("Unknown build in " + getRefInfoForException() + ": " + buildId, Status.NOT_FOUND);
             }
 
             return fromGitLabPipeline(this.projectId, pipeline);

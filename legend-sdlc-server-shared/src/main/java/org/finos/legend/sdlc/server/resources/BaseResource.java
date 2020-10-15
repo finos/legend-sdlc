@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources;
 
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,7 +52,7 @@ public abstract class BaseResource
             }
             return result;
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             Status status = e.getStatus();
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))

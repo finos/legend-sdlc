@@ -19,31 +19,31 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.ws.rs.core.Response.Status;
 
-public class MetadataException extends RuntimeException
+public class LegendSDLCServerException extends RuntimeException
 {
     private static final long serialVersionUID = -427388642530259672L;
     private static final Status DEFAULT_STATUS = Status.INTERNAL_SERVER_ERROR;
 
     private final Status status;
 
-    public MetadataException(String message, Status httpStatus, Throwable cause)
+    public LegendSDLCServerException(String message, Status httpStatus, Throwable cause)
     {
         super(message, cause);
         this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
     }
 
-    public MetadataException(String message, Status httpStatus)
+    public LegendSDLCServerException(String message, Status httpStatus)
     {
         super(message);
         this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
     }
 
-    public MetadataException(String message, Throwable cause)
+    public LegendSDLCServerException(String message, Throwable cause)
     {
         this(message, null, cause);
     }
 
-    public MetadataException(String message)
+    public LegendSDLCServerException(String message)
     {
         this(message, (Status) null);
     }
@@ -72,7 +72,7 @@ public class MetadataException extends RuntimeException
     {
         if (!predicate.test(arg))
         {
-            throw new MetadataException(message, (httpStatus == null) ? Status.BAD_REQUEST : httpStatus);
+            throw new LegendSDLCServerException(message, (httpStatus == null) ? Status.BAD_REQUEST : httpStatus);
         }
         return arg;
     }
@@ -86,7 +86,7 @@ public class MetadataException extends RuntimeException
     {
         if (!predicate.test(arg))
         {
-            throw new MetadataException((messageFn == null) ? null : messageFn.apply(arg), (httpStatus == null) ? Status.BAD_REQUEST : httpStatus);
+            throw new LegendSDLCServerException((messageFn == null) ? null : messageFn.apply(arg), (httpStatus == null) ? Status.BAD_REQUEST : httpStatus);
         }
         return arg;
     }

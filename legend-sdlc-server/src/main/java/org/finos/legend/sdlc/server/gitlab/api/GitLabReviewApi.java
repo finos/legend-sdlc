@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -68,7 +68,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         Set<String> revisionIdSet;
         if (revisionIds == null)
         {
@@ -236,8 +236,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review getReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -256,10 +256,10 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review createReview(String projectId, String workspaceId, String title, String description)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(title, "title may not be null");
-        MetadataException.validateNonNull(description, "description may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(title, "title may not be null");
+        LegendSDLCServerException.validateNonNull(description, "description may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -280,8 +280,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review closeReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -304,8 +304,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review reopenReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -328,8 +328,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review approveReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -351,11 +351,11 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 case 401:
                 case 403:
                 {
-                    throw new MetadataException("User " + getCurrentUser() + " is not allowed to approve review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
+                    throw new LegendSDLCServerException("User " + getCurrentUser() + " is not allowed to approve review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
                 }
                 case 404:
                 {
-                    throw new MetadataException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND, e);
+                    throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND, e);
                 }
                 default:
                 {
@@ -365,11 +365,11 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                     {
                         builder.append(": ").append(eMessage);
                     }
-                    throw new MetadataException(builder.toString(), e);
+                    throw new LegendSDLCServerException(builder.toString(), e);
                 }
             }
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }
@@ -381,15 +381,15 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             {
                 builder.append(": ").append(eMessage);
             }
-            throw new MetadataException(builder.toString(), e);
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
     }
 
     @Override
     public Review revokeReviewApproval(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -415,8 +415,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review rejectReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -439,9 +439,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public Review commitReview(String projectId, String reviewId, String message)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
-        MetadataException.validateNonNull(message, "message may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(message, "message may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -458,7 +458,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         Integer approvalsLeft = mergeRequest.getApprovalsLeft();
         if ((approvalsLeft != null) && (approvalsLeft > 0))
         {
-            throw new MetadataException("Review " + reviewId + " in project " + projectId + " still requires " + approvalsLeft + " approvals", Status.CONFLICT);
+            throw new LegendSDLCServerException("Review " + reviewId + " in project " + projectId + " still requires " + approvalsLeft + " approvals", Status.CONFLICT);
         }
 
         // TODO add more validations
@@ -477,33 +477,33 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 case 403:
                 {
                     // This shouldn't happen, but just in case ...
-                    throw new MetadataException("User " + getCurrentUser() + " is not allowed to commit changes from review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
+                    throw new LegendSDLCServerException("User " + getCurrentUser() + " is not allowed to commit changes from review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
                 }
                 case 404:
                 {
                     // This shouldn't happen, as we already verified the review exists
-                    throw new MetadataException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND, e);
+                    throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND, e);
                 }
                 case 405:
                 {
                     // Status 405 (Method Not Allowed) indicates the merge request could not be accepted because it's not in an appropriate state (i.e., work in progress, closed, pipeline pending completion, or failed while requiring success)
-                    throw new MetadataException("Review " + reviewId + " in project " + projectId + " is not in a committable state; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
+                    throw new LegendSDLCServerException("Review " + reviewId + " in project " + projectId + " is not in a committable state; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
                 }
                 case 406:
                 {
                     // Status 406 (Not Acceptable) indicates the merge could not occur because of a conflict
-                    throw new MetadataException("Could not commit review " + reviewId + " in project " + projectId + " because of a conflict; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
+                    throw new LegendSDLCServerException("Could not commit review " + reviewId + " in project " + projectId + " because of a conflict; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
                 }
                 default:
                 {
                     StringBuilder builder = new StringBuilder("Error committing changes from review ").append(reviewId).append(" to project ").append(projectId);
                     StringTools.appendThrowableMessageIfPresent(builder, e);
                     LOGGER.warn("Unexpected response status committing changes from review {} to project {}; status {}; message: {}", reviewId, projectId, e.getHttpStatus(), e.getMessage());
-                    throw new MetadataException(builder.toString(), e);
+                    throw new LegendSDLCServerException(builder.toString(), e);
                 }
             }
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }
@@ -511,22 +511,22 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         {
             StringBuilder builder = new StringBuilder("Error committing changes from review ").append(reviewId).append(" to project ").append(projectId);
             StringTools.appendThrowableMessageIfPresent(builder, e);
-            throw new MetadataException(builder.toString(), e);
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
     }
 
     @Override
     public ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
         MergeRequest mergeRequest = getReviewMergeRequest(gitLabApi.getMergeRequestApi(), gitLabProjectId, reviewId);
         if (!(isOpen(mergeRequest) || isLocked(mergeRequest)))
         {
-            throw new MetadataException("Cannot get update status for review " + mergeRequest.getIid() + " in project " + projectId + ": state is " + getReviewState(mergeRequest), Status.CONFLICT);
+            throw new LegendSDLCServerException("Cannot get update status for review " + mergeRequest.getIid() + " in project " + projectId + ": state is " + getReviewState(mergeRequest), Status.CONFLICT);
         }
         return getReviewUpdateStatus(gitLabProjectId, gitLabApi, mergeRequest);
     }
@@ -534,8 +534,8 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     @Override
     public ReviewUpdateStatus updateReview(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
@@ -545,7 +545,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         MergeRequest initialMergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         if (!isOpen(initialMergeRequest))
         {
-            throw new MetadataException("Only open reviews can be updated: state of review " + initialMergeRequest.getIid() + " in project " + projectId + " is " + getReviewState(initialMergeRequest), Status.CONFLICT);
+            throw new LegendSDLCServerException("Only open reviews can be updated: state of review " + initialMergeRequest.getIid() + " in project " + projectId + " is " + getReviewState(initialMergeRequest), Status.CONFLICT);
         }
         ReviewUpdateStatus updateStatus = getReviewUpdateStatus(gitLabProjectId, gitLabApi, initialMergeRequest);
         if (updateStatus.isUpdateInProgress() || ((updateStatus.getBaseRevisionId() != null) && updateStatus.getBaseRevisionId().equals(updateStatus.getTargetRevisionId())))
@@ -565,7 +565,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                     500L);
             if (!callUntil.succeeded())
             {
-                throw new MetadataException("Failed to start update for review " + reviewId + " in project " + projectId);
+                throw new LegendSDLCServerException("Failed to start update for review " + reviewId + " in project " + projectId);
             }
             rebaseMergeRequest = callUntil.getResult();
         }
@@ -632,12 +632,12 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             LOGGER.error("Error getting merge base for merge request {} in project {} (source branch: {}, target branch: {})", mergeRequest.getIid(), projectId, sourceBranchName, targetBranchName);
             StringBuilder builder = new StringBuilder("Error getting base revision for review ").append(mergeRequest.getIid()).append(" for project ").append(projectId);
             StringTools.appendThrowableMessageIfPresent(builder, e);
-            throw new MetadataException(builder.toString(), e);
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
         if ((mergeBase == null) || (mergeBase.getId() == null))
         {
             LOGGER.error("Error getting merge base for merge request {} in project {} (source branch: {}, target branch: {}): {}", mergeRequest.getIid(), projectId, sourceBranchName, targetBranchName, mergeBase);
-            throw new MetadataException("Error getting base revision for review " + mergeRequest.getIid() + " for project " + projectId);
+            throw new LegendSDLCServerException("Error getting base revision for review " + mergeRequest.getIid() + " for project " + projectId);
         }
         return mergeBase.getId();
     }
@@ -655,13 +655,13 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             LOGGER.error("Error getting target branch head for merge request " + mergeRequest.getIid() + " in project " + projectId + "(target branch: " + mergeRequest.getTargetBranch() + ")", e);
             StringBuilder builder = new StringBuilder("Error getting target revision for review ").append(mergeRequest.getIid()).append(" for project ").append(projectId);
             StringTools.appendThrowableMessageIfPresent(builder, e);
-            throw new MetadataException(builder.toString(), e);
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
         Commit targetHead = targetBranch.getCommit();
         if ((targetHead == null) || (targetHead.getId() == null))
         {
             LOGGER.error("Error getting target branch head for merge request {} in project {} (target branch: {}): {}", mergeRequest.getIid(), projectId, mergeRequest.getTargetBranch(), targetHead);
-            throw new MetadataException("Error getting target revision for review " + mergeRequest.getIid() + " for project");
+            throw new LegendSDLCServerException("Error getting target revision for review " + mergeRequest.getIid() + " for project");
         }
         return targetHead.getId();
     }
@@ -671,7 +671,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         ReviewState actualState = getReviewState(mergeRequest);
         if (expectedState != actualState)
         {
-            throw new MetadataException("Review is not " + expectedState.name().toLowerCase() + " (state: " + actualState.name().toLowerCase() + ")", Status.CONFLICT);
+            throw new LegendSDLCServerException("Review is not " + expectedState.name().toLowerCase() + " (state: " + actualState.name().toLowerCase() + ")", Status.CONFLICT);
         }
     }
 

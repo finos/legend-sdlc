@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -53,7 +53,7 @@ public interface ProjectConfigurationApi
         }
         catch (IllegalArgumentException e)
         {
-            throw new MetadataException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
         }
         return getVersionProjectConfiguration(projectId, versionId);
     }

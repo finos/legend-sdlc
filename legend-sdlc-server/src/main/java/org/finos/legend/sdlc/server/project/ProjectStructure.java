@@ -33,7 +33,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.serialization.EntityTextSerializer;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -411,7 +411,7 @@ public abstract class ProjectStructure
         ProjectConfiguration versionConfig = ProjectStructure.getProjectConfiguration(versionFileAccessContext);
         if (versionConfig == null)
         {
-            throw new MetadataException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId().toVersionIdString());
+            throw new LegendSDLCServerException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId().toVersionIdString());
         }
         return ProjectStructure.getProjectStructure(versionConfig);
     }
@@ -498,11 +498,11 @@ public abstract class ProjectStructure
 
         if (updateBuilder.hasGroupId() && !isValidGroupId(updateBuilder.getGroupId()))
         {
-            throw new MetadataException("Invalid groupId: " + updateBuilder.getGroupId(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid groupId: " + updateBuilder.getGroupId(), Status.BAD_REQUEST);
         }
         if (updateBuilder.hasArtifactId() && !isValidArtifactId(updateBuilder.getArtifactId()))
         {
-            throw new MetadataException("Invalid artifactId: " + updateBuilder.getArtifactId(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid artifactId: " + updateBuilder.getArtifactId(), Status.BAD_REQUEST);
         }
 
         ProjectType projectType = updateBuilder.getProjectType();
@@ -526,7 +526,7 @@ public abstract class ProjectStructure
                     builder.append(workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
                 }
                 builder.append("project ").append(projectId).append(": it may be corrupt");
-                throw new MetadataException(builder.toString());
+                throw new LegendSDLCServerException(builder.toString());
             }
         }
 
@@ -536,7 +536,7 @@ public abstract class ProjectStructure
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId, projectType) : readProjectConfiguration(configFile);
         if (projectType != currentConfig.getProjectType())
         {
-            throw new MetadataException("Project type mismatch for project " + projectId + ": got " + projectType + ", found " + currentConfig.getProjectType(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Project type mismatch for project " + projectId + ": got " + projectType + ", found " + currentConfig.getProjectType(), Status.BAD_REQUEST);
         }
         boolean updateProjectStructureVersion = updateBuilder.hasProjectStructureVersion() && (updateBuilder.getProjectStructureVersion() != currentConfig.getProjectStructureVersion().getVersion());
         boolean updateProjectStructureExtensionVersion = updateBuilder.hasProjectStructureExtensionVersion() && !updateBuilder.getProjectStructureExtensionVersion().equals(currentConfig.getProjectStructureVersion().getExtensionVersion());
@@ -601,7 +601,7 @@ public abstract class ProjectStructure
                     ProjectDependency first = accessExceptions.firstKey();
                     accessExceptions.forEach((d, e) -> d.appendDependencyString((d == first) ? builder : builder.append(", ")).append(" (").append(e.getMessage()).append(')'));
                 }
-                throw new MetadataException(builder.toString(), Status.BAD_REQUEST);
+                throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
             }
         }
 
@@ -663,7 +663,7 @@ public abstract class ProjectStructure
                 builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
                 unknownDependencies.sort(Comparator.naturalOrder());
                 unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
-                throw new MetadataException(builder.toString(), Status.BAD_REQUEST);
+                throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
             }
         }
 
@@ -757,7 +757,7 @@ public abstract class ProjectStructure
         // prevent downgrading project
         if (newConfig.getProjectStructureVersion().compareTo(currentConfig.getProjectStructureVersion()) < 0)
         {
-            throw new MetadataException("Cannot change project " + projectId + " from project structure version " + currentConfig.getProjectStructureVersion().toVersionString() + " to version " + newConfig.getProjectStructureVersion().toVersionString(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Cannot change project " + projectId + " from project structure version " + currentConfig.getProjectStructureVersion().toVersionString() + " to version " + newConfig.getProjectStructureVersion().toVersionString(), Status.BAD_REQUEST);
         }
 
         String serializedNewConfig = serializeProjectConfiguration(newConfig);
@@ -816,7 +816,7 @@ public abstract class ProjectStructure
         {
             StringBuilder builder = new StringBuilder(conflictMessages.size() * 64);
             conflictMessages.forEach((key, message) -> ((builder.length() == 0) ? builder.append("The following ").append(description).append(" have conflicts: ") : builder.append(", ")).append(key).append(" (").append(message).append(')'));
-            throw new MetadataException(builder.toString(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
         }
     }
 
@@ -944,7 +944,7 @@ public abstract class ProjectStructure
 
         if (!isValid)
         {
-            throw new MetadataException(builder.toString(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
         }
     }
 }
