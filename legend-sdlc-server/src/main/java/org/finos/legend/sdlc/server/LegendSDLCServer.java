@@ -19,7 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.finos.legend.sdlc.server.config.MetadataSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
@@ -30,23 +30,23 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public class MetadataSDLCServer extends BaseServer<MetadataSDLCServerConfiguration>
+public class LegendSDLCServer extends BaseServer<LegendSDLCServerConfiguration>
 {
     public static final String GITLAB_MODE = "gitlab";
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MetadataSDLCServer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServer.class);
 
     private final String mode;
     private BackgroundTaskProcessor backgroundTaskProcessor;
 
-    public MetadataSDLCServer(String mode)
+    public LegendSDLCServer(String mode)
     {
         this.mode = mode;
     }
 
     public static void main(String... args) throws Exception
     {
-        new MetadataSDLCServer(GITLAB_MODE).run(args);
+        new LegendSDLCServer(GITLAB_MODE).run(args);
     }
 
     @Override
@@ -56,7 +56,7 @@ public class MetadataSDLCServer extends BaseServer<MetadataSDLCServerConfigurati
     }
 
     @Override
-    public void initialize(Bootstrap<MetadataSDLCServerConfiguration> bootstrap)
+    public void initialize(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         super.initialize(bootstrap);
 
@@ -66,21 +66,21 @@ public class MetadataSDLCServer extends BaseServer<MetadataSDLCServerConfigurati
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
     }
 
-    protected void configureApis(Bootstrap<MetadataSDLCServerConfiguration> bootstrap)
+    protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         if (GITLAB_MODE.equals(this.mode))
         {
             // Add GitLab bundle
-            bootstrap.addBundle(new GitLabBundle<>(MetadataSDLCServerConfiguration::getGitLabConfiguration));
+            bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
         }
 
         // Guice bootstrapping..
         bootstrap.addBundle(buildGuiceBundle());
     }
 
-    protected GuiceBundle<MetadataSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
     {
-        return GuiceBundle.defaultBuilder(MetadataSDLCServerConfiguration.class)
+        return GuiceBundle.defaultBuilder(LegendSDLCServerConfiguration.class)
                 .modules(buildBaseModule())
                 .build();
     }
@@ -91,7 +91,7 @@ public class MetadataSDLCServer extends BaseServer<MetadataSDLCServerConfigurati
     }
 
     @Override
-    public void run(MetadataSDLCServerConfiguration configuration, Environment environment)
+    public void run(LegendSDLCServerConfiguration configuration, Environment environment)
     {
         super.run(configuration, environment);
         LifecycleEnvironment lifecycleEnvironment = environment.lifecycle();

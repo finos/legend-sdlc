@@ -16,7 +16,7 @@ To this end, the Legend SDLC enables:
 Start by creating a configuration file (which can be JSON or YAML) based on your particular environment. Once you have that, you can start the server is with a command such as this:
 
 ```
-java -cp legend-sdlc-server-0.5.0-shaded.jar org.finos.legend.sdlc.server.MetadataSDLCServer server $CONFIG_DIR/config.yaml
+java -cp legend-sdlc-server-shaded.jar org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
 ```
 
 Additional libraries may be included on the classpath to add functionality extensions. Additional JVM arguments may be required depending on your needs (such as specifying a krb5.conf if you are using Kerberos authentication).

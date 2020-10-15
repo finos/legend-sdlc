@@ -16,8 +16,8 @@ package org.finos.legend.sdlc.server.resources;
 
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
-import org.finos.legend.sdlc.server.MetadataSDLCServerForTest;
-import org.finos.legend.sdlc.server.config.MetadataSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.LegendSDLCServerForTest;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.junit.Before;
 import org.junit.ClassRule;
@@ -26,12 +26,12 @@ import org.junit.Rule;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 
-public abstract class AbstractMetadataSDLCServerResourceTest
+public abstract class AbstractLegendSDLCServerResourceTest
 {
     @ClassRule
-    public static final DropwizardAppRule<MetadataSDLCServerConfiguration> APP_RULE =
+    public static final DropwizardAppRule<LegendSDLCServerConfiguration> APP_RULE =
             new DropwizardAppRule<>(
-                    MetadataSDLCServerForTest.class,
+                    LegendSDLCServerForTest.class,
                     ResourceHelpers.resourceFilePath("config-test.yaml"));
 
     protected Client client;
@@ -43,7 +43,7 @@ public abstract class AbstractMetadataSDLCServerResourceTest
     @Before
     public void setUp()
     {
-        this.backend = ((MetadataSDLCServerForTest) APP_RULE.getApplication()).getGuiceBundle().getInjector().getInstance(InMemoryBackend.class);
+        this.backend = ((LegendSDLCServerForTest) APP_RULE.getApplication()).getGuiceBundle().getInjector().getInstance(InMemoryBackend.class);
         configureClient();
     }
 

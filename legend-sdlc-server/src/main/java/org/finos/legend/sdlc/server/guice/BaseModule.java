@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
-import org.finos.legend.sdlc.server.MetadataSDLCServer;
+import org.finos.legend.sdlc.server.LegendSDLCServer;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -48,7 +48,7 @@ import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
 
 public class BaseModule extends AbstractBaseModule
 {
-    public BaseModule(MetadataSDLCServer server)
+    public BaseModule(LegendSDLCServer server)
     {
         super(server);
     }
@@ -56,7 +56,7 @@ public class BaseModule extends AbstractBaseModule
     @Override
     protected void configureApis(Binder binder)
     {
-        if (MetadataSDLCServer.GITLAB_MODE.equals(this.server.getMode()))
+        if (LegendSDLCServer.GITLAB_MODE.equals(this.server.getMode()))
         {
             binder.bind(ProjectApi.class).to(GitLabProjectApi.class);
             binder.bind(ProjectConfigurationApi.class).to(GitLabProjectConfigurationApi.class);

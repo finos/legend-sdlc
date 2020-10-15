@@ -18,11 +18,11 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
-public class TestProjectsResource extends AbstractMetadataSDLCServerResourceTest
+public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
 {
     @Test
     public void testGetAllProjects()

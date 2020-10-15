@@ -21,12 +21,12 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.Set;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 
-public class TestDependenciesResource extends AbstractMetadataSDLCServerResourceTest
+public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTest
 {
     @Before
     public void setup()
