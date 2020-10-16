@@ -37,12 +37,6 @@ abstract class EntityAccessResource extends BaseResource
         return entityAccessContext.getEntityPaths(entityPathPredicate, classifierPathPredicate, contentPredicate);
     }
 
-    @Deprecated
-    protected List<Entity> getEntities(EntityAccessContext entityAccessContext, Set<String> classifierPaths, Set<String> packages, boolean includeSubPackages, String nameRegex)
-    {
-        return getEntities(entityAccessContext, classifierPaths, packages, includeSubPackages, nameRegex, null, null);
-    }
-
     protected List<Entity> getEntities(EntityAccessContext entityAccessContext, Set<String> classifierPaths, Set<String> packages, boolean includeSubPackages, String nameRegex, Set<String> stereotypes, Collection<String> taggedValueRegexes)
     {
         Predicate<String> entityPathPredicate = getEntityPathPredicate(packages, includeSubPackages, nameRegex);
