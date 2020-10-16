@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -42,8 +42,8 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     @Override
     public void discardBackupWorkspace(String projectId, String workspaceId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         boolean backupWorkspaceDeleted;
@@ -61,7 +61,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         }
         if (!backupWorkspaceDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
         }
     }
 
@@ -74,8 +74,8 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     @Override
     public void recoverBackup(String projectId, String workspaceId, boolean forceRecovery)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         // Verify the backup exists
@@ -112,7 +112,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         {
             if (!forceRecovery)
             {
-                throw new MetadataException("Workspace " + workspaceId + " of project " + projectId + " already existed and the recovery is not forced, so recovery from backup is not possible", Response.Status.METHOD_NOT_ALLOWED);
+                throw new LegendSDLCServerException("Workspace " + workspaceId + " of project " + projectId + " already existed and the recovery is not forced, so recovery from backup is not possible", Response.Status.METHOD_NOT_ALLOWED);
             }
             // Delete the existing branch
             boolean workspaceDeleted;
@@ -130,7 +130,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
             }
             if (!workspaceDeleted)
             {
-                throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
+                throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
             }
         }
         // Create new workspace branch off the backup branch head
@@ -152,7 +152,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         }
         if (workspaceBranch == null)
         {
-            throw new MetadataException("Failed to create workspace " + workspaceId + " in project " + projectId + " from " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId);
+            throw new LegendSDLCServerException("Failed to create workspace " + workspaceId + " in project " + projectId + " from " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId);
         }
         // Delete backup branch
         try

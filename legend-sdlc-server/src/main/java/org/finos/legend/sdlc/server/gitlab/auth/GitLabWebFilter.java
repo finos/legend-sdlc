@@ -14,18 +14,18 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.auth.MetadataWebFilter;
+import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
 import org.pac4j.core.profile.CommonProfile;
 
+import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.Cookie;
-import java.util.List;
 
-public class GitLabWebFilter extends MetadataWebFilter<CommonProfile>
+public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
 {
     private final GitLabModeInfos gitLabModeInfos;
 

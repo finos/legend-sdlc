@@ -37,7 +37,6 @@ server:
         archivedLogFilenamePattern: ./logs/access-%d.log
         archivedFileCount: 5
         timeZone: UTC
-      #- type: console
   rootPath: /api
 
 filterPriorities:
@@ -47,31 +46,34 @@ filterPriorities:
   CORS: 4
 
 pac4j:
+  callbackPrefix: /api/pac4j/login
   clients:
-    - org.finos.legend.server.pac4j.kerberos.LocalKerberosClient: {}
+    - org.finos.legend.server.pac4j.gitlab.GitlabClient:
+        name: gitlab
+        clientId: $APP_ID
+        secret: $APP_SECRET
+        discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
+        scope: openid profile api
   bypassPaths:
     - /api/info
 
-projectStructure:
-  projectCreation:
-    groupIdPattern: ^org\.finos\.legend\..+
-
 gitLab:
-  uat:
+  newProjectVisibility: public
+  prod:
     server:
-      scheme: na
-      host: na-uat
+      scheme: https
+      host: $GITLAB_HOST
     app:
-      id: na
-      secret: na
-      redirectURI: na
+      id: $APP_ID
+      secret: $APP_SECRET
+      redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
 
 logging:
   # Change this to affect library class logging
   level: INFO
   loggers:
     # Change this to affect application class logging
-    org.finos.legend.sdlc: DEBUG
+    org.finos.legend.sdlc: INFO
   appenders:
     - type: file
       logFormat: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %c - %m%n"
@@ -87,5 +89,4 @@ logging:
 swagger:
   resourcePackage: org.finos.legend.sdlc.server.resources
   title: Legend SDLC
-  version: local-snapshot
   schemes: []

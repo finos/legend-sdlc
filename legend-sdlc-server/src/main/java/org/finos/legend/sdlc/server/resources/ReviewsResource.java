@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
 import org.finos.legend.sdlc.server.application.review.CreateReviewCommand;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi.ReviewUpdateStatus;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
@@ -108,7 +108,7 @@ public class ReviewsResource extends BaseResource
     @ApiOperation("Create a review")
     public Review createReview(@PathParam("projectId") String projectId, CreateReviewCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to create review");
+        LegendSDLCServerException.validateNonNull(command, "Input required to create review");
         return executeWithLogging(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId,
                 () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), command.getTitle(), command.getDescription())
@@ -175,7 +175,7 @@ public class ReviewsResource extends BaseResource
     @ApiOperation(value = "Commit an approved review", notes = "Commit changes from a review. This is only valid if the review is open and has sufficient approvals.")
     public Review commitReview(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, CommitReviewCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to commit review");
+        LegendSDLCServerException.validateNonNull(command, "Input required to commit review");
         return executeWithLogging(
                 "committing review " + reviewId + " for project " + projectId,
                 () -> this.reviewApi.commitReview(projectId, reviewId, command.getMessage())

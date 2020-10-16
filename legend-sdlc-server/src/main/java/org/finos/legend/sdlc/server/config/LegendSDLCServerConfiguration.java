@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 
-public class MetadataSDLCServerConfiguration extends ServerConfiguration
+public class LegendSDLCServerConfiguration extends ServerConfiguration
 {
     @JsonProperty("gitLab")
     private GitLabConfiguration gitLabConfig;

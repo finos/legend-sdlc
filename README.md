@@ -4,7 +4,9 @@
 
 # legend-sdlc
 
-The Legend SDLC Server provides a rich REST API allowing users to safely manage metadata. Most SDLCs are file- and text-centric, but the Legend SDLC is model-centric. That is, users interact with model entities rather than with files and folders.
+The Legend SDLC Server provides a rich REST API allowing users to safely manage metadata. Most SDLCs are file- and
+text-centric, but the Legend SDLC is model-centric. That is, users interact with model entities rather than with files
+and folders.
 
 To this end, the Legend SDLC enables:
 * Users to develop with tools designed for editing models (rather than files or code)
@@ -13,17 +15,29 @@ To this end, the Legend SDLC enables:
 
 ## Usage example
 
-Start by creating a configuration file (which can be JSON or YAML) based on your particular environment. Once you have that, you can start the server is with a command such as this:
+Start by creating a configuration file based on your particular environment. This can be JSON or YAML. A
+[sample configuration file](https://github.com/finos/legend-sdlc/blob/master/legend-sdlc-server/src/test/resources/config-sample.yaml)
+is included to help you get started. You will need to supply some information, such as the host your server is running
+on.
+
+You will also need an instance of GitLab to connect to, such as [gitlab.com](https://gitlab.com). On GitLab you will
+need to create an "Application", which is used for authorization so that the SDLC Server can act on behalf of users.
+See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for more details. Information about the GitLab
+instance and your application will need to be included in the configuration file.
+
+Once you have your configuration file, you can start the server is with a command such as this:
 
 ```
-java -cp legend-sdlc-server-0.5.0-shaded.jar org.finos.legend.sdlc.server.MetadataSDLCServer server $CONFIG_DIR/config.yaml
+java -cp legend-sdlc-server-shaded.jar org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
 ```
 
-Additional libraries may be included on the classpath to add functionality extensions. Additional JVM arguments may be required depending on your needs (such as specifying a krb5.conf if you are using Kerberos authentication).
+Note that this application currently runs only on Java 8. Additional libraries may be included on the classpath to
+add functionality extensions. Additional JVM arguments may be required depending on your needs (such as specifying a
+krb5.conf if you are using Kerberos authentication).
 
 ## Development setup
 
-This application uses Maven 3.6+ and JDK 8. Simply run `mvn install` to compile.
+This application uses Maven 3.6+ and JDK 14 to build. Simply run `mvn install` to compile.
 
 ## Roadmap
 

@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructure
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
@@ -57,7 +57,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getProjectProjectConfiguration(String projectId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
             return getProjectConfiguration(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -74,8 +74,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, String revisionId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         String resolvedRevisionId;
         try
         {
@@ -91,7 +91,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
         if (resolvedRevisionId == null)
         {
-            throw new MetadataException("Failed to resolve revision " + revisionId + " of project " + projectId, Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " of project " + projectId, Status.NOT_FOUND);
         }
         try
         {
@@ -127,9 +127,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 
     private ProjectConfiguration getWorkspaceProjectConfigurationByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         try
         {
             return getProjectConfiguration(projectId, workspaceId, null, workspaceAccessType);
@@ -163,10 +163,10 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 
     private ProjectConfiguration getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         String resolvedRevisionId;
         try
         {
@@ -182,7 +182,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
         if (resolvedRevisionId == null)
         {
-            throw new MetadataException("Failed to resolve revision " + revisionId + " in " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId, Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " in " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId, Status.NOT_FOUND);
         }
         try
         {
@@ -200,8 +200,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getVersionProjectConfiguration(String projectId, VersionId versionId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(versionId, "versionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
         try
         {
             return getProjectConfiguration(projectId, versionId);
@@ -218,8 +218,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -233,15 +233,15 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
         else
         {
-            throw new MetadataException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
     }
 
     @Override
     public ProjectConfiguration getReviewToProjectConfiguration(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -255,7 +255,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
         else
         {
-            throw new MetadataException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCServerException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
         }
     }
 
@@ -274,22 +274,22 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 
     private Revision updateProjectConfigurationByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(message, "message may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(message, "message may not be null");
 
         if ((groupId != null) && !ProjectStructure.isValidGroupId(groupId))
         {
-            throw new MetadataException("Invalid groupId: " + groupId, Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid groupId: " + groupId, Status.BAD_REQUEST);
         }
         if ((artifactId != null) && !ProjectStructure.isValidArtifactId(artifactId))
         {
-            throw new MetadataException("Invalid artifactId: " + artifactId, Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid artifactId: " + artifactId, Status.BAD_REQUEST);
         }
         if ((projectStructureVersion != null) && (this.projectStructureConfig != null) && this.projectStructureConfig.getDemisedVersions().contains(projectStructureVersion))
         {
-            throw new MetadataException("Project structure version " + projectStructureVersion + " is demised", Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Project structure version " + projectStructureVersion + " is demised", Status.BAD_REQUEST);
         }
 
         try
@@ -299,7 +299,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 
             if (currentRevision == null)
             {
-                throw new MetadataException("Could not find current revision for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceAccessType.getLabel() + " may be corrupt");
+                throw new LegendSDLCServerException("Could not find current revision for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceAccessType.getLabel() + " may be corrupt");
             }
             return ProjectConfigurationUpdateBuilder.newBuilder(fileAccessProvider, getProjectTypeFromMode(GitLabProjectId.getGitLabMode(projectId)), projectId)
                     .withWorkspace(workspaceId, workspaceAccessType)
@@ -330,7 +330,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         // We only allow review in OPEN and COMMITTED state. Note that this is the only control point for this restriction
         if (!isOpen(mergeRequest) && !isCommitted(mergeRequest))
         {
-            throw new MetadataException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
+            throw new LegendSDLCServerException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
         }
     }
 

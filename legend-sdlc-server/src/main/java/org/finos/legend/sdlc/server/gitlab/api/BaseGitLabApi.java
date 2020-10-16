@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -104,11 +104,11 @@ abstract class BaseGitLabApi
         }
         catch (Exception e)
         {
-            throw new MetadataException("Invalid project id: " + projectId, Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException("Invalid project id: " + projectId, Status.BAD_REQUEST, e);
         }
         if (!this.userContext.isValidMode(gitLabProjectId.getGitLabMode()))
         {
-            throw new MetadataException("Unknown project: " + projectId, Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND);
         }
         return gitLabProjectId;
     }
@@ -119,7 +119,7 @@ abstract class BaseGitLabApi
         {
             return this.userContext.getGitLabAPI(mode);
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }
@@ -131,7 +131,7 @@ abstract class BaseGitLabApi
             {
                 message.append(": ").append(detail);
             }
-            throw new MetadataException(message.toString(), e);
+            throw new LegendSDLCServerException(message.toString(), e);
         }
     }
 
@@ -436,26 +436,26 @@ abstract class BaseGitLabApi
         }
         catch (NumberFormatException e)
         {
-            throw new MetadataException("Invalid id: " + id, (errorStatus == null) ? Status.BAD_REQUEST : errorStatus);
+            throw new LegendSDLCServerException("Invalid id: " + id, (errorStatus == null) ? Status.BAD_REQUEST : errorStatus);
         }
     }
 
-    protected MetadataException buildException(Exception e, String message)
+    protected LegendSDLCServerException buildException(Exception e, String message)
     {
         return buildException(e, null, null, ex -> message);
     }
 
-    protected MetadataException buildException(Exception e, Supplier<String> message)
+    protected LegendSDLCServerException buildException(Exception e, Supplier<String> message)
     {
         return buildException(e, null, null, ex -> message.get());
     }
 
-    protected MetadataException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
+    protected LegendSDLCServerException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
     {
         return buildException(e, (forbiddenMessage == null) ? null : ex -> forbiddenMessage.get(), (notFoundMessage == null) ? null : ex -> notFoundMessage.get(), ex -> defaultMessage.get());
     }
 
-    protected MetadataException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
+    protected LegendSDLCServerException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
     {
         return processException(e,
                 Function.identity(),
@@ -477,20 +477,20 @@ abstract class BaseGitLabApi
                             if ("GET".equalsIgnoreCase(httpRequest.getMethod()))
                             {
                                 // TODO consider a more appropriate redirect status if HTTP version is 1.1
-                                return new MetadataException(urlBuilder.toString(), Status.FOUND);
+                                return new LegendSDLCServerException(urlBuilder.toString(), Status.FOUND);
                             }
                             else
                             {
-                                return new MetadataException("Please retry request: " + httpRequest.getMethod() + " " + urlBuilder.toString(), Status.SERVICE_UNAVAILABLE, glae);
+                                return new LegendSDLCServerException("Please retry request: " + httpRequest.getMethod() + " " + urlBuilder.toString(), Status.SERVICE_UNAVAILABLE, glae);
                             }
                         }
                         case 403:
                         {
-                            return new MetadataException((forbiddenMessage != null) ? forbiddenMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.FORBIDDEN, glae);
+                            return new LegendSDLCServerException((forbiddenMessage != null) ? forbiddenMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.FORBIDDEN, glae);
                         }
                         case 404:
                         {
-                            return new MetadataException((notFoundMessage != null) ? notFoundMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.NOT_FOUND, glae);
+                            return new LegendSDLCServerException((notFoundMessage != null) ? notFoundMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.NOT_FOUND, glae);
                         }
                         default:
                         {
@@ -505,17 +505,17 @@ abstract class BaseGitLabApi
                     {
                         return null;
                     }
-                    return new MetadataException(StringTools.appendThrowableMessageIfPresent(message, ex), ex);
+                    return new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent(message, ex), ex);
                 }
         );
     }
 
-    protected MetadataException processException(Exception e, Function<? super MetadataException, ? extends MetadataException> meHandler, Function<? super GitLabApiException, ? extends MetadataException> glaeHandler, Function<? super Exception, ? extends MetadataException> defaultHandler)
+    protected LegendSDLCServerException processException(Exception e, Function<? super LegendSDLCServerException, ? extends LegendSDLCServerException> meHandler, Function<? super GitLabApiException, ? extends LegendSDLCServerException> glaeHandler, Function<? super Exception, ? extends LegendSDLCServerException> defaultHandler)
     {
         // Special handling
-        if ((meHandler != null) && (e instanceof MetadataException))
+        if ((meHandler != null) && (e instanceof LegendSDLCServerException))
         {
-            MetadataException result = meHandler.apply((MetadataException) e);
+            LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
             if (result != null)
             {
                 return result;
@@ -523,7 +523,7 @@ abstract class BaseGitLabApi
         }
         else if ((glaeHandler != null) && (e instanceof GitLabApiException))
         {
-            MetadataException result = glaeHandler.apply((GitLabApiException) e);
+            LegendSDLCServerException result = glaeHandler.apply((GitLabApiException) e);
             if (result != null)
             {
                 return result;
@@ -533,7 +533,7 @@ abstract class BaseGitLabApi
         // Provided default handling
         if (defaultHandler != null)
         {
-            MetadataException result = defaultHandler.apply(e);
+            LegendSDLCServerException result = defaultHandler.apply(e);
             if (result != null)
             {
                 return result;
@@ -541,7 +541,7 @@ abstract class BaseGitLabApi
         }
 
         // Default default handling (final fall through case)
-        return new MetadataException(StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e), e);
+        return new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e), e);
     }
 
     protected <T> T withRetries(ThrowingSupplier<T, ? extends GitLabApiException> apiCall) throws GitLabApiException
@@ -633,7 +633,7 @@ abstract class BaseGitLabApi
         }
         if (!isReviewMergeRequest(mergeRequest))
         {
-            throw new MetadataException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }

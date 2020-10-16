@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.resources;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenReader;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthAccessException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
@@ -111,7 +111,7 @@ public class GitLabAuthResource extends BaseResource
             }
             if (redirectUri != null)
             {
-                throw new MetadataException(redirectUri, Status.FOUND);
+                throw new LegendSDLCServerException(redirectUri, Status.FOUND);
             }
             return "<html><h1>Success</h1></html>";
         });
@@ -168,7 +168,7 @@ public class GitLabAuthResource extends BaseResource
                                 {
                                     errorStatus = null;
                                 }
-                                throw new MetadataException(StringTools.appendThrowableMessageIfPresent("Error checking acceptance of terms of service", e), errorStatus, e);
+                                throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error checking acceptance of terms of service", e), errorStatus, e);
                             }
                         })
                         .map(GitLabApi::getGitLabServerUrl)
@@ -190,14 +190,14 @@ public class GitLabAuthResource extends BaseResource
         }
         catch (IllegalArgumentException e)
         {
-            throw new MetadataException("Unknown GitLab mode: " + gitLabModeName, Status.INTERNAL_SERVER_ERROR);
+            throw new LegendSDLCServerException("Unknown GitLab mode: " + gitLabModeName, Status.INTERNAL_SERVER_ERROR);
         }
 
         try
         {
             this.userContext.gitLabAuthCallback(mode, code);
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }
@@ -209,16 +209,16 @@ public class GitLabAuthResource extends BaseResource
             {
                 message.append(": ").append(eMessage);
             }
-            throw new MetadataException(message.toString(), Status.INTERNAL_SERVER_ERROR, e);
+            throw new LegendSDLCServerException(message.toString(), Status.INTERNAL_SERVER_ERROR, e);
         }
 
         if (!"GET".equalsIgnoreCase(originalRequestMethod))
         {
             // TODO consider whether 503 is the right status code
-            throw new MetadataException("Please retry request: " + originalRequestMethod + " " + originalRequestURL, Status.SERVICE_UNAVAILABLE);
+            throw new LegendSDLCServerException("Please retry request: " + originalRequestMethod + " " + originalRequestURL, Status.SERVICE_UNAVAILABLE);
         }
 
         // Redirect to original request URL
-        throw new MetadataException(originalRequestURL, Status.FOUND);
+        throw new LegendSDLCServerException(originalRequestURL, Status.FOUND);
     }
 }

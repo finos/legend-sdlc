@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -47,8 +47,8 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
     @Override
     public void discardConflictResolution(String projectId, String workspaceId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         boolean conflictResolutionBranchDeleted;
@@ -65,7 +65,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!conflictResolutionBranchDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId);
         }
     }
 
@@ -80,8 +80,8 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
     @Override
     public void discardChangesConflictResolution(String projectId, String workspaceId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         // Verify conflict resolution is happening
@@ -118,7 +118,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!backupWorkspaceDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Create backup branch
         Branch workspaceBranch;
@@ -139,7 +139,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (workspaceBranch == null)
         {
-            throw new MetadataException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Delete original branch
         boolean originalBranchDeleted;
@@ -156,7 +156,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!originalBranchDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Create new workspace branch off the project HEAD
         Branch newWorkspaceBranch;
@@ -175,7 +175,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (newWorkspaceBranch == null)
         {
-            throw new MetadataException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Delete conflict resolution branch
         boolean conflictResolutionWorkspaceDeleted;
@@ -193,7 +193,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!conflictResolutionWorkspaceDeleted)
         {
-            throw new MetadataException("Failed to delete workspace with conflict resolution " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete workspace with conflict resolution " + workspaceId + " in project " + projectId);
         }
         // Delete backup branch
         try
@@ -226,8 +226,8 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
     @Override
     public void acceptConflictResolution(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         // Verify conflict resolution is happening
@@ -277,7 +277,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!backupWorkspaceDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Create backup branch from original branch
         Branch newBackupBranch;
@@ -296,7 +296,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (newBackupBranch == null)
         {
-            throw new MetadataException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId +
+            throw new LegendSDLCServerException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId +
                     " from " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Delete original branch
@@ -314,7 +314,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!originalBranchDeleted)
         {
-            throw new MetadataException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Create new workspace branch off the conflict workspace head
         Branch newWorkspaceBranch;
@@ -333,7 +333,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (newWorkspaceBranch == null)
         {
-            throw new MetadataException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId +
+            throw new LegendSDLCServerException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId +
                     " from " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Delete conflict resolution branch
@@ -352,7 +352,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         }
         if (!conflictResolutionWorkspaceDeleted)
         {
-            throw new MetadataException("Failed to delete workspace with conflict resolution " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete workspace with conflict resolution " + workspaceId + " in project " + projectId);
         }
         // Delete backup branch
         try

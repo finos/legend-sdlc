@@ -21,7 +21,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import javax.ws.rs.core.Response.Status;
 
-public class TestMetadataException
+public class TestLegendSDLCServerException
 {
     @Test
     public void testValidateNonNull()
@@ -29,14 +29,14 @@ public class TestMetadataException
         String message = "the quick brown fox jumped over the lazy dog";
         Object someObject = new Object();
 
-        Assert.assertSame(someObject, MetadataException.validateNonNull(someObject, message));
+        Assert.assertSame(someObject, LegendSDLCServerException.validateNonNull(someObject, message));
 
-        MetadataException e1 = Assert.assertThrows(MetadataException.class, () -> MetadataException.validateNonNull(null, message));
+        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> LegendSDLCServerException.validateNonNull(null, message));
         Assert.assertEquals(message, e1.getMessage());
         Assert.assertEquals(Status.BAD_REQUEST, e1.getStatus());
 
         Status status = Status.INTERNAL_SERVER_ERROR;
-        MetadataException e2 = Assert.assertThrows(message, MetadataException.class, () -> MetadataException.validateNonNull(null, message, status));
+        LegendSDLCServerException e2 = Assert.assertThrows(message, LegendSDLCServerException.class, () -> LegendSDLCServerException.validateNonNull(null, message, status));
         Assert.assertEquals(message, e2.getMessage());
         Assert.assertEquals(status, e2.getStatus());
     }
@@ -49,14 +49,14 @@ public class TestMetadataException
         Object invalidObject = new Object();
         Predicate<Object> predicate = x -> x == validObject;
 
-        Assert.assertSame(validObject, MetadataException.validate(validObject, predicate, message));
+        Assert.assertSame(validObject, LegendSDLCServerException.validate(validObject, predicate, message));
 
-        MetadataException e1 = Assert.assertThrows(MetadataException.class, () -> MetadataException.validate(invalidObject, predicate, message));
+        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> LegendSDLCServerException.validate(invalidObject, predicate, message));
         Assert.assertEquals(message, e1.getMessage());
         Assert.assertEquals(Status.BAD_REQUEST, e1.getStatus());
 
         Status status = Status.NOT_IMPLEMENTED;
-        MetadataException e2 = Assert.assertThrows(message, MetadataException.class, () -> MetadataException.validate(invalidObject, predicate, message, status));
+        LegendSDLCServerException e2 = Assert.assertThrows(message, LegendSDLCServerException.class, () -> LegendSDLCServerException.validate(invalidObject, predicate, message, status));
         Assert.assertEquals(message, e2.getMessage());
         Assert.assertEquals(status, e2.getStatus());
     }
@@ -76,16 +76,16 @@ public class TestMetadataException
         Object invalidObject = new Object();
         Predicate<Object> predicate = x -> x == validObject;
 
-        Assert.assertSame(validObject, MetadataException.validate(validObject, predicate, messageFn));
+        Assert.assertSame(validObject, LegendSDLCServerException.validate(validObject, predicate, messageFn));
         Assert.assertEquals(0, messageFnCount[0]);
 
-        MetadataException e1 = Assert.assertThrows(MetadataException.class, () -> MetadataException.validate(invalidObject, predicate, messageFn));
+        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> LegendSDLCServerException.validate(invalidObject, predicate, messageFn));
         Assert.assertEquals(message, e1.getMessage());
         Assert.assertEquals(1, messageFnCount[0]);
         Assert.assertEquals(Status.BAD_REQUEST, e1.getStatus());
 
         Status status = Status.CONFLICT;
-        MetadataException e2 = Assert.assertThrows(message, MetadataException.class, () -> MetadataException.validate(invalidObject, predicate, messageFn, status));
+        LegendSDLCServerException e2 = Assert.assertThrows(message, LegendSDLCServerException.class, () -> LegendSDLCServerException.validate(invalidObject, predicate, messageFn, status));
         Assert.assertEquals(message, e2.getMessage());
         Assert.assertEquals(2, messageFnCount[0]);
         Assert.assertEquals(status, e2.getStatus());

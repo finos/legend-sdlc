@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -103,7 +103,7 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     @ApiOperation("Accept a conflict resolution")
     public void acceptConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to accept conflict resolution");
+        LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");
         executeWithLogging(
                 "accept conflict resolution for workspace " + workspaceId + " in project " + projectId,
                 () -> this.conflictResolutionApi.acceptConflictResolution(projectId, workspaceId, command)

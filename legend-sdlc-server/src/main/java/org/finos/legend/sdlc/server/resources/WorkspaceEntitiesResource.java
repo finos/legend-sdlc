@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -98,7 +98,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     @ApiOperation(value = "Update entities", notes = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
     public Revision updateEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateEntitiesCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to update entities");
+        LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
         return executeWithLogging(
                 "updating entities in workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
@@ -121,7 +121,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     @ApiOperation("Create a new entity or update an existing entity")
     public Revision createOrUpdateEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, CreateOrUpdateEntityCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to create or update an entity");
+        LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
         return executeWithLogging(
                 "Creating or updating entity " + path + " in workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
@@ -133,7 +133,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     @ApiOperation("Delete an entity")
     public Revision deleteEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, DeleteEntityCommand command)
     {
-        MetadataException.validateNonNull(command, "Input required to delete an entity");
+        LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");
         return executeWithLogging(
                 "deleting entity " + path + " in workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(path, command.getMessage())

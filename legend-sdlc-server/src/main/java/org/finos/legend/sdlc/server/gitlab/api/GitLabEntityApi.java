@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -58,7 +58,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getProjectEntityAccessContext(String projectId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         return new GitLabEntityAccessContext()
         {
             @Override
@@ -78,8 +78,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getProjectRevisionEntityAccessContext(String projectId, String revisionId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         validateRevision(projectId, null, revisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         return new GitLabEntityAccessContext()
         {
@@ -101,7 +101,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 }
                 if (resolvedRevisionId == null)
                 {
-                    throw new MetadataException("Failed to resolve " + getInfoForException());
+                    throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
                 return projectFileAccessProvider.getFileAccessContext(projectId, null, resolvedRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             }
@@ -116,8 +116,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     public EntityAccessContext getReviewFromEntityAccessContext(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -144,14 +144,14 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         else
         {
-            throw new MetadataException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
     }
 
     public EntityAccessContext getReviewToEntityAccessContext(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -178,7 +178,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         else
         {
-            throw new MetadataException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCServerException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
         }
     }
 
@@ -187,7 +187,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         // We only allow review in OPEN and COMMITTED state. Note that this is the only control point for this restriction
         if (!isOpen(mergeRequest) && !isCommitted(mergeRequest))
         {
-            throw new MetadataException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
+            throw new LegendSDLCServerException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
         }
     }
 
@@ -211,9 +211,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private EntityAccessContext getWorkspaceEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         return new GitLabEntityAccessContext()
         {
             @Override
@@ -250,10 +250,10 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private EntityAccessContext getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        MetadataException.validateNonNull(revisionId, "revisionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         validateRevision(projectId, workspaceId, revisionId, workspaceAccessType);
         return new GitLabEntityAccessContext()
         {
@@ -275,7 +275,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 }
                 if (resolvedRevisionId == null)
                 {
-                    throw new MetadataException("Failed to resolve " + getInfoForException());
+                    throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
                 return projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, resolvedRevisionId, workspaceAccessType);
             }
@@ -291,8 +291,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getVersionEntityAccessContext(String projectId, VersionId versionId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(versionId, "versionId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
         return new GitLabEntityAccessContext()
         {
             @Override
@@ -323,9 +323,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private EntityModificationContext getWorkspaceEntityModificationContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
-        MetadataException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         return new GitLabEntityModificationContext(projectId, workspaceId, workspaceAccessType);
     }
 
@@ -334,7 +334,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         Revision revision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getRevision(revisionId);
         if (revision == null)
         {
-            throw new MetadataException("Revision " + revisionId + " is unknown for " + getReferenceInfo(projectId, workspaceId, null), Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Revision " + revisionId + " is unknown for " + getReferenceInfo(projectId, workspaceId, null), Status.NOT_FOUND);
         }
     }
 
@@ -350,7 +350,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(projectStructure.entityPathToFilePath(path));
                 if (file == null)
                 {
-                    throw new MetadataException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
+                    throw new LegendSDLCServerException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
                 }
                 return projectStructure.deserializeEntity(path, file.getContentAsReader());
             }
@@ -423,16 +423,16 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public Revision updateEntities(Iterable<? extends Entity> entities, boolean replace, String message)
         {
-            MetadataException.validateNonNull(entities, "entities may not be null");
-            MetadataException.validateNonNull(message, "message may not be null");
+            LegendSDLCServerException.validateNonNull(entities, "entities may not be null");
+            LegendSDLCServerException.validateNonNull(message, "message may not be null");
             return GitLabEntityApi.this.updateEntities(this.projectId, this.workspaceId, entities, replace, message, this.workspaceAccessType);
         }
 
         @Override
         public Revision performChanges(List<? extends EntityChange> changes, String revisionId, String message)
         {
-            MetadataException.validateNonNull(changes, "changes may not be null");
-            MetadataException.validateNonNull(message, "message may not be null");
+            LegendSDLCServerException.validateNonNull(changes, "changes may not be null");
+            LegendSDLCServerException.validateNonNull(message, "message may not be null");
             validateEntityChanges(changes);
             return GitLabEntityApi.this.performChanges(this.projectId, this.workspaceId, revisionId, message, changes, this.workspaceAccessType);
         }
@@ -505,13 +505,13 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         if (!errorMessages.isEmpty())
         {
-            throw new MetadataException((errorMessages.size() == 1) ? errorMessages.get(0) : "There are errors with entity definitions:\n\t" + String.join("\n\t", errorMessages), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException((errorMessages.size() == 1) ? errorMessages.get(0) : "There are errors with entity definitions:\n\t" + String.join("\n\t", errorMessages), Status.BAD_REQUEST);
         }
 
         Revision currentWorkspaceRevision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getCurrentRevision();
         if (currentWorkspaceRevision == null)
         {
-            throw new MetadataException("Could not find current revision for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceAccessType.getLabel() + " may be corrupt");
+            throw new LegendSDLCServerException("Could not find current revision for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceAccessType.getLabel() + " may be corrupt");
         }
         String revisionId = currentWorkspaceRevision.getId();
         LOGGER.debug("Using revision {} for reference in entity update in {} {} in project {}", revisionId, workspaceAccessType.getLabel(), workspaceId, projectId);
@@ -661,7 +661,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         if (builder.length() > 0)
         {
-            throw new MetadataException(builder.toString(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
         }
     }
 

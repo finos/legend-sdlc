@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
 import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.server.MetadataSDLCServer;
+import org.finos.legend.sdlc.server.LegendSDLCServer;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -51,7 +51,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
 public class InMemoryModule extends AbstractBaseModule
 {
-    public InMemoryModule(MetadataSDLCServer server)
+    public InMemoryModule(LegendSDLCServer server)
     {
         super(server);
     }

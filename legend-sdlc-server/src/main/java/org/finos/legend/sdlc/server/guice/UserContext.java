@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.servlet.RequestScoped;
-import org.finos.legend.sdlc.server.auth.MetadataWebFilter;
+import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,7 +42,7 @@ public class UserContext
     {
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
-        this.session = MetadataException.validateNonNull(findSession(httpRequest), "Invalid request");
+        this.session = LegendSDLCServerException.validateNonNull(findSession(httpRequest), "Invalid request");
     }
 
     public String getCurrentUser()
@@ -67,7 +67,7 @@ public class UserContext
 
     private static Session findSession(ServletRequest request, int depth)
     {
-        Session sdlcSession = MetadataWebFilter.getSessionFromServletRequestAttribute(request);
+        Session sdlcSession = LegendSDLCWebFilter.getSessionFromServletRequestAttribute(request);
         if (sdlcSession != null)
         {
             LOGGER.debug("got SDLC session from request attribute (depth {})", depth);
@@ -88,7 +88,7 @@ public class UserContext
             }
             if (httpSession != null)
             {
-                sdlcSession = MetadataWebFilter.getSessionFromHttpSession(httpSession);
+                sdlcSession = LegendSDLCWebFilter.getSessionFromHttpSession(httpSession);
                 if (sdlcSession != null)
                 {
                     LOGGER.debug("got SDLC session from HTTP session (depth {})", depth);

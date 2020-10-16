@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.build;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.ws.rs.core.Response.Status;
@@ -35,7 +35,7 @@ public interface BuildApi
         }
         catch (IllegalArgumentException e)
         {
-            throw new MetadataException(e.getMessage(), Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException(e.getMessage(), Status.BAD_REQUEST, e);
         }
         return getVersionBuildAccessContext(projectId, versionId);
     }

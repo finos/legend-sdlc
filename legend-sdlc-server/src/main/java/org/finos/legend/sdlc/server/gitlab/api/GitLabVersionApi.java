@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -55,7 +55,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public List<Version> getVersions(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
         {
@@ -71,7 +71,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             }
             default:
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
             }
         }
     }
@@ -79,14 +79,14 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version getLatestVersion(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         return getLatestVersion(parseProjectId(projectId), minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion);
     }
 
     @Override
     public Version getVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
         {
@@ -116,7 +116,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             }
             default:
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
             }
         }
     }
@@ -124,14 +124,14 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version newVersion(String projectId, NewVersionType type, String revisionId, String notes)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(type, "type may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(type, "type may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
         {
             case PROTOTYPE:
             {
-                throw new MetadataException("Cannot create versions for prototype projects", Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Cannot create versions for prototype projects", Status.BAD_REQUEST);
             }
             case PRODUCTION:
             {
@@ -157,14 +157,14 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                     }
                     default:
                     {
-                        throw new MetadataException("Unknown new version type: " + type, Status.BAD_REQUEST);
+                        throw new LegendSDLCServerException("Unknown new version type: " + type, Status.BAD_REQUEST);
                     }
                 }
                 return newVersion(gitLabProjectId, revisionId, nextVersionId, notes);
             }
             default:
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
             }
         }
     }
@@ -285,7 +285,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             }
             default:
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
             }
         }
     }
@@ -309,7 +309,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             }
             default:
             {
-                throw new MetadataException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
             }
         }
     }
@@ -330,7 +330,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                 referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), MASTER_BRANCH);
                 if (referenceCommit == null)
                 {
-                    throw new MetadataException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
+                    throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
                 }
             }
             else
@@ -343,7 +343,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                 {
                     if (GitLabApiTools.isNotFoundGitLabApiException(e))
                     {
-                        throw new MetadataException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
+                        throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
                     }
                     throw e;
                 }
@@ -352,7 +352,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                 Stream<CommitRef> referenceCommitBranches = PagerTools.stream(referenceCommitBranchPager);
                 if (referenceCommitBranches.noneMatch(ref -> MASTER_BRANCH.equals(ref.getName())))
                 {
-                    throw new MetadataException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
+                    throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
                 }
             }
 
@@ -390,7 +390,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                         revisionVersionId.appendVersionIdString(builder);
                     }
                 }
-                throw new MetadataException(builder.toString());
+                throw new LegendSDLCServerException(builder.toString());
             }
 
             Tag tag = getGitLabApi(projectId.getGitLabMode()).getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceRevisionId, message, notes);

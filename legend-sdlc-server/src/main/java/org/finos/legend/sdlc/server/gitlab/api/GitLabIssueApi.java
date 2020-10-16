@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -37,8 +37,8 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
     @Override
     public Issue getIssue(String projectId, String issueId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(issueId, "issueId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(issueId, "issueId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -57,7 +57,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
     @Override
     public List<Issue> getIssues(String projectId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -76,9 +76,9 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
     @Override
     public Issue createIssue(String projectId, String title, String description)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(title, "title may not be null");
-        MetadataException.validateNonNull(description, "description may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(title, "title may not be null");
+        LegendSDLCServerException.validateNonNull(description, "description may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -97,14 +97,14 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
     @Override
     public void deleteIssue(String projectId, String issueId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(issueId, "issueId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(issueId, "issueId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
         }
-        catch (MetadataException e)
+        catch (LegendSDLCServerException e)
         {
             throw e;
         }

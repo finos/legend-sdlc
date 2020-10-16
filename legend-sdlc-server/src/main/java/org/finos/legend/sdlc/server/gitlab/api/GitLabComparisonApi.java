@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.comparison.EntityDiff;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.error.MetadataException;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -53,8 +53,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     @Override
     public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
@@ -80,8 +80,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     @Override
     public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         String currentProjectRevisionId = this.revisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId();
@@ -94,8 +94,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     @Override
     public Comparison getReviewComparison(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -111,15 +111,15 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         }
         else
         {
-            throw new MetadataException("Unable to get revision info in project " + projectId + ": " + reviewId);
+            throw new LegendSDLCServerException("Unable to get revision info in project " + projectId + ": " + reviewId);
         }
     }
 
     @Override
     public Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId)
     {
-        MetadataException.validateNonNull(projectId, "projectId may not be null");
-        MetadataException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -133,7 +133,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         }
         else
         {
-            throw new MetadataException("Unable to get revision info in project " + projectId + ": " + reviewId);
+            throw new LegendSDLCServerException("Unable to get revision info in project " + projectId + ": " + reviewId);
         }
     }
 
@@ -167,7 +167,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         Commit comparisonResultCommit = comparisonResult.getCommit();
         if (comparisonResultCommit != null && !comparisonResultCommit.getId().equals(toRevisionId))
         {
-            throw new MetadataException("Unexpected Comparison Result: toRevisionId does not match expected. Expected: " + toRevisionId + ", Actual: " + comparisonResultCommit.getId());
+            throw new LegendSDLCServerException("Unexpected Comparison Result: toRevisionId does not match expected. Expected: " + toRevisionId + ", Actual: " + comparisonResultCommit.getId());
         }
         return newComparison(fromRevisionId, toRevisionId, comparisonResult.getDiffs(), fromProjectStructure, toProjectStructure);
     }

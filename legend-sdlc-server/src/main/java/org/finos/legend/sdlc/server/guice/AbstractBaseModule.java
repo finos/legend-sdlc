@@ -18,11 +18,11 @@ import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
-import org.finos.legend.sdlc.server.MetadataSDLCServer;
-import org.finos.legend.sdlc.server.config.MetadataSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.LegendSDLCServer;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
-import org.finos.legend.sdlc.server.error.MetadataExceptionMapper;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -91,16 +91,16 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
-import javax.inject.Named;
 import java.lang.reflect.Constructor;
 import java.util.List;
+import javax.inject.Named;
 
-public abstract class AbstractBaseModule extends DropwizardAwareModule<MetadataSDLCServerConfiguration>
+public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
-    protected final MetadataSDLCServer server;
+    protected final LegendSDLCServer server;
     protected ProjectStructureExtensionProvider extensionProvider;
 
-    public AbstractBaseModule(MetadataSDLCServer server)
+    public AbstractBaseModule(LegendSDLCServer server)
     {
         this.server = server;
     }
@@ -201,7 +201,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<MetadataS
 
     private void bindExceptionMappers(Binder binder)
     {
-        binder.bind(MetadataExceptionMapper.class).toConstructor(defaultConstructor(MetadataExceptionMapper.class));
+        binder.bind(LegendSDLCServerExceptionMapper.class).toConstructor(defaultConstructor(LegendSDLCServerExceptionMapper.class));
     }
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()
@@ -234,7 +234,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<MetadataS
 
     @Provides
     @Named("applicationName")
-    public String provideApplicationName(MetadataSDLCServerConfiguration configuration)
+    public String provideApplicationName(LegendSDLCServerConfiguration configuration)
     {
         return configuration.getApplicationName();
     }

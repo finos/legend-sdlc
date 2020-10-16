@@ -19,29 +19,29 @@ import io.dropwizard.setup.Bootstrap;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.config.MetadataSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.InMemoryModule;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 
-public class MetadataSDLCServerForTest extends MetadataSDLCServer
+public class LegendSDLCServerForTest extends LegendSDLCServer
 {
-    private GuiceBundle<MetadataSDLCServerConfiguration> guiceBundle;
+    private GuiceBundle<LegendSDLCServerConfiguration> guiceBundle;
 
     public static void main(String... args) throws Exception
     {
-        new MetadataSDLCServerForTest().run(args);
+        new LegendSDLCServerForTest().run(args);
     }
 
-    public MetadataSDLCServerForTest()
+    public LegendSDLCServerForTest()
     {
         super(null);
     }
 
     @Override
-    protected void configureApis(Bootstrap<MetadataSDLCServerConfiguration> bootstrap)
+    protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         super.configureApis(bootstrap);
 
@@ -51,7 +51,7 @@ public class MetadataSDLCServerForTest extends MetadataSDLCServer
     }
 
     @Override
-    protected GuiceBundle<MetadataSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
     {
         this.guiceBundle = super.buildGuiceBundle();
         return this.guiceBundle;
@@ -63,7 +63,7 @@ public class MetadataSDLCServerForTest extends MetadataSDLCServer
         return new InMemoryModule(this);
     }
 
-    public GuiceBundle<MetadataSDLCServerConfiguration> getGuiceBundle()
+    public GuiceBundle<LegendSDLCServerConfiguration> getGuiceBundle()
     {
         return this.guiceBundle;
     }
