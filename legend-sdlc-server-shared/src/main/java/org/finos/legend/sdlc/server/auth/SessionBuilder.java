@@ -22,33 +22,68 @@ public abstract class SessionBuilder<T extends Session>
     private String userId;
     private Instant creationTime;
 
+    /**
+     * Get the user id that has been set, if any.
+     *
+     * @return user id or null if not set
+     */
     public String getUserId()
     {
         return this.userId;
     }
 
+    /**
+     * Set the user id, and return the builder.
+     *
+     * @param userId user id
+     * @return this builder
+     */
     public SessionBuilder<T> withUserId(String userId)
     {
         this.userId = userId;
         return this;
     }
 
+    /**
+     * Get the creation time that has been set, if any.
+     *
+     * @return creation time or null if not set
+     */
     public Instant getCreationTime()
     {
         return this.creationTime;
     }
 
+    /**
+     * Set the creation time, and return the builder. Creation time is only stored to second precision. Any sub-second
+     * information is dropped.
+     *
+     * @param creationTime creation time
+     * @return this builder
+     */
     public SessionBuilder<T> withCreationTime(Instant creationTime)
     {
         this.creationTime = ((creationTime != null) && (creationTime.getNano() != 0)) ? Instant.ofEpochSecond(creationTime.getEpochSecond()) : creationTime;
         return this;
     }
 
+    /**
+     * Set the builder state from the given token string, and return the builder.
+     *
+     * @param tokenString token string
+     * @return this builder
+     */
     public SessionBuilder<T> fromToken(String tokenString)
     {
         return fromToken(Token.newReader(tokenString));
     }
 
+    /**
+     * Set the builder state from the given token reader, and return the builder.
+     *
+     * @param reader token reader
+     * @return this builder
+     */
     public SessionBuilder<T> fromToken(Token.TokenReader reader)
     {
         String userIdFromToken = reader.getString();
@@ -57,7 +92,9 @@ public abstract class SessionBuilder<T extends Session>
     }
 
     /**
-     * Reset the build to its initial state, and returns the builder.
+     * Reset the builder to its initial state, and return the builder.
+     *
+     * @return this builder
      */
     public SessionBuilder<T> reset()
     {
@@ -67,8 +104,10 @@ public abstract class SessionBuilder<T extends Session>
     }
 
     /**
-     * Validate that the state of the builder is suitable for building
-     * the given type of session. Throws an IllegalStateException if not.
+     * Validate that the state of the builder is suitable for building the given type of session. Throws an
+     * IllegalStateException if not.
+     *
+     * @throws IllegalStateException if the state of the builder is not suitable for building a new session
      */
     public void validate()
     {
@@ -80,6 +119,12 @@ public abstract class SessionBuilder<T extends Session>
         }
     }
 
+    /**
+     * Build a new session.
+     *
+     * @return new session
+     * @throws IllegalStateException if the state of the builder is not suitable for building a new session
+     */
     public final T build()
     {
         validate();
