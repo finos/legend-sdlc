@@ -44,7 +44,6 @@ import org.finos.legend.sdlc.server.resources.ComparisonWorkspaceResource;
 import org.finos.legend.sdlc.server.resources.ConfigurationResource;
 import org.finos.legend.sdlc.server.resources.ConflictResolutionProjectResource;
 import org.finos.legend.sdlc.server.resources.ConflictResolutionWorkspaceEntitiesResource;
-import org.finos.legend.sdlc.server.resources.ConflictResolutionWorkspaceEntityChangesResource;
 import org.finos.legend.sdlc.server.resources.ConflictResolutionWorkspaceEntityPathsResource;
 import org.finos.legend.sdlc.server.resources.ConflictResolutionWorkspaceProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.ConflictResolutionWorkspaceResource;
@@ -165,7 +164,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ConflictResolutionProjectResource.class);
         binder.bind(ConflictResolutionWorkspaceResource.class);
         binder.bind(ConflictResolutionWorkspaceEntitiesResource.class);
-        binder.bind(ConflictResolutionWorkspaceEntityChangesResource.class);
         binder.bind(ConflictResolutionWorkspaceEntityPathsResource.class);
         binder.bind(ConflictResolutionWorkspaceRevisionsResource.class);
         binder.bind(ConflictResolutionWorkspaceRevisionEntitiesResource.class);

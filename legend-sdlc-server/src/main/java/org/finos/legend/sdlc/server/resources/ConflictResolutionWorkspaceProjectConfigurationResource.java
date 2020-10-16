@@ -17,15 +17,11 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.application.project.UpdateProjectConfigurationCommand;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -52,29 +48,6 @@ public class ConflictResolutionWorkspaceProjectConfigurationResource extends Bas
         return executeWithLogging(
                 "getting project " + projectId + " configuration in workspace with conflict resolution " + workspaceId,
                 () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId)
-        );
-    }
-
-    @Deprecated
-    @POST
-    @ApiOperation("Update the project configuration of a project in a workspace with conflict resolution")
-    public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
-    {
-        LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
-        return executeWithLogging(
-                "updating configuration for project " + projectId + " in workspace with conflict resolution" + workspaceId,
-                () -> this.projectConfigurationApi.updateProjectConfigurationForWorkspaceWithConflictResolution(
-                        projectId,
-                        workspaceId,
-                        command.getMessage(),
-                        command.getProjectStructureVersion().getVersion(),
-                        command.getProjectStructureVersion().getExtensionVersion(),
-                        command.getGroupId(),
-                        command.getArtifactId(),
-                        command.getProjectDependenciesToAdd(),
-                        command.getProjectDependenciesToRemove(),
-                        command.getArtifactGenerationsToAdd(),
-                        command.getArtifactGenerationsNamesToRemove())
         );
     }
 }
