@@ -29,15 +29,10 @@ server:
       - POST
   requestLog:
     type: classic
+    level: OFF
     appenders:
-      - type: file
-        currentLogFilename: ./logs/access.log
-        threshold: ALL
-        archive: true
-        archivedLogFilenamePattern: ./logs/access-%d.log
-        archivedFileCount: 5
-        timeZone: UTC
-      #- type: console
+      - type: console
+        logFormat: "OFF"
   rootPath: /api
 
 filterPriorities:
@@ -68,19 +63,8 @@ gitLab:
 
 logging:
   # Change this to affect library class logging
-  level: INFO
-  loggers:
-    # Change this to affect application class logging
-    org.finos.legend.sdlc: DEBUG
+  level: OFF
   appenders:
-    - type: file
-      logFormat: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %c - %m%n"
-      currentLogFilename: ./logs/service.log
-      threshold: ALL
-      archive: true
-      archivedLogFilenamePattern: ./logs/service-%d.log
-      archivedFileCount: 5
-      timeZone: UTC
     - type: console
       logFormat: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %c - %m%n"
 
