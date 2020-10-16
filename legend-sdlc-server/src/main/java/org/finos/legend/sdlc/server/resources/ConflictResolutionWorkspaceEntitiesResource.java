@@ -18,22 +18,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.application.entity.CreateOrUpdateEntityCommand;
-import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
-import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
-import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
-import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
@@ -78,35 +70,6 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
         );
     }
 
-    @Deprecated
-    @DELETE
-    @ApiOperation(value = "Delete multiple entities from workspace with conflict resolution", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
-    public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
-    {
-        List<String> entityPathsToDelete = command.getEntitiesToDelete();
-        return (entityPathsToDelete == null) ?
-                executeWithLogging(
-                        "deleting all entities in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).deleteAllEntities(command.getMessage())
-                ) :
-                executeWithLogging(
-                        "deleting " + entityPathsToDelete.size() + " entities in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).deleteEntities(entityPathsToDelete, command.getMessage())
-                );
-    }
-
-    @Deprecated
-    @POST
-    @ApiOperation(value = "Update entities of workspace with conflict resolution", notes = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
-    public Revision updateEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateEntitiesCommand command)
-    {
-        LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
-        return executeWithLogging(
-                "updating entities in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
-        );
-    }
-
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the workspace with conflict resolution by its path")
@@ -115,32 +78,6 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
         return executeWithLogging(
                 "getting entity " + path + " in workspace with conflict resolution " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
-        );
-    }
-
-    @Deprecated
-    @POST
-    @Path("{path}")
-    @ApiOperation("Create a new entity or update an existing entity in the workspace with conflict resolution")
-    public Revision createOrUpdateEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, CreateOrUpdateEntityCommand command)
-    {
-        LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
-        return executeWithLogging(
-                "Creating or updating entity " + path + " in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
-        );
-    }
-
-    @Deprecated
-    @DELETE
-    @Path("{path}")
-    @ApiOperation("Delete an entity from the workspace with conflict resolution")
-    public Revision deleteEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, DeleteEntityCommand command)
-    {
-        LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");
-        return executeWithLogging(
-                "deleting entity " + path + " in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).deleteEntity(path, command.getMessage())
         );
     }
 }
