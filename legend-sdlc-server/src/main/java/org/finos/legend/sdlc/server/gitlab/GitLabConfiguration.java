@@ -18,19 +18,34 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.gitlab4j.api.models.Visibility;
 
+import java.util.regex.Pattern;
+
 public class GitLabConfiguration
 {
+    private static final Pattern LEGEND_SDLC_PROJECT_TAG_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]*$");
+
+    private final String projectTag;
     private final AuthConfiguration authConfig;
     private final ModeConfiguration uatConfig;
     private final ModeConfiguration prodConfig;
     private final NewProjectVisibility newProjectVisibility;
 
-    private GitLabConfiguration(AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility)
+    private GitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility)
     {
+        if ((projectTag != null) && !LEGEND_SDLC_PROJECT_TAG_PATTERN.matcher(projectTag).matches())
+        {
+            throw new IllegalArgumentException("Invalid project tag: " + projectTag);
+        }
+        this.projectTag = projectTag;
         this.authConfig = authConfig;
         this.uatConfig = uatConfig;
         this.prodConfig = prodConfig;
         this.newProjectVisibility = newProjectVisibility;
+    }
+
+    public String getProjectTag()
+    {
+        return this.projectTag;
     }
 
     public AuthConfiguration getAuthConfig()
@@ -54,9 +69,9 @@ public class GitLabConfiguration
     }
 
     @JsonCreator
-    public static GitLabConfiguration newGitLabConfiguration(@JsonProperty("auth") AuthConfiguration authConfig, @JsonProperty("uat") ModeConfiguration uatConfig, @JsonProperty("prod") ModeConfiguration prodConfig, @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility)
+    public static GitLabConfiguration newGitLabConfiguration(@JsonProperty("projectTag") String projectTag, @JsonProperty("auth") AuthConfiguration authConfig, @JsonProperty("uat") ModeConfiguration uatConfig, @JsonProperty("prod") ModeConfiguration prodConfig, @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility)
     {
-        return new GitLabConfiguration(authConfig, uatConfig, prodConfig, newProjectVisibility);
+        return new GitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility);
     }
 
     public static class AuthConfiguration
