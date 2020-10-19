@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
@@ -49,8 +51,6 @@ import org.gitlab4j.api.models.Visibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -60,24 +60,26 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabProjectApi extends GitLabApiWithFileAccess implements ProjectApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabProjectApi.class);
 
+    private static final String DEFAULT_LEGEND_SDLC_PROJECT_TAG = "legend";
     private static final Visibility DEFAULT_VISIBILITY = Visibility.INTERNAL;
 
-    private static final String PURE_PROJECT_TAG = "pure";
-    private static final String PURE_TAG_PREFIX = "pure_";
-
+    private final GitLabConfiguration gitLabConfig;
     private final ProjectStructureConfiguration projectStructureConfig;
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
     private final GitLabConfiguration gitLabConfiguration;
 
     @Inject
-    public GitLabProjectApi(GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, GitLabConfiguration gitLabConfiguration, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabProjectApi(GitLabConfiguration gitLabConfig, GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, GitLabConfiguration gitLabConfiguration, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(userContext, backgroundTaskProcessor);
+        this.gitLabConfig = gitLabConfig;
         this.projectStructureConfig = projectStructureConfig;
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
         this.gitLabConfiguration = gitLabConfiguration;
@@ -91,7 +93,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabProjectId projectId = parseProjectId(id);
             org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isPureProject(gitLabProject))
+            if (!isLegendSDLCProject(gitLabProject))
             {
                 throw new LegendSDLCServerException("Failed to get project " + id);
             }
@@ -125,11 +127,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             Iterable<GitLabMode> modes = typesSet.isEmpty() ? getValidGitLabModes() : typesSet.stream().map(GitLabProjectApi::getGitLabModeFromProjectType).filter(this::isValidGitLabMode).collect(Collectors.toList());
 
             List<Project> projects = Lists.mutable.empty();
-            Set<String> tagSet = (tags == null) ? Collections.emptySet() : toPureTagSet(tags);
+            Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
             for (GitLabMode mode : modes)
             {
                 Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi(mode).getProjectApi().getProjects(null, null, null, null, search, null, null, user, null, null, ITEMS_PER_PAGE));
-                Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(GitLabProjectApi::isPureProject);
+                Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
                 if (!tagSet.isEmpty())
                 {
                     stream = stream.filter(p -> p.getTagList().stream().anyMatch(tagSet::contains));
@@ -189,10 +191,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             GitLabApi gitLabApi = getGitLabApi(mode);
 
             List<String> tagList = Lists.mutable.empty();
-            tagList.add(PURE_PROJECT_TAG);
+            tagList.add(getLegendSDLCProjectTag());
             if (tags != null)
             {
-                tagList.addAll(toPureTagSet(tags));
+                tagList.addAll(toLegendSDLCTagSet(tags));
             }
             org.gitlab4j.api.models.Project gitLabProjectSpec = new org.gitlab4j.api.models.Project()
                     .withName(name)
@@ -407,7 +409,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         // Add tags
         Project finalProject;
         List<String> currentTags = currentProject.getTagList();
-        if ((currentTags != null) && currentTags.stream().anyMatch(GitLabProjectApi::isPureProjectTag))
+        if ((currentTags != null) && currentTags.stream().anyMatch(this::isLegendSDLCProjectTag))
         {
             // already has the necessary tag
             finalProject = fromGitLabProject(currentProject, projectId.getGitLabMode());
@@ -419,7 +421,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             {
                 updatedTags.addAll(currentTags);
             }
-            updatedTags.add(PURE_PROJECT_TAG);
+            updatedTags.add(getLegendSDLCProjectTag());
             org.gitlab4j.api.models.Project updatedProject;
             try
             {
@@ -536,13 +538,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
             List<String> currentTags = currentProject.getTagList();
 
-            Set<String> toRemoveSet = (tagsToRemove == null) ? Collections.emptySet() : toPureTagSet(tagsToRemove);
-            Set<String> toAddSet = (tagsToAdd == null) ? Sets.mutable.empty() : toPureTagSet(tagsToAdd);
+            Set<String> toRemoveSet = (tagsToRemove == null) ? Collections.emptySet() : toLegendSDLCTagSet(tagsToRemove);
+            Set<String> toAddSet = (tagsToAdd == null) ? Sets.mutable.empty() : toLegendSDLCTagSet(tagsToAdd);
 
             List<String> updatedTags = Lists.mutable.ofInitialCapacity(currentTags.size() + toAddSet.size() - toRemoveSet.size());
             for (String tag : currentTags)
             {
-                if (!isPureTag(tag) || !toRemoveSet.contains(tag))
+                if (!isLegendSDLCTag(tag) || !toRemoveSet.contains(tag))
                 {
                     updatedTags.add(tag);
                     toAddSet.remove(tag);
@@ -577,12 +579,12 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
 
             List<String> currentTags = currentProject.getTagList();
-            Set<String> newTags = toPureTagSet(tags);
+            Set<String> newTags = toLegendSDLCTagSet(tags);
 
             List<String> updatedTags = Lists.mutable.ofInitialCapacity(currentTags.size());
             for (String tag : currentTags)
             {
-                if (!isPureTag(tag) || newTags.remove(tag))
+                if (!isLegendSDLCTag(tag) || newTags.remove(tag))
                 {
                     updatedTags.add(tag);
                 }
@@ -611,7 +613,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabProjectId projectId = parseProjectId(id);
             org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isPureProject(gitLabProject))
+            if (!isLegendSDLCProject(gitLabProject))
             {
                 throw new LegendSDLCServerException("Failed to get project " + id);
             }
@@ -701,7 +703,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabApi gitLabApi = getGitLabApi(projectId.getGitLabMode());
             org.gitlab4j.api.models.Project project = withRetries(() -> gitLabApi.getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isPureProject(project))
+            if (!isLegendSDLCProject(project))
             {
                 throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND);
             }
@@ -716,7 +718,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
-    private static boolean isPureProject(org.gitlab4j.api.models.Project project)
+    private boolean isLegendSDLCProject(org.gitlab4j.api.models.Project project)
     {
         if (project == null)
         {
@@ -724,45 +726,58 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
 
         List<String> tags = project.getTagList();
-        return (tags != null) && tags.stream().anyMatch(GitLabProjectApi::isPureProjectTag);
+        return (tags != null) && tags.stream().anyMatch(this::isLegendSDLCProjectTag);
     }
 
-    private static boolean isPureProjectTag(String tag)
+    private boolean isLegendSDLCProjectTag(String tag)
     {
-        return PURE_PROJECT_TAG.equalsIgnoreCase(tag);
+        return getLegendSDLCProjectTag().equalsIgnoreCase(tag);
     }
 
-    private static boolean isPureTag(String tag)
+    private String getLegendSDLCProjectTag()
     {
-        return (tag != null) && tag.startsWith(PURE_TAG_PREFIX);
+        String tag = this.gitLabConfig.getProjectTag();
+        return (tag == null) ? DEFAULT_LEGEND_SDLC_PROJECT_TAG : tag;
     }
 
-    private static String stripPureTagPrefix(String tag)
+    private boolean isLegendSDLCTag(String tag)
     {
-        return (tag == null) ? null : tag.substring(PURE_TAG_PREFIX.length());
+        if (tag == null)
+        {
+            return false;
+        }
+        String legendSDLCTag = getLegendSDLCProjectTag();
+        return (tag.length() > (legendSDLCTag.length() + 1)) &&
+                (tag.charAt(legendSDLCTag.length()) == '_') &&
+                tag.regionMatches(true, 0, legendSDLCTag, 0, legendSDLCTag.length());
     }
 
-    private static String addPureTagPrefix(String tag)
+    private String stripLegendSDLCTagPrefix(String tag)
     {
-        return (tag == null) ? null : (PURE_TAG_PREFIX + tag);
+        return (tag == null) ? null : tag.substring(getLegendSDLCProjectTag().length() + 1);
     }
 
-    private static Set<String> toPureTagSet(Iterable<String> tags)
+    private String addLegendSDLCTagPrefix(String tag)
     {
-        return StreamSupport.stream(tags.spliterator(), false).map(GitLabProjectApi::addPureTagPrefix).collect(Collectors.toSet());
+        return (tag == null) ? null : (getLegendSDLCProjectTag() + "_" + tag);
     }
 
-    private static List<String> gitLabTagListToPureTagList(List<String> gitLabTagList)
+    private Set<String> toLegendSDLCTagSet(Iterable<String> tags)
     {
-        return ((gitLabTagList == null) || gitLabTagList.isEmpty()) ? Collections.emptyList() : gitLabTagList.stream().filter(GitLabProjectApi::isPureTag).map(GitLabProjectApi::stripPureTagPrefix).collect(Collectors.toList());
+        return Iterate.collect(tags, this::addLegendSDLCTagPrefix, Sets.mutable.empty());
     }
 
-    private static Project fromGitLabProject(org.gitlab4j.api.models.Project project, GitLabMode mode)
+    private List<String> gitLabTagListToLegendSDLCTagList(List<String> gitLabTagList)
+    {
+        return ((gitLabTagList == null) || gitLabTagList.isEmpty()) ? Collections.emptyList() : ListIterate.collectIf(gitLabTagList, this::isLegendSDLCTag, this::stripLegendSDLCTagPrefix);
+    }
+
+    private Project fromGitLabProject(org.gitlab4j.api.models.Project project, GitLabMode mode)
     {
         return (project == null) ? null : new ProjectWrapper(project, mode);
     }
 
-    private static class ProjectWrapper implements Project
+    private class ProjectWrapper implements Project
     {
         private final org.gitlab4j.api.models.Project gitLabProject;
         private final String projectId;
@@ -796,7 +811,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         @Override
         public List<String> getTags()
         {
-            return gitLabTagListToPureTagList(this.gitLabProject.getTagList());
+            return gitLabTagListToLegendSDLCTagList(this.gitLabProject.getTagList());
         }
 
         @Override

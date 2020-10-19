@@ -52,6 +52,7 @@ projectStructure:
     groupIdPattern: ^org\.finos\.legend\..+
 
 gitLab:
+  projectTag: legendtest
   uat:
     server:
       scheme: na
