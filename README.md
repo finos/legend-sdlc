@@ -33,9 +33,7 @@ Once you have your configuration file, you can start the server is with a comman
 java -cp legend-sdlc-server-shaded.jar org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
 ```
 
-Note that this application currently runs only on Java 8. Additional libraries may be included on the classpath to
-add functionality extensions. Additional JVM arguments may be required depending on your needs (such as specifying a
-krb5.conf if you are using Kerberos authentication).
+You may include additional libraries on the classpath to add functionality extensions.
 
 ## Development setup
 
