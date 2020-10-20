@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.6.0</version>
+    <version>0.7.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -80,7 +80,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/finos/legend-sdlc</developerConnection>
-        <tag>legend-sdlc-0.6.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
@@ -368,7 +368,7 @@
                         </goals>
                         <configuration>
                             <executable>git</executable>
-                            <commandlineArgs>push origin ${scm.tag}</commandlineArgs>
+                            <commandlineArgs>push origin legend-sdlc-0.6.0</commandlineArgs>
                         </configuration>
                     </execution>
                 </executions>
