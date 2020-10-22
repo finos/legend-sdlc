@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.6.0-SNAPSHOT</version>
+    <version>0.7.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -334,12 +334,44 @@
                 <artifactId>maven-release-plugin</artifactId>
                 <version>3.0.0-M1</version>
                 <configuration>
+                    <pushChanges>false</pushChanges>
                     <arguments>-DskipTests</arguments>
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
-                    <goals>deploy</goals>
+                    <completionGoals>exec:exec@git-push exec:exec@git-push-tag</completionGoals>
+                    <goals>deploy exec:exec@git-push</goals>
                 </configuration>
+            </plugin>
+            <plugin>
+				<!-- Push new poms to release branch after release.
+			         Ideally we'd use maven-scm-plugin for this, but it doesn't support force pushing to a branch
+			    -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>git-push</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>git</executable>
+                            <commandlineArgs>push -f origin HEAD:release</commandlineArgs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>git-push-tag</id>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>git</executable>
+                            <commandlineArgs>push origin ${tag}</commandlineArgs>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
