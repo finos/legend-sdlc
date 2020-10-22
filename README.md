@@ -27,7 +27,8 @@ need to create an "Application", which is used for authorization so that the SDL
 See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for more details. Information about the GitLab
 instance and your application will need to be included in the configuration file.
 
-Once you have your configuration file, you can start the server is with a command such as this:
+Once you have your configuration file, you can run the server with Java 8 or later. You can use a command such as this
+to start the server:
 
 ```
 java -cp legend-sdlc-server-shaded.jar org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
