@@ -93,11 +93,11 @@
 
         <!-- SHARED -->
         <dependency>
-            <groupId>org.finos.legend</groupId>
+            <groupId>org.finos.legend.shared</groupId>
             <artifactId>legend-shared-pac4j-kerberos</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.finos.legend</groupId>
+            <groupId>org.finos.legend.shared</groupId>
             <artifactId>legend-shared-pac4j-gitlab</artifactId>
             <scope>runtime</scope>
         </dependency>

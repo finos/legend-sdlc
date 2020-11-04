@@ -82,16 +82,16 @@
             <artifactId>pac4j-core</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.finos.legend</groupId>
+            <groupId>org.finos.legend.shared</groupId>
             <artifactId>legend-shared-pac4j</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.finos.legend</groupId>
+            <groupId>org.finos.legend.shared</groupId>
             <artifactId>legend-shared-pac4j-kerberos</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.finos.legend</groupId>
-            <artifactId>legend-server-shared</artifactId>
+            <groupId>org.finos.legend.shared</groupId>
+            <artifactId>legend-shared-server</artifactId>
         </dependency>
 
         <dependency>
