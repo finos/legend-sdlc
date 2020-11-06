@@ -339,7 +339,7 @@
                     <autoVersionSubmodules>true</autoVersionSubmodules>
                     <useReleaseProfile>false</useReleaseProfile>
                     <releaseProfiles>release</releaseProfiles>
-                    <completionGoals>exec:exec@git-push exec:exec@git-push-tag</completionGoals>
+                    <completionGoals>-DreleaseTag=${tag} -N exec:exec@git-push exec:exec@git-push-tag</completionGoals>
                     <goals>deploy exec:exec@git-push</goals>
                 </configuration>
             </plugin>
@@ -368,7 +368,7 @@
                         </goals>
                         <configuration>
                             <executable>git</executable>
-                            <commandlineArgs>push origin ${tag}</commandlineArgs>
+                            <commandlineArgs>push origin ${releaseTag}</commandlineArgs>
                         </configuration>
                     </execution>
                 </executions>
