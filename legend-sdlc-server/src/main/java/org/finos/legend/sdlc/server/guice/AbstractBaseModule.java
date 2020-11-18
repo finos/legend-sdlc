@@ -18,7 +18,7 @@ import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
-import org.finos.legend.sdlc.server.LegendSDLCServer;
+import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
@@ -96,10 +96,10 @@ import javax.inject.Named;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
-    protected final LegendSDLCServer server;
+    protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
 
-    public AbstractBaseModule(LegendSDLCServer server)
+    public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
         this.server = server;
     }

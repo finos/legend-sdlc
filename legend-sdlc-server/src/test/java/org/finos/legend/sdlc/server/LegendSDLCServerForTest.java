@@ -26,14 +26,9 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 
-public class LegendSDLCServerForTest extends LegendSDLCServer
+public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
     private GuiceBundle<LegendSDLCServerConfiguration> guiceBundle;
-
-    public static void main(String... args) throws Exception
-    {
-        new LegendSDLCServerForTest().run(args);
-    }
 
     public LegendSDLCServerForTest()
     {
@@ -66,5 +61,16 @@ public class LegendSDLCServerForTest extends LegendSDLCServer
     public GuiceBundle<LegendSDLCServerConfiguration> getGuiceBundle()
     {
         return this.guiceBundle;
+    }
+
+    @Override
+    protected ServerPlatformInfo newServerPlatformInfo()
+    {
+        return new ServerPlatformInfo(null, null, null);
+    }
+
+    public static void main(String... args) throws Exception
+    {
+        new LegendSDLCServerForTest().run(args);
     }
 }
