@@ -14,128 +14,23 @@
 
 package org.finos.legend.sdlc.server;
 
-import com.hubspot.dropwizard.guicier.GuiceBundle;
-import io.dropwizard.lifecycle.Managed;
-import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
-import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
-import org.finos.legend.sdlc.server.guice.BaseModule;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.TimeUnit;
-
-public class LegendSDLCServer extends BaseServer<LegendSDLCServerConfiguration>
+public class LegendSDLCServer extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
-    public static final String GITLAB_MODE = "gitlab";
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServer.class);
-
-    private final String mode;
-    private BackgroundTaskProcessor backgroundTaskProcessor;
-
     public LegendSDLCServer(String mode)
     {
-        this.mode = mode;
+        super(mode);
+    }
+
+    @Override
+    protected ServerPlatformInfo newServerPlatformInfo()
+    {
+        return new ServerPlatformInfo(null, null, null);
     }
 
     public static void main(String... args) throws Exception
     {
         new LegendSDLCServer(GITLAB_MODE).run(args);
-    }
-
-    @Override
-    public String getName()
-    {
-        return "Metadata SDLC";
-    }
-
-    @Override
-    public void initialize(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
-    {
-        super.initialize(bootstrap);
-
-        configureApis(bootstrap);
-
-        // SDLC specific initialization
-        ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
-    }
-
-    protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
-    {
-        if (GITLAB_MODE.equals(this.mode))
-        {
-            // Add GitLab bundle
-            bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
-        }
-
-        // Guice bootstrapping..
-        bootstrap.addBundle(buildGuiceBundle());
-    }
-
-    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
-    {
-        return GuiceBundle.defaultBuilder(LegendSDLCServerConfiguration.class)
-                .modules(buildBaseModule())
-                .build();
-    }
-
-    protected AbstractBaseModule buildBaseModule()
-    {
-        return new BaseModule(this);
-    }
-
-    @Override
-    public void run(LegendSDLCServerConfiguration configuration, Environment environment)
-    {
-        super.run(configuration, environment);
-        LifecycleEnvironment lifecycleEnvironment = environment.lifecycle();
-        LOGGER.debug("Creating background task processor");
-        BackgroundTaskProcessor taskProcessor = new BackgroundTaskProcessor(1);
-        lifecycleEnvironment.manage(new Managed()
-        {
-            @Override
-            public void start()
-            {
-                // nothing to do
-            }
-
-            @Override
-            public void stop() throws Exception
-            {
-                LOGGER.debug("Shutting down background task processor");
-                taskProcessor.shutdown();
-                if (taskProcessor.awaitTermination(30, TimeUnit.SECONDS))
-                {
-                    LOGGER.debug("Done shutting down background task processor");
-                }
-                else
-                {
-                    LOGGER.debug("Background task processor did not terminate within the timeout");
-                }
-            }
-        });
-        this.backgroundTaskProcessor = taskProcessor;
-    }
-
-    public String getMode()
-    {
-        return this.mode;
-    }
-
-    public BackgroundTaskProcessor getBackgroundTaskProcessor()
-    {
-        return this.backgroundTaskProcessor;
-    }
-
-    @Override
-    protected ServerPlatformInfo newServerPlatformInfo() throws Exception
-    {
-        return new ServerPlatformInfo(null, null, null);
     }
 }
