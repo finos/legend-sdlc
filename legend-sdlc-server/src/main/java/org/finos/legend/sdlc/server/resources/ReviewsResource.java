@@ -109,8 +109,9 @@ public class ReviewsResource extends BaseResource
     public Review createReview(@PathParam("projectId") String projectId, CreateReviewCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create review");
-        return executeWithLogging(
+        return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId,
+                "create a review",
                 () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), command.getTitle(), command.getDescription())
         );
     }

@@ -68,8 +68,9 @@ public class ProjectsResource extends BaseResource
                                      @QueryParam("type")
                                      @ApiParam("only include projects of the given types (defaults to all types)") Set<ProjectType> types)
     {
-        return executeWithLogging(
+        return execute(
                 "getting projects",
+                "get projects",
                 () -> this.projectApi.getProjects(user, search, tags, types));
     }
 

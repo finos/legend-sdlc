@@ -105,8 +105,9 @@ public class WorkspacesResource extends BaseResource
     @ApiOperation("Create a new workspace")
     public Workspace createWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
-        return executeWithLogging(
+        return execute(
                 "creating new workspace " + workspaceId + " for project " + projectId,
+                "create new workspace",
                 this.workspaceApi::newWorkspace,
                 projectId,
                 workspaceId
