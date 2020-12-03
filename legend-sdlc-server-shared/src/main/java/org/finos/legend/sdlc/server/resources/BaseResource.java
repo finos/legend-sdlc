@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,11 +30,12 @@ import javax.ws.rs.core.Response.Status.Family;
 
 public abstract class BaseResource
 {
-    protected <T> T executeWithLogging(String description, Supplier<T> supplier)
+    protected <T> T execute(String descriptionForLogging, String metricName, Supplier<T> supplier)
     {
         Logger logger = getLogger();
+        SDLCMetricsHandler.incrementSDLCOperationsGauge();
         boolean isInfoLogging = logger.isInfoEnabled();
-        String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(description, "_", false) : null;
+        String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(descriptionForLogging, "_", false) : null;
         long start = System.nanoTime();
         if (isInfoLogging)
         {
@@ -50,10 +52,19 @@ public abstract class BaseResource
                 builder.append("s)");
                 logger.info(builder.toString());
             }
+            if (metricName != null)
+            {
+                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+            }
             return result;
         }
         catch (LegendSDLCServerException e)
         {
+            SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
+            if (metricName != null)
+            {
+                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+            }
             Status status = e.getStatus();
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))
             {
@@ -74,7 +85,7 @@ public abstract class BaseResource
                     long duration = System.nanoTime() - start;
                     if (sanitizedDescription == null)
                     {
-                        sanitizedDescription = StringTools.sanitizeForLogging(description, "_", false);
+                        sanitizedDescription = StringTools.sanitizeForLogging(descriptionForLogging, "_", false);
                     }
                     logger.error(buildLoggingErrorMessage(e, sanitizedDescription, duration), e);
                 }
@@ -83,17 +94,64 @@ public abstract class BaseResource
         }
         catch (Throwable t)
         {
+            SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
+            if (metricName != null)
+            {
+                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+            }
             if (logger.isErrorEnabled())
             {
                 long duration = System.nanoTime() - start;
                 if (sanitizedDescription == null)
                 {
-                    sanitizedDescription = StringTools.sanitizeForLogging(description, "_", false);
+                    sanitizedDescription = StringTools.sanitizeForLogging(descriptionForLogging, "_", false);
                 }
                 logger.error(buildLoggingErrorMessage(t, sanitizedDescription, duration), t);
             }
             throw t;
         }
+    }
+
+    protected <T, R> R execute(String descriptionForLogging, String metricName, Function<? super T, R> function, T arg)
+    {
+        return execute(descriptionForLogging, metricName, () -> function.apply(arg));
+    }
+
+    protected <T, U, R> R execute(String descriptionForLogging, String metricName, BiFunction<? super T, ? super U, R> function, T arg1, U arg2)
+    {
+        return execute(descriptionForLogging, metricName, () -> function.apply(arg1, arg2));
+    }
+
+    protected void execute(String descriptionForLogging, String metricName, Runnable runnable)
+    {
+        execute(descriptionForLogging, metricName, () ->
+        {
+            runnable.run();
+            return null;
+        });
+    }
+
+    protected <T> void execute(String descriptionForLogging, String metricName, Consumer<? super T> consumer, T arg)
+    {
+        execute(descriptionForLogging, metricName, () ->
+        {
+            consumer.accept(arg);
+            return null;
+        });
+    }
+
+    protected <T, U> void execute(String descriptionForLogging, String metricName, BiConsumer<? super T, ? super U> consumer, T arg1, U arg2)
+    {
+        execute(descriptionForLogging, metricName, () ->
+        {
+            consumer.accept(arg1, arg2);
+            return null;
+        });
+    }
+
+    protected <T> T executeWithLogging(String description, Supplier<T> supplier)
+    {
+        return execute(description, null, supplier);
     }
 
     protected <T, R> R executeWithLogging(String description, Function<? super T, R> function, T arg)

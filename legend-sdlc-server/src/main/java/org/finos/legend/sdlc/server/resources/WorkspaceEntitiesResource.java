@@ -72,8 +72,9 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
                                        @QueryParam("taggedValue")
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
-        return executeWithLogging(
+        return execute(
                 "getting entities in workspace " + workspaceId + " for project " + projectId,
+                "get entities of the workspace",
                 () -> getEntities(this.entityApi.getWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
@@ -99,8 +100,9 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     public Revision updateEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateEntitiesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
-        return executeWithLogging(
+        return execute(
                 "updating entities in workspace " + workspaceId + " for project " + projectId,
+                "update entities",
                 () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
