@@ -29,12 +29,12 @@ public class SDLCMetricsHandler
     private static final Gauge allSDLCOperations = Gauge.build().name("sdlc_operations").help("Operation endpoint calls gauge metric ").register();
     private static final Gauge allSDLCOperationErrors = Gauge.build().name("sdlc_operation_errors").help("Operation errors gauge metric ").register();
 
-    public static synchronized void incrementSDLCOperationsGauge()
+    public static void incrementSDLCOperationsGauge()
     {
         allSDLCOperations.inc();
     }
 
-    public static synchronized void incrementSDLCOperationErrorsGauge()
+    public static void incrementSDLCOperationErrorsGauge()
     {
         allSDLCOperationErrors.inc();
     }

@@ -36,7 +36,7 @@ public abstract class BaseResource
         SDLCMetricsHandler.incrementSDLCOperationsGauge();
         boolean isInfoLogging = logger.isInfoEnabled();
         String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(descriptionForLogging, "_", false) : null;
-        long start = System.nanoTime();
+        long startTime = System.nanoTime();
         if (isInfoLogging)
         {
             logger.info("Starting {}", sanitizedDescription);
@@ -44,9 +44,10 @@ public abstract class BaseResource
         try
         {
             T result = supplier.get();
+            long endTime = System.nanoTime();
             if (isInfoLogging)
             {
-                long duration = System.nanoTime() - start;
+                long duration = endTime - startTime;
                 StringBuilder builder = new StringBuilder(sanitizedDescription.length() + 32).append("Finished ").append(sanitizedDescription).append(" (");
                 StringTools.formatDurationInNanos(builder, duration);
                 builder.append("s)");
@@ -54,23 +55,23 @@ public abstract class BaseResource
             }
             if (metricName != null)
             {
-                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+                SDLCMetricsHandler.observe(metricName, startTime, endTime);
             }
             return result;
         }
         catch (LegendSDLCServerException e)
         {
-            SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
+            long endTime = System.nanoTime();
             if (metricName != null)
             {
-                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+                SDLCMetricsHandler.observe(metricName, startTime, endTime);
             }
             Status status = e.getStatus();
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))
             {
                 if (isInfoLogging)
                 {
-                    long duration = System.nanoTime() - start;
+                    long duration = endTime - startTime;
                     String redirectLocation = String.valueOf(e.getMessage());
                     StringBuilder builder = new StringBuilder(sanitizedDescription.length() + redirectLocation.length() + 39).append("Redirected ").append(sanitizedDescription).append(" to: ").append(redirectLocation).append(" (");
                     StringTools.formatDurationInNanos(builder, duration);
@@ -80,9 +81,10 @@ public abstract class BaseResource
             }
             else
             {
+                SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
                 if (logger.isErrorEnabled())
                 {
-                    long duration = System.nanoTime() - start;
+                    long duration = endTime - startTime;
                     if (sanitizedDescription == null)
                     {
                         sanitizedDescription = StringTools.sanitizeForLogging(descriptionForLogging, "_", false);
@@ -94,14 +96,15 @@ public abstract class BaseResource
         }
         catch (Throwable t)
         {
+            long endTime = System.nanoTime();
             SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
             if (metricName != null)
             {
-                SDLCMetricsHandler.observe(metricName, start, System.nanoTime());
+                SDLCMetricsHandler.observe(metricName, startTime, endTime);
             }
             if (logger.isErrorEnabled())
             {
-                long duration = System.nanoTime() - start;
+                long duration = endTime - startTime;
                 if (sanitizedDescription == null)
                 {
                     sanitizedDescription = StringTools.sanitizeForLogging(descriptionForLogging, "_", false);
