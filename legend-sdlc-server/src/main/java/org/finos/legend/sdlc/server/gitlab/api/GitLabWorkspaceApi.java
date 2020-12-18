@@ -741,7 +741,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to create commit on temporary workspace " + tempBranchName + " of project " + projectId,
                     () -> "Unknown project: " + projectId + " or temporary workspace " + tempBranchName,
-                    () -> "Failed to create commit in temporary workspace " + tempBranchName + " of project" + projectId
+                    () -> "Failed to create commit in temporary workspace " + tempBranchName + " of project " + projectId
             );
         }
         // Attempt to rebase the temporary branch on top of master
