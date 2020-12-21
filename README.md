@@ -22,10 +22,19 @@ Start by creating a configuration file based on your particular environment. Thi
 is included to help you get started. You will need to supply some information, such as the host your server is running
 on.
 
-You will also need an instance of GitLab to connect to, such as [gitlab.com](https://gitlab.com). On GitLab you will
+You will also need an instance of GitLab to connect to, such as [gitlab.com](https://gitlab.com). On GitLab, you will
 need to create an "Application", which is used for authorization so that the SDLC Server can act on behalf of users.
-See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for more details. Information about the GitLab
-instance and your application will need to be included in the configuration file.
+See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for general information about creating an
+application in GitLab. The application will need to have "api" scope and have https://SDLC_SERVER/api/auth/callback as a
+redirect URI, where SDLC_SERVER is the host and possibly port needed to connect to the SDLC Server. (For testing
+purposes, you can use 127.0.0.1:7075.) This redirect URI will also need to appear in your configuration file.
+
+If you are using the GitlabClient for authentication (see the pac4j section of the configuration), you will need a
+GitLab application for that as well. It will need "openid" and "profile" scopes, and will require
+https://SDLC_SERVER/api/pac4j/login/callback as a redirect URI (where, again, SDLC_SERVER is the host and port needed to
+connect to the SDLC Server). You can either create a new application for this, or you can add these scopes and redirect
+URI to your existing application. We recommend you use a single application for both purposes, as it makes the
+authentication and authorization process simpler and faster.
 
 Once you have your configuration file, you can run the server with Java 8 or later. You can use a command such as this
 to start the server:
