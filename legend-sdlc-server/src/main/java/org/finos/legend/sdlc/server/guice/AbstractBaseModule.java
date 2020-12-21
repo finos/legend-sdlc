@@ -17,8 +17,8 @@ package org.finos.legend.sdlc.server.guice;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
-import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
+import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
@@ -212,22 +212,28 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         if (this.extensionProvider == null)
         {
-            ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
-            if (projectStructureConfiguration != null)
-            {
-                ProjectStructureExtensionProvider configuredProvider = projectStructureConfiguration.getProjectStructureExtensionProvider();
-                if (configuredProvider == null)
-                {
-                    List<ProjectStructureExtension> extensions = projectStructureConfiguration.getProjectStructureExtensions();
-                    this.extensionProvider = ((extensions == null) || extensions.isEmpty()) ? new VoidProjectStructureExtensionProvider() : DefaultProjectStructureExtensionProvider.fromExtensions(extensions);
-                }
-                else
-                {
-                    this.extensionProvider = configuredProvider;
-                }
-            }
+            this.extensionProvider = resolveProjectStructureExtensionProvider();
         }
         return this.extensionProvider;
+    }
+
+    private ProjectStructureExtensionProvider resolveProjectStructureExtensionProvider()
+    {
+        ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
+        if (projectStructureConfiguration != null)
+        {
+            ProjectStructureExtensionProvider configuredProvider = projectStructureConfiguration.getProjectStructureExtensionProvider();
+            if (configuredProvider != null)
+            {
+                return configuredProvider;
+            }
+            List<ProjectStructureExtension> extensions = projectStructureConfiguration.getProjectStructureExtensions();
+            if ((extensions != null) && !extensions.isEmpty())
+            {
+                return DefaultProjectStructureExtensionProvider.fromExtensions(extensions);
+            }
+        }
+        return new VoidProjectStructureExtensionProvider();
     }
 
     @Provides
