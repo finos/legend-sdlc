@@ -38,8 +38,6 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccess
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 
-import javax.lang.model.SourceVersion;
-import javax.ws.rs.core.Response.Status;
 import java.io.Reader;
 import java.util.Collection;
 import java.util.Collections;
@@ -58,6 +56,8 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.lang.model.SourceVersion;
+import javax.ws.rs.core.Response.Status;
 
 public abstract class ProjectStructure
 {
@@ -68,7 +68,7 @@ public abstract class ProjectStructure
 
     private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
 
-    private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*(-[a-z][a-z0-9_]*)*$");
+    private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*+(-[a-z][a-z0-9_]*+)*+$");
 
     public static final String PROJECT_CONFIG_PATH = "/project.json";
 
