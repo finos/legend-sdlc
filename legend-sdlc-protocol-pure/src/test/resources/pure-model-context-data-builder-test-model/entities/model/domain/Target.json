@@ -1,0 +1,37 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "name": "Target",
+    "package": "model::domain",
+    "properties": [
+      {
+        "name": "name",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "type": "String"
+      },
+      {
+        "name": "date",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "type": "StrictDate"
+      },
+      {
+        "name": "number",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "type": "Integer"
+      }
+    ],
+    "superTypes": [
+      "meta::pure::metamodel::type::Any"
+    ]
+  }
+}
