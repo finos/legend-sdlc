@@ -69,6 +69,14 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-protocol</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-protocol-pure</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server-shared</artifactId>
         </dependency>
         <dependency>

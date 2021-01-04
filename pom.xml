@@ -32,6 +32,8 @@
     <modules>
         <module>legend-sdlc-model</module>
         <module>legend-sdlc-entity-serialization</module>
+        <module>legend-sdlc-protocol</module>
+        <module>legend-sdlc-protocol-pure</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
         <module>test-reports</module>
@@ -73,6 +75,7 @@
         <jersey.version>2.25.1</jersey.version>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <junit.version>4.13.1</junit.version>
+        <legend.engine.version>2.5.0</legend.engine.version>
         <legend.shared.version>0.4.0</legend.shared.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -399,6 +402,16 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-protocol</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-protocol-pure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server-shared</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -435,6 +448,16 @@
                 <groupId>org.finos.legend.shared</groupId>
                 <artifactId>legend-shared-pac4j-gitlab</artifactId>
                 <version>${legend.shared.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-protocol</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-protocol-pure</artifactId>
+                <version>${legend.engine.version}</version>
             </dependency>
 
             <!-- External dependencies -->
