@@ -14,14 +14,50 @@
 
 package org.finos.legend.sdlc.serialization;
 
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.utility.LazyIterate;
+
+import java.util.List;
+import java.util.Map;
+import java.util.ServiceLoader;
+
 public class EntitySerializers
 {
     private EntitySerializers()
     {
     }
 
-    public static EntityTextSerializer getJsonSerializer()
+    public static EntityTextSerializer getDefaultJsonSerializer()
     {
-        return JsonEntitySerializer.INSTANCE;
+        return new DefaultJsonEntitySerializer();
+    }
+
+    public static Iterable<EntitySerializer> getAvailableSerializers()
+    {
+        return ServiceLoader.load(EntitySerializer.class);
+    }
+
+    public static Iterable<EntityTextSerializer> getAvailableTextSerializers()
+    {
+        return LazyIterate.selectInstancesOf(getAvailableSerializers(), EntityTextSerializer.class);
+    }
+
+    public static Map<String, List<EntitySerializer>> getAvailableSerializersByExtension()
+    {
+        return indexByExtension(getAvailableSerializers());
+    }
+
+    public static Map<String, List<EntityTextSerializer>> getAvailableTextSerializersByExtension()
+    {
+        return indexByExtension(getAvailableTextSerializers());
+    }
+
+    private static <T extends EntitySerializer> Map<String, List<T>> indexByExtension(Iterable<T> serializers)
+    {
+        MutableMap<String, List<T>> result = Maps.mutable.empty();
+        serializers.forEach(s -> result.getIfAbsentPut(s.getDefaultFileExtension(), Lists.mutable::empty).add(s));
+        return result;
     }
 }

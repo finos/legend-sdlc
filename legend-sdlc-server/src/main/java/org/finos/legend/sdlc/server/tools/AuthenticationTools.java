@@ -33,6 +33,7 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.protocol.HttpContext;
+import org.eclipse.collections.api.factory.Maps;
 import org.ietf.jgss.GSSContext;
 import org.ietf.jgss.GSSCredential;
 import org.ietf.jgss.GSSException;
@@ -40,13 +41,12 @@ import org.ietf.jgss.GSSManager;
 import org.ietf.jgss.GSSName;
 import org.ietf.jgss.Oid;
 
+import java.security.Principal;
+import java.util.Map;
+import java.util.Objects;
 import javax.security.auth.Subject;
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
-import java.security.Principal;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Objects;
 
 public class AuthenticationTools
 {
@@ -158,9 +158,9 @@ public class AuthenticationTools
             @Override
             public AppConfigurationEntry[] getAppConfigurationEntry(String name)
             {
-                Map<String, String> options = new HashMap<>(2);
-                options.put("useTicketCache", "true");
-                options.put("doNotPrompt", "false");
+                Map<String, String> options = Maps.mutable.with(
+                        "useTicketCache", "true",
+                        "doNotPrompt", "false");
                 String ticketCacheName = System.getenv("KRB5CCNAME");
                 if ((ticketCacheName != null) && !ticketCacheName.isEmpty())
                 {

@@ -14,13 +14,13 @@
 
 package org.finos.legend.sdlc.server.tools;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -148,7 +148,7 @@ public class TestIOTools
         {
             throw new Exception(expectedMessage);
         });
-        List<Exception> exceptions = new ArrayList<>();
+        List<Exception> exceptions = Lists.mutable.empty();
         Stream<String> stream = IOTools.streamCloseableSpliterator(spliterator, false, exceptions::add);
         Assert.assertFalse(spliterator.isClosed);
         List<String> result = stream.filter(s -> !spliterator.isClosed).collect(Collectors.toList());
@@ -236,7 +236,7 @@ public class TestIOTools
         });
         List<String> list = Collections.unmodifiableList(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "G-MAN", "G-MAN", "HOOVER"));
         Stream<String> stream = list.stream();
-        List<Exception> exceptions = new ArrayList<>();
+        List<Exception> exceptions = Lists.mutable.empty();
         IOTools.closeCloseableOnStreamClose(stream, closeable, exceptions::add);
         List<String> result = stream.collect(Collectors.toList());
         stream.close();

@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;

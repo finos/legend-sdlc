@@ -20,8 +20,6 @@ import io.prometheus.client.Summary;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.factory.Maps;
 
-import java.lang.reflect.Method;
-
 public class SDLCMetricsHandler
 {
     private static final String METRIC_PREFIX = "sdlc_";

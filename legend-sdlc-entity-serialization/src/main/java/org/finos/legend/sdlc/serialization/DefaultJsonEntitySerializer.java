@@ -29,18 +29,16 @@ import java.io.Reader;
 import java.io.Writer;
 import java.util.Map;
 
-class JsonEntitySerializer implements EntityTextSerializer
+public class DefaultJsonEntitySerializer implements EntityTextSerializer
 {
-    static final JsonEntitySerializer INSTANCE = new JsonEntitySerializer();
-
-    private final ObjectMapper objectMapper = new ObjectMapper()
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
             .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
             .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
             .configure(SerializationFeature.INDENT_OUTPUT, true)
             .configure(SerializationFeature.CLOSE_CLOSEABLE, false);
-    private final JavaType entityFileType = this.objectMapper.getTypeFactory().constructType(EntityFile.class);
+    private static final JavaType ENTITY_FILE_TYPE = OBJECT_MAPPER.getTypeFactory().constructType(EntityFile.class);
 
-    private JsonEntitySerializer()
+    public DefaultJsonEntitySerializer()
     {
     }
 
@@ -55,25 +53,25 @@ class JsonEntitySerializer implements EntityTextSerializer
     @Override
     public void serialize(Entity entity, OutputStream stream) throws IOException
     {
-        this.objectMapper.writeValue(stream, toEntityFile(entity));
+        OBJECT_MAPPER.writeValue(stream, toEntityFile(entity));
     }
 
     @Override
     public void serialize(Entity entity, Writer writer) throws IOException
     {
-        this.objectMapper.writeValue(writer, toEntityFile(entity));
+        OBJECT_MAPPER.writeValue(writer, toEntityFile(entity));
     }
 
     @Override
     public byte[] serializeToBytes(Entity entity) throws IOException
     {
-        return this.objectMapper.writeValueAsBytes(toEntityFile(entity));
+        return OBJECT_MAPPER.writeValueAsBytes(toEntityFile(entity));
     }
 
     @Override
     public String serializeToString(Entity entity) throws IOException
     {
-        return this.objectMapper.writeValueAsString(toEntityFile(entity));
+        return OBJECT_MAPPER.writeValueAsString(toEntityFile(entity));
     }
 
     // Deserialization
@@ -81,25 +79,25 @@ class JsonEntitySerializer implements EntityTextSerializer
     @Override
     public Entity deserialize(InputStream stream) throws IOException
     {
-        return toEntity(this.objectMapper.readValue(stream, this.entityFileType));
+        return toEntity(OBJECT_MAPPER.readValue(stream, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(Reader reader) throws IOException
     {
-        return toEntity(this.objectMapper.readValue(reader, this.entityFileType));
+        return toEntity(OBJECT_MAPPER.readValue(reader, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(byte[] content) throws IOException
     {
-        return toEntity(this.objectMapper.readValue(content, this.entityFileType));
+        return toEntity(OBJECT_MAPPER.readValue(content, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(String content) throws IOException
     {
-        return toEntity(this.objectMapper.readValue(content, this.entityFileType));
+        return toEntity(OBJECT_MAPPER.readValue(content, ENTITY_FILE_TYPE));
     }
 
     // Helpers
