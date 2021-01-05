@@ -14,12 +14,12 @@
 
 package org.finos.legend.sdlc.serialization;
 
-public class TestJsonEntitySerializer extends TestEntityTextSerializer<JsonEntitySerializer>
+public class TestDefaultJsonEntitySerializer extends TestEntityTextSerializer<DefaultJsonEntitySerializer>
 {
     @Override
-    protected JsonEntitySerializer getSerializer()
+    protected DefaultJsonEntitySerializer getSerializer()
     {
-        return JsonEntitySerializer.INSTANCE;
+        return new DefaultJsonEntitySerializer();
     }
 
     @Override

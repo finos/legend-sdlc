@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,7 +23,6 @@ import org.slf4j.event.Level;
 import org.slf4j.event.SubstituteLoggingEvent;
 import org.slf4j.helpers.SubstituteLoggerFactory;
 
-import java.util.ArrayList;
 import java.util.List;
 import javax.ws.rs.core.Response;
 
@@ -199,7 +199,7 @@ public class TestBaseResource
 
         List<SubstituteLoggingEvent> getLoggingEvents()
         {
-            List<SubstituteLoggingEvent> events = new ArrayList<>();
+            List<SubstituteLoggingEvent> events = Lists.mutable.empty();
             this.loggerFactory.getEventQueue().drainTo(events);
             return events;
         }

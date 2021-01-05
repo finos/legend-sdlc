@@ -88,7 +88,7 @@ public abstract class ProjectStructure
 
     protected ProjectStructure(ProjectConfiguration projectConfiguration)
     {
-        this(projectConfiguration, EntitySerializers.getJsonSerializer());
+        this(projectConfiguration, EntitySerializers.getDefaultJsonSerializer());
     }
 
     @Override

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.serialization;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -48,7 +48,7 @@ public class EntityLoader implements AutoCloseable
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(EntityLoader.class);
 
-    private static final EntitySerializer ENTITY_SERIALIZER = EntitySerializers.getJsonSerializer();
+    private static final EntitySerializer ENTITY_SERIALIZER = EntitySerializers.getDefaultJsonSerializer();
     private static final String ENTITIES_DIRECTORY = "entities";
     private static final String ENTITY_FILE_EXTENSION = "." + ENTITY_SERIALIZER.getDefaultFileExtension();
 
@@ -177,7 +177,7 @@ public class EntityLoader implements AutoCloseable
         {
             return newEntityLoader(paths[0]);
         }
-        List<EntityFileSearch> searchList = new ArrayList<>(paths.length);
+        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(paths.length);
         Arrays.stream(paths).map(EntityLoader::newPathEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
         return new EntityLoader(searchList);
     }
@@ -194,7 +194,7 @@ public class EntityLoader implements AutoCloseable
             return newEntityLoader(classLoader);
         }
 
-        List<EntityFileSearch> searchList = new ArrayList<>(paths.length + 1);
+        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(paths.length + 1);
         searchList.add(new ClassLoaderEntityFileSearch(classLoader));
         Arrays.stream(paths).map(EntityLoader::newPathEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
         return new EntityLoader(searchList);
