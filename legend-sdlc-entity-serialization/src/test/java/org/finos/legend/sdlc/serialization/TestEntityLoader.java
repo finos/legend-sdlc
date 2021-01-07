@@ -34,7 +34,7 @@ abstract class TestEntityLoader
 {
     private List<Entity> testEntities;
     private EntityLoader entityLoader;
-    private List<AutoCloseable> closeables = Lists.mutable.empty();
+    private final List<AutoCloseable> closeables = Lists.mutable.empty();
 
     @Before
     public void setUp() throws IOException

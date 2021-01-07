@@ -31,17 +31,19 @@ public abstract class TestEntityLoaderWithZipFile extends TestEntityLoader
     @Rule
     public TemporaryFolder tempFolder = new TemporaryFolder();
 
-    protected Path writeToTempZipFile(Map<String, byte[]> fileContentByPath, boolean jar) throws IOException
+    protected abstract boolean isJar();
+
+    protected Path writeToTempZipFile(Map<String, byte[]> fileContentByPath) throws IOException
     {
-        Path tempFile = Files.createTempFile(this.tempFolder.getRoot().toPath(), "junit", jar ? ".jar" : ".zip");
-        writeToZipFile(fileContentByPath, tempFile, jar);
+        Path tempFile = Files.createTempFile(this.tempFolder.getRoot().toPath(), "junit", isJar() ? ".jar" : ".zip");
+        writeToZipFile(fileContentByPath, tempFile);
         return tempFile;
     }
 
-    protected void writeToZipFile(Map<String, byte[]> fileContentByPath, Path path, boolean jar) throws IOException
+    private void writeToZipFile(Map<String, byte[]> fileContentByPath, Path path) throws IOException
     {
         try (OutputStream outStream = Files.newOutputStream(path);
-             ZipOutputStream zipStream = jar ? new JarOutputStream(outStream) : new ZipOutputStream(outStream))
+             ZipOutputStream zipStream = isJar() ? new JarOutputStream(outStream) : new ZipOutputStream(outStream))
         {
             for (Map.Entry<String, byte[]> entry : fileContentByPath.entrySet())
             {

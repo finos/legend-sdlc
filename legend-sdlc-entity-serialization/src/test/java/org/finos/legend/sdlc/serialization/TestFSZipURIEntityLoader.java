@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,13 +18,13 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Map;
 
-public class TestFSZipEntityLoader extends TestEntityLoaderWithZipFile
+public class TestFSZipURIEntityLoader extends TestEntityLoaderWithZipFile
 {
     @Override
     protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
     {
         Path zipPath = writeToTempZipFile(fileContentByPath);
-        return EntityLoader.newEntityLoader(zipPath);
+        return EntityLoader.newEntityLoader(zipPath.toUri());
     }
 
     @Override
@@ -33,3 +33,4 @@ public class TestFSZipEntityLoader extends TestEntityLoaderWithZipFile
         return false;
     }
 }
+
