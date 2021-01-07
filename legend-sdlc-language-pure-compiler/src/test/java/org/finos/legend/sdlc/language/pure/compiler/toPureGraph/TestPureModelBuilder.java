@@ -14,16 +14,12 @@
 
 package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
-import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.property.Property;
-import org.finos.legend.pure.m3.navigation.ProcessorSupport;
-import org.finos.legend.pure.m3.navigation.generictype.GenericType;
-import org.finos.legend.pure.m3.navigation.multiplicity.Multiplicity;
+import org.finos.legend.pure.generated.core_pure_serialization_toPureGrammar;
 import org.finos.legend.sdlc.protocol.pure.v1.PureProtocolHelper;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.junit.After;
@@ -110,34 +106,21 @@ public class TestPureModelBuilder
 
     private void checkPureModel(PureModel pureModel)
     {
-        checkClass(pureModel,
-                "model::domain::Source",
-                "oneName:String[1]", "anotherName:String[0..1]", "oneDate:StrictDate[0..1]", "anotherDate:StrictDate[0..1]", "oneNumber:Integer[0..1]", "anotherNumber:Integer[0..1]");
-        checkClass(pureModel,
-                "model::domain::Target",
-                "name:String[1]", "date:StrictDate[0..1]", "number:Integer[0..1]");
+        checkClass(pureModel, "model::domain::Source", expectedSourceClass);
+        checkClass(pureModel, "model::domain::Target", expectedTargetClass);
         checkMapping(pureModel, "model::mapping::SourceToTargetM2M");
     }
 
-    private void checkClass(PureModel pureModel, String path, String... expectedProperties)
+    private void checkClass(PureModel pureModel, String path, String expected)
     {
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> cls = pureModel.getClass(path);
         Assert.assertNotNull(path, cls);
-        ProcessorSupport processorSupport = pureModel.getExecutionSupport().getProcessorSupport();
-        Assert.assertEquals(Lists.mutable.with(expectedProperties), cls._properties().collect(p -> propertyToString(p, processorSupport), Lists.mutable.empty()));
+        String actual = core_pure_serialization_toPureGrammar.Root_meta_pure_metamodel_serialization_grammar_printClass_Class_1__String_1_(cls, pureModel.getExecutionSupport());
+        Assert.assertEquals(expected.trim().replace(": ", " : "), actual);
     }
 
     private void checkMapping(PureModel pureModel, String path)
     {
         Assert.assertNotNull(path, pureModel.getMapping(path));
-    }
-
-    private String propertyToString(Property<?, ?> property, ProcessorSupport processorSupport)
-    {
-        StringBuilder builder = new StringBuilder();
-        builder.append(property._name()).append(':');
-        GenericType.print(builder, property._genericType(), true, processorSupport);
-        Multiplicity.print(builder, property._multiplicity(), true);
-        return builder.toString();
     }
 }
