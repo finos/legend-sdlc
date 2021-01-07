@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2020 Goldman Sachs
+ Copyright 2021 Goldman Sachs
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,25 +23,9 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>legend-sdlc-protocol-pure</artifactId>
-    <name>Legend SDLC Protocol Pure</name>
+    <artifactId>legend-sdlc-language-pure-compiler</artifactId>
+    <name>Legend SDLC Language Pure Compiler</name>
     <packaging>jar</packaging>
-
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
 
     <dependencies>
         <!-- SDLC -->
@@ -51,18 +35,22 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-protocol</artifactId>
+            <artifactId>legend-sdlc-protocol-pure</artifactId>
         </dependency>
         <!-- SDLC -->
 
         <!-- ENGINE -->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-protocol</artifactId>
+            <artifactId>legend-engine-protocol-pure</artifactId>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-protocol-pure</artifactId>
+            <artifactId>legend-engine-language-pure-compiler</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-shared-core</artifactId>
         </dependency>
         <!-- ENGINE -->
 
@@ -70,10 +58,6 @@
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections</artifactId>
         </dependency>
         <!-- ECLIPSE COLLECTIONS -->
 
@@ -90,8 +74,18 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-model</artifactId>
+            <artifactId>legend-sdlc-protocol-pure</artifactId>
             <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-m3-core</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.pure</groupId>
+            <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
