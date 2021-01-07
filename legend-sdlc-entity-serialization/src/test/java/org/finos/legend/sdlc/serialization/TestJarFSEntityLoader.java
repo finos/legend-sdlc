@@ -14,20 +14,11 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import java.io.IOException;
-import java.nio.file.FileSystem;
-import java.nio.file.FileSystems;
-import java.nio.file.Path;
-import java.util.Map;
-
-public class TestJarFSEntityLoader extends TestEntityLoaderWithZipFile
+public class TestJarFSEntityLoader extends TestZipFSEntityLoader
 {
     @Override
-    protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
+    protected boolean isJar()
     {
-        Path jarPath = writeToTempZipFile(fileContentByPath, true);
-        FileSystem jarFS = FileSystems.newFileSystem(jarPath, (ClassLoader) null);
-        registerCloseable(jarFS);
-        return EntityLoader.newEntityLoader(jarFS.getPath(jarFS.getSeparator()));
+        return true;
     }
 }

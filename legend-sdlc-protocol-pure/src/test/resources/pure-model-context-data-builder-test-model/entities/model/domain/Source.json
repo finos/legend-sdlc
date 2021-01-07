@@ -35,7 +35,7 @@
           "lowerBound": 0,
           "upperBound": 1
         },
-        "type": "strictDate"
+        "type": "StrictDate"
       },
       {
         "name": "oneNumber",
@@ -54,8 +54,6 @@
         "type": "Integer"
       }
     ],
-    "superTypes": [
-      "meta::pure::metamodel::type::Any"
-    ]
+    "superTypes": []
   }
 }

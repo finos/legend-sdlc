@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.stream.IntStream;
 
 public class TestFSDirectoriesEntityLoader extends TestEntityLoader
 {
@@ -33,6 +34,12 @@ public class TestFSDirectoriesEntityLoader extends TestEntityLoader
     @Override
     protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
     {
+        Path[] dirs = writeToDirectories(fileContentByPath);
+        return EntityLoader.newEntityLoader(dirs);
+    }
+
+    protected Path[] writeToDirectories(Map<String, byte[]> fileContentByPath) throws IOException
+    {
         Path root = this.tempFolder.getRoot().toPath();
         int i = 0;
         for (Map.Entry<String, byte[]> entry : fileContentByPath.entrySet())
@@ -42,11 +49,9 @@ public class TestFSDirectoriesEntityLoader extends TestEntityLoader
             Files.write(filePath, entry.getValue());
             i++;
         }
-        Path[] dirs = new Path[DIR_COUNT];
-        for (int d = 0; d < DIR_COUNT; d++)
-        {
-            dirs[d] = root.resolve(DIR_PREFIX + d);
-        }
-        return EntityLoader.newEntityLoader(dirs);
+        return IntStream.range(0, DIR_COUNT)
+                .mapToObj(d -> DIR_PREFIX + d)
+                .map(root::resolve)
+                .toArray(Path[]::new);
     }
 }

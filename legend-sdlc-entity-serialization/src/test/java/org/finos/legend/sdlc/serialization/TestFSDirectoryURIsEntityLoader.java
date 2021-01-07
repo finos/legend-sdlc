@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,21 +15,18 @@
 package org.finos.legend.sdlc.serialization;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.file.Path;
+import java.util.Arrays;
 import java.util.Map;
 
-public class TestFSZipEntityLoader extends TestEntityLoaderWithZipFile
+public class TestFSDirectoryURIsEntityLoader extends TestFSDirectoriesEntityLoader
 {
     @Override
     protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
     {
-        Path zipPath = writeToTempZipFile(fileContentByPath);
-        return EntityLoader.newEntityLoader(zipPath);
-    }
-
-    @Override
-    protected boolean isJar()
-    {
-        return false;
+        Path[] dirs = writeToDirectories(fileContentByPath);
+        URI[] uris = Arrays.stream(dirs).map(Path::toUri).toArray(URI[]::new);
+        return EntityLoader.newEntityLoader(uris);
     }
 }

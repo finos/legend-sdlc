@@ -16,11 +16,9 @@ package org.finos.legend.sdlc.protocol.pure.v1;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.protocol.Protocol;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -126,12 +124,39 @@ public class TestPureModelContextDataBuilder
         Assert.assertEquals(new TestSDLC(project, revisionId), pureModelContextData.origin.sdlcInfo);
 
         Assert.assertEquals(3, pureModelContextData.getElements().size());
-        Assert.assertEquals(
-                Sets.mutable.with("model::domain::Source", "model::domain::Target"),
-                Iterate.collect(pureModelContextData.getElementsOfType(Class.class), PackageableElement::getPath, Sets.mutable.empty()));
-        Assert.assertEquals(
-                Sets.mutable.with("model::mapping::SourceToTargetM2M"),
-                Iterate.collect(pureModelContextData.getElementsOfType(Mapping.class), PackageableElement::getPath, Sets.mutable.empty()));
+
+        String expectedSourceClass = "Class model::domain::Source\n" +
+                "{\n" +
+                "  oneName: String[1];\n" +
+                "  anotherName: String[0..1];\n" +
+                "  oneDate: StrictDate[0..1];\n" +
+                "  anotherDate: StrictDate[0..1];\n" +
+                "  oneNumber: Integer[0..1];\n" +
+                "  anotherNumber: Integer[0..1];\n" +
+                "}\n";
+        String expectedTargetClass = "Class model::domain::Target\n" +
+                "{\n" +
+                "  name: String[1];\n" +
+                "  date: StrictDate[0..1];\n" +
+                "  number: Integer[0..1];\n" +
+                "}\n";
+        PureProtocolHelper.assertElementsEqual(
+                Sets.mutable.with(expectedSourceClass, expectedTargetClass),
+                pureModelContextData.getElementsOfType(Class.class));
+
+        String expectedMapping = "Mapping model::mapping::SourceToTargetM2M\n" +
+                "(\n" +
+                "  *model::domain::Target[model_domain_Target]: Pure\n" +
+                "  {\n" +
+                "    ~src model::domain::Source\n" +
+                "    name: $src.oneName,\n" +
+                "    date: $src.anotherDate,\n" +
+                "    number: $src.oneNumber\n" +
+                "  }\n" +
+                ")\n";
+        PureProtocolHelper.assertElementsEqual(
+                Sets.mutable.with(expectedMapping),
+                pureModelContextData.getElementsOfType(Mapping.class));
     }
 
     private static class TestSDLC extends SDLC

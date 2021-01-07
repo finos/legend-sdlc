@@ -34,6 +34,7 @@
         <module>legend-sdlc-entity-serialization</module>
         <module>legend-sdlc-protocol</module>
         <module>legend-sdlc-protocol-pure</module>
+        <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
         <module>test-reports</module>
@@ -75,7 +76,8 @@
         <jersey.version>2.25.1</jersey.version>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <junit.version>4.13.1</junit.version>
-        <legend.engine.version>2.5.0</legend.engine.version>
+        <legend.engine.version>2.6.0</legend.engine.version>
+        <legend.pure.version>1.4.0</legend.pure.version>
         <legend.shared.version>0.4.0</legend.shared.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
@@ -412,6 +414,18 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-protocol-pure</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-language-pure-compiler</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server-shared</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -450,6 +464,26 @@
                 <version>${legend.shared.version}</version>
             </dependency>
             <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-code-compiled-core</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-code-java-compiled-core</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-m3-core</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-protocol</artifactId>
                 <version>${legend.engine.version}</version>
@@ -457,6 +491,21 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-protocol-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-compiler</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-grammar</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-shared-core</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
 

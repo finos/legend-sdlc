@@ -33,6 +33,7 @@ import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Arrays;
 import java.util.Collections;
@@ -167,6 +168,12 @@ public class EntityLoader implements AutoCloseable
         return newEntityLoader(path.toPath());
     }
 
+    public static EntityLoader newEntityLoader(URI uri)
+    {
+        EntityFileSearch search = newURIEntityFileSearch(uri);
+        return new EntityLoader((search == null) ? Collections.emptyList() : Collections.singletonList(search));
+    }
+
     public static EntityLoader newEntityLoader(Path... paths)
     {
         if ((paths == null) || (paths.length == 0))
@@ -185,6 +192,21 @@ public class EntityLoader implements AutoCloseable
     public static EntityLoader newEntityLoader(File... directories)
     {
         return newEntityLoader((directories == null) ? null : Arrays.stream(directories).map(File::toPath).toArray(Path[]::new));
+    }
+
+    public static EntityLoader newEntityLoader(URI... uris)
+    {
+        if ((uris == null) || (uris.length == 0))
+        {
+            return new EntityLoader(Collections.emptyList());
+        }
+        if (uris.length == 1)
+        {
+            return newEntityLoader(uris[0]);
+        }
+        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(uris.length);
+        Arrays.stream(uris).map(EntityLoader::newURIEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
+        return new EntityLoader(searchList);
     }
 
     public static EntityLoader newEntityLoader(ClassLoader classLoader, Path... paths)
@@ -352,6 +374,68 @@ public class EntityLoader implements AutoCloseable
         catch (Exception e)
         {
             StringBuilder builder = new StringBuilder("Error handling ").append(path);
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append(": ").append(eMessage);
+            }
+            throw new RuntimeException(builder.toString(), e);
+        }
+    }
+
+    private static EntityFileSearch newURIEntityFileSearch(URI uri)
+    {
+        try
+        {
+            if ("file".equalsIgnoreCase(uri.getScheme()))
+            {
+                return newPathEntityFileSearch(Paths.get(uri));
+            }
+
+            FileSystem fileSystem;
+            boolean fileSystemShouldBeClosed;
+            try
+            {
+                fileSystem = FileSystems.getFileSystem(uri);
+                fileSystemShouldBeClosed = false;
+            }
+            catch (FileSystemNotFoundException ignore)
+            {
+                try
+                {
+                    fileSystem = FileSystems.newFileSystem(uri, Collections.emptyMap());
+                    fileSystemShouldBeClosed = true;
+                }
+                catch (FileSystemAlreadyExistsException ignoreAlso)
+                {
+                    fileSystem = FileSystems.getFileSystem(uri);
+                    fileSystemShouldBeClosed = false;
+                }
+            }
+            try
+            {
+                Path path = fileSystem.provider().getPath(uri);
+                return fileSystemShouldBeClosed ? new DirectoryEntityFileSearchWithCloseable(path, fileSystem) : new DirectoryEntityFileSearch(path);
+            }
+            catch (Exception e)
+            {
+                if (fileSystemShouldBeClosed)
+                {
+                    try
+                    {
+                        fileSystem.close();
+                    }
+                    catch (Exception suppress)
+                    {
+                        e.addSuppressed(suppress);
+                    }
+                }
+                throw e;
+            }
+        }
+        catch (Exception e)
+        {
+            StringBuilder builder = new StringBuilder("Error handling ").append(uri);
             String eMessage = e.getMessage();
             if (eMessage != null)
             {

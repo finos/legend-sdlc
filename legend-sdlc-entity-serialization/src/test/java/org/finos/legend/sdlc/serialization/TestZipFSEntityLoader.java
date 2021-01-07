@@ -25,9 +25,15 @@ public class TestZipFSEntityLoader extends TestEntityLoaderWithZipFile
     @Override
     protected EntityLoader createEntityLoaderFromFiles(Map<String, byte[]> fileContentByPath) throws IOException
     {
-        Path zipPath = writeToTempZipFile(fileContentByPath, false);
+        Path zipPath = writeToTempZipFile(fileContentByPath);
         FileSystem zipFS = FileSystems.newFileSystem(zipPath, (ClassLoader) null);
         registerCloseable(zipFS);
         return EntityLoader.newEntityLoader(zipFS.getPath(zipFS.getSeparator()));
+    }
+
+    @Override
+    protected boolean isJar()
+    {
+        return false;
     }
 }

@@ -30,8 +30,6 @@
         "type": "Integer"
       }
     ],
-    "superTypes": [
-      "meta::pure::metamodel::type::Any"
-    ]
+    "superTypes": []
   }
 }
