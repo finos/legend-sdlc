@@ -54,6 +54,11 @@
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <maven.compiler.release>8</maven.compiler.release>
 
+        <!-- Legend dependency versions -->
+        <legend.engine.version>2.7.0</legend.engine.version>
+        <legend.pure.version>1.5.0</legend.pure.version>
+        <legend.shared.version>0.4.0</legend.shared.version>
+
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
         <commons-compress.version>1.20</commons-compress.version>
@@ -76,9 +81,6 @@
         <jersey.version>2.25.1</jersey.version>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <junit.version>4.13.1</junit.version>
-        <legend.engine.version>2.6.0</legend.engine.version>
-        <legend.pure.version>1.4.0</legend.pure.version>
-        <legend.shared.version>0.4.0</legend.shared.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
