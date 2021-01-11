@@ -344,7 +344,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             catch (Exception ee)
             {
                 // Possibly failed to delete branch - unfortunate, but ignore it
-                LOGGER.error("Error deleting workspace " + workspaceId + " in project " + projectId, ee);
+                LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ee);
             }
             throw e;
         }
@@ -369,7 +369,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             catch (Exception e)
             {
                 // Possibly failed to delete branch - unfortunate, but ignore it
-                LOGGER.error("Error deleting workspace " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, e);
             }
         }
         else
@@ -396,7 +396,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 catch (Exception ee)
                 {
                     // Possibly failed to delete branch - unfortunate, but ignore it
-                    LOGGER.error("Error deleting workspace " + workspaceId + " in project " + projectId, ee);
+                    LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ee);
                 }
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id + " of type " + type,

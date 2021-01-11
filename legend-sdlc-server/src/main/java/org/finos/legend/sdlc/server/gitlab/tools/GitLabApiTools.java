@@ -111,7 +111,7 @@ public class GitLabApiTools
                 catch (Exception e)
                 {
                     // log exceptions trying to update the wait interval, but otherwise ignore them
-                    LOGGER.error("Exception while updating the wait interval (from " + waitInterval + " millis)", e);
+                    LOGGER.error("Exception while updating the wait interval (from {}  millis)", waitInterval, e);
                 }
             }
         }

@@ -63,8 +63,6 @@ import org.gitlab4j.api.models.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -81,6 +79,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 
 abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 {
@@ -207,7 +207,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 if ((statusCode == Status.TOO_MANY_REQUESTS.getStatusCode()) || (statusCode == Status.NOT_ACCEPTABLE.getStatusCode()))
                 {
-                    LOGGER.warn("Failed to get files for " + getReference() + " from repository archive (http status: " + statusCode + "), will try to get them from tree", exception);
+                    LOGGER.warn("Failed to get files for {} from repository archive (http status: {}), will try to get them from tree", getReference(), statusCode, exception);
                     try
                     {
                         return getFilesFromTree(canonicalDirectory);
@@ -1070,7 +1070,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 return false;
             }
             // Don't let a non-retryable exception here block the delete
-            LOGGER.warn("Error checking for pending pipelines for branch " + branchName + " in project " + projectId, e);
+            LOGGER.warn("Error checking for pending pipelines for branch {} in project {}", branchName, projectId, e);
         }
         LOGGER.debug("Found no pending pipelines for branch {} in project {}", branchName, projectId);
 
@@ -1091,7 +1091,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 return false;
             }
             // Don't let a non-retryable exception here block the delete
-            LOGGER.warn("Error checking for running pipelines for branch " + branchName + " in project " + projectId, e);
+            LOGGER.warn("Error checking for running pipelines for branch {} in project {}", branchName, projectId, e);
         }
         LOGGER.debug("Found no running pipelines for branch {} in project {}", branchName, projectId);
 
@@ -1204,7 +1204,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                             throw new LegendSDLCServerException(msg, Status.fromStatusCode(statusCode), e);
                         }
                     }
-                    LOGGER.error("Commit failed on try " + i, e);
+                    LOGGER.error("Commit failed on try {}", i, e);
                     lastException = e;
                 }
             }

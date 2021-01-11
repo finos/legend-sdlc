@@ -79,7 +79,7 @@ public class GitLabAuthResource extends BaseResource
                             catch (GitLabAuthAccessException e)
                             {
                                 // tolerate access exceptions
-                                getLogger().error("Access exception occurred while checking auth for mode " + mode, e);
+                                getLogger().error("Access exception occurred while checking auth for mode {}", mode, e);
                                 return true;
                             }
                         });
