@@ -42,8 +42,6 @@ import org.gitlab4j.api.models.MergeRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -54,6 +52,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
 {
@@ -652,7 +652,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
         catch (Exception e)
         {
-            LOGGER.error("Error getting target branch head for merge request " + mergeRequest.getIid() + " in project " + projectId + "(target branch: " + mergeRequest.getTargetBranch() + ")", e);
+            LOGGER.error("Error getting target branch head for merge request {} in project {} (target branch: {})", mergeRequest.getIid(), projectId, mergeRequest.getTargetBranch(), e);
             StringBuilder builder = new StringBuilder("Error getting target revision for review ").append(mergeRequest.getIid()).append(" for project ").append(projectId);
             StringTools.appendThrowableMessageIfPresent(builder, e);
             throw new LegendSDLCServerException(builder.toString(), e);

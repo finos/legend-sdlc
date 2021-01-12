@@ -208,7 +208,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting backup workspace " + workspaceId + " in project " + projectId, e);
+            LOGGER.error("Error deleting backup workspace {} in project {}", workspaceId, projectId, e);
         }
     }
 
@@ -367,7 +367,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting backup workspace " + workspaceId + " in project " + projectId, e);
+            LOGGER.error("Error deleting backup workspace {} in project {}", workspaceId, projectId, e);
         }
     }
 }

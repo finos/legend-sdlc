@@ -14,37 +14,44 @@
 
 package org.finos.legend.sdlc.server.error;
 
-import io.dropwizard.jersey.errors.ErrorMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.ResponseBuilder;
 import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-public class LegendSDLCServerExceptionMapper implements ExceptionMapper<LegendSDLCServerException>
+public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendSDLCServerException>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerExceptionMapper.class);
+
+    public LegendSDLCServerExceptionMapper(boolean includeStackTrace)
+    {
+        super(includeStackTrace);
+    }
+
+    public LegendSDLCServerExceptionMapper()
+    {
+        this(false);
+    }
 
     @Override
     public Response toResponse(LegendSDLCServerException exception)
     {
         Status status = exception.getStatus();
-        ResponseBuilder builder = Response.status(status);
         switch (status.getFamily())
         {
             case CLIENT_ERROR:
+            {
+                // we do not return a stack trace for client errors, regardless of the value of includeStackTrace
+                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCServerException(exception, false));
+            }
             case SERVER_ERROR:
             {
-                builder.entity(buildErrorMessage(exception))
-                        .type(MediaType.APPLICATION_JSON);
-                break;
+                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
             }
             case REDIRECTION:
             {
@@ -52,51 +59,27 @@ public class LegendSDLCServerExceptionMapper implements ExceptionMapper<LegendSD
                 URI redirectLocation = getRedirectLocation(exception);
                 if (redirectLocation != null)
                 {
-                    builder.location(redirectLocation);
+                    return Response.status(status)
+                            .location(redirectLocation)
+                            .build();
                 }
-                else
-                {
-                    // Could not get a redirect location from an exception indicating there should be a redirect
-                    // Send back an internal server error instead
-                    builder.status(Status.INTERNAL_SERVER_ERROR)
-                            .entity(buildErrorMessage(exception))
-                            .type(MediaType.APPLICATION_JSON);
-                }
-                break;
+
+                // Could not get a redirect location from an exception indicating there should be a redirect
+                // Send back an internal server error instead
+                LOGGER.warn("Could not get redirect URI from exception with status: {}", status);
+                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
             }
             default:
             {
                 // Exception with non-error HTTP status
                 // Send back an internal server error instead
                 LOGGER.warn("Exception with non-error HTTP status: {}", status);
-                builder.status(Status.INTERNAL_SERVER_ERROR)
-                        .entity(buildErrorMessage(exception))
-                        .type(MediaType.APPLICATION_JSON);
-                break;
+                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
             }
         }
-        return builder.build();
     }
 
-    private ErrorMessage buildErrorMessage(LegendSDLCServerException exception)
-    {
-        return new ErrorMessage(exception.getStatus().getStatusCode(), getMessage(exception));
-    }
-
-    private String getMessage(LegendSDLCServerException exception)
-    {
-        String message = exception.getMessage();
-        if (message == null)
-        {
-            for (Throwable cause = exception.getCause(); (message == null) && (cause != null); cause = cause.getCause())
-            {
-                message = cause.getMessage();
-            }
-        }
-        return message;
-    }
-
-    private URI getRedirectLocation(LegendSDLCServerException exception)
+    private static URI getRedirectLocation(LegendSDLCServerException exception)
     {
         String message = exception.getMessage();
         if (message == null)

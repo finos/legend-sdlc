@@ -283,12 +283,12 @@ public class BackgroundTaskProcessor
         }
         catch (RejectedExecutionException e)
         {
-            LOGGER.error(taskWrapper.logPrefix + " Task rejected", e);
+            LOGGER.error("{} Task rejected", taskWrapper.logPrefix, e);
             throw e;
         }
         catch (Exception e)
         {
-            LOGGER.error(taskWrapper.logPrefix + " Error while submitting task", e);
+            LOGGER.error("{} Error while submitting task", taskWrapper.logPrefix, e);
             throw e;
         }
         LOGGER.debug("{} task submitted", taskWrapper.logPrefix);
@@ -376,7 +376,7 @@ public class BackgroundTaskProcessor
             }
             catch (Exception e)
             {
-                LOGGER.warn(this.logPrefix + " Error occurred during task", e);
+                LOGGER.warn("{} Error occurred during task", this.logPrefix, e);
                 throw e;
             }
             LOGGER.debug("{} Finished task", this.logPrefix);
@@ -436,13 +436,13 @@ public class BackgroundTaskProcessor
             {
                 if (isExceptionRetryable(e))
                 {
-                    LOGGER.warn(this.logPrefix + " Retryable error occurred on attempt #" + this.tryCount + ", resubmitting", e);
+                    LOGGER.warn("{} Retryable error occurred on attempt #{}, resubmitting", this.logPrefix, this.tryCount, e);
                     this.lastTime = System.currentTimeMillis();
                     this.tryCount++;
                     resubmit();
                     return;
                 }
-                LOGGER.warn(this.logPrefix + " Non-retryable error occurred during task on attempt #" + this.tryCount, e);
+                LOGGER.warn("{} Non-retryable error occurred during task on attempt #{}", this.logPrefix, this.tryCount, e);
                 throw e;
             }
             if (finished)
@@ -479,7 +479,7 @@ public class BackgroundTaskProcessor
                 }
                 catch (Exception e)
                 {
-                    LOGGER.warn(this.logPrefix + " Error occurred while testing if exception is retryable on attempt #" + this.tryCount, e);
+                    LOGGER.warn("{} Error occurred while testing if exception is retryable on attempt #{}", this.logPrefix, this.tryCount, e);
                 }
             }
             return false;
@@ -500,11 +500,11 @@ public class BackgroundTaskProcessor
             }
             catch (RejectedExecutionException e)
             {
-                LOGGER.warn(this.logPrefix + " Task rejected on retry submission", e);
+                LOGGER.warn("{} Task rejected on retry submission", this.logPrefix, e);
             }
             catch (Exception e)
             {
-                LOGGER.warn(this.logPrefix + " Error resubmitting task for retry", e);
+                LOGGER.warn("{} Error resubmitting task for retry", this.logPrefix, e);
             }
             return false;
         }

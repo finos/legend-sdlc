@@ -22,7 +22,6 @@ import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -90,7 +89,6 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
-import java.lang.reflect.Constructor;
 import java.util.List;
 import javax.inject.Named;
 
@@ -199,7 +197,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private void bindExceptionMappers(Binder binder)
     {
-        binder.bind(LegendSDLCServerExceptionMapper.class).toConstructor(defaultConstructor(LegendSDLCServerExceptionMapper.class));
+
     }
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()
@@ -241,17 +239,5 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     public String provideApplicationName(LegendSDLCServerConfiguration configuration)
     {
         return configuration.getApplicationName();
-    }
-
-    private static <T> Constructor<T> defaultConstructor(Class<T> type)
-    {
-        try
-        {
-            return type.getConstructor();
-        }
-        catch (NoSuchMethodException e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 }

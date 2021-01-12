@@ -105,7 +105,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error getting workspace " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error getting workspace {} in project {}", workspaceId, projectId, e);
             }
         }
         if (existingBranch != null)
@@ -167,7 +167,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting backup workspace " + workspaceId + " in project " + projectId + " after recovery is completed", e);
+            LOGGER.error("Error deleting backup workspace {} in project {} after recovery is completed", workspaceId, projectId, e);
         }
     }
 }

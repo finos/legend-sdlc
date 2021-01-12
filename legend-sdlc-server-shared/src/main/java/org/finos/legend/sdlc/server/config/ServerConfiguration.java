@@ -35,6 +35,9 @@ public class ServerConfiguration extends Configuration
     @JsonProperty("filterPriorities")
     private Map<String, Integer> filterPriorities;
 
+    @JsonProperty("errors")
+    private ErrorHandlingConfiguration errorConfig;
+
     public String getApplicationName()
     {
         return this.applicationName;
@@ -53,5 +56,10 @@ public class ServerConfiguration extends Configuration
     public Map<String, Integer> getFilterPriorities()
     {
         return this.filterPriorities;
+    }
+
+    public ErrorHandlingConfiguration getErrorHandlingConfiguration()
+    {
+        return this.errorConfig;
     }
 }

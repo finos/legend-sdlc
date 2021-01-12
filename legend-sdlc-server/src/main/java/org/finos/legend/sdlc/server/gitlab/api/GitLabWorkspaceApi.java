@@ -311,7 +311,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error accessing " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error accessing {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel(), workspaceId, projectId, e);
             }
         }
         if (backupBranch != null)
@@ -329,7 +329,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             catch (Exception e)
             {
                 // unfortunate, but this should not throw error
-                LOGGER.error("Error deleting " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error deleting {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel(), workspaceId, projectId, e);
             }
         }
         // Delete workspace with conflict resolution with the same name if exists
@@ -342,7 +342,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error accessing workspace with " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error accessing workspace with {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel(), workspaceId, projectId, e);
             }
         }
         if (conflictResolutionBranch != null)
@@ -360,7 +360,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             catch (Exception e)
             {
                 // unfortunate, but this should not throw error
-                LOGGER.error("Error deleting " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId, e);
+                LOGGER.error("Error deleting {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel(), workspaceId, projectId, e);
             }
         }
         // Create new workspace
@@ -426,7 +426,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId, e);
+            LOGGER.error("Error deleting {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel(), workspaceId, projectId, e);
         }
         // Delete backup workspace
         try
@@ -441,7 +441,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId, e);
+            LOGGER.error("Error deleting {} {} in project {}", ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel(), workspaceId, projectId, e);
         }
     }
 
@@ -910,7 +910,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             catch (Exception closeEx)
             {
                 // if we fail, log the error but we don't throw it
-                LOGGER.error("Could not close merge request " + mergeRequest.getIid() + " for project " + projectId + ": " + mergeRequest.getWebUrl(), closeEx);
+                LOGGER.error("Could not close merge request {} for project {}: {}", mergeRequest.getIid(), projectId, mergeRequest.getWebUrl(), closeEx);
             }
             // Delete temporary branch in the background
             submitBackgroundRetryableTask(() -> waitForPipelinesDeleteBranchAndVerify(gitLabApi, gitLabProjectId, tempBranchName), 5000L, "delete " + tempBranchName);

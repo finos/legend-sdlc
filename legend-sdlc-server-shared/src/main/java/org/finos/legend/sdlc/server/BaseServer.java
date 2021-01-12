@@ -19,14 +19,17 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.jersey.jackson.JsonProcessingExceptionMapper;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.finos.legend.sdlc.server.config.ErrorHandlingConfiguration;
 import org.finos.legend.sdlc.server.config.ServerConfiguration;
+import org.finos.legend.sdlc.server.error.CatchAllExceptionMapper;
+import org.finos.legend.sdlc.server.error.JsonProcessingExceptionMapper;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
@@ -47,6 +50,7 @@ import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import javax.servlet.DispatcherType;
 import javax.servlet.FilterRegistration;
@@ -96,10 +100,15 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         environment.jersey().register(MultiPartFeature.class);
         environment.healthChecks().register("server", new MinimalServerHealthCheck());
 
-        environment.jersey().register(new JsonProcessingExceptionMapper(true));
+        // Temporal configuration
         environment.jersey().getResourceConfig().register(new TemporalConverterProvider());
-
         environment.getObjectMapper().configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        // Error handling
+        boolean includeStackTraces = Optional.ofNullable(configuration.getErrorHandlingConfiguration()).map(ErrorHandlingConfiguration::getIncludeStackTrace).orElse(false);
+        environment.jersey().register(new JsonProcessingExceptionMapper(includeStackTraces));
+        environment.jersey().register(new LegendSDLCServerExceptionMapper(includeStackTraces));
+        environment.jersey().register(new CatchAllExceptionMapper(includeStackTraces));
     }
 
     public ServerInfo getServerInfo()
