@@ -34,7 +34,10 @@ public class TestPureModelContextDataBuilder
     @Test
     public void testEmpty()
     {
-        PureModelContextData pureModelContextData = PureModelContextDataBuilder.newBuilder().build();
+        PureModelContextDataBuilder builder = PureModelContextDataBuilder.newBuilder();
+        Assert.assertEquals(0, builder.getElementCount());
+
+        PureModelContextData pureModelContextData = builder.build();
         Assert.assertNull(pureModelContextData.serializer);
         Assert.assertNull(pureModelContextData.origin);
         Assert.assertEquals(Collections.emptyList(), pureModelContextData.getElements());
@@ -108,17 +111,17 @@ public class TestPureModelContextDataBuilder
         String protocolVersion = "3.2.1";
         String project = "someProject";
         String revisionId = "1234567890abcdef";
-        PureModelContextData pureModelContextData;
-
+        PureModelContextDataBuilder builder = PureModelContextDataBuilder.newBuilder();
+        Assert.assertEquals(0, builder.getElementCount());
         try (EntityLoader entityLoader = EntityLoader.newEntityLoader(Paths.get(Objects.requireNonNull(getClass().getClassLoader().getResource("pure-model-context-data-builder-test-model")).toURI())))
         {
-            pureModelContextData = PureModelContextDataBuilder.newBuilder()
-                    .withProtocol(protocolName, protocolVersion)
+            builder.withProtocol(protocolName, protocolVersion)
                     .withSDLC(new TestSDLC(project, revisionId))
-                    .withEntities(entityLoader.getAllEntities())
-                    .build();
+                    .withEntities(entityLoader.getAllEntities());
         }
+        Assert.assertEquals(3, builder.getElementCount());
 
+        PureModelContextData pureModelContextData = builder.build();
         Assert.assertEquals(new Protocol(protocolName, protocolVersion), pureModelContextData.serializer);
         Assert.assertEquals(new Protocol(protocolName, protocolVersion), pureModelContextData.origin.serializer);
         Assert.assertEquals(new TestSDLC(project, revisionId), pureModelContextData.origin.sdlcInfo);

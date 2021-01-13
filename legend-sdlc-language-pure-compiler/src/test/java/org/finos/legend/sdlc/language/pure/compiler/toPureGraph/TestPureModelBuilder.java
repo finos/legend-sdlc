@@ -80,7 +80,10 @@ public class TestPureModelBuilder
     @Test
     public void testBuild()
     {
-        PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(this.entityLoader.getAllEntities()).build();
+        PureModelBuilder builder = PureModelBuilder.newBuilder();
+        Assert.assertEquals(0, builder.getElementCount());
+        PureModelBuilder.PureModelWithContextData pureModelWithContextData = builder.withEntities(this.entityLoader.getAllEntities()).build();
+        Assert.assertEquals(3, builder.getElementCount());
         checkPureModelContextData(pureModelWithContextData.getPureModelContextData());
         checkPureModel(pureModelWithContextData.getPureModel());
     }
@@ -88,7 +91,10 @@ public class TestPureModelBuilder
     @Test
     public void testBuildPureModel()
     {
-        PureModel pureModel = PureModelBuilder.newBuilder().withEntities(this.entityLoader.getAllEntities()).buildPureModel();
+        PureModelBuilder builder = PureModelBuilder.newBuilder();
+        Assert.assertEquals(0, builder.getElementCount());
+        PureModel pureModel = builder.withEntities(this.entityLoader.getAllEntities()).buildPureModel();
+        Assert.assertEquals(3, builder.getElementCount());
         checkPureModel(pureModel);
     }
 
