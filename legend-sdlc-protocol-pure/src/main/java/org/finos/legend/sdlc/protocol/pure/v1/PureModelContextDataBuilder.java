@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.protocol.pure.v1;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.finos.legend.engine.protocol.Protocol;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextPointer;
@@ -23,7 +24,6 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -37,6 +37,11 @@ public class PureModelContextDataBuilder
     private PureModelContextDataBuilder(EntityToPureConverter converter)
     {
         this.converter = converter;
+    }
+
+    public int getElementCount()
+    {
+        return this.elements.size();
     }
 
     public void addPackageableElement(PackageableElement element)
@@ -61,21 +66,37 @@ public class PureModelContextDataBuilder
         return this;
     }
 
-    public PureModelContextDataBuilder withEntities(Stream<? extends Entity> entities)
+    public void addEntities(Stream<? extends Entity> entities)
     {
         entities.forEach(this::addEntity);
+    }
+
+    public PureModelContextDataBuilder withEntities(Stream<? extends Entity> entities)
+    {
+        addEntities(entities);
         return this;
+    }
+
+    public void addEntities(Iterable<? extends Entity> entities)
+    {
+        entities.forEach(this::addEntity);
     }
 
     public PureModelContextDataBuilder withEntities(Iterable<? extends Entity> entities)
     {
-        entities.forEach(this::addEntity);
+        addEntities(entities);
         return this;
+    }
+
+    public void addEntities(Entity... entities)
+    {
+        ArrayIterate.forEach(entities, this::addEntity);
     }
 
     public PureModelContextDataBuilder withEntities(Entity... entities)
     {
-        return withEntities(Arrays.asList(entities));
+        addEntities(entities);
+        return this;
     }
 
     public boolean addEntityIfPossible(Entity entity)
@@ -91,21 +112,37 @@ public class PureModelContextDataBuilder
         return this;
     }
 
-    public PureModelContextDataBuilder withEntitiesIfPossible(Stream<? extends Entity> entities)
+    public void addEntitiesIfPossible(Stream<? extends Entity> entities)
     {
         entities.forEach(this::addEntityIfPossible);
+    }
+
+    public PureModelContextDataBuilder withEntitiesIfPossible(Stream<? extends Entity> entities)
+    {
+        addEntitiesIfPossible(entities);
         return this;
+    }
+
+    public void addEntitiesIfPossible(Iterable<? extends Entity> entities)
+    {
+        entities.forEach(this::addEntityIfPossible);
     }
 
     public PureModelContextDataBuilder withEntitiesIfPossible(Iterable<? extends Entity> entities)
     {
-        entities.forEach(this::addEntityIfPossible);
+        addEntitiesIfPossible(entities);
         return this;
+    }
+
+    public void addEntitiesIfPossible(Entity... entities)
+    {
+        ArrayIterate.forEach(entities, this::addEntityIfPossible);
     }
 
     public PureModelContextDataBuilder withEntitiesIfPossible(Entity... entities)
     {
-        return withEntitiesIfPossible(Arrays.asList(entities));
+        addEntitiesIfPossible(entities);
+        return this;
     }
 
     public void setProtocol(Protocol protocol)

@@ -16,11 +16,11 @@ package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 
-import java.util.Arrays;
 import java.util.stream.Stream;
 
 public class PureModelBuilder
@@ -29,6 +29,22 @@ public class PureModelBuilder
 
     private PureModelBuilder()
     {
+    }
+
+    public int getElementCount()
+    {
+        return this.contextDataBuilder.getElementCount();
+    }
+
+    public void addPackageableElement(PackageableElement element)
+    {
+        this.contextDataBuilder.addPackageableElement(element);
+    }
+
+    public PureModelBuilder withPackageableElement(PackageableElement element)
+    {
+        addPackageableElement(element);
+        return this;
     }
 
     public void addEntity(Entity entity)
@@ -42,21 +58,37 @@ public class PureModelBuilder
         return this;
     }
 
+    public void addEntities(Stream<? extends Entity> entities)
+    {
+        this.contextDataBuilder.addEntities(entities);
+    }
+
     public PureModelBuilder withEntities(Stream<? extends Entity> entities)
     {
-        entities.forEach(this::addEntity);
+        addEntities(entities);
         return this;
+    }
+
+    public void addEntities(Iterable<? extends Entity> entities)
+    {
+        this.contextDataBuilder.addEntities(entities);
     }
 
     public PureModelBuilder withEntities(Iterable<? extends Entity> entities)
     {
-        entities.forEach(this::addEntity);
+        addEntities(entities);
         return this;
+    }
+
+    public void addEntities(Entity... entities)
+    {
+        this.contextDataBuilder.addEntities(entities);
     }
 
     public PureModelBuilder withEntities(Entity... entities)
     {
-        return withEntities(Arrays.asList(entities));
+        addEntities(entities);
+        return this;
     }
 
     public PureModelWithContextData build()
