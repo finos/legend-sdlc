@@ -91,6 +91,50 @@ public class PureModelBuilder
         return this;
     }
 
+    public boolean addEntityIfPossible(Entity entity)
+    {
+        return this.contextDataBuilder.addEntityIfPossible(entity);
+    }
+
+    public PureModelBuilder withEntityIfPossible(Entity entity)
+    {
+        addEntityIfPossible(entity);
+        return this;
+    }
+
+    public void addEntitiesIfPossible(Stream<? extends Entity> entities)
+    {
+        this.contextDataBuilder.addEntitiesIfPossible(entities);
+    }
+
+    public PureModelBuilder withEntitiesIfPossible(Stream<? extends Entity> entities)
+    {
+        addEntitiesIfPossible(entities);
+        return this;
+    }
+
+    public void addEntitiesIfPossible(Iterable<? extends Entity> entities)
+    {
+        this.contextDataBuilder.addEntitiesIfPossible(entities);
+    }
+
+    public PureModelBuilder withEntitiesIfPossible(Iterable<? extends Entity> entities)
+    {
+        addEntitiesIfPossible(entities);
+        return this;
+    }
+
+    public void addEntitiesIfPossible(Entity... entities)
+    {
+        this.contextDataBuilder.addEntitiesIfPossible(entities);
+    }
+
+    public PureModelBuilder withEntitiesIfPossible(Entity... entities)
+    {
+        addEntitiesIfPossible(entities);
+        return this;
+    }
+
     public PureModelWithContextData build()
     {
         return build(null);
