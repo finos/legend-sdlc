@@ -87,7 +87,7 @@
         <snakeyaml.version>1.27</snakeyaml.version>
         <gitlab.version>12.9.2-ce.0</gitlab.version>
         <gitlab.autoremove-container>true</gitlab.autoremove-container>
-        <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
+        <gitlab.skip-docker-start>true</gitlab.skip-docker-start>
         <gitlab.port>8090</gitlab.port>
     </properties>
 
