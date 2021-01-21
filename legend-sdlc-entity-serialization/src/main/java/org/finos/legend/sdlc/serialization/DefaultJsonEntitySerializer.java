@@ -57,6 +57,12 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
     // Serialization
 
     @Override
+    public boolean canSerialize(Entity entity)
+    {
+        return true;
+    }
+
+    @Override
     public void serialize(Entity entity, OutputStream stream) throws IOException
     {
         OBJECT_MAPPER.writeValue(stream, toEntityFile(entity));
