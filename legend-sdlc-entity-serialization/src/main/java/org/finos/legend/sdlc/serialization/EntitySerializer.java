@@ -41,6 +41,14 @@ public interface EntitySerializer
     // Serialization
 
     /**
+     * Return whether the entity can be serialized by this serializer.
+     *
+     * @param entity entity
+     * @return whether entity can be serialized
+     */
+    boolean canSerialize(Entity entity);
+
+    /**
      * Serialize an entity to an output stream.
      *
      * @param entity entity to serialize
