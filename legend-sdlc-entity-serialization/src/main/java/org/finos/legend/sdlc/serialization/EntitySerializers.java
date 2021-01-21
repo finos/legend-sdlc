@@ -14,12 +14,9 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.LazyIterate;
 
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -44,20 +41,28 @@ public class EntitySerializers
         return LazyIterate.selectInstancesOf(getAvailableSerializers(), EntityTextSerializer.class);
     }
 
-    public static Map<String, List<EntitySerializer>> getAvailableSerializersByExtension()
+    public static Map<String, EntitySerializer> getAvailableSerializersByName()
     {
-        return indexByExtension(getAvailableSerializers());
+        return indexByName(getAvailableSerializers());
     }
 
-    public static Map<String, List<EntityTextSerializer>> getAvailableTextSerializersByExtension()
+    public static Map<String, EntityTextSerializer> getAvailableTextSerializersByName()
     {
-        return indexByExtension(getAvailableTextSerializers());
+        return indexByName(getAvailableTextSerializers());
     }
 
-    private static <T extends EntitySerializer> Map<String, List<T>> indexByExtension(Iterable<T> serializers)
+    private static <T extends EntitySerializer> Map<String, T> indexByName(Iterable<T> serializers)
     {
-        MutableMap<String, List<T>> result = Maps.mutable.empty();
-        serializers.forEach(s -> result.getIfAbsentPut(s.getDefaultFileExtension(), Lists.mutable::empty).add(s));
+        Map<String, T> result = Maps.mutable.empty();
+        for (T serializer : serializers)
+        {
+            String name = serializer.getName();
+            T old = result.put(name, serializer);
+            if (old != null)
+            {
+                throw new IllegalArgumentException("Multiple serializers named \"" + name + "\"");
+            }
+        }
         return result;
     }
 }

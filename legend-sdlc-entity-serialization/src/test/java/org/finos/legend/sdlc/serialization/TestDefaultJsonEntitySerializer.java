@@ -23,6 +23,12 @@ public class TestDefaultJsonEntitySerializer extends TestEntityTextSerializer<De
     }
 
     @Override
+    public String getExpectedName()
+    {
+        return "alloy";
+    }
+
+    @Override
     protected String getExpectedDefaultFileExtension()
     {
         return "json";

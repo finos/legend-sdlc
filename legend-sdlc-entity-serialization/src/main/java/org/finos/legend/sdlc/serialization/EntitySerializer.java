@@ -24,14 +24,38 @@ import java.io.OutputStream;
 
 public interface EntitySerializer
 {
-    // Files
+    /**
+     * Get the name of the serialization format.
+     *
+     * @return serialization format name
+     */
+    String getName();
 
+    /**
+     * Get the default file extension for entities serialized in this format.
+     *
+     * @return default file extension
+     */
     String getDefaultFileExtension();
 
     // Serialization
 
+    /**
+     * Serialize an entity to an output stream.
+     *
+     * @param entity entity to serialize
+     * @param stream output stream to serialize to
+     * @throws IOException
+     */
     void serialize(Entity entity, OutputStream stream) throws IOException;
 
+    /**
+     * Serialize an entity to a byte array.
+     *
+     * @param entity entity to serialize
+     * @return byte array serialization of entity
+     * @throws IOException
+     */
     default byte[] serializeToBytes(Entity entity) throws IOException
     {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
@@ -41,8 +65,22 @@ public interface EntitySerializer
 
     // Deserialization
 
+    /**
+     * Deserialize an entity from an input stream.
+     *
+     * @param stream input stream
+     * @return deserialized entity
+     * @throws IOException
+     */
     Entity deserialize(InputStream stream) throws IOException;
 
+    /**
+     * Deserialize an entity from a byte array.
+     *
+     * @param content input bytes
+     * @return deserialized entity
+     * @throws IOException
+     */
     default Entity deserialize(byte[] content) throws IOException
     {
         return deserialize(new ByteArrayInputStream(content));

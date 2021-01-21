@@ -43,6 +43,12 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
     }
 
     @Override
+    public String getName()
+    {
+        return "alloy";
+    }
+
+    @Override
     public String getDefaultFileExtension()
     {
         return "json";

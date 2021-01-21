@@ -31,6 +31,12 @@ public abstract class TestEntitySerializer<T extends EntitySerializer>
     protected final T serializer = getSerializer();
 
     @Test
+    public void testName()
+    {
+        Assert.assertEquals(getExpectedName(), this.serializer.getName());
+    }
+
+    @Test
     public void testDefaultFileExtension()
     {
         Assert.assertEquals(getExpectedDefaultFileExtension(), this.serializer.getDefaultFileExtension());
@@ -61,6 +67,8 @@ public abstract class TestEntitySerializer<T extends EntitySerializer>
     }
 
     protected abstract T getSerializer();
+
+    protected abstract String getExpectedName();
 
     protected abstract String getExpectedDefaultFileExtension();
 
