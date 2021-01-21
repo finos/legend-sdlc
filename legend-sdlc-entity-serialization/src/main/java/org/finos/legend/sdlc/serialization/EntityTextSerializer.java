@@ -31,6 +31,13 @@ public interface EntityTextSerializer extends EntitySerializer
 {
     // Serialization
 
+    /**
+     * Serialize an entity to a writer.
+     *
+     * @param entity entity to serialize
+     * @param writer writer to serialize to
+     * @throws IOException
+     */
     void serialize(Entity entity, Writer writer) throws IOException;
 
     @Override
@@ -39,6 +46,13 @@ public interface EntityTextSerializer extends EntitySerializer
         serialize(entity, new OutputStreamWriter(stream, StandardCharsets.UTF_8));
     }
 
+    /**
+     * Serialize an entity to a string.
+     *
+     * @param entity entity to serialize
+     * @return string serialization of entity
+     * @throws IOException
+     */
     default String serializeToString(Entity entity) throws IOException
     {
         StringWriter writer = new StringWriter();
@@ -48,6 +62,13 @@ public interface EntityTextSerializer extends EntitySerializer
 
     // Deserialization
 
+    /**
+     * Deserialize an entity from a reader.
+     *
+     * @param reader input reader
+     * @return deserialized entity
+     * @throws IOException
+     */
     Entity deserialize(Reader reader) throws IOException;
 
     @Override
@@ -56,6 +77,13 @@ public interface EntityTextSerializer extends EntitySerializer
         return deserialize(new InputStreamReader(stream, StandardCharsets.UTF_8));
     }
 
+    /**
+     * Deserialize an entity from a string.
+     *
+     * @param content input string
+     * @return deserialized entity
+     * @throws IOException
+     */
     default Entity deserialize(String content) throws IOException
     {
         return deserialize(new StringReader(content));

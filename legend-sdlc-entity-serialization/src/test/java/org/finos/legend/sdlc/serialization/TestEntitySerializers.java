@@ -20,7 +20,6 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 public class TestEntitySerializers
@@ -48,22 +47,20 @@ public class TestEntitySerializers
     }
 
     @Test
-    public void testGetAvailableSerializersByExtension()
+    public void testGetAvailableSerializersByName()
     {
-        Map<String, List<EntitySerializer>> index = EntitySerializers.getAvailableSerializersByExtension();
+        Map<String, EntitySerializer> index = EntitySerializers.getAvailableSerializersByName();
         Assert.assertEquals(1, index.size());
-        Assert.assertEquals(Collections.singleton("json"), index.keySet());
-        Assert.assertEquals(1, index.get("json").size());
-        Assert.assertTrue(index.get("json").get(0) instanceof DefaultJsonEntitySerializer);
+        Assert.assertEquals(Collections.singleton("alloy"), index.keySet());
+        Assert.assertTrue(index.get("alloy") instanceof DefaultJsonEntitySerializer);
     }
 
     @Test
-    public void testGetAvailableTextSerializersByExtension()
+    public void testGetAvailableTextSerializersByName()
     {
-        Map<String, List<EntityTextSerializer>> index = EntitySerializers.getAvailableTextSerializersByExtension();
+        Map<String, EntityTextSerializer> index = EntitySerializers.getAvailableTextSerializersByName();
         Assert.assertEquals(1, index.size());
-        Assert.assertEquals(Collections.singleton("json"), index.keySet());
-        Assert.assertEquals(1, index.get("json").size());
-        Assert.assertTrue(index.get("json").get(0) instanceof DefaultJsonEntitySerializer);
+        Assert.assertEquals(Collections.singleton("alloy"), index.keySet());
+        Assert.assertTrue(index.get("alloy") instanceof DefaultJsonEntitySerializer);
     }
 }
