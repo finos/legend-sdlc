@@ -45,7 +45,7 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
     @Override
     public String getName()
     {
-        return "alloy";
+        return "legend";
     }
 
     @Override
