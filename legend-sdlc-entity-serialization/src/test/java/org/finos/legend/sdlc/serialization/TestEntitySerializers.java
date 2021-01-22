@@ -51,8 +51,8 @@ public class TestEntitySerializers
     {
         Map<String, EntitySerializer> index = EntitySerializers.getAvailableSerializersByName();
         Assert.assertEquals(1, index.size());
-        Assert.assertEquals(Collections.singleton("alloy"), index.keySet());
-        Assert.assertTrue(index.get("alloy") instanceof DefaultJsonEntitySerializer);
+        Assert.assertEquals(Collections.singleton("legend"), index.keySet());
+        Assert.assertTrue(index.get("legend") instanceof DefaultJsonEntitySerializer);
     }
 
     @Test
@@ -60,7 +60,7 @@ public class TestEntitySerializers
     {
         Map<String, EntityTextSerializer> index = EntitySerializers.getAvailableTextSerializersByName();
         Assert.assertEquals(1, index.size());
-        Assert.assertEquals(Collections.singleton("alloy"), index.keySet());
-        Assert.assertTrue(index.get("alloy") instanceof DefaultJsonEntitySerializer);
+        Assert.assertEquals(Collections.singleton("legend"), index.keySet());
+        Assert.assertTrue(index.get("legend") instanceof DefaultJsonEntitySerializer);
     }
 }

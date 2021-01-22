@@ -25,7 +25,7 @@ public class TestDefaultJsonEntitySerializer extends TestEntityTextSerializer<De
     @Override
     public String getExpectedName()
     {
-        return "alloy";
+        return "legend";
     }
 
     @Override
