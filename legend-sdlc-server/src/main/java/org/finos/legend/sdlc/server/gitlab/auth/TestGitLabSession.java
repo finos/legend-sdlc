@@ -1,0 +1,80 @@
+// Copyright 2020 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.finos.legend.sdlc.server.gitlab.auth;
+
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+
+import java.time.Instant;
+import java.util.Set;
+
+public class TestGitLabSession implements GitLabSession
+{
+    private String accessToken;
+
+    @Override
+    public String getUserId() {
+        return null;
+    }
+
+    @Override
+    public Instant getCreationTime() {
+        return null;
+    }
+
+    @Override
+    public boolean isValid() {
+        return false;
+    }
+
+    @Override
+    public Set<GitLabMode> getValidModes() {
+        return null;
+    }
+
+    @Override
+    public boolean isValidMode(GitLabMode mode) {
+        return true; // TODO: update
+    }
+
+    @Override
+    public boolean gitLabOAuthCallback(GitLabMode mode, String code) {
+        return false;
+    }
+
+    public void setAccessToken(String token) {
+        this.accessToken = token;
+    }
+
+    @Override
+    public String getAccessToken(GitLabMode mode) {
+        return this.accessToken;
+    }
+
+    @Override
+    public void clearAccessTokens() {
+
+    }
+
+    @Override
+    public void putAccessToken(GitLabMode mode, String token) {
+
+    }
+
+    @Override
+    public GitLabModeInfo getModeInfo(GitLabMode mode) {
+        return null;
+    }
+}
