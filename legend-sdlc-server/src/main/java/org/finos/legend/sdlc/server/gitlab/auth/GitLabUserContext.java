@@ -42,7 +42,7 @@ public class GitLabUserContext extends UserContext
     @Inject
     public GitLabUserContext(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
     {
-        super(httpRequest, httpResponse); // need to mock the request; gen oauth token
+        super(httpRequest, httpResponse);
     }
 
     public void gitLabAuthCallback(GitLabMode mode, String code)

@@ -55,7 +55,6 @@ public class UserContext
         return this.httpRequest;
     }
 
-    // look here
     private static Session findSession(ServletRequest request)
     {
         Session session = findSession(request, 0);

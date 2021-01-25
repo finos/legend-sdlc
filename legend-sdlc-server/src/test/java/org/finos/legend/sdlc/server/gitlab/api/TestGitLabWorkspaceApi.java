@@ -33,28 +33,10 @@ import static org.junit.Assert.assertNotNull;
 
 public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
 {
-//    private static WorkspaceApi workspaceApi;
-//    private static GitLabApi oauthGitLabApi;
-
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        //        workspaceApi = new GitLabWorkspaceApi(null, null, null);
     }
-
-//    @Test
-//    public void testCreateNewWorkspace()
-//    {
-//        String workspaceId = "DunderMifflin";
-//        String projectId = "UAT-802";
-//        Workspace workspace = execute(
-//                "getting workspace " + workspaceId + " for project " + projectId,
-//                "create new workspace",
-//                workspaceApi::newWorkspace,
-//                projectId,
-//                workspaceId
-//        );
-//    }
 
     @Test
     public void testCreateProject() throws GitLabApiException { // TODO: remove exception to catch block
