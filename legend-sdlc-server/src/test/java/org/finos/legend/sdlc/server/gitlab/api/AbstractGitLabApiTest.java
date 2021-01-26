@@ -65,6 +65,7 @@ public class AbstractGitLabApiTest extends BaseResource
         catch (GitLabApiException exception)
         {
             exception.printStackTrace();
+            System.out.println(exception.getValidationErrors().toString());
             throw new LegendSDLCServerException("Cannot create proper user for authentication: " + exception.getMessage());
         }
     }
