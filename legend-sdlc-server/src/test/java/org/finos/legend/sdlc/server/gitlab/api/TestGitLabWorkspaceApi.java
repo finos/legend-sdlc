@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.gitlab4j.api.GitLabApi;
@@ -37,11 +38,12 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: remove
+        JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
+        prepareGitLabUser();
     }
 
     @Test
-    public void testCreateProject() throws GitLabApiException { // TODO: remove exception to catch block
+    public void testCreateProject() throws LegendSDLCServerException {
 
         String projectName = "Test Project";
         String description = "A test project.";
@@ -52,14 +54,20 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
 
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
-//        GitLabSessionBuilder.newBuilder(MODE_INFOS).withProfile(getProfile()).build();
-//        Session session = new GitLabSessionBuilder().withText("test text").withNumber(333888777444222L).withUserId("slothrop").build();
-
         Session testGitLabSession = new TestGitLabSession();
+        GitLabApi oauthGitLabApi;
+        Version version;
 
-        GitLabApi oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_LOGIN_USERNAME, TEST_LOGIN_PASSWORD, null, null, true);
-        assertNotNull(oauthGitLabApi);
-        Version version = oauthGitLabApi.getVersion();
+        try
+        {
+            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_LOGIN_USERNAME, TEST_LOGIN_PASSWORD, null, null, true);
+            assertNotNull(oauthGitLabApi);
+            version = oauthGitLabApi.getVersion();
+        }
+        catch (GitLabApiException exception)
+        {
+            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage());
+        }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
         System.out.println("ACCESS_TOKEN: " + oauthToken);
