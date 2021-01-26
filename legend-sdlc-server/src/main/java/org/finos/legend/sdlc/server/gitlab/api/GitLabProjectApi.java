@@ -227,10 +227,12 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
         catch (Exception e)
         {
-            throw buildException(e,
+            Exception exception = buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to create project " + name,
                     () -> "Failed to create project: " + name,
                     () -> "Failed to create project: " + name);
+            exception.printStackTrace();
+            throw exception;
         }
     }
 
