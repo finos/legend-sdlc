@@ -27,7 +27,10 @@ public class AbstractGitLabApiTest extends BaseResource
 {
     static final String TEST_LOGIN_USERNAME = "Oski";
     static final String TEST_LOGIN_PASSWORD = "FiatLux19";
-    static final String TEST_HOST_URL = "http://localhost:8090";
+    static final String TEST_HOST_SCHEME = "http";
+    static final String TEST_HOST_HOST = "localhost";
+    static final Integer TEST_HOST_PORT = 8090;
+    static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
     /**
      * Get the test Legend-SDLC Project instance for the calling test class.

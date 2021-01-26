@@ -22,11 +22,18 @@ import java.util.Set;
 
 public class TestGitLabSession implements GitLabSession
 {
+    private final String userId;
     private String accessToken;
+    private GitLabModeInfo gitLabModeInfo;
+
+    public TestGitLabSession(String userId)
+    {
+        this.userId = userId;
+    }
 
     @Override
     public String getUserId() {
-        return null;
+        return this.userId;
     }
 
     @Override
@@ -73,8 +80,12 @@ public class TestGitLabSession implements GitLabSession
 
     }
 
+    public void setModeInfo(GitLabModeInfo gitLabModeInfo) {
+        this.gitLabModeInfo = gitLabModeInfo;
+    }
+
     @Override
     public GitLabModeInfo getModeInfo(GitLabMode mode) {
-        return null;
+        return this.gitLabModeInfo;
     }
 }

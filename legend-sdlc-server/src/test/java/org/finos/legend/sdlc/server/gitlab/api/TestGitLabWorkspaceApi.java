@@ -21,8 +21,12 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Version;
@@ -51,10 +55,11 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
         String groupId = "testGroup";
         String artifactId = "testproj";
         Iterable<String> tags = Lists.mutable.empty();
+        GitLabMode gitLabMode = GitLabMode.UAT;
 
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
-        Session testGitLabSession = new TestGitLabSession();
+        TestGitLabSession session = new TestGitLabSession(TEST_LOGIN_USERNAME);
         GitLabApi oauthGitLabApi;
         Version version;
 
@@ -73,8 +78,13 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
         System.out.println("ACCESS_TOKEN: " + oauthToken);
         assertNotNull(version);
 
-        ((TestGitLabSession) testGitLabSession).setAccessToken(oauthToken);
-        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, testGitLabSession);
+        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
+        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
+        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
+
+        session.setAccessToken(oauthToken);
+        session.setModeInfo(gitLabModeInfo);
+        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
         GitLabUserContext gitLabUserContext = new GitLabUserContext(httpServletRequest, null);
         GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(null, gitLabUserContext, null, null, null, null); // TODO: change back
 
