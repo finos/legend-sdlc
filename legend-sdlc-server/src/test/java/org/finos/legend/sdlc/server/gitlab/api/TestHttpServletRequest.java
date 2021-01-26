@@ -345,7 +345,7 @@ public class TestHttpServletRequest implements HttpServletRequest
 
     @Override
     public String getRemoteHost()
-
+    {
         return null;
     }
 
