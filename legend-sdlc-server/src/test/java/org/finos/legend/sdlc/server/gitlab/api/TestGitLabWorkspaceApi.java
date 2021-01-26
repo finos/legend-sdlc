@@ -19,7 +19,6 @@ import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
-import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
@@ -49,7 +48,7 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
     @Test
     public void testCreateProject() throws LegendSDLCServerException {
 
-        String projectName = "Test Project";
+        String projectName = "TestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
         String groupId = "testGroup";
