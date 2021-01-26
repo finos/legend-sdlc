@@ -19,7 +19,7 @@ import org.gitlab4j.api.models.Project;
 
 public class AbstractGitLabApiTest extends BaseResource
 {
-    static final String TEST_LOGIN_USERNAME = "Golden Bear";
+    static final String TEST_LOGIN_USERNAME = "Oski";
     static final String TEST_LOGIN_PASSWORD = "FiatLux";
     static final String TEST_HOST_URL = "http://localhost:8090";
 
