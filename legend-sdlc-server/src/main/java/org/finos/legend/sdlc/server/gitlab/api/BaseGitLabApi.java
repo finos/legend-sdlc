@@ -452,6 +452,7 @@ abstract class BaseGitLabApi
 
     protected LegendSDLCServerException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
     {
+        e.printStackTrace();
         return buildException(e, (forbiddenMessage == null) ? null : ex -> forbiddenMessage.get(), (notFoundMessage == null) ? null : ex -> notFoundMessage.get(), ex -> defaultMessage.get());
     }
 

@@ -208,6 +208,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project gitLabProject = gitLabApi.getProjectApi().createProject(gitLabProjectSpec);
             if (gitLabProject == null)
             {
+                System.out.println("project created is null.");
                 throw new LegendSDLCServerException("Failed to create project: " + name);
             }
 
@@ -227,12 +228,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
         catch (Exception e)
         {
-            Exception exception = buildException(e,
+            throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to create project " + name,
                     () -> "Failed to create project: " + name,
                     () -> "Failed to create project: " + name);
-            exception.printStackTrace();
-            throw exception;
         }
     }
 
