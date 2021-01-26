@@ -26,7 +26,7 @@ import java.util.Optional;
 public class AbstractGitLabApiTest extends BaseResource
 {
     static final String TEST_LOGIN_USERNAME = "Oski";
-    static final String TEST_LOGIN_PASSWORD = "FiatLuxNineteen";
+    static final String TEST_LOGIN_PASSWORD = "FiatLux19";
     static final String TEST_HOST_URL = "http://localhost:8090";
 
     /**
