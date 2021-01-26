@@ -49,8 +49,8 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testCreateProject() throws LegendSDLCServerException {
-
+    public void testCreateProject() throws LegendSDLCServerException
+    {
         String projectName = "TestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;

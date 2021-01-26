@@ -32,60 +32,72 @@ public class TestGitLabSession implements GitLabSession
     }
 
     @Override
-    public String getUserId() {
+    public String getUserId()
+    {
         return this.userId;
     }
 
     @Override
-    public Instant getCreationTime() {
+    public Instant getCreationTime()
+    {
         return null;
     }
 
     @Override
-    public boolean isValid() {
+    public boolean isValid()
+    {
         return false;
     }
 
     @Override
-    public Set<GitLabMode> getValidModes() {
+    public Set<GitLabMode> getValidModes()
+    {
         return null;
     }
 
     @Override
-    public boolean isValidMode(GitLabMode mode) {
+    public boolean isValidMode(GitLabMode mode)
+    {
         return true; // TODO: update
     }
 
     @Override
-    public boolean gitLabOAuthCallback(GitLabMode mode, String code) {
+    public boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    {
         return false;
     }
 
-    public void setAccessToken(String token) {
+    public void setAccessToken(String token)
+    {
         this.accessToken = token;
     }
 
     @Override
-    public String getAccessToken(GitLabMode mode) {
+    public String getAccessToken(GitLabMode mode)
+    {
         return this.accessToken;
     }
 
     @Override
-    public void clearAccessTokens() {
+    public void clearAccessTokens()
+    {
 
     }
 
     @Override
-    public void putAccessToken(GitLabMode mode, String token) {
+    public void putAccessToken(GitLabMode mode, String token)
+    {
 
     }
 
-    public void setModeInfo(GitLabModeInfo gitLabModeInfo) {
+    public void setModeInfo(GitLabModeInfo gitLabModeInfo)
+    {
         this.gitLabModeInfo = gitLabModeInfo;
     }
 
     @Override
-    public GitLabModeInfo getModeInfo(GitLabMode mode) {
+    public GitLabModeInfo getModeInfo(GitLabMode mode)
+    {
         return this.gitLabModeInfo;
     }
 }
