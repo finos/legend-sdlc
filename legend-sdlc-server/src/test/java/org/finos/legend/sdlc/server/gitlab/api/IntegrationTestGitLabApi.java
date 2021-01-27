@@ -32,14 +32,17 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Version;
+import org.gitlab4j.api.models.Visibility;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static org.junit.Assert.assertNotNull;
+import java.util.List;
 
-public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
+import static org.junit.Assert.*;
+
+public class IntegrationTestGitLabApi extends AbstractGitLabApiTest
 {
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -56,7 +59,7 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
         ProjectType projectType = ProjectType.PROTOTYPE;
         String groupId = "testGroup";
         String artifactId = "testproj";
-        Iterable<String> tags = Lists.mutable.empty();
+        List<String> tags = Lists.mutable.empty();
         GitLabMode gitLabMode = GitLabMode.UAT;
 
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
@@ -93,5 +96,15 @@ public class TestGitLabWorkspaceApi extends AbstractGitLabApiTest
         GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1)); // TODO: change back
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+
+        org.gitlab4j.api.models.Project testProject = new org.gitlab4j.api.models.Project() // GitLab4J Project
+                .withName(projectName)
+                .withDescription(description)
+                .withTagList(tags)
+                .withVisibility(Visibility.INTERNAL)
+                .withMergeRequestsEnabled(true)
+                .withIssuesEnabled(true)
+                .withWikiEnabled(false)
+                .withSnippetsEnabled(false);
     }
 }
