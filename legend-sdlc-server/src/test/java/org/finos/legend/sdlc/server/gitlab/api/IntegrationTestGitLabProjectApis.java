@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Version;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,11 +49,17 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     private static GitLabProjectApi gitLabProjectApi;
 
     @BeforeClass
-    public static void setup() throws GitLabApiException
+    public static void setup() throws LegendSDLCServerException
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
         prepareGitLabUser();
         setUpProjectApi();
+    }
+
+    @AfterClass
+    public static void tearDown()
+    {
+        cleanUpProjectApi();
     }
 
     @Test
@@ -179,6 +186,13 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
         GitLabUserContext gitLabUserContext = new GitLabUserContext(httpServletRequest, null);
         gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
+    }
+
+    /**
+     * Cleans up the transient data in instantiated test GitLabProjectApi.
+     */
+    private static void cleanUpProjectApi()
+    {
     }
 
     /**

@@ -14,13 +14,34 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.gitlab4j.api.GitLabApiException;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestDockerGitLabApi
+public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
 {
-    @Test
-    public void testDockerCreateProject() throws GitLabApiException
+    private static GitLabWorkspaceApi gitLabWorkspaceApi;
+
+    @BeforeClass
+    public static void setup() throws GitLabApiException
     {
+        JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
+        prepareGitLabUser();
+        setUpWorkspaceApi();
+    }
+
+    @Test
+    public void testCreateWorkspace()
+    {
+
+    }
+
+    /**
+     * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
+     */
+    private static void setUpWorkspaceApi()
+    {
+
     }
 }
