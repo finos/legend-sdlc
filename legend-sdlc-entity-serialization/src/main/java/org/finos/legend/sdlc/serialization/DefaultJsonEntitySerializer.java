@@ -16,10 +16,12 @@ package org.finos.legend.sdlc.serialization;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 
 import java.io.IOException;
@@ -31,12 +33,14 @@ import java.util.Map;
 
 public class DefaultJsonEntitySerializer implements EntityTextSerializer
 {
-    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper()
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
-            .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-            .configure(SerializationFeature.INDENT_OUTPUT, true)
-            .configure(SerializationFeature.CLOSE_CLOSEABLE, false);
-    private static final JavaType ENTITY_FILE_TYPE = OBJECT_MAPPER.getTypeFactory().constructType(EntityFile.class);
+    private static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+            .build();
+    private static final JavaType ENTITY_FILE_TYPE = JSON_MAPPER.getTypeFactory().constructType(EntityFile.class);
 
     public DefaultJsonEntitySerializer()
     {
@@ -65,25 +69,25 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
     @Override
     public void serialize(Entity entity, OutputStream stream) throws IOException
     {
-        OBJECT_MAPPER.writeValue(stream, toEntityFile(entity));
+        JSON_MAPPER.writeValue(stream, toEntityFile(entity));
     }
 
     @Override
     public void serialize(Entity entity, Writer writer) throws IOException
     {
-        OBJECT_MAPPER.writeValue(writer, toEntityFile(entity));
+        JSON_MAPPER.writeValue(writer, toEntityFile(entity));
     }
 
     @Override
     public byte[] serializeToBytes(Entity entity) throws IOException
     {
-        return OBJECT_MAPPER.writeValueAsBytes(toEntityFile(entity));
+        return JSON_MAPPER.writeValueAsBytes(toEntityFile(entity));
     }
 
     @Override
     public String serializeToString(Entity entity) throws IOException
     {
-        return OBJECT_MAPPER.writeValueAsString(toEntityFile(entity));
+        return JSON_MAPPER.writeValueAsString(toEntityFile(entity));
     }
 
     // Deserialization
@@ -91,25 +95,25 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
     @Override
     public Entity deserialize(InputStream stream) throws IOException
     {
-        return toEntity(OBJECT_MAPPER.readValue(stream, ENTITY_FILE_TYPE));
+        return toEntity(JSON_MAPPER.readValue(stream, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(Reader reader) throws IOException
     {
-        return toEntity(OBJECT_MAPPER.readValue(reader, ENTITY_FILE_TYPE));
+        return toEntity(JSON_MAPPER.readValue(reader, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(byte[] content) throws IOException
     {
-        return toEntity(OBJECT_MAPPER.readValue(content, ENTITY_FILE_TYPE));
+        return toEntity(JSON_MAPPER.readValue(content, ENTITY_FILE_TYPE));
     }
 
     @Override
     public Entity deserialize(String content) throws IOException
     {
-        return toEntity(OBJECT_MAPPER.readValue(content, ENTITY_FILE_TYPE));
+        return toEntity(JSON_MAPPER.readValue(content, ENTITY_FILE_TYPE));
     }
 
     // Helpers
