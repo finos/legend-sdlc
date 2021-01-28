@@ -328,7 +328,7 @@
                     <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
                     </reportsDirectory>
                     <excludes>
-                        <exclude>**/IntegrationTestGitLabApi.java</exclude>
+                        <exclude>**/IntegrationTestGitLabProjectApis.java</exclude>
                     </excludes>
                 </configuration>
                 <executions>
@@ -343,7 +343,7 @@
                                 <exclude>none</exclude>
                             </excludes>
                             <includes>
-                                <include>**/IntegrationTestGitLabApi.java</include>
+                                <include>**/IntegrationTestGitLabProjectApis.java</include>
                             </includes>
                         </configuration>
                     </execution>
