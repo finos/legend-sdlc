@@ -35,7 +35,7 @@ import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Categories;
+import org.junit.experimental.categories.Category;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -45,7 +45,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@Categories.IncludeCategory(GitLabIntegrationTest.class)
+@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;
