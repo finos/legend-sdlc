@@ -94,7 +94,7 @@
                                 </ports>
                                 <wait>
                                     <healthy>true</healthy>
-                                    <time>100000</time>
+                                    <time>300000</time>
                                 </wait>
                             </run>
                         </image>
