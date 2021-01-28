@@ -16,15 +16,26 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import com.googlecode.junittoolbox.SuiteClasses;
 import com.googlecode.junittoolbox.WildcardPatternSuite;
+import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
+import org.gitlab4j.api.models.Version;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
+
+import static org.junit.Assert.assertNotNull;
 
 /**
  * Prepares subclass GitLab integration tests.
@@ -78,5 +89,39 @@ public class AbstractGitLabApiTest
             System.out.println(exception.getValidationErrors().toString());
             throw new LegendSDLCServerException("Cannot create proper user for authentication: " + exception.getMessage());
         }
+    }
+
+    protected static GitLabUserContext prepareGitLabUserContext() throws LegendSDLCServerException
+    {
+        GitLabMode gitLabMode = GitLabMode.UAT;
+        HttpServletRequest httpServletRequest = new TestHttpServletRequest();
+
+        TestGitLabSession session = new TestGitLabSession(TEST_LOGIN_USERNAME);
+        GitLabApi oauthGitLabApi;
+        Version version;
+
+        try
+        {
+            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_LOGIN_USERNAME, TEST_LOGIN_PASSWORD, null, null, true);
+            assertNotNull(oauthGitLabApi);
+            version = oauthGitLabApi.getVersion();
+        }
+        catch (GitLabApiException exception)
+        {
+            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage());
+        }
+
+        String oauthToken = oauthGitLabApi.getAuthToken();
+        System.out.println("ACCESS_TOKEN: " + oauthToken);
+        assertNotNull(version);
+
+        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
+        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
+        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
+
+        session.setAccessToken(oauthToken);
+        session.setModeInfo(gitLabModeInfo);
+        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
+        return new GitLabUserContext(httpServletRequest, null);
     }
 }

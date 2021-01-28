@@ -154,38 +154,10 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
      */
     private static void setUpProjectApi() throws LegendSDLCServerException
     {
-        GitLabMode gitLabMode = GitLabMode.UAT;
-        HttpServletRequest httpServletRequest = new TestHttpServletRequest();
-
-        TestGitLabSession session = new TestGitLabSession(TEST_LOGIN_USERNAME);
-        GitLabApi oauthGitLabApi;
-        Version version;
-
-        try
-        {
-            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_LOGIN_USERNAME, TEST_LOGIN_PASSWORD, null, null, true);
-            assertNotNull(oauthGitLabApi);
-            version = oauthGitLabApi.getVersion();
-        }
-        catch (GitLabApiException exception)
-        {
-            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage());
-        }
-
-        String oauthToken = oauthGitLabApi.getAuthToken();
-        System.out.println("ACCESS_TOKEN: " + oauthToken);
-        assertNotNull(version);
-
-        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
-        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
-        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
+        GitLabUserContext gitLabUserContext = prepareGitLabUserContext();
 
-        session.setAccessToken(oauthToken);
-        session.setModeInfo(gitLabModeInfo);
-        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
-        GitLabUserContext gitLabUserContext = new GitLabUserContext(httpServletRequest, null);
         gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
     }
 
