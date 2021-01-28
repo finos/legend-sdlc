@@ -337,7 +337,7 @@
                         </goals>
                         <phase>integration-test</phase>
                         <configuration>
-                            <groups>org.gitlab4j.api.IntegrationTest</groups>
+                            <groups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</groups>
                             <includes>
                                 <include>**/AbstractGitLabApiTest.java</include>
                             </includes>
