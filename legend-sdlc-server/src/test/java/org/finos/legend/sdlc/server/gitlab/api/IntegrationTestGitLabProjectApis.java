@@ -41,6 +41,7 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
@@ -101,7 +102,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testUpdateProject() throws LegendSDLCServerException
+    public void testUpdateProject()
     {
         String projectName = "TestProjectThree";
         String description = "A test project.";
@@ -135,10 +136,15 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 
         assertEquals(newProjectName, reRetrievedProject.getName());
         assertEquals(newProjectDescription, reRetrievedProject.getDescription());
-        assertEquals(expectedTags, reRetrievedProject.getTags());
+        assertTrue(checkTagEquals(expectedTags, reRetrievedProject.getTags()));
     }
 
-    private static void setUpProjectApi()
+    /**
+     * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
+     *
+     * @throws LegendSDLCServerException if cannot authenticates to GitLab.
+     */
+    private static void setUpProjectApi() throws LegendSDLCServerException
     {
         GitLabMode gitLabMode = GitLabMode.UAT;
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
@@ -173,5 +179,15 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
         GitLabUserContext gitLabUserContext = new GitLabUserContext(httpServletRequest, null);
         gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
+    }
+
+    /**
+     * Util method that compares two tag lists equality.
+     *
+     * @return true if and only if the tag lists have the same contents.
+     */
+    private boolean checkTagEquals(List<String> tagOne, List<String> tagTwo)
+    {
+        return tagOne.size() == tagTwo.size() && tagOne.containsAll(tagTwo) && tagTwo.containsAll(tagOne);
     }
 }
