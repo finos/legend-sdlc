@@ -125,14 +125,17 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         List<String> tagsToAdd = Lists.mutable.with("bancroft");
         List<String> tagsToRemove = Lists.mutable.with("doe", "moffitt");
         List<String> expectedTags = Lists.mutable.with("main-stacks", "bancroft");
+
         gitLabProjectApi.changeProjectName(projectId, newProjectName);
         gitLabProjectApi.changeProjectDescription(projectId, newProjectDescription);
         gitLabProjectApi.setProjectTags(projectId, newTags);
         gitLabProjectApi.updateProjectTags(projectId, tagsToRemove, tagsToAdd);
 
-        assertEquals(newProjectName, createdProject.getName());
-        assertEquals(newProjectDescription, createdProject.getDescription());
-        assertEquals(expectedTags, createdProject.getTags());
+        Project reRetrievedProject = gitLabProjectApi.getProject(projectId);
+
+        assertEquals(newProjectName, reRetrievedProject.getName());
+        assertEquals(newProjectDescription, reRetrievedProject.getDescription());
+        assertEquals(expectedTags, reRetrievedProject.getTags());
     }
 
     private static void setUpProjectApi()
