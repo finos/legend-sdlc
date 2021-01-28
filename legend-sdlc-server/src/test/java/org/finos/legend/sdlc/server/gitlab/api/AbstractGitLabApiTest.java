@@ -14,16 +14,27 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.finos.legend.sdlc.domain.model.project.Project;
+import com.googlecode.junittoolbox.SuiteClasses;
+import com.googlecode.junittoolbox.WildcardPatternSuite;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
+import org.junit.BeforeClass;
+import org.junit.experimental.categories.Categories;
+import org.junit.runner.RunWith;
 
 import java.util.Optional;
 
-public class AbstractGitLabApiTest extends BaseResource
+/**
+ * Prepares subclass GitLab integration tests.
+ * Only run before the GitLabIntegrationTest group during integration-test phase in-between docker start and stop.
+ * Skipped during Junit tests.
+ */
+@RunWith(WildcardPatternSuite.class)
+@SuiteClasses({"**/IntegrationTestGitLab*.class"})
+@Categories.IncludeCategory(GitLabIntegrationTest.class)
+public class AbstractGitLabApiTest
 {
     static final String TEST_LOGIN_USERNAME = "Oski";
     static final String TEST_LOGIN_PASSWORD = "FiatLux19";
@@ -32,14 +43,10 @@ public class AbstractGitLabApiTest extends BaseResource
     static final Integer TEST_HOST_PORT = 8090;
     static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
-    /**
-     * Get the test Legend-SDLC Project instance for the calling test class.
-     *
-     * @return the test Project instance for the calling test class
-     */
-    protected static Project getTestProject()
+    @BeforeClass
+    public static void suiteSetup()
     {
-        return null;
+        prepareGitLabUser();;
     }
 
     /**
@@ -51,9 +58,9 @@ public class AbstractGitLabApiTest extends BaseResource
         String adminPassWord = "password";
         try
         {
-            GitLabApi gitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, adminUserName, adminPassWord, null, null, true);
-            Optional<User> optionalUser = gitLabApi.getUserApi().getOptionalUser(TEST_LOGIN_USERNAME);
-            if (!optionalUser.isPresent())
+            GitLabApi rootGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, adminUserName, adminPassWord, null, null, true);
+            Optional<User> testUser = rootGitLabApi.getUserApi().getOptionalUser(TEST_LOGIN_USERNAME);
+            if (!testUser.isPresent())
             {
                 User userSettings = new User()
                         .withUsername(TEST_LOGIN_USERNAME)
@@ -61,7 +68,7 @@ public class AbstractGitLabApiTest extends BaseResource
                         .withName("Oski Bear")
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
-                gitLabApi.getUserApi().createUser(userSettings, TEST_LOGIN_PASSWORD, false);
+                rootGitLabApi.getUserApi().createUser(userSettings, TEST_LOGIN_PASSWORD, false);
                 System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
             }
         }

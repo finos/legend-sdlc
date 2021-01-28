@@ -35,6 +35,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Version;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Categories;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -43,6 +44,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+@Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
 {
     private static GitLabRevisionApi gitLabRevisionApi;
@@ -53,7 +55,6 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     public static void setup() throws GitLabApiException
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
-        prepareGitLabUser();
         setUpWorkspaceApi();
     }
 

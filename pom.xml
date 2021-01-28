@@ -327,9 +327,7 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
                     </reportsDirectory>
-                    <excludes>
-                        <exclude>**/IntegrationTestGitLab*.java</exclude>
-                    </excludes>
+                    <excludedGroups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</excludedGroups>
                 </configuration>
                 <executions>
                     <execution>
@@ -339,11 +337,9 @@
                         </goals>
                         <phase>integration-test</phase>
                         <configuration>
-                            <excludes>
-                                <exclude>none</exclude>
-                            </excludes>
+                            <groups>org.gitlab4j.api.IntegrationTest</groups>
                             <includes>
-                                <include>**/IntegrationTestGitLab*.java</include>
+                                <include>**/AbstractGitLabApiTest.java</include>
                             </includes>
                         </configuration>
                     </execution>

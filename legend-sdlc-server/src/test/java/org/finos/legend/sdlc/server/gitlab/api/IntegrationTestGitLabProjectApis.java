@@ -35,6 +35,7 @@ import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.junit.experimental.categories.Categories;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -44,6 +45,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
+@Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;
@@ -52,7 +54,6 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     public static void setup() throws LegendSDLCServerException
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
-        prepareGitLabUser();
         setUpProjectApi();
     }
 
