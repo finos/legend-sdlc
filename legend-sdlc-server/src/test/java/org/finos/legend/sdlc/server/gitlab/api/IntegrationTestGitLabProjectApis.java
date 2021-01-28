@@ -196,7 +196,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     }
 
     /**
-     * Util method that compares two tag lists equality.
+     * Util method that compares two project tag lists equality.
      *
      * @return true if and only if the tag lists have the same contents.
      */
