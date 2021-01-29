@@ -91,6 +91,12 @@ public class AbstractGitLabApiTest
         }
     }
 
+    /**
+     * Authenticates to GitLab and creates a test GitLabUserContext.
+     *
+     * @return A test GitLabUserContext.
+     * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
+     */
     protected static GitLabUserContext prepareGitLabUserContext() throws LegendSDLCServerException
     {
         GitLabMode gitLabMode = GitLabMode.UAT;

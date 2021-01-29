@@ -208,7 +208,6 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project gitLabProject = gitLabApi.getProjectApi().createProject(gitLabProjectSpec);
             if (gitLabProject == null)
             {
-                System.out.println("project created is null.");
                 throw new LegendSDLCServerException("Failed to create project: " + name);
             }
 
