@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -45,7 +44,6 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
         setUpEntityApi();
     }
 

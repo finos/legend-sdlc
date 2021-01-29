@@ -14,30 +14,18 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
-import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
-
-import javax.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -53,7 +41,6 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     @BeforeClass
     public static void setup() throws LegendSDLCServerException
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null); // TODO: temp solution to handle undeclared dependency
         setUpProjectApi();
     }
 

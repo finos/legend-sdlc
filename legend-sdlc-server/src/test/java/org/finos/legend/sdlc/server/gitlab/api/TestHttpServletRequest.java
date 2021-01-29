@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
 import javax.servlet.RequestDispatcher;
