@@ -14,9 +14,11 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -61,10 +63,13 @@ import javax.ws.rs.core.Response.Status;
 
 public abstract class ProjectStructure
 {
-    private static final ObjectMapper JSON = new ObjectMapper()
-            .configure(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS, true)
-            .configure(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY, true)
-            .configure(SerializationFeature.INDENT_OUTPUT, true);
+    private static final JsonMapper JSON = JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+            .build();
 
     private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
 

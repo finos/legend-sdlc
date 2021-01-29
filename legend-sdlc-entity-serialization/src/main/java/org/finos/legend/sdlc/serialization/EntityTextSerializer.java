@@ -36,7 +36,7 @@ public interface EntityTextSerializer extends EntitySerializer
      *
      * @param entity entity to serialize
      * @param writer writer to serialize to
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     void serialize(Entity entity, Writer writer) throws IOException;
 
@@ -51,7 +51,7 @@ public interface EntityTextSerializer extends EntitySerializer
      *
      * @param entity entity to serialize
      * @return string serialization of entity
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     default String serializeToString(Entity entity) throws IOException
     {
@@ -67,7 +67,7 @@ public interface EntityTextSerializer extends EntitySerializer
      *
      * @param reader input reader
      * @return deserialized entity
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     Entity deserialize(Reader reader) throws IOException;
 
@@ -82,7 +82,7 @@ public interface EntityTextSerializer extends EntitySerializer
      *
      * @param content input string
      * @return deserialized entity
-     * @throws IOException
+     * @throws IOException if an I/O error occurs
      */
     default Entity deserialize(String content) throws IOException
     {
