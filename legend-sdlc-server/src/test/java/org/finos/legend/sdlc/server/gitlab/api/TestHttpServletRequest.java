@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import com.google.common.collect.Maps;
 
 import javax.servlet.AsyncContext;
 import javax.servlet.DispatcherType;
@@ -36,12 +35,13 @@ import java.io.UnsupportedEncodingException;
 import java.security.Principal;
 import java.util.Collection;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
 public class TestHttpServletRequest implements HttpServletRequest
 {
-    private final Map<String, Object> attributes = Maps.newHashMap();
+    private final Map<String, Object> attributes = new HashMap<>();
 
     @Override
     public String getAuthType()
