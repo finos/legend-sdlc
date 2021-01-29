@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -28,8 +29,11 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
@@ -40,6 +44,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabWorkspaceApi gitLabWorkspaceApi;
     private static GitLabRevisionApi gitLabRevisionApi;
     private static GitLabEntityApi gitLabEntityApi;
+    private static GitLabReviewApi gitLabReviewApi;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -64,10 +69,48 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceName);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
-        assertNotNull(initialEntities);
-        assertTrue(initialEntities.isEmpty());
+        assertNotNull(initialWorkspaceEntities);
+        assertNotNull(initialProjectEntities);
+        assertTrue(initialWorkspaceEntities.isEmpty());
+        assertTrue(initialProjectEntities.isEmpty());
+
+        String entityPath = "/test";
+        String classifierPath = "/mathematicsDepartment";
+        Map<String, String> entityContentMap = new HashMap<>();
+        entityContentMap.put("math-113", "abstract-algebra");
+        entityContentMap.put("math-185", "complex-analysis");
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> modifiedProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+
+        assertNotNull(modifiedWorkspaceEntities);
+        assertNotNull(modifiedProjectEntities);
+        assertTrue(modifiedWorkspaceEntities.size() == 1);
+        Entity initalEntity = modifiedWorkspaceEntities.get(0);
+        assertEquals(initalEntity.getPath(), entityPath);
+        assertEquals(initalEntity.getClassifierPath(), classifierPath);
+        assertEquals(initalEntity.getContent(), entityContentMap);
+        assertTrue(modifiedProjectEntities.isEmpty());
+
+        Review testReview = gitLabReviewApi.createReview(projectId, workspaceId, "Add Courses.", "add two math courses");
+        String reviewId = testReview.getId();
+        gitLabReviewApi.approveReview(projectId, reviewId);
+        gitLabReviewApi.commitReview(projectId, reviewId, "add two math courses");
+        gitLabReviewApi.closeReview(projectId, reviewId);
+        List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+
+        assertNotNull(newWorkspaceEntities);
+        assertNotNull(postCommitProjectEntities);
+        assertTrue(newWorkspaceEntities.isEmpty());
+        assertTrue(postCommitProjectEntities.size() == 1);
+        Entity projectEntity = postCommitProjectEntities.get(0);
+        assertEquals(projectEntity.getPath(), entityPath);
+        assertEquals(projectEntity.getClassifierPath(), classifierPath);
+        assertEquals(projectEntity.getContent(), entityContentMap);
     }
 
     /**
@@ -83,5 +126,6 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, new BackgroundTaskProcessor(1));
         gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, new BackgroundTaskProcessor(1));
         gitLabEntityApi = new GitLabEntityApi(gitLabUserContext, new BackgroundTaskProcessor(1));
+        gitLabReviewApi = new GitLabReviewApi(gitLabUserContext);
     }
 }
