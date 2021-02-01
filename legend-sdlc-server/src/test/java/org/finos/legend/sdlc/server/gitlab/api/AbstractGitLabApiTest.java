@@ -47,8 +47,8 @@ import static org.junit.Assert.assertNotNull;
 @Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class AbstractGitLabApiTest
 {
-    static final String TEST_LOGIN_USERNAME = "Oski";
-    static final String TEST_LOGIN_PASSWORD = "FiatLux19";
+    static final String TEST_LOGIN_USERNAME = "Tester";
+    static final String TEST_LOGIN_PASSWORD = "testerPassword";
     static final String TEST_HOST_SCHEME = "http";
     static final String TEST_HOST_HOST = "localhost";
     static final Integer TEST_HOST_PORT = 8090;
@@ -76,7 +76,7 @@ public class AbstractGitLabApiTest
                 User userSettings = new User()
                         .withUsername(TEST_LOGIN_USERNAME)
                         .withEmail(TEST_LOGIN_USERNAME + "@testUser.org")
-                        .withName("Oski Bear")
+                        .withName("Test Person")
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
                 rootGitLabApi.getUserApi().createUser(userSettings, TEST_LOGIN_PASSWORD, false);
