@@ -84,10 +84,6 @@
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
-        <gitlab.version>12.9.2-ce.0</gitlab.version>
-        <gitlab.autoremove-container>true</gitlab.autoremove-container>
-        <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
-        <gitlab.port>8090</gitlab.port>
     </properties>
 
     <scm>
@@ -328,21 +324,6 @@
                     </reportsDirectory>
                     <excludedGroups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</excludedGroups>
                 </configuration>
-                <executions>
-                    <execution>
-                        <id>integration-test</id>
-                        <goals>
-                            <goal>test</goal>
-                        </goals>
-                        <phase>integration-test</phase>
-                        <configuration>
-                            <groups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</groups>
-                            <includes>
-                                <include>**/AbstractGitLabApiTest.java</include>
-                            </includes>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
 
             <plugin>

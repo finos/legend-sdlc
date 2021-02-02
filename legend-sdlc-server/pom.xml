@@ -27,6 +27,13 @@
     <name>Legend SDLC Server</name>
     <packaging>jar</packaging>
 
+    <properties>
+        <gitlab.version>12.9.2-ce.0</gitlab.version>
+        <gitlab.autoremove-container>true</gitlab.autoremove-container>
+        <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
+        <gitlab.port>8090</gitlab.port>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -69,6 +76,26 @@
                                 </transformer>
                             </transformers>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-failsafe-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <configuration>
+                    <groups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</groups>
+                    <includes>
+                        <include>**/AbstractGitLabApiTest.java</include>
+                    </includes>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>integration-test</id>
+                        <goals>
+                            <goal>verify</goal>
+                        </goals>
+                        <phase>integration-test</phase>
                     </execution>
                 </executions>
             </plugin>
