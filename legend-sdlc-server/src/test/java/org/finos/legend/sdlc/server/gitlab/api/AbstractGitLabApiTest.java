@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
 import org.junit.BeforeClass;
@@ -34,6 +35,7 @@ import org.junit.runner.RunWith;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -48,7 +50,7 @@ import static org.junit.Assert.assertNotNull;
 public class AbstractGitLabApiTest
 {
     static final String TEST_LOGIN_USERNAME = "Tester";
-    static final String TEST_LOGIN_PASSWORD = "testerPassword";
+    static final String TEST_LOGIN_PASSWORD = generateRandomAlphaNumericString(8);
     static final String TEST_HOST_SCHEME = "http";
     static final String TEST_HOST_HOST = "localhost";
     static final Integer TEST_HOST_PORT = 8090;
@@ -129,5 +131,23 @@ public class AbstractGitLabApiTest
         session.setModeInfo(gitLabModeInfo);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
         return new GitLabUserContext(httpServletRequest, null);
+    }
+
+    /**
+     * A helper method to generate random alpha-numeric strings.
+     * @param length The desired string length.
+     * @return The generated random string.
+     */
+    private static String generateRandomAlphaNumericString(int length)
+    {
+        int leftLimit = 48;
+        int rightLimit = 122;
+        Random random = new Random();
+
+        return random.ints(leftLimit, rightLimit + 1)
+                .filter(i -> (i <= 57 || i >= 65) && (i <= 90 || i >= 97))
+                .limit(length)
+                .collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append)
+                .toString();
     }
 }
