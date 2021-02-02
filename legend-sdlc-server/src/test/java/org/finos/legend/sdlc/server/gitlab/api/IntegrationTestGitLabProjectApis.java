@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -30,7 +31,6 @@ import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
 
 @Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
@@ -49,7 +49,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         String projectName = "TestProjectOne";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
-        String groupId = "testGroup";
+        String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
 
@@ -59,7 +59,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(projectName, createdProject.getName());
         assertEquals(description, createdProject.getDescription());
         assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(tags, createdProject.getTags());
+        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
     }
 
     @Test
@@ -68,7 +68,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         String projectName = "TestProjectTwo";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
-        String groupId = "testGroup";
+        String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
 
@@ -78,7 +78,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(projectName, createdProject.getName());
         assertEquals(description, createdProject.getDescription());
         assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(tags, createdProject.getTags());
+        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         Project retrievedProject = gitLabProjectApi.getProject(createdProject.getProjectId());
 
@@ -86,7 +86,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(projectName, retrievedProject.getName());
         assertEquals(description, retrievedProject.getDescription());
         assertEquals(projectType, retrievedProject.getProjectType());
-        assertEquals(tags, retrievedProject.getTags());
+        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(retrievedProject.getTags()));
     }
 
     @Test
@@ -95,7 +95,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         String projectName = "TestProjectThree";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
-        String groupId = "testGroup";
+        String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
 
@@ -105,7 +105,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(projectName, createdProject.getName());
         assertEquals(description, createdProject.getDescription());
         assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(tags, createdProject.getTags());
+        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
         String newProjectName = "TestProjectThreeMod";
@@ -124,7 +124,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 
         assertEquals(newProjectName, reRetrievedProject.getName());
         assertEquals(newProjectDescription, reRetrievedProject.getDescription());
-        assertTrue(checkTagEquals(expectedTags, reRetrievedProject.getTags()));
+        assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
     }
 
     /**
@@ -139,15 +139,5 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         GitLabUserContext gitLabUserContext = prepareGitLabUserContext();
 
         gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
-    }
-
-    /**
-     * Util method that compares two project tag lists equality.
-     *
-     * @return true if and only if the tag lists have the same contents.
-     */
-    private boolean checkTagEquals(List<String> tagOne, List<String> tagTwo)
-    {
-        return tagOne.size() == tagTwo.size() && tagOne.containsAll(tagTwo) && tagTwo.containsAll(tagOne);
     }
 }

@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
@@ -51,7 +52,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         String projectName = "WorkspaceTestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
-        String groupId = "workTestGroup";
+        String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
         String workspaceId = "testworkspace";
@@ -62,7 +63,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         assertEquals(projectName, createdProject.getName());
         assertEquals(description, createdProject.getDescription());
         assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(tags, createdProject.getTags());
+        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
         Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceId);

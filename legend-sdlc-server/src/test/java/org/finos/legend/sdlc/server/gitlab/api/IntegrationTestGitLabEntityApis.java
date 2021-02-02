@@ -29,6 +29,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -58,7 +59,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
-        String groupId = "EntityTestGroup";
+        String groupId = "org.finos.sdlc.test";
         String artifactId = "entitytestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
         String workspaceName = "entitytestworkspace";
@@ -72,10 +73,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
-        assertNotNull(initialWorkspaceEntities);
-        assertNotNull(initialProjectEntities);
-        assertTrue(initialWorkspaceEntities.isEmpty());
-        assertTrue(initialProjectEntities.isEmpty());
+        assertEquals(Collections.emptyList(), initialWorkspaceEntities);
+        assertEquals(Collections.emptyList(), initialProjectEntities);
 
         String entityPath = "/test";
         String classifierPath = "/mathematicsDepartment";
@@ -87,13 +86,12 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         List<Entity> modifiedProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
         assertNotNull(modifiedWorkspaceEntities);
-        assertNotNull(modifiedProjectEntities);
+        assertEquals(Collections.emptyList(), modifiedProjectEntities);
         assertTrue(modifiedWorkspaceEntities.size() == 1);
         Entity initalEntity = modifiedWorkspaceEntities.get(0);
         assertEquals(initalEntity.getPath(), entityPath);
         assertEquals(initalEntity.getClassifierPath(), classifierPath);
         assertEquals(initalEntity.getContent(), entityContentMap);
-        assertTrue(modifiedProjectEntities.isEmpty());
 
         Review testReview = gitLabReviewApi.createReview(projectId, workspaceId, "Add Courses.", "add two math courses");
         String reviewId = testReview.getId();
@@ -103,9 +101,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
-        assertNotNull(newWorkspaceEntities);
         assertNotNull(postCommitProjectEntities);
-        assertTrue(newWorkspaceEntities.isEmpty());
+        assertEquals(Collections.emptyList(), newWorkspaceEntities);
         assertTrue(postCommitProjectEntities.size() == 1);
         Entity projectEntity = postCommitProjectEntities.get(0);
         assertEquals(projectEntity.getPath(), entityPath);

@@ -63,7 +63,7 @@ public class AbstractGitLabApiTest
     @BeforeClass
     public static void suiteSetup()
     {
-        prepareGitLabUser();;
+        prepareGitLabUser();
     }
 
     /**
