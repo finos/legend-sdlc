@@ -49,6 +49,10 @@ import static org.junit.Assert.assertNotNull;
 @Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class AbstractGitLabApiTest
 {
+    // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.
+    // Admin and test user(s) will only exist for the container's lifetime.
+    static final String TEST_ADMIN_USERNAME = "root";
+    static final String TEST_ADMIN_PASSWORD = "ac22057BD4399";
     static final String TEST_LOGIN_USERNAME = "Tester";
     static final String TEST_LOGIN_PASSWORD = generateRandomAlphaNumericString(8);
     static final String TEST_HOST_SCHEME = "http";
@@ -67,11 +71,9 @@ public class AbstractGitLabApiTest
      */
     protected static void prepareGitLabUser() throws LegendSDLCServerException
     {
-        String adminUserName = "root";
-        String adminPassWord = "password";
         try
         {
-            GitLabApi rootGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, adminUserName, adminPassWord, null, null, true);
+            GitLabApi rootGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD, null, null, true);
             Optional<User> testUser = rootGitLabApi.getUserApi().getOptionalUser(TEST_LOGIN_USERNAME);
             if (!testUser.isPresent())
             {
