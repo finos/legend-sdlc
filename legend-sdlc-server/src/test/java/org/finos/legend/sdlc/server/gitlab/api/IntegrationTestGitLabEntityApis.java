@@ -77,8 +77,10 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         assertEquals(Collections.emptyList(), initialProjectEntities);
 
         String entityPath = "test::entity";
-        String classifierPath = "test::mathematicsDepartment";
+        String classifierPath = "meta::test::mathematicsDepartment";
         Map<String, String> entityContentMap = new HashMap<>();
+        entityContentMap.put("package", "test");
+        entityContentMap.put("name", "entity");
         entityContentMap.put("math-113", "abstract-algebra");
         entityContentMap.put("math-185", "complex-analysis");
         gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
