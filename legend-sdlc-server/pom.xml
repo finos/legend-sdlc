@@ -85,20 +85,19 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.0.0-M3</version>
-                <configuration>
-                    <includes>
-                        <include>**/IntegrationTestGitLab*.java</include>
-                    </includes>
-                </configuration>
+                <artifactId>maven-surefire-plugin</artifactId>
                 <executions>
                     <execution>
                         <id>integration-test</id>
                         <goals>
-                            <goal>verify</goal>
+                            <goal>test</goal>
                         </goals>
                         <phase>integration-test</phase>
+                        <configuration>
+                            <includes>
+                                <include>**/IntegrationTestGitLab*.java</include>
+                            </includes>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
