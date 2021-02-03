@@ -100,7 +100,6 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         String reviewId = testReview.getId();
         gitLabApproverReviewApi.approveReview(projectId, reviewId);
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
-        gitLabCommitterReviewApi.closeReview(projectId, reviewId);
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
