@@ -322,7 +322,9 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
                     </reportsDirectory>
-                    <excludedGroups>**/IntegrationTestGitLab*.java</excludedGroups>
+                    <excludes>
+                        <exclude>**/IntegrationTestGitLab*.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 
