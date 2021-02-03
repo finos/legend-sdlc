@@ -111,7 +111,7 @@
                 <configuration>
                     <images>
                         <image>
-                            <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>
+                            <name>gitlab/gitlab-ee:${gitlab.latestVersion}</name>
                             <alias>gitlabNightly</alias>
                             <run>
                                 <namingStrategy>alias</namingStrategy>
