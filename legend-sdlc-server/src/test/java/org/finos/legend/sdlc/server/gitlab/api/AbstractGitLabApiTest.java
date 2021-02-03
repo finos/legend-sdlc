@@ -53,9 +53,9 @@ public class AbstractGitLabApiTest
     // Admin and test user(s) will only exist for the container's lifetime.
     static final String TEST_ADMIN_USERNAME = "root";
     static final String TEST_ADMIN_PASSWORD = "ac0018BD19066353";
-    static final String TEST_OWNER_USERNAME = "Owner";
+    static final String TEST_OWNER_USERNAME = "OwnerUser";
     static final String TEST_OWNER_PASSWORD = generateRandomHexCharString();
-    static final String TEST_MEMBER_USERNAME = "Tester";
+    static final String TEST_MEMBER_USERNAME = "MemberUser";
     static final String TEST_MEMBER_PASSWORD = generateRandomHexCharString();
     static final String TEST_HOST_SCHEME = "http";
     static final String TEST_HOST_HOST = "localhost";
@@ -70,7 +70,7 @@ public class AbstractGitLabApiTest
     }
 
     /**
-     * Create the proper user for authenticating the GitLab operations.
+     * Create the proper users for authenticating the GitLab operations.
      */
     protected static void prepareGitLabUser() throws LegendSDLCServerException
     {
@@ -83,7 +83,7 @@ public class AbstractGitLabApiTest
                 User userSettings = new User()
                         .withUsername(TEST_OWNER_USERNAME)
                         .withEmail(TEST_OWNER_USERNAME + "@testUser.org")
-                        .withName("Test Person")
+                        .withName("Owner User")
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
                 rootGitLabApi.getUserApi().createUser(userSettings, TEST_OWNER_PASSWORD, false);
@@ -95,10 +95,10 @@ public class AbstractGitLabApiTest
                 User userSettings = new User()
                         .withUsername(TEST_MEMBER_USERNAME)
                         .withEmail(TEST_MEMBER_PASSWORD + "@testUser.org")
-                        .withName("Test Person")
+                        .withName("Member User")
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
-                rootGitLabApi.getUserApi().createUser(userSettings, TEST_OWNER_PASSWORD, false);
+                rootGitLabApi.getUserApi().createUser(userSettings, TEST_MEMBER_PASSWORD, false);
                 System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
             }
         }
