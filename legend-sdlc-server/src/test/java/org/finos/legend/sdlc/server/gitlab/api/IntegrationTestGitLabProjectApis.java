@@ -25,14 +25,12 @@ import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-//@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;

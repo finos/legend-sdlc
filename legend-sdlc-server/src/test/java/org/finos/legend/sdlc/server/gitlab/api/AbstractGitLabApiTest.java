@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import com.googlecode.junittoolbox.SuiteClasses;
-import com.googlecode.junittoolbox.WildcardPatternSuite;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -30,8 +28,6 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
 import org.junit.BeforeClass;
-import org.junit.experimental.categories.Categories;
-import org.junit.runner.RunWith;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
@@ -44,9 +40,6 @@ import static org.junit.Assert.assertNotNull;
  * Only run before the GitLabIntegrationTest group during integration-test phase in-between docker start and stop.
  * Skipped during Junit tests.
  */
-//@RunWith(WildcardPatternSuite.class)
-//@SuiteClasses({"**/IntegrationTestGitLab*.class"})
-//@Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class AbstractGitLabApiTest
 {
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.

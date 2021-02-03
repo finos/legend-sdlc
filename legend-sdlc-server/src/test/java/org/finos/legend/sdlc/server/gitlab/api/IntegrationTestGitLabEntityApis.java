@@ -27,7 +27,6 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -38,7 +37,6 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-//@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;

@@ -26,14 +26,12 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.junit.experimental.categories.Category;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-//@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
 {
     private static GitLabRevisionApi gitLabRevisionApi;
