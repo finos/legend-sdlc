@@ -37,7 +37,7 @@ import static org.junit.Assert.assertNotNull;
 
 /**
  * Prepares subclass GitLab integration tests.
- * Only run before the GitLabIntegrationTest group during integration-test phase in-between docker start and stop.
+ * Only run before the GitLab integration tests during integration-test phase in-between docker start and stop.
  * Skipped during Junit tests.
  */
 public class AbstractGitLabApiTest
