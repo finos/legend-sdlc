@@ -113,6 +113,7 @@
                             <name>gitlab/gitlab-ee:${gitlab.nightlyVersion}</name>
                             <alias>gitlabNightly</alias>
                             <run>
+                                <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
                                     <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac22057BD4399"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
@@ -130,6 +131,7 @@
                             <name>gitlab/gitlab-ee:${gitlab.latestVersion}</name>
                             <alias>gitlabLatest</alias>
                             <run>
+                                <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
                                     <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac22057BD4399"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
@@ -147,6 +149,7 @@
                             <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>
                             <alias>gitlabTwelve</alias>
                             <run>
+                                <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
                                     <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac22057BD4399"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
