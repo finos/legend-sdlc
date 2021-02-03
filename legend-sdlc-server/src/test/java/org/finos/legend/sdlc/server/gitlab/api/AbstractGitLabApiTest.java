@@ -91,7 +91,10 @@ public class AbstractGitLabApiTest
         catch (GitLabApiException exception)
         {
             exception.printStackTrace();
-            System.out.println(exception.getValidationErrors().toString());
+            if (exception.hasValidationErrors())
+            {
+                System.out.println(exception.getValidationErrors().toString());
+            }
             throw new LegendSDLCServerException("Cannot create proper user for authentication: " + exception.getMessage());
         }
     }

@@ -111,7 +111,7 @@
                 <configuration>
                     <images>
                         <image>
-                            <name>gitlab/gitlab-ee:${gitlab.nightlyVersion}</name>
+                            <name>gitlab/gitlab-ce:12.9.2-ce.0</name>
                             <alias>gitlabNightly</alias>
                             <run>
                                 <namingStrategy>alias</namingStrategy>
