@@ -25,6 +25,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -47,11 +48,21 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabEntityApi gitLabEntityApi;
     private static GitLabReviewApi gitLabCommitterReviewApi;
     private static GitLabReviewApi gitLabApproverReviewApi;
+    private static boolean initializedSubclass;
 
-    @BeforeClass
-    public static void setup() throws GitLabApiException
+    public IntegrationTestGitLabEntityApis(Integer port)
     {
-        setUpEntityApi();
+        super(port);
+    }
+
+    @Before
+    public void setup() throws GitLabApiException
+    {
+        if (!initializedSubclass)
+        {
+            setUpEntityApi();
+            initializedSubclass = true;
+        }
     }
 
     @Test
@@ -115,7 +126,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabEntityApi.
      */
-    private static void setUpEntityApi()
+    private void setUpEntityApi()
     {
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();

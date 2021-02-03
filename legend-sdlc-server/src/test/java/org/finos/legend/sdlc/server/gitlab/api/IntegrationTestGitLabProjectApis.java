@@ -23,6 +23,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -36,11 +37,21 @@ import static org.junit.Assert.assertNotNull;
 public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;
+    private static boolean initializedSubclass;
 
-    @BeforeClass
-    public static void setup() throws LegendSDLCServerException
+    public IntegrationTestGitLabProjectApis(Integer port)
     {
-        setUpProjectApi();
+        super(port);
+    }
+
+    @Before
+    public void setup() throws LegendSDLCServerException
+    {
+        if (!initializedSubclass)
+        {
+            setUpProjectApi();
+            initializedSubclass = true;
+        }
     }
 
     @Test
@@ -132,7 +143,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
      *
      * @throws LegendSDLCServerException if cannot authenticates to GitLab.
      */
-    private static void setUpProjectApi() throws LegendSDLCServerException
+    private void setUpProjectApi() throws LegendSDLCServerException
     {
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();

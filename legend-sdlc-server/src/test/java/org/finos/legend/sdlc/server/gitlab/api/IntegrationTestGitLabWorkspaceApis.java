@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -39,11 +40,21 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     private static GitLabRevisionApi gitLabRevisionApi;
     private static GitLabWorkspaceApi gitLabWorkspaceApi;
     private static GitLabProjectApi gitLabProjectApi;
+    private static boolean initializedSubclass;
 
-    @BeforeClass
-    public static void setup() throws GitLabApiException
+    public IntegrationTestGitLabWorkspaceApis(Integer port)
     {
-        setUpWorkspaceApi();
+        super(port);
+    }
+
+    @Before
+    public void setup() throws GitLabApiException
+    {
+        if (!initializedSubclass)
+        {
+            setUpWorkspaceApi();
+            initializedSubclass = true;
+        }
     }
 
     @Test
@@ -76,7 +87,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
      */
-    private static void setUpWorkspaceApi()
+    private void setUpWorkspaceApi()
     {
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();

@@ -33,9 +33,8 @@
         <gitlab.twelveLatestVersion>12.10.14-ee.0</gitlab.twelveLatestVersion>
         <gitlab.autoremove-container>true</gitlab.autoremove-container>
         <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
-        <gitlab.nightlyPort>8090</gitlab.nightlyPort>
-        <gitlab.latestPort>9090</gitlab.latestPort>
-        <gitlab.twelveLatestPort>7075</gitlab.twelveLatestPort>
+        <gitlab.latestPort>8090</gitlab.latestPort>
+        <gitlab.twelveLatestPort>9090</gitlab.twelveLatestPort>
     </properties>
 
     <build>
@@ -112,7 +111,7 @@
                     <images>
                         <image>
                             <name>gitlab/gitlab-ee:${gitlab.latestVersion}</name>
-                            <alias>gitlabNightly</alias>
+                            <alias>gitlabLatest</alias>
                             <run>
                                 <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
@@ -120,7 +119,7 @@
                                     <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac0018BD19066353"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
                                 </env>
                                 <ports>
-                                    <port>${gitlab.nightlyPort}:80</port>
+                                    <port>${gitlab.latestPort}:80</port>
                                 </ports>
                                 <wait>
                                     <healthy>true</healthy>
@@ -128,42 +127,24 @@
                                 </wait>
                             </run>
                         </image>
-<!--                        <image>-->
-<!--                            <name>gitlab/gitlab-ee:${gitlab.latestVersion}</name>-->
-<!--                            <alias>gitlabLatest</alias>-->
-<!--                            <run>-->
-<!--                                <namingStrategy>alias</namingStrategy>-->
-<!--                                <skip>${gitlab.skip-docker-start}</skip>-->
-<!--                                <env>-->
-<!--                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac22057BD4399"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>-->
-<!--                                </env>-->
-<!--                                <ports>-->
-<!--                                    <port>${gitlab.latestPort}:80</port>-->
-<!--                                </ports>-->
-<!--                                <wait>-->
-<!--                                    <healthy>true</healthy>-->
-<!--                                    <time>300000</time>-->
-<!--                                </wait>-->
-<!--                            </run>-->
-<!--                        </image>-->
-<!--                        <image>-->
-<!--                            <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>-->
-<!--                            <alias>gitlabTwelve</alias>-->
-<!--                            <run>-->
-<!--                                <namingStrategy>alias</namingStrategy>-->
-<!--                                <skip>${gitlab.skip-docker-start}</skip>-->
-<!--                                <env>-->
-<!--                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac22057BD4399"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>-->
-<!--                                </env>-->
-<!--                                <ports>-->
-<!--                                    <port>${gitlab.twelveLatestPort}:80</port>-->
-<!--                                </ports>-->
-<!--                                <wait>-->
-<!--                                    <healthy>true</healthy>-->
-<!--                                    <time>300000</time>-->
-<!--                                </wait>-->
-<!--                            </run>-->
-<!--                        </image>-->
+                        <image>
+                            <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>
+                            <alias>gitlabTwelve</alias>
+                            <run>
+                                <namingStrategy>alias</namingStrategy>
+                                <skip>${gitlab.skip-docker-start}</skip>
+                                <env>
+                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac0018BD19066353"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
+                                </env>
+                                <ports>
+                                    <port>${gitlab.twelveLatestPort}:80</port>
+                                </ports>
+                                <wait>
+                                    <healthy>true</healthy>
+                                    <time>300000</time>
+                                </wait>
+                            </run>
+                        </image>
                     </images>
                     <removeVolumes>true</removeVolumes>
                 </configuration>
