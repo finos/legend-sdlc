@@ -111,13 +111,13 @@
                 <configuration>
                     <images>
                         <image>
-                            <name>gitlab/gitlab-ce:12.9.2-ce.0</name>
+                            <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>
                             <alias>gitlabNightly</alias>
                             <run>
                                 <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
-                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="password"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
+                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac0018BD19066353"; gitlab_rails['lfs_enabled']=false;</GITLAB_OMNIBUS_CONFIG>
                                 </env>
                                 <ports>
                                     <port>${gitlab.nightlyPort}:80</port>

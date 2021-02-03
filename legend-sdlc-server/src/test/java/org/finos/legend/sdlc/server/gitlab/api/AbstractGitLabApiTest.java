@@ -52,7 +52,7 @@ public class AbstractGitLabApiTest
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.
     // Admin and test user(s) will only exist for the container's lifetime.
     static final String TEST_ADMIN_USERNAME = "root";
-    static final String TEST_ADMIN_PASSWORD = "password";
+    static final String TEST_ADMIN_PASSWORD = "ac0018BD19066353";
     static final String TEST_LOGIN_USERNAME = "Tester";
     static final String TEST_LOGIN_PASSWORD = generateRandomHexCharString();
     static final String TEST_HOST_SCHEME = "http";
