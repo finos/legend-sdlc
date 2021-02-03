@@ -29,16 +29,12 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.experimental.categories.Categories;
 import org.junit.runner.RunWith;
-import org.junit.runners.Parameterized;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Optional;
 
 import static org.junit.Assert.assertNotNull;
@@ -51,7 +47,6 @@ import static org.junit.Assert.assertNotNull;
 //@RunWith(WildcardPatternSuite.class)
 //@SuiteClasses({"**/IntegrationTestGitLab*.class"})
 //@Categories.IncludeCategory(GitLabIntegrationTest.class)
-@RunWith(Parameterized.class)
 public class AbstractGitLabApiTest
 {
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.
@@ -64,42 +59,20 @@ public class AbstractGitLabApiTest
     static final String TEST_MEMBER_PASSWORD = generateRandomHexCharString();
     static final String TEST_HOST_SCHEME = "http";
     static final String TEST_HOST_HOST = "localhost";
-    static boolean initialized = false;
+    static final Integer TEST_HOST_PORT = 8090;
+    static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
-    final Integer TEST_HOST_PORT;// = 8090;
-    final String TEST_HOST_URL;// = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
-
-    @Parameterized.Parameters
-    public static Collection<Object[]> data()
+    @BeforeClass
+    public static void suiteSetup()
     {
-        return Arrays.asList(new Object[][]
-                {
-                    {8090},
-                    {9090}
-                });
-    }
-
-    public AbstractGitLabApiTest(Integer port)
-    {
-        this.TEST_HOST_PORT = port;
-        this.TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;;
-    }
-
-    @Before
-    public void suiteSetup()
-    {
-        if (!initialized)
-        {
-            JerseyGuiceUtils.install((s, serviceLocator) -> null);
-            prepareGitLabUser();
-            initialized = true;
-        }
+        JerseyGuiceUtils.install((s, serviceLocator) -> null);
+        prepareGitLabUser();
     }
 
     /**
      * Create the proper users for authenticating the GitLab operations.
      */
-    protected void prepareGitLabUser() throws LegendSDLCServerException
+    protected static void prepareGitLabUser() throws LegendSDLCServerException
     {
         try
         {
@@ -146,7 +119,7 @@ public class AbstractGitLabApiTest
      * @return A test GitLabUserContext for a project owner.
      * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
      */
-    protected GitLabUserContext prepareGitLabOwnerUserContext() throws LegendSDLCServerException
+    protected static GitLabUserContext prepareGitLabOwnerUserContext() throws LegendSDLCServerException
     {
         return prepareGitLabUserContextHelper(TEST_OWNER_USERNAME, TEST_OWNER_PASSWORD);
     }
@@ -157,7 +130,7 @@ public class AbstractGitLabApiTest
      * @return A test GitLabUserContext for a project member.
      * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
      */
-    protected GitLabUserContext prepareGitLabMemberUserContext() throws LegendSDLCServerException
+    protected static GitLabUserContext prepareGitLabMemberUserContext() throws LegendSDLCServerException
     {
         return prepareGitLabUserContextHelper(TEST_MEMBER_USERNAME, TEST_MEMBER_PASSWORD);
     }
@@ -167,7 +140,7 @@ public class AbstractGitLabApiTest
      * @param username the name of user for whom we create this context.
      * @param password the password of user for whom we create this context.
      */
-    private GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
+    private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
         GitLabMode gitLabMode = GitLabMode.UAT;
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
