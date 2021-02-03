@@ -122,7 +122,7 @@
                                 </ports>
                                 <wait>
                                     <healthy>true</healthy>
-                                    <time>180000</time>
+                                    <time>300000</time>
                                 </wait>
                             </run>
                         </image>
@@ -139,7 +139,7 @@
                                 </ports>
                                 <wait>
                                     <healthy>true</healthy>
-                                    <time>180000</time>
+                                    <time>300000</time>
                                 </wait>
                             </run>
                         </image>
@@ -156,7 +156,7 @@
                                 </ports>
                                 <wait>
                                     <healthy>true</healthy>
-                                    <time>180000</time>
+                                    <time>300000</time>
                                 </wait>
                             </run>
                         </image>
