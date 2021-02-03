@@ -80,7 +80,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     {
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
-        GitLabUserContext gitLabUserContext = prepareGitLabUserContext();
+        GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
         gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
         gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, new BackgroundTaskProcessor(1));

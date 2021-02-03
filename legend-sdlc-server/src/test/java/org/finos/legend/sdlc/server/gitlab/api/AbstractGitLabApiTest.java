@@ -53,8 +53,10 @@ public class AbstractGitLabApiTest
     // Admin and test user(s) will only exist for the container's lifetime.
     static final String TEST_ADMIN_USERNAME = "root";
     static final String TEST_ADMIN_PASSWORD = "ac0018BD19066353";
-    static final String TEST_LOGIN_USERNAME = "Tester";
-    static final String TEST_LOGIN_PASSWORD = generateRandomHexCharString();
+    static final String TEST_OWNER_USERNAME = "Owner";
+    static final String TEST_OWNER_PASSWORD = generateRandomHexCharString();
+    static final String TEST_MEMBER_USERNAME = "Tester";
+    static final String TEST_MEMBER_PASSWORD = generateRandomHexCharString();
     static final String TEST_HOST_SCHEME = "http";
     static final String TEST_HOST_HOST = "localhost";
     static final Integer TEST_HOST_PORT = 8090;
@@ -75,16 +77,28 @@ public class AbstractGitLabApiTest
         try
         {
             GitLabApi rootGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_ADMIN_USERNAME, TEST_ADMIN_PASSWORD, null, null, true);
-            Optional<User> testUser = rootGitLabApi.getUserApi().getOptionalUser(TEST_LOGIN_USERNAME);
+            Optional<User> testUser = rootGitLabApi.getUserApi().getOptionalUser(TEST_OWNER_USERNAME);
             if (!testUser.isPresent())
             {
                 User userSettings = new User()
-                        .withUsername(TEST_LOGIN_USERNAME)
-                        .withEmail(TEST_LOGIN_USERNAME + "@testUser.org")
+                        .withUsername(TEST_OWNER_USERNAME)
+                        .withEmail(TEST_OWNER_USERNAME + "@testUser.org")
                         .withName("Test Person")
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
-                rootGitLabApi.getUserApi().createUser(userSettings, TEST_LOGIN_PASSWORD, false);
+                rootGitLabApi.getUserApi().createUser(userSettings, TEST_OWNER_PASSWORD, false);
+                System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
+            }
+            Optional<User> testMember = rootGitLabApi.getUserApi().getOptionalUser(TEST_MEMBER_USERNAME);
+            if (!testMember.isPresent())
+            {
+                User userSettings = new User()
+                        .withUsername(TEST_MEMBER_USERNAME)
+                        .withEmail(TEST_MEMBER_PASSWORD + "@testUser.org")
+                        .withName("Test Person")
+                        .withSkipConfirmation(true)
+                        .withIsAdmin(true);
+                rootGitLabApi.getUserApi().createUser(userSettings, TEST_OWNER_PASSWORD, false);
                 System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
             }
         }
@@ -100,23 +114,44 @@ public class AbstractGitLabApiTest
     }
 
     /**
-     * Authenticates to GitLab and creates a test GitLabUserContext.
+     * Authenticates to GitLab and creates a test GitLabUserContext for a project owner.
      *
-     * @return A test GitLabUserContext.
+     * @return A test GitLabUserContext for a project owner.
      * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
      */
-    protected static GitLabUserContext prepareGitLabUserContext() throws LegendSDLCServerException
+    protected static GitLabUserContext prepareGitLabOwnerUserContext() throws LegendSDLCServerException
+    {
+        return prepareGitLabUserContextHelper(TEST_OWNER_USERNAME, TEST_OWNER_PASSWORD);
+    }
+
+    /**
+     * Authenticates to GitLab and creates a test GitLabUserContext for a project member.
+     *
+     * @return A test GitLabUserContext for a project member.
+     * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
+     */
+    protected static GitLabUserContext prepareGitLabMemberUserContext() throws LegendSDLCServerException
+    {
+        return prepareGitLabUserContextHelper(TEST_MEMBER_USERNAME, TEST_MEMBER_PASSWORD);
+    }
+
+    /**
+     * Authenticates to GitLab and creates a test GitLabUserContext.
+     * @param username the name of user for whom we create this context.
+     * @param password the password of user for whom we create this context.
+     */
+    private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
         GitLabMode gitLabMode = GitLabMode.UAT;
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
-        TestGitLabSession session = new TestGitLabSession(TEST_LOGIN_USERNAME);
+        TestGitLabSession session = new TestGitLabSession(username);
         GitLabApi oauthGitLabApi;
         Version version;
 
         try
         {
-            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, TEST_LOGIN_USERNAME, TEST_LOGIN_PASSWORD, null, null, true);
+            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, username, password, null, null, true);
             assertNotNull(oauthGitLabApi);
             version = oauthGitLabApi.getVersion();
         }

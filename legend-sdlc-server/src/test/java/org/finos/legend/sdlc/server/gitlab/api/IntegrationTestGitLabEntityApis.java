@@ -45,7 +45,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabWorkspaceApi gitLabWorkspaceApi;
     private static GitLabRevisionApi gitLabRevisionApi;
     private static GitLabEntityApi gitLabEntityApi;
-    private static GitLabReviewApi gitLabReviewApi;
+    private static GitLabReviewApi gitLabCommitterReviewApi;
+    private static GitLabReviewApi gitLabApproverReviewApi;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -95,11 +96,11 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         assertEquals(initalEntity.getClassifierPath(), classifierPath);
         assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabReviewApi.createReview(projectId, workspaceId, "Add Courses.", "add two math courses");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, "Add Courses.", "add two math courses");
         String reviewId = testReview.getId();
-        gitLabReviewApi.approveReview(projectId, reviewId);
-        gitLabReviewApi.commitReview(projectId, reviewId, "add two math courses");
-        gitLabReviewApi.closeReview(projectId, reviewId);
+        gitLabApproverReviewApi.approveReview(projectId, reviewId);
+        gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
+        gitLabCommitterReviewApi.closeReview(projectId, reviewId);
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
@@ -117,14 +118,16 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
      */
     private static void setUpEntityApi()
     {
-        GitLabUserContext gitLabUserContext = prepareGitLabUserContext();
+        GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
+        GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, new BackgroundTaskProcessor(1));
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, new BackgroundTaskProcessor(1));
-        gitLabEntityApi = new GitLabEntityApi(gitLabUserContext, new BackgroundTaskProcessor(1));
-        gitLabReviewApi = new GitLabReviewApi(gitLabUserContext);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, new BackgroundTaskProcessor(1));
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, new BackgroundTaskProcessor(1));
+        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, new BackgroundTaskProcessor(1));
+        gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
+        gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
     }
 }
