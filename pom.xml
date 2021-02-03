@@ -322,7 +322,7 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
                     </reportsDirectory>
-                    <excludedGroups>org.finos.legend.sdlc.server.gitlab.api.GitLabIntegrationTest</excludedGroups>
+                    <excludedGroups>**/IntegrationTestGitLab*.java</excludedGroups>
                 </configuration>
             </plugin>
 

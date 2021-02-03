@@ -38,7 +38,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@Category(GitLabIntegrationTest.class)
+//@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;

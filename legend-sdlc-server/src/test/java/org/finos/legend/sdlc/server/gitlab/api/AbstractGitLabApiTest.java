@@ -43,9 +43,9 @@ import static org.junit.Assert.assertNotNull;
  * Only run before the GitLabIntegrationTest group during integration-test phase in-between docker start and stop.
  * Skipped during Junit tests.
  */
-@RunWith(WildcardPatternSuite.class)
-@SuiteClasses({"**/IntegrationTestGitLab*.class"})
-@Categories.IncludeCategory(GitLabIntegrationTest.class)
+//@RunWith(WildcardPatternSuite.class)
+//@SuiteClasses({"**/IntegrationTestGitLab*.class"})
+//@Categories.IncludeCategory(GitLabIntegrationTest.class)
 public class AbstractGitLabApiTest
 {
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.

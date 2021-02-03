@@ -33,7 +33,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-@Category(GitLabIntegrationTest.class)
+//@Category(GitLabIntegrationTest.class)
 public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
 {
     private static GitLabRevisionApi gitLabRevisionApi;
