@@ -111,7 +111,7 @@
                     <images>
                         <image>
                             <name>gitlab/gitlab-ee:${gitlab.nightlyVersion}</name>
-                            <alias>gitlab</alias>
+                            <alias>gitlabNightly</alias>
                             <run>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
@@ -128,7 +128,7 @@
                         </image>
                         <image>
                             <name>gitlab/gitlab-ee:${gitlab.latestVersion}</name>
-                            <alias>gitlab</alias>
+                            <alias>gitlabLatest</alias>
                             <run>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
@@ -145,7 +145,7 @@
                         </image>
                         <image>
                             <name>gitlab/gitlab-ee:${gitlab.twelveLatestVersion}</name>
-                            <alias>gitlab</alias>
+                            <alias>gitlabTwelve</alias>
                             <run>
                                 <skip>${gitlab.skip-docker-start}</skip>
                                 <env>
