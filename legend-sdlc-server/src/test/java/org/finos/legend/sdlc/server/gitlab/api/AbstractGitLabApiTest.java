@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import com.googlecode.junittoolbox.SuiteClasses;
 import com.googlecode.junittoolbox.WildcardPatternSuite;
+import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
@@ -62,6 +63,7 @@ public class AbstractGitLabApiTest
     @BeforeClass
     public static void suiteSetup()
     {
+        JerseyGuiceUtils.install((s, serviceLocator) -> null);
         prepareGitLabUser();
     }
 
