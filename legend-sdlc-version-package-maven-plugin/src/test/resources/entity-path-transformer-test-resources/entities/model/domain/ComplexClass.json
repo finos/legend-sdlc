@@ -1,0 +1,35 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "name": "ComplexClass",
+    "package": "model::domain",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "src",
+        "type": "model::domain::Source"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "target",
+        "type": "model::domain::Target"
+      }
+    ],
+    "taggedValues": [
+      {
+        "tag": {
+          "profile": "model::domain::ProfileExtension",
+          "value": "docExtension"
+        },
+        "value": "docExtensions are cool"
+      }
+    ]
+  }
+}

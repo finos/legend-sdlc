@@ -1,0 +1,127 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "_type": "mapping",
+    "classMappings": [
+      {
+        "id": "model_domain_Target",
+        "_type": "pureInstance",
+        "root": true,
+        "propertyMappings": [
+          {
+            "_type": "purePropertyMapping",
+            "transform": {
+              "_type": "lambda",
+              "body": [
+                {
+                  "_type": "property",
+                  "class": "model::domain::Source",
+                  "property": "oneName",
+                  "parameters": [
+                    {
+                      "_type": "var",
+                      "name": "src"
+                    }
+                  ]
+                }
+              ],
+              "parameters": [
+                {
+                  "_type": "var",
+                  "name": "src",
+                  "class": "model::domain::Source",
+                  "multiplicity": {
+                    "lowerBound": 1,
+                    "upperBound": 1
+                  }
+                }
+              ]
+            },
+            "source": "model_domain_Target",
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "name"
+            }
+          },
+          {
+            "_type": "purePropertyMapping",
+            "transform": {
+              "_type": "lambda",
+              "body": [
+                {
+                  "_type": "property",
+                  "class": "model::domain::Source",
+                  "property": "anotherDate",
+                  "parameters": [
+                    {
+                      "_type": "var",
+                      "name": "src"
+                    }
+                  ]
+                }
+              ],
+              "parameters": [
+                {
+                  "_type": "var",
+                  "name": "src",
+                  "class": "model::domain::Source",
+                  "multiplicity": {
+                    "lowerBound": 1,
+                    "upperBound": 1
+                  }
+                }
+              ]
+            },
+            "source": "model_domain_Target",
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "date"
+            }
+          },
+          {
+            "_type": "purePropertyMapping",
+            "transform": {
+              "_type": "lambda",
+              "body": [
+                {
+                  "_type": "property",
+                  "class": "model::domain::Source",
+                  "property": "oneNumber",
+                  "parameters": [
+                    {
+                      "_type": "var",
+                      "name": "src"
+                    }
+                  ]
+                }
+              ],
+              "parameters": [
+                {
+                  "_type": "var",
+                  "name": "src",
+                  "class": "model::domain::Source",
+                  "multiplicity": {
+                    "lowerBound": 1,
+                    "upperBound": 1
+                  }
+                }
+              ]
+            },
+            "source": "model_domain_Target",
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "number"
+            }
+          }
+        ],
+        "class": "model::domain::Target",
+        "srcClass": "model::domain::Source"
+      }
+    ],
+    "name": "SourceToTargetM2M",
+    "package": "model::mapping"
+  }
+}

@@ -1,0 +1,95 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "_type": "mapping",
+    "name": "SourceToTargetRelational",
+    "package": "model::mapping",
+    "classMappings": [
+      {
+        "id": "test_model_domain_Target",
+        "mainTable": {
+          "schema": "SOURCE_S",
+          "_type": "table",
+          "table": "SOURCE_TB",
+          "database": "model::store::SourceDb"
+        },
+        "_type": "relational",
+        "root": true,
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "relationalOperation": {
+              "_type": "column",
+              "column": "NAME",
+              "tableAlias": "SOURCE_TB",
+              "table": {
+                "schema": "SOURCE_S",
+                "_type": "table",
+                "table": "SOURCE_TB",
+                "database": "model::store::SourceDb"
+              }
+            },
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "name"
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "relationalOperation": {
+              "_type": "column",
+              "column": "DT",
+              "tableAlias": "SOURCE_TB",
+              "table": {
+                "schema": "SOURCE_S",
+                "_type": "table",
+                "table": "SOURCE_TB",
+                "database": "model::store::SourceDb"
+              }
+            },
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "date"
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "relationalOperation": {
+              "_type": "column",
+              "column": "NUM",
+              "tableAlias": "SOURCE_TB",
+              "table": {
+                "schema": "SOURCE_S",
+                "_type": "table",
+                "table": "SOURCE_TB",
+                "database": "model::store::SourceDb"
+              }
+            },
+            "target": "",
+            "property": {
+              "class": "model::domain::Target",
+              "property": "number"
+            }
+          }
+        ],
+        "primaryKey": [
+          {
+            "_type": "column",
+            "column": "ID",
+            "tableAlias": "",
+            "table": {
+              "schema": "SOURCE_S",
+              "_type": "table",
+              "table": "SOURCE_TB",
+              "database": "model::store::SourceDb"
+            }
+          }
+        ],
+        "class": "model::domain::Target",
+        "distinct": false
+      }
+    ]
+  }
+}
