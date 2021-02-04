@@ -35,6 +35,8 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;
 
+    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+
     @BeforeClass
     public static void setup() throws LegendSDLCServerException
     {
@@ -136,6 +138,6 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
     }
 }

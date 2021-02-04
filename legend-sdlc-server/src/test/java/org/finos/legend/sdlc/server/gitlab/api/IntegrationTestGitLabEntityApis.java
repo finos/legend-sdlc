@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
+import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -45,6 +46,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabEntityApi gitLabEntityApi;
     private static GitLabReviewApi gitLabCommitterReviewApi;
     private static GitLabReviewApi gitLabApproverReviewApi;
+
+    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
 
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -96,7 +99,12 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
 
         Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, "Add Courses.", "add two math courses");
         String reviewId = testReview.getId();
-        gitLabApproverReviewApi.approveReview(projectId, reviewId);
+        Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
+
+        assertNotNull(approvedReview);
+        assertEquals(reviewId, approvedReview.getId());
+        assertEquals(ReviewState.OPEN, approvedReview.getState());
+
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
@@ -120,10 +128,10 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, new BackgroundTaskProcessor(1));
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, new BackgroundTaskProcessor(1));
-        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, new BackgroundTaskProcessor(1));
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
         gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
         gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
     }

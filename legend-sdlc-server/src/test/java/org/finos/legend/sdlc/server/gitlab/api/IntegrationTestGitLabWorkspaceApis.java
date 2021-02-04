@@ -38,6 +38,8 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     private static GitLabWorkspaceApi gitLabWorkspaceApi;
     private static GitLabProjectApi gitLabProjectApi;
 
+    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
@@ -80,8 +82,8 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, new BackgroundTaskProcessor(1));
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, new BackgroundTaskProcessor(1));
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, new BackgroundTaskProcessor(1));
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
     }
 }
