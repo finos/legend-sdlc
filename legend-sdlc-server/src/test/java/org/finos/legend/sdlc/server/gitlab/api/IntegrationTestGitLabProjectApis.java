@@ -22,8 +22,6 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -36,18 +34,10 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
 {
     private static GitLabProjectApi gitLabProjectApi;
 
-    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
-
     @BeforeClass
     public static void setup() throws LegendSDLCServerException
     {
         setUpProjectApi();
-    }
-
-    @AfterClass
-    public static void shutdown()
-    {
-        backgroundTaskProcessor.shutdown();
     }
 
     @Test
@@ -145,6 +135,6 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, null);
     }
 }

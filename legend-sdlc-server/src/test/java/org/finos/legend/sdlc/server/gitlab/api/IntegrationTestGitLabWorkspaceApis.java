@@ -22,9 +22,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -39,18 +37,10 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     private static GitLabWorkspaceApi gitLabWorkspaceApi;
     private static GitLabProjectApi gitLabProjectApi;
 
-    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
-
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
         setUpWorkspaceApi();
-    }
-
-    @AfterClass
-    public static void shutdown()
-    {
-        backgroundTaskProcessor.shutdown();
     }
 
     @Test
@@ -89,8 +79,8 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, null);
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, null);
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, null);
     }
 }

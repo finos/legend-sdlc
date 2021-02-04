@@ -24,9 +24,7 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
-import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -48,18 +46,10 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabReviewApi gitLabCommitterReviewApi;
     private static GitLabReviewApi gitLabApproverReviewApi;
 
-    private static BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
-
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
         setUpEntityApi();
-    }
-
-    @AfterClass
-    public static void shutdown()
-    {
-        backgroundTaskProcessor.shutdown();
     }
 
     @Test
@@ -135,10 +125,10 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, null);
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, null);
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, null);
+        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, null);
         gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
         gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
     }
