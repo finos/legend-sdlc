@@ -23,6 +23,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,6 +42,12 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     public static void setup() throws LegendSDLCServerException
     {
         setUpProjectApi();
+    }
+
+    @AfterClass
+    public static void shutdown()
+    {
+        backgroundTaskProcessor.shutdown();
     }
 
     @Test
