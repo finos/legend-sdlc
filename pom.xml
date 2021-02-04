@@ -594,7 +594,7 @@
             <dependency>
                 <groupId>com.squarespace.jersey2-guice</groupId>
                 <artifactId>jersey2-guice-impl</artifactId>
-                <version>${jersey2-guice.version}}</version>
+                <version>${jersey2-guice.version}</version>
             </dependency>
 
             <dependency>

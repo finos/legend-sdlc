@@ -23,11 +23,14 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
 import org.junit.BeforeClass;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
@@ -55,6 +58,8 @@ public class AbstractGitLabApiTest
     static final Integer TEST_HOST_PORT = 8090;
     static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
+
     @BeforeClass
     public static void suiteSetup()
     {
@@ -80,7 +85,7 @@ public class AbstractGitLabApiTest
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
                 rootGitLabApi.getUserApi().createUser(userSettings, TEST_OWNER_PASSWORD, false);
-                System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
+                LOGGER.info("Created user with name {} and username {}", userSettings.getName(), userSettings.getUsername());
             }
             Optional<User> testMember = rootGitLabApi.getUserApi().getOptionalUser(TEST_MEMBER_USERNAME);
             if (!testMember.isPresent())
@@ -92,17 +97,17 @@ public class AbstractGitLabApiTest
                         .withSkipConfirmation(true)
                         .withIsAdmin(true);
                 rootGitLabApi.getUserApi().createUser(userSettings, TEST_MEMBER_PASSWORD, false);
-                System.out.format("Created %s user (%s)%n", userSettings.getName(), userSettings.getUsername());
+                LOGGER.info("Created user with name {} and username {}", userSettings.getName(), userSettings.getUsername());
             }
         }
         catch (GitLabApiException exception)
         {
-            exception.printStackTrace();
+            String errorMsg = exception.getMessage();
             if (exception.hasValidationErrors())
             {
-                System.out.println(exception.getValidationErrors().toString());
+                errorMsg = "Validation error: " + exception.getValidationErrors().toString();
             }
-            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + exception.getMessage());
+            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + errorMsg);
         }
     }
 
@@ -154,7 +159,7 @@ public class AbstractGitLabApiTest
         }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
-        System.out.println("ACCESS_TOKEN: " + oauthToken);
+        LOGGER.info("Retrieved access token: {}", oauthToken);
         assertNotNull(version);
 
         GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
