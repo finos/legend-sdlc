@@ -1,0 +1,24 @@
+{
+  "classifierPath": "meta::pure::metamodel::diagram::Diagram",
+  "content": {
+    "_type": "diagram",
+    "classViews": [
+      {
+        "class": "model::domain::ComplexClass",
+        "id": "4164091a-9548-4f79-80ca-d66d327dea38",
+        "position": {
+          "x": 579.0000038146973,
+          "y": 405.9548645019531
+        },
+        "rectangle": {
+          "height": 72,
+          "width": 238.466796875
+        }
+      }
+    ],
+    "generalizationViews": [],
+    "name": "MyDiagram",
+    "package": "model::diagram",
+    "propertyViews": []
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "classifierPath": "meta::relational::metamodel::Database",
+  "content": {
+    "_type": "relational",
+    "name": "SourceDb",
+    "package": "model::store",
+    "schemas": [
+      {
+        "tables": [
+          {
+            "primaryKey": [
+              "ID"
+            ],
+            "name": "SOURCE_TB",
+            "columns": [
+              {
+                "name": "ID",
+                "nullable": false,
+                "type": {
+                  "_type": "Integer"
+                }
+              },
+              {
+                "name": "NAME",
+                "nullable": true,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 128
+                }
+              },
+              {
+                "name": "DT",
+                "nullable": true,
+                "type": {
+                  "_type": "Date"
+                }
+              },
+              {
+                "name": "NUM",
+                "nullable": true,
+                "type": {
+                  "_type": "Integer"
+                }
+              }
+            ]
+          }
+        ],
+        "name": "SOURCE_S"
+      }
+    ]
+  }
+}

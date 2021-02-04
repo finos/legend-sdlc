@@ -1,0 +1,12 @@
+{
+  "classifierPath": "meta::pure::metamodel::extension::Profile",
+  "content": {
+    "_type": "profile",
+    "name": "ProfileExtension",
+    "package": "model::domain",
+    "stereotypes": [],
+    "tags": [
+      "docExtension"
+    ]
+  }
+}

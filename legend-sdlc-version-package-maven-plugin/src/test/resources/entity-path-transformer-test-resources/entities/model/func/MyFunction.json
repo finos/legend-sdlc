@@ -1,0 +1,36 @@
+{
+  "classifierPath": "meta::pure::metamodel::function::ConcreteFunctionDefinition",
+  "content": {
+    "_type": "function",
+    "body": [
+      {
+        "_type": "string",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "values": [
+          "sss"
+        ]
+      }
+    ],
+    "name": "MyFunction",
+    "package": "model::func",
+    "parameters": [
+      {
+        "_type": "var",
+        "class": "model::domain::ComplexClass",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "complex"
+      }
+    ],
+    "returnMultiplicity": {
+      "lowerBound": 1,
+      "upperBound": 1
+    },
+    "returnType": "String"
+  }
+}
