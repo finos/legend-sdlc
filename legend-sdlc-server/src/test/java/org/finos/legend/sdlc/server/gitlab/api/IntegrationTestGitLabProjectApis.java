@@ -135,6 +135,6 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, null);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
     }
 }

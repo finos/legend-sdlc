@@ -23,10 +23,12 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,8 @@ public class AbstractGitLabApiTest
     static final Integer TEST_HOST_PORT = 8090;
     static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
+    static final BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
 
     @BeforeClass
@@ -64,6 +68,14 @@ public class AbstractGitLabApiTest
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null);
         prepareGitLabUser();
+    }
+
+    @AfterClass
+    public static void shutDown()
+    {
+        LOGGER.info("Shutting down backgroundTaskProcessor.");
+        backgroundTaskProcessor.shutdown();
+        LOGGER.info("Shut down backgroundTaskProcessor.");
     }
 
     /**

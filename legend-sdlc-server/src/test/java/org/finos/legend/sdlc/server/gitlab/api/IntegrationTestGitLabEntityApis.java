@@ -127,10 +127,10 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, null);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, null);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, null);
-        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, null);
+        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
         gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
         gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
     }
