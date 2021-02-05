@@ -28,7 +28,7 @@ import java.util.stream.Stream;
 
 class EntityPathTransformer
 {
-    private static final Pattern PACKAGE_PATH_PATTERN = Pattern.compile("^(\\w[\\w$]*::)+\\w[\\w$]*$");
+    private static final Pattern PACKAGE_PATH_PATTERN = Pattern.compile("^(\\w[\\w$]*+::)++\\w[\\w$]*+$");
     private static final String PACKAGE_KEY = "package";
     private static final String NAME_KEY = "name";
 

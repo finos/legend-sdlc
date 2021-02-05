@@ -121,7 +121,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
                 throw new MojoFailureException("A non-empty version is required");
             }
         }
-        else if (!this.versionAlias.matches("^\\w+$"))
+        else if (!this.versionAlias.matches("^\\w++$"))
         {
             throw new MojoFailureException("Invalid version alias: \"" + this.versionAlias + "\"");
         }
@@ -142,7 +142,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         }
 
         String artifactId = findArtifactId();
-        if ((artifactId == null) || artifactId.isEmpty() || !artifactId.matches("^\\w+(-\\w+)*$"))
+        if ((artifactId == null) || artifactId.isEmpty() || !artifactId.matches("^\\w++(-\\w++)*+$"))
         {
             StringBuilder builder = new StringBuilder("A valid artifactId is required, found: ");
             if (artifactId == null)
@@ -421,7 +421,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
                 return true;
             }
 
-            if (this.getClass() != other.getClass())
+            if (!(other instanceof DependencyArtifactKey))
             {
                 return false;
             }
