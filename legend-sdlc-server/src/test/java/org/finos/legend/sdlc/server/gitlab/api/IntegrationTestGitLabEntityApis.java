@@ -23,6 +23,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.BeforeClass;
@@ -53,8 +54,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testEntitiesInNormalWorkflow() throws InterruptedException
-    {
+    public void testEntitiesInNormalWorkflow() throws GitLabApiException {
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
@@ -101,7 +101,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         assertNotNull(approvedReview);
         assertEquals(reviewId, approvedReview.getId());
         assertEquals(ReviewState.OPEN, approvedReview.getState());
-        Thread.sleep(20); // Note: Doing a sleep currently to ensure GitLab API approve MR completes.
+
+        GitLabApiTools.callWithRetries(() -> gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses"), 5, 20);
 
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
