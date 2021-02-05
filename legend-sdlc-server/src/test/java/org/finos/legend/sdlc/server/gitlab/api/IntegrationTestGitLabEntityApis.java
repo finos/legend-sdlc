@@ -53,7 +53,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testEntitiesInNormalWorkflow()
+    public void testEntitiesInNormalWorkflow() throws InterruptedException
     {
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
@@ -101,6 +101,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         assertNotNull(approvedReview);
         assertEquals(reviewId, approvedReview.getId());
         assertEquals(ReviewState.OPEN, approvedReview.getState());
+        Thread.sleep(20); // Note: Doing a sleep currently to ensure GitLab API approve MR completes.
 
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
