@@ -22,10 +22,13 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.models.MergeRequest;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -46,6 +49,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     private static GitLabEntityApi gitLabEntityApi;
     private static GitLabReviewApi gitLabCommitterReviewApi;
     private static GitLabReviewApi gitLabApproverReviewApi;
+
+    private static GitLabUserContext gitLabMemberUserContext;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -102,7 +107,25 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         assertEquals(reviewId, approvedReview.getId());
         assertEquals(ReviewState.OPEN, approvedReview.getState());
 
-        GitLabApiTools.callWithRetries(() -> gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses"), 5, 20);
+        GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
+        MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getMergeRequestApi();
+        Integer parsedMergeRequestId = Integer.parseInt(reviewId);
+        Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
+        MergeRequest mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId);
+
+        int maxTries = 10;
+        for (int i = 0; !("can_be_merged".equals(mergeRequest.getMergeStatus())) && (i < maxTries); i++)
+        {
+            try
+            {
+                Thread.sleep(500);
+                mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId);
+            }
+            catch (InterruptedException e)
+            {
+                Thread.currentThread().interrupt();
+            }
+        }
 
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
@@ -122,8 +145,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
      */
     private static void setUpEntityApi()
     {
+        gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
-        GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
