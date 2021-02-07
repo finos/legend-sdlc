@@ -59,7 +59,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testEntitiesInNormalWorkflow() throws GitLabApiException {
+    public void testEntitiesInNormalWorkflow() throws GitLabApiException
+    {
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PROTOTYPE;
