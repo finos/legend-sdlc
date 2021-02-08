@@ -114,19 +114,23 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
         MergeRequest mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId);
 
+        LOGGER.info("Start trying to merge the request once valid.");
         int maxTries = 10;
+        int totalRetryCount = 0;
         for (int i = 0; !("can_be_merged".equals(mergeRequest.getMergeStatus())) && (i < maxTries); i++)
         {
             try
             {
                 Thread.sleep(500);
                 mergeRequest = mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId);
+                totalRetryCount += 1;
             }
             catch (InterruptedException e)
             {
                 Thread.currentThread().interrupt();
             }
         }
+        LOGGER.info("Retried merge: {} times", totalRetryCount);
 
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);

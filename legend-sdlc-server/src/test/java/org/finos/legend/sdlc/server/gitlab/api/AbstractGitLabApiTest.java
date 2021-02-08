@@ -61,7 +61,7 @@ public class AbstractGitLabApiTest
 
     static final BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
 
     @BeforeClass
     public static void suiteSetup()
