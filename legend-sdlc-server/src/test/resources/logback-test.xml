@@ -24,6 +24,8 @@
         </encoder>
     </appender>
 
+    <logger name="org.finos.legend.sdlc.server.gitlab.api" level="INFO"/>
+
     <root level="OFF">
         <appender-ref ref="STDOUT"/>
     </root>

@@ -81,6 +81,7 @@
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
         <jersey.version>2.25.1</jersey.version>
+        <jersey2-guice.version>1.0.6</jersey2-guice.version>
         <jetty.version>9.4.35.v20201120</jetty.version>
         <junit.version>4.13.1</junit.version>
         <apache.maven.version>3.6.2</apache.maven.version>
@@ -325,6 +326,9 @@
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
                     </reportsDirectory>
+                    <excludes>
+                        <exclude>**/IntegrationTestGitLab*.java</exclude>
+                    </excludes>
                 </configuration>
             </plugin>
 
@@ -593,6 +597,12 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.squarespace.jersey2-guice</groupId>
+                <artifactId>jersey2-guice-impl</artifactId>
+                <version>${jersey2-guice.version}</version>
             </dependency>
 
             <dependency>
