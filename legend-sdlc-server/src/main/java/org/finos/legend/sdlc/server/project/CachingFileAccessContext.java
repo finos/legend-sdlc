@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
 
@@ -24,8 +25,8 @@ import java.util.stream.Stream;
 class CachingFileAccessContext implements FileAccessContext
 {
     private final FileAccessContext delegate;
-    private final Map<String, byte[]> cache = Maps.mutable.empty();
-    private boolean isCacheFull = false;
+    private final MutableMap<String, byte[]> cache = Maps.mutable.empty();
+    private volatile boolean isCacheFull = false;
 
     private CachingFileAccessContext(FileAccessContext delegate)
     {
@@ -50,16 +51,23 @@ class CachingFileAccessContext implements FileAccessContext
     {
         String canonicalPath = canonicalizePath(path);
         byte[] bytes;
-        synchronized (this.cache)
+        if (this.isCacheFull)
         {
             bytes = this.cache.get(canonicalPath);
-            if (!this.isCacheFull && (bytes == null))
+        }
+        else
+        {
+            synchronized (this.cache)
             {
-                ProjectFile file = this.delegate.getFile(canonicalPath);
-                if (file != null)
+                bytes = this.cache.get(canonicalPath);
+                if ((bytes == null) && !this.isCacheFull)
                 {
-                    bytes = file.getContentAsBytes();
-                    this.cache.put(canonicalPath, bytes);
+                    ProjectFile file = this.delegate.getFile(canonicalPath);
+                    if (file != null)
+                    {
+                        bytes = file.getContentAsBytes();
+                        this.cache.put(canonicalPath, bytes);
+                    }
                 }
             }
         }
@@ -68,12 +76,15 @@ class CachingFileAccessContext implements FileAccessContext
 
     public void fillCache()
     {
-        synchronized (this.cache)
+        if (!this.isCacheFull)
         {
-            if (!this.isCacheFull)
+            synchronized (this.cache)
             {
-                this.delegate.getFiles().forEach(pf -> this.cache.computeIfAbsent(canonicalizePath(pf.getPath()), p -> pf.getContentAsBytes()));
-                this.isCacheFull = true;
+                if (!this.isCacheFull)
+                {
+                    this.delegate.getFiles().forEach(pf -> this.cache.getIfAbsentPut(pf.getPath(), pf::getContentAsBytes));
+                    this.isCacheFull = true;
+                }
             }
         }
     }
@@ -86,7 +97,7 @@ class CachingFileAccessContext implements FileAccessContext
         }
         if (fileAccessContext instanceof CachingFileAccessContext)
         {
-            return (CachingFileAccessContext)fileAccessContext;
+            return (CachingFileAccessContext) fileAccessContext;
         }
         return new CachingFileAccessContext(fileAccessContext);
     }
