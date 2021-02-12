@@ -56,6 +56,10 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-serialization</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-version-package</artifactId>
+        </dependency>
         <!-- ENGINE -->
 
         <dependency>
@@ -84,11 +88,6 @@
             <artifactId>maven-model</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
         <!-- TEST -->
         <dependency>
             <groupId>junit</groupId>
@@ -103,6 +102,12 @@
         <dependency>
             <groupId>org.apache.maven</groupId>
             <artifactId>maven-compat</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-version-package</artifactId>
+            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
         <!-- TEST -->

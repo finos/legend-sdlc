@@ -32,7 +32,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-class EntityTransformationTestTools
+public class EntityTransformationTestTools
 {
     static List<Entity> transformEntities(List<Entity> entities, Function<? super String, ? extends String> pathTransform)
     {

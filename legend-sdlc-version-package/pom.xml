@@ -1,6 +1,5 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <!--
- Copyright 2020 Goldman Sachs
+ Copyright 2021 Goldman Sachs
 
  Licensed under the Apache License, Version 2.0 (the "License");
  you may not use this file except in compliance with the License.
@@ -23,44 +22,42 @@
     </parent>
 
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>legend-sdlc-entity-serialization</artifactId>
-    <name>Legend SDLC Entity Serialization</name>
     <packaging>jar</packaging>
+    <artifactId>legend-sdlc-version-package</artifactId>
+    <name>Legend SDLC Version Package</name>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>test-jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
 
     <dependencies>
-        <!-- SDLC -->
+        <!-- ENGINE -->
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-model</artifactId>
         </dependency>
-        <!-- SDLC -->
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-entity-serialization</artifactId>
+        </dependency>
+        <!-- ENGINE -->
 
-        <!-- ECLIPSE COLLECTIONS -->
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections</artifactId>
-        </dependency>
-        <!-- ECLIPSE COLLECTIONS -->
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-api</artifactId>
         </dependency>
 
         <!-- TEST -->
@@ -69,12 +66,7 @@
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-model</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
+
         <!-- TEST -->
     </dependencies>
 </project>

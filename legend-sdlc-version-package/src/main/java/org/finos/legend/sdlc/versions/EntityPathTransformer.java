@@ -26,7 +26,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-class EntityPathTransformer
+public class EntityPathTransformer
 {
     private static final Pattern PACKAGE_PATH_PATTERN = Pattern.compile("^(\\w[\\w$]*+::)++\\w[\\w$]*+$");
     private static final String PACKAGE_KEY = "package";

@@ -89,6 +89,10 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-version-package</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-version-package-maven-plugin</artifactId>
         </dependency>
         <!-- Legend dependencies -->
