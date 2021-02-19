@@ -1,0 +1,51 @@
+{
+  "classifierPath" : "meta::pure::metamodel::type::Enumeration",
+  "content" : {
+    "_type" : "Enumeration",
+    "name" : "AddressType",
+    "package" : "model::domain::enums",
+    "sourceInformation" : {
+      "endColumn" : 1,
+      "endLine" : 4,
+      "sourceId" : "",
+      "startColumn" : 1,
+      "startLine" : 1
+    },
+    "stereotypes" : [ ],
+    "taggedValues" : [ ],
+    "values" : [ {
+      "sourceInformation" : {
+        "endColumn" : 8,
+        "endLine" : 3,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 3
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "value" : "STREET"
+    }, {
+      "sourceInformation" : {
+        "endColumn" : 14,
+        "endLine" : 3,
+        "sourceId" : "",
+        "startColumn" : 11,
+        "startLine" : 3
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "value" : "CITY"
+    }, {
+      "sourceInformation" : {
+        "endColumn" : 23,
+        "endLine" : 3,
+        "sourceId" : "",
+        "startColumn" : 17,
+        "startLine" : 3
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "value" : "COUNTRY"
+    } ]
+  }
+}

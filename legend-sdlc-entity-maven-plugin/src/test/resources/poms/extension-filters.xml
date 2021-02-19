@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>org.finos.legend.sdlc.test</groupId>
+    <artifactId>project-no-source-dirs</artifactId>
+    <version>trunk-SNAPSHOT</version>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
+                <configuration>
+                    <sourceDirectories>
+                        <sourceDirectory>
+                            <directory>src/main/mixed</directory>
+                            <serializer>legend</serializer>
+                            <extensions>
+                                <extension>json</extension>
+                            </extensions>
+                        </sourceDirectory>
+                        <sourceDirectory>
+                            <directory>src/main/mixed</directory>
+                            <serializer>pure</serializer>
+                            <extensions>
+                                <extension>pure</extension>
+                            </extensions>
+                        </sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>process-entities</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>

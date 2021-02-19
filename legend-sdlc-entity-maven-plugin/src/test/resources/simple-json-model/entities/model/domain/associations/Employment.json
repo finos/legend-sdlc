@@ -1,0 +1,71 @@
+{
+  "classifierPath": "meta::pure::metamodel::relationship::Association",
+  "content": {
+    "_type": "association",
+    "name": "Employment",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::associations",
+    "properties": [
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": null
+        },
+        "name": "employer",
+        "propertyTypeSourceInformation": {
+          "endColumn": 31,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 13,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 35,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Firm"
+      },
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": null
+        },
+        "name": "employees",
+        "propertyTypeSourceInformation": {
+          "endColumn": 34,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 4
+        },
+        "sourceInformation": {
+          "endColumn": 38,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Person"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 5,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "taggedValues": []
+  }
+}

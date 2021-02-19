@@ -1,0 +1,100 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Firm",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "legalName",
+        "propertyTypeSourceInformation": {
+          "endColumn": 19,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 23,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "commonName",
+        "propertyTypeSourceInformation": {
+          "endColumn": 20,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 15,
+          "startLine": 4
+        },
+        "sourceInformation": {
+          "endColumn": 27,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "founded",
+        "propertyTypeSourceInformation": {
+          "endColumn": 21,
+          "endLine": 5,
+          "sourceId": "",
+          "startColumn": 12,
+          "startLine": 5
+        },
+        "sourceInformation": {
+          "endColumn": 28,
+          "endLine": 5,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 5
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "StrictDate"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 6,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "superTypes": [
+      "model::domain::classes::EntityWithAddresses"
+    ],
+    "taggedValues": []
+  }
+}

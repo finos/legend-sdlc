@@ -37,6 +37,7 @@
         <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
+        <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>test-reports</module>
     </modules>
@@ -438,6 +439,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

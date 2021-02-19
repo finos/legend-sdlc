@@ -1,0 +1,73 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Address",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "type",
+        "propertyTypeSourceInformation": {
+          "endColumn": 41,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 9,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 45,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::enums::AddressType"
+      },
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "address",
+        "propertyTypeSourceInformation": {
+          "endColumn": 17,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 12,
+          "startLine": 4
+        },
+        "sourceInformation": {
+          "endColumn": 21,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 5,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "superTypes": [],
+    "taggedValues": []
+  }
+}
