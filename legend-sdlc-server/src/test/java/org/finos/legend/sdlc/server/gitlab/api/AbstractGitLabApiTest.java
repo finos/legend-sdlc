@@ -29,6 +29,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,8 +37,6 @@ import org.slf4j.LoggerFactory;
 import java.security.SecureRandom;
 import java.util.Optional;
 import javax.servlet.http.HttpServletRequest;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Prepares subclass GitLab integration tests.
@@ -115,12 +114,17 @@ public class AbstractGitLabApiTest
         }
         catch (GitLabApiException e)
         {
-            String errorMsg = e.getMessage();
+            StringBuilder builder = new StringBuilder("Error creating user for authentication; response status: ").append(e.getHttpStatus());
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append("; error message: ").append(eMessage);
+            }
             if (e.hasValidationErrors())
             {
-                errorMsg = "Validation error: " + e.getValidationErrors().toString();
+                builder.append("; validation error(s): ").append(e.getValidationErrors());
             }
-            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + errorMsg, e);
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
     }
 
@@ -163,17 +167,27 @@ public class AbstractGitLabApiTest
         try
         {
             oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, username, password, null, null, true);
-            assertNotNull(oauthGitLabApi);
+            Assert.assertNotNull(oauthGitLabApi);
             version = oauthGitLabApi.getVersion();
         }
         catch (GitLabApiException e)
         {
-            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + e.getMessage(), e);
+            StringBuilder builder = new StringBuilder("Error instantiating GitLabApi via OAuth2; response status: ").append(e.getHttpStatus());
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append("; error message: ").append(eMessage);
+            }
+            if (e.hasValidationErrors())
+            {
+                builder.append("; validation error(s): ").append(e.getValidationErrors());
+            }
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
         LOGGER.info("Retrieved access token: {}", oauthToken);
-        assertNotNull(version);
+        Assert.assertNotNull(version);
 
         GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
         GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
