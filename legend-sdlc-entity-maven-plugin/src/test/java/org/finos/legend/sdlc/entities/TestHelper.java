@@ -23,7 +23,6 @@ import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.serialization.EntityTextSerializer;
 import org.junit.Assert;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.net.URL;
@@ -37,6 +36,7 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 class TestHelper
@@ -58,18 +58,23 @@ class TestHelper
         }
     }
 
-    static void copyResourceDirectoryTree(String resourceName, File targetDir) throws IOException
-    {
-        copyResourceDirectoryTree(resourceName, targetDir.toPath());
-    }
-
     static void copyResourceDirectoryTree(String resourceName, Path targetDir) throws IOException
     {
+        copyResourceDirectoryTree(resourceName, targetDir, null);
+    }
+
+    static void copyResourceDirectoryTree(String resourceName, Path targetDir, Predicate<? super Path> fileFilter) throws IOException
+    {
         Path resourcePath = TestHelper.getPathFromResource(resourceName);
-        copyDirectoryTree(resourcePath, targetDir);
+        copyDirectoryTree(resourcePath, targetDir, fileFilter);
     }
 
     static void copyDirectoryTree(Path sourceDir, Path targetDir) throws IOException
+    {
+        copyDirectoryTree(sourceDir, targetDir, null);
+    }
+
+    static void copyDirectoryTree(Path sourceDir, Path targetDir, Predicate<? super Path> fileFilter) throws IOException
     {
         if (!Files.isDirectory(sourceDir))
         {
@@ -87,7 +92,10 @@ class TestHelper
             @Override
             public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) throws IOException
             {
-                Files.copy(file, targetDir.resolve(sourceDir.relativize(file)));
+                if ((fileFilter == null) || fileFilter.test(file))
+                {
+                    Files.copy(file, targetDir.resolve(sourceDir.relativize(file)));
+                }
                 return FileVisitResult.CONTINUE;
             }
         });

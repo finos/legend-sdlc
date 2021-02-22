@@ -208,6 +208,46 @@ public class TestEntityMojo
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
     }
 
+    @Test
+    public void testMultipleSourceDirectories() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/multiple-source-directories.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+        TestHelper.copyResourceDirectoryTree("simple-mixed-model", Files.createDirectories(srcMain.resolve("legend")), p -> p.toString().endsWith(".json"));
+        TestHelper.copyResourceDirectoryTree("simple-mixed-model", Files.createDirectories(srcMain.resolve("pure")), p -> p.toString().endsWith(".pure"));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+        this.mojoRule.executeMojo(projectDir, GOAL);
+
+        Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
+        TestHelper.assertDirectoryTreeFilePaths(
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                outputDir);
+        Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
+        TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
+    }
+
+    @Test
+    public void testMultipleSourceDirectoriesWithConflict() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/multiple-source-directories.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+        TestHelper.copyResourceDirectoryTree("simple-json-model", Files.createDirectories(srcMain.resolve("legend")));
+        TestHelper.copyResourceDirectoryTree("simple-pure-model/model/domain/enums", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+
+        String expectedMessage = "Error reserializing entities from " + srcMain.resolve("pure") + " using serializer \"pure\" to " + outputDir + ": Error serializing entity 'model::domain::enums::AddressType' to " + outputDir.resolve(Paths.get("entities", "model", "domain", "enums", "AddressType.json")) + ": target file already exists";
+        MojoExecutionException e = Assert.assertThrows(MojoExecutionException.class, () -> this.mojoRule.executeMojo(projectDir, GOAL));
+        Assert.assertEquals(expectedMessage, e.getMessage());
+    }
+
     private void copyPomFromResource(String resourceName, File targetDir) throws IOException
     {
         copyPomFromResource(resourceName, targetDir.toPath());

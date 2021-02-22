@@ -63,14 +63,14 @@ public class EntityMojo extends AbstractMojo
         for (SerializationSpec serializationSpec : serializationSpecs)
         {
             long sourceStart = System.nanoTime();
-            getLog().info("Reserializing entities from " + serializationSpec.directory + " using " + serializationSpec.serializer.getName() + " to " + this.outputDirectory);
+            getLog().info("Reserializing entities from " + serializationSpec.directory + " using serializer \"" + serializationSpec.serializer.getName() + "\" to " + this.outputDirectory);
             EntityReserializer reserializer = EntityReserializer.newReserializer(serializationSpec.serializer, outputSerializer);
             Predicate<Path> filter = (serializationSpec.fileExtensions == null) ? null : EntityReserializer.getExtensionsFilter(serializationSpec.fileExtensions);
             try
             {
                 List<String> paths = reserializer.reserializeDirectoryTree(serializationSpec.directory, filter, this.outputDirectory.toPath());
                 long sourceEnd = System.nanoTime();
-                getLog().info(String.format("Finished reserializing %,d entities from %s using %s to %s (%.9fs)", paths.size(), serializationSpec.directory, serializationSpec.serializer.getName(), this.outputDirectory, nanoDuration(sourceStart, sourceEnd)));
+                getLog().info(String.format("Finished reserializing %,d entities from %s using serializer \"%s\" to %s (%.9fs)", paths.size(), serializationSpec.directory, serializationSpec.serializer.getName(), this.outputDirectory, nanoDuration(sourceStart, sourceEnd)));
                 if (getLog().isDebugEnabled())
                 {
                     getLog().debug(Iterate.makeString(paths, "Reserialized: ", ", ", ""));
@@ -80,9 +80,9 @@ public class EntityMojo extends AbstractMojo
             catch (Exception e)
             {
                 long sourceEnd = System.nanoTime();
-                getLog().info(String.format("Error reserializing entities from %s using %s to %s (%.9fs)", serializationSpec.directory, serializationSpec.serializer.getName(), this.outputDirectory, nanoDuration(sourceStart, sourceEnd)), e);
+                getLog().info(String.format("Error reserializing entities from %s using serializer \"%s\" to %s (%.9fs)", serializationSpec.directory, serializationSpec.serializer.getName(), this.outputDirectory, nanoDuration(sourceStart, sourceEnd)), e);
                 StringBuilder builder = new StringBuilder("Error reserializing entities from ").append(serializationSpec.directory)
-                        .append(" using ").append(serializationSpec.serializer.getName())
+                        .append(" using serializer \"").append(serializationSpec.serializer.getName()).append('"')
                         .append(" to ").append(this.outputDirectory);
                 String eMessage = e.getMessage();
                 if (eMessage != null)
