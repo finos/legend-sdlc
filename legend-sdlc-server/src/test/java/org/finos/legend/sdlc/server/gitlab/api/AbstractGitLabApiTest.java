@@ -33,9 +33,9 @@ import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
 import java.util.Optional;
+import javax.servlet.http.HttpServletRequest;
 
 import static org.junit.Assert.assertNotNull;
 
@@ -46,6 +46,8 @@ import static org.junit.Assert.assertNotNull;
  */
 public class AbstractGitLabApiTest
 {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.
     // Admin and test user(s) will only exist for the container's lifetime.
     static final String TEST_ADMIN_USERNAME = "root";
@@ -111,14 +113,14 @@ public class AbstractGitLabApiTest
                 LOGGER.info("Created user with name {} and username {}", userSettings.getName(), userSettings.getUsername());
             }
         }
-        catch (GitLabApiException exception)
+        catch (GitLabApiException e)
         {
-            String errorMsg = exception.getMessage();
-            if (exception.hasValidationErrors())
+            String errorMsg = e.getMessage();
+            if (e.hasValidationErrors())
             {
-                errorMsg = "Validation error: " + exception.getValidationErrors().toString();
+                errorMsg = "Validation error: " + e.getValidationErrors().toString();
             }
-            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + errorMsg);
+            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + errorMsg, e);
         }
     }
 
@@ -164,9 +166,9 @@ public class AbstractGitLabApiTest
             assertNotNull(oauthGitLabApi);
             version = oauthGitLabApi.getVersion();
         }
-        catch (GitLabApiException exception)
+        catch (GitLabApiException e)
         {
-            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage());
+            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + e.getMessage(), e);
         }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
@@ -189,7 +191,6 @@ public class AbstractGitLabApiTest
      */
     private static String generateRandomHexCharString()
     {
-        SecureRandom secureRandom = new SecureRandom();
-        return String.format("%016x", secureRandom.nextLong());
+        return String.format("%016x", SECURE_RANDOM.nextLong());
     }
 }
