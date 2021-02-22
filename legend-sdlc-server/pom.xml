@@ -29,7 +29,8 @@
     <packaging>jar</packaging>
 
     <properties>
-        <gitlab.version>latest</gitlab.version>
+<!--        <gitlab.version>latest</gitlab.version>-->
+        <gitlab.version>13.8.4-ee.0</gitlab.version>
         <gitlab.autoremove-container>true</gitlab.autoremove-container>
         <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
         <gitlab.port>8090</gitlab.port>
