@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api;
+package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
+import org.finos.legend.sdlc.server.gitlab.api.TestHttpServletRequest;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
@@ -157,7 +158,7 @@ public class AbstractGitLabApiTest
      */
     private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
-        GitLabMode gitLabMode = GitLabMode.UAT;
+        GitLabMode gitLabMode = GitLabMode.PROD;
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
         TestGitLabSession session = new TestGitLabSession(username);

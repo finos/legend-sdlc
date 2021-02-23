@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api;
+package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
@@ -20,6 +20,9 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.gitlab4j.api.GitLabApiException;
@@ -48,7 +51,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     {
         String projectName = "WorkspaceTestProject";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");

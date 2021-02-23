@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api;
+package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
@@ -24,6 +24,11 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.CallUntil;
@@ -60,7 +65,7 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     {
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "entitytestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");

@@ -18,6 +18,8 @@ import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 
 import java.time.Instant;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 
 public class TestGitLabSession implements GitLabSession
@@ -52,13 +54,16 @@ public class TestGitLabSession implements GitLabSession
     @Override
     public Set<GitLabMode> getValidModes()
     {
-        return null;
+        Set<GitLabMode> modes = new HashSet<GitLabMode>();
+        modes.add(GitLabMode.PROD);
+
+        return Collections.unmodifiableSet(modes);
     }
 
     @Override
     public boolean isValidMode(GitLabMode mode)
     {
-        return true; // TODO: update
+        return GitLabMode.PROD.equals(mode);
     }
 
     @Override
