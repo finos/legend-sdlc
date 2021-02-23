@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api;
+package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.junit.BeforeClass;
@@ -45,7 +46,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     {
         String projectName = "TestProjectOne";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -64,7 +65,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     {
         String projectName = "TestProjectTwo";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -91,7 +92,7 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
     {
         String projectName = "TestProjectThree";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
