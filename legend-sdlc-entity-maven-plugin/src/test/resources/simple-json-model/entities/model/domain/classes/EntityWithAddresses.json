@@ -1,0 +1,48 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "EntityWithAddresses",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": null
+        },
+        "name": "addresses",
+        "propertyTypeSourceInformation": {
+          "endColumn": 44,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 48,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::classes::Address"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 4,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "superTypes": [],
+    "taggedValues": []
+  }
+}

@@ -29,15 +29,14 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
+import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
 import java.util.Optional;
-
-import static org.junit.Assert.assertNotNull;
+import javax.servlet.http.HttpServletRequest;
 
 /**
  * Prepares subclass GitLab integration tests.
@@ -46,6 +45,8 @@ import static org.junit.Assert.assertNotNull;
  */
 public class AbstractGitLabApiTest
 {
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
     // Note: Password for Admin is preset for Maven to start the test container for testing purposes only.
     // Admin and test user(s) will only exist for the container's lifetime.
     static final String TEST_ADMIN_USERNAME = "root";
@@ -111,14 +112,19 @@ public class AbstractGitLabApiTest
                 LOGGER.info("Created user with name {} and username {}", userSettings.getName(), userSettings.getUsername());
             }
         }
-        catch (GitLabApiException exception)
+        catch (GitLabApiException e)
         {
-            String errorMsg = exception.getMessage();
-            if (exception.hasValidationErrors())
+            StringBuilder builder = new StringBuilder("Error creating user for authentication; response status: ").append(e.getHttpStatus());
+            String eMessage = e.getMessage();
+            if (eMessage != null)
             {
-                errorMsg = "Validation error: " + exception.getValidationErrors().toString();
+                builder.append("; error message: ").append(eMessage);
             }
-            throw new LegendSDLCServerException("Cannot create proper user for authentication: " + errorMsg);
+            if (e.hasValidationErrors())
+            {
+                builder.append("; validation error(s): ").append(e.getValidationErrors());
+            }
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
     }
 
@@ -161,17 +167,27 @@ public class AbstractGitLabApiTest
         try
         {
             oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, username, password, null, null, true);
-            assertNotNull(oauthGitLabApi);
+            Assert.assertNotNull(oauthGitLabApi);
             version = oauthGitLabApi.getVersion();
         }
-        catch (GitLabApiException exception)
+        catch (GitLabApiException e)
         {
-            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage());
+            StringBuilder builder = new StringBuilder("Error instantiating GitLabApi via OAuth2; response status: ").append(e.getHttpStatus());
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append("; error message: ").append(eMessage);
+            }
+            if (e.hasValidationErrors())
+            {
+                builder.append("; validation error(s): ").append(e.getValidationErrors());
+            }
+            throw new LegendSDLCServerException(builder.toString(), e);
         }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
         LOGGER.info("Retrieved access token: {}", oauthToken);
-        assertNotNull(version);
+        Assert.assertNotNull(version);
 
         GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
         GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
@@ -189,7 +205,6 @@ public class AbstractGitLabApiTest
      */
     private static String generateRandomHexCharString()
     {
-        SecureRandom secureRandom = new SecureRandom();
-        return String.format("%016x", secureRandom.nextLong());
+        return String.format("%016x", SECURE_RANDOM.nextLong());
     }
 }

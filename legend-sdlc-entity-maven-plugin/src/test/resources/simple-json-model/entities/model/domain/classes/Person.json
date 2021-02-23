@@ -1,0 +1,75 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Person",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "firstName",
+        "propertyTypeSourceInformation": {
+          "endColumn": 19,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 23,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "defaultValue": null,
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "lastName",
+        "propertyTypeSourceInformation": {
+          "endColumn": 18,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 13,
+          "startLine": 4
+        },
+        "sourceInformation": {
+          "endColumn": 22,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 5,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "superTypes": [
+      "model::domain::classes::EntityWithAddresses"
+    ],
+    "taggedValues": []
+  }
+}

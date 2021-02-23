@@ -1,0 +1,5 @@
+Class model::domain::classes::Address
+{
+  type: model::domain::enums::AddressType[1];
+  address: String[1];
+}

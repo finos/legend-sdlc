@@ -1,0 +1,6 @@
+Class model::domain::classes::Firm extends model::domain::classes::EntityWithAddresses
+{
+  legalName: String[1];
+  commonName: String[0..1];
+  founded: StrictDate[0..1];
+}

@@ -1,0 +1,5 @@
+Class model::domain::classes::Person extends model::domain::classes::EntityWithAddresses
+{
+  firstName: String[1];
+  lastName: String[1];
+}
