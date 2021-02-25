@@ -48,6 +48,7 @@ import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.RepositoryApi;
+import org.gitlab4j.api.RepositoryFileApi;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.CommitAction;
@@ -302,7 +303,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             String referenceId = getReference();
             try
             {
-                RepositoryFile file = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi().getFile(this.projectId.getGitLabId(), toGitLabFilePath(path), referenceId, true));
+                RepositoryFileApi repositoryFileApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi();
+                String gitLabFilePath = toGitLabFilePath(path);
+                RepositoryFile file = withRetries(() -> repositoryFileApi.getFile(this.projectId.getGitLabId(), gitLabFilePath, referenceId, true));
                 Encoding encoding = file.getEncoding();
                 if (encoding == null)
                 {
@@ -330,6 +333,30 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 if (GitLabApiTools.isNotFoundGitLabApiException(e))
                 {
                     return null;
+                }
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),
+                        () -> "Unknown file " + path + " for " + getDescriptionForExceptionMessage(),
+                        () -> "Error getting file " + path + " for " + getDescriptionForExceptionMessage());
+            }
+        }
+
+        @Override
+        public boolean fileExists(String path)
+        {
+            String referenceId = getReference();
+            try
+            {
+                RepositoryFileApi repositoryFileApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi();
+                String gitLabFilePath = toGitLabFilePath(path);
+                RepositoryFile file = withRetries(() -> repositoryFileApi.getFile(this.projectId.getGitLabId(), gitLabFilePath, referenceId, false));
+                return file != null;
+            }
+            catch (Exception e)
+            {
+                if (GitLabApiTools.isNotFoundGitLabApiException(e))
+                {
+                    return false;
                 }
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),

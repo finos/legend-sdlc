@@ -122,6 +122,17 @@ public interface ProjectFileAccessProvider
          * @return file or null, if there is no such file
          */
         ProjectFile getFile(String path);
+
+        /**
+         * Return whether a file exists.
+         *
+         * @param path file path
+         * @return whether the file exists
+         */
+        default boolean fileExists(String path)
+        {
+            return getFile(path) != null;
+        }
     }
 
     /**
