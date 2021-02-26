@@ -20,6 +20,7 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -31,8 +32,8 @@ import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
+import org.finos.legend.sdlc.server.project.AbstractFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileModificationContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.RevisionAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
@@ -175,7 +176,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         }
     }
 
-    private abstract class AbstractGitLabFileAccessContext implements FileAccessContext
+    private abstract class AbstractGitLabFileAccessContext extends AbstractFileAccessContext
     {
         protected final GitLabProjectId projectId;
 
@@ -185,13 +186,12 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         }
 
         @Override
-        public Stream<ProjectFileAccessProvider.ProjectFile> getFilesInDirectory(String directory)
+        protected Stream<ProjectFileAccessProvider.ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
         {
-            String canonicalDirectory = directory.endsWith("/") ? directory : (directory + "/");
             Exception exception;
             try
             {
-                return getFilesFromRepoArchive(canonicalDirectory);
+                return getFilesFromRepoArchive(directories);
             }
             catch (Exception e)
             {
@@ -208,18 +208,13 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 if ((statusCode == Status.TOO_MANY_REQUESTS.getStatusCode()) || (statusCode == Status.NOT_ACCEPTABLE.getStatusCode()))
                 {
-                    LOGGER.warn("Failed to get files for {} from repository archive (http status: {}), will try to get them from tree", getReference(), statusCode, exception);
+                    LOGGER.warn("Failed to get files for {} from repository archive (http status: {}), will try to get them from tree(s)", getReference(), statusCode, exception);
                     try
                     {
-                        return getFilesFromTree(canonicalDirectory);
+                        return getFilesFromTrees(directories);
                     }
                     catch (Exception e)
                     {
-                        if ((e instanceof GitLabApiException) && (Status.NOT_FOUND.getStatusCode() == ((GitLabApiException) e).getHttpStatus()) && "404 Tree Not Found".equals(e.getMessage()))
-                        {
-                            // This means the directory cannot be found
-                            return Stream.empty();
-                        }
                         try
                         {
                             e.addSuppressed(exception);
@@ -232,14 +227,13 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     }
                 }
             }
-
             throw buildException(exception,
                     () -> "User " + getCurrentUser() + " is not allowed to access files for " + getDescriptionForExceptionMessage(),
                     () -> "Unknown " + getDescriptionForExceptionMessage(),
                     () -> "Failed to access files for " + getDescriptionForExceptionMessage());
         }
 
-        private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromRepoArchive(String directory) throws GitLabApiException, IOException
+        private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromRepoArchive(MutableList<String> directories) throws GitLabApiException, IOException
         {
             InputStream inStream = null;
             ArchiveInputStream archiveInputStream = null;
@@ -250,9 +244,21 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 inStream = withRetries(() -> repositoryApi.getRepositoryArchive(this.projectId.getGitLabId(), referenceId));
                 archiveInputStream = new TarArchiveInputStream(new GzipCompressorInputStream(inStream));
                 Stream<ProjectFileAccessProvider.ProjectFile> stream = IOTools.streamCloseableSpliterator(new ArchiveStreamProjectFileSpliterator(archiveInputStream), false);
-                if (!"/".equals(directory))
+                if (directories.size() == 1)
                 {
-                    stream = stream.filter(f -> f.getPath().startsWith(directory));
+                    String directory = directories.get(0);
+                    if (!ROOT_DIRECTORY.equals(directory))
+                    {
+                        stream = stream.filter(f -> f.getPath().startsWith(directory));
+                    }
+                }
+                else
+                {
+                    stream = stream.filter(f ->
+                    {
+                        String path = f.getPath();
+                        return directories.anySatisfy(path::startsWith);
+                    });
                 }
                 return stream;
             }
@@ -284,13 +290,42 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
         }
 
-        private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromTree(String directory) throws GitLabApiException
+        private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromTrees(List<String> directories) throws GitLabApiException
         {
             String referenceId = getReference();
             RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
-            String filePath = "/".equals(directory) ? null : directory.substring(1);
-            Pager<TreeItem> pager = withRetries(() -> repositoryApi.getTree(this.projectId.getGitLabId(), filePath, referenceId, true, ITEMS_PER_PAGE));
-            return PagerTools.stream(pager)
+            MutableList<Pager<TreeItem>> pagers = Lists.mutable.ofInitialCapacity(directories.size());
+            for (String directory : directories)
+            {
+                String filePath = ROOT_DIRECTORY.equals(directory) ? null : directory.substring(1);
+                Pager<TreeItem> pager;
+                try
+                {
+                    pager = withRetries(() -> repositoryApi.getTree(this.projectId.getGitLabId(), filePath, referenceId, true, ITEMS_PER_PAGE));
+                }
+                catch (GitLabApiException e)
+                {
+                    if (GitLabApiTools.isNotFoundGitLabApiException(e) && "404 Tree Not Found".equals(e.getMessage()))
+                    {
+                        // The directory doesn't exist, no need to add a pager
+                        pager = null;
+                    }
+                    else
+                    {
+                        throw e;
+                    }
+                }
+                if (pager != null)
+                {
+                    pagers.add(pager);
+                }
+            }
+            if (pagers.isEmpty())
+            {
+                return Stream.empty();
+            }
+            return pagers.stream()
+                    .flatMap(PagerTools::stream)
                     .filter(ti -> ti.getType() == TreeItem.Type.BLOB)
                     .map(TreeItem::getPath)
                     .map(p -> p.startsWith("/") ? p : ("/" + p))

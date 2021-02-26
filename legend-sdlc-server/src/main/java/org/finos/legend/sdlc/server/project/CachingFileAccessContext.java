@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
@@ -22,7 +23,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFil
 import java.util.Map;
 import java.util.stream.Stream;
 
-class CachingFileAccessContext implements FileAccessContext
+public class CachingFileAccessContext extends AbstractFileAccessContext
 {
     private final FileAccessContext delegate;
     private final MutableMap<String, byte[]> cache = Maps.mutable.empty();
@@ -34,14 +35,25 @@ class CachingFileAccessContext implements FileAccessContext
     }
 
     @Override
-    public Stream<ProjectFile> getFilesInDirectory(String directory)
+    protected Stream<ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
     {
         fillCache();
         Stream<Map.Entry<String, byte[]>> stream = this.cache.entrySet().stream();
-        String canonicalDirectory = directory.endsWith("/") ? directory : (directory + "/");
-        if (!"/".equals(directory))
+        if (directories.size() == 1)
         {
-            stream = stream.filter(f -> f.getKey().startsWith(canonicalDirectory));
+            String directory = directories.get(0);
+            if (!ROOT_DIRECTORY.equals(directory))
+            {
+                stream = stream.filter(f -> f.getKey().startsWith(directory));
+            }
+        }
+        else
+        {
+            stream = stream.filter(f ->
+            {
+                String path = f.getKey();
+                return directories.anySatisfy(path::startsWith);
+            });
         }
         return stream.map(e -> ProjectFiles.newByteArrayProjectFile(e.getKey(), e.getValue()));
     }
@@ -89,7 +101,7 @@ class CachingFileAccessContext implements FileAccessContext
         }
     }
 
-    static CachingFileAccessContext wrap(FileAccessContext fileAccessContext)
+    public static CachingFileAccessContext wrap(FileAccessContext fileAccessContext)
     {
         if (fileAccessContext == null)
         {

@@ -25,6 +25,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -93,6 +94,8 @@ public interface ProjectFileAccessProvider
 
     interface FileAccessContext
     {
+        String ROOT_DIRECTORY = "/";
+
         /**
          * Get all files as a stream. Note that this stream should be closed when
          * no longer needed. It is strongly recommended to use a try-with-resources
@@ -102,7 +105,7 @@ public interface ProjectFileAccessProvider
          */
         default Stream<ProjectFile> getFiles()
         {
-            return getFilesInDirectory("/");
+            return getFilesInDirectory(ROOT_DIRECTORY);
         }
 
         /**
@@ -113,7 +116,21 @@ public interface ProjectFileAccessProvider
          * @param directory directory path
          * @return stream of all files in the given directory
          */
-        Stream<ProjectFile> getFilesInDirectory(String directory);
+        default Stream<ProjectFile> getFilesInDirectory(String directory)
+        {
+            return getFilesInDirectories(Collections.singletonList(directory));
+        }
+
+        /**
+         * Get all files in the directories as a stream. No file should appear multiple
+         * times in the stream, even if a directory appears more than once in the input.
+         * Note that this stream should be closed when no longer needed. It is strongly
+         * recommended to use a try-with-resources statement.
+         *
+         * @param directories directory paths
+         * @return stream of all files in the given directories
+         */
+        Stream<ProjectFile> getFilesInDirectories(Iterable<? extends String> directories);
 
         /**
          * Get a single file. Returns null if the file does not exist.

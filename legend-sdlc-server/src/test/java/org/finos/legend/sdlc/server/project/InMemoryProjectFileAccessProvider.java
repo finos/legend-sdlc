@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
@@ -49,7 +50,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         {
             case WORKSPACE:
             {
-                return new AbstractFileAccessContext(revisionId)
+                return new AbstractInMemoryFileAccessContext(revisionId)
                 {
                     @Override
                     protected SimpleInMemoryVCS getContextVCS()
@@ -68,7 +69,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     @Override
     public FileAccessContext getFileAccessContext(String projectId, VersionId versionId)
     {
-        return new AbstractFileAccessContext()
+        return new AbstractInMemoryFileAccessContext()
         {
             @Override
             protected SimpleInMemoryVCS getContextVCS()
@@ -385,28 +386,27 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         }
     }
 
-    private abstract static class AbstractFileAccessContext implements FileAccessContext
+    private abstract static class AbstractInMemoryFileAccessContext extends AbstractFileAccessContext
     {
         private final String revisionId;
 
-        protected AbstractFileAccessContext(String revisionId)
+        protected AbstractInMemoryFileAccessContext(String revisionId)
         {
             this.revisionId = revisionId;
         }
 
-        protected AbstractFileAccessContext()
+        protected AbstractInMemoryFileAccessContext()
         {
             this(null);
         }
 
         @Override
-        public Stream<ProjectFile> getFilesInDirectory(String directory)
+        protected Stream<ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
         {
             Stream<ProjectFile> stream = getContextVCS().getFiles(this.revisionId).map(VCSFileWrapper::new);
-            String canonicalDirectory = directory.endsWith("/") ? directory : (directory + "/");
-            if (!"/".equals(canonicalDirectory))
+            if (!directories.contains(ROOT_DIRECTORY))
             {
-                stream = stream.filter(f -> f.getPath().startsWith(canonicalDirectory));
+                stream = stream.filter(f -> directories.anySatisfy(d -> f.getPath().startsWith(d)));
             }
             return stream;
         }
