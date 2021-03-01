@@ -1,0 +1,12 @@
+{
+  "classifierPath" : "meta::pure::generation::metamodel::GenerationConfiguration",
+  "content" : {
+    "_type" : "fileGeneration",
+    "configurationProperties" : [ ],
+    "name" : "myProtobuf",
+    "package" : "model",
+    "scopeElements" : [ "model", "complex" ],
+    "generationOutputPath": "myProtobuf",
+    "type" : "protobuf"
+  }
+}

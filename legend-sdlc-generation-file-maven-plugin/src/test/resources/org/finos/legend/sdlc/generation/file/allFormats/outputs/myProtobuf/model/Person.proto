@@ -1,0 +1,20 @@
+message Person {
+ string lastname = 1;
+ string firstname = 2;
+ timestamp dateofbirth = 3;
+ string middlename = 4;
+ Address address = 5;
+}
+message Address {
+ string street = 1;
+ City city = 2;
+ Country country = 3;
+}
+enum City {
+   London = 0;
+   NY = 1;
+}
+enum Country {
+   UK = 0;
+   USA = 1;
+}

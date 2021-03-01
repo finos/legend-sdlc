@@ -1,0 +1,11 @@
+{
+  "classifierPath" : "meta::pure::generation::metamodel::GenerationConfiguration",
+  "content" : {
+    "_type" : "fileGeneration",
+    "configurationProperties" : [ ],
+    "name" : "myRosetta",
+    "package" : "model",
+    "scopeElements" : [ "model" ],
+    "type" : "rosetta"
+  }
+}

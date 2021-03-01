@@ -1,0 +1,33 @@
+type Address:
+   Street string (1..1)
+   City City (1..1)
+   Country Country (1..1)
+
+
+type Firm:
+   employees Person (1..1)
+   legalName string (1..1)
+   incType IncType (1..1)
+
+
+type Person:
+   lastName string (1..1)
+   firstName string (1..1)
+   dateOfBirth date (1..1)
+   middleName string (1..1)
+   address Address (1..1)
+
+
+enum City:
+   London
+   NY
+
+
+enum Country:
+   UK
+   USA
+
+
+enum IncType:
+   CORP
+   LLC

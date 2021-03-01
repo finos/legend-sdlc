@@ -1,0 +1,13 @@
+{
+  "classifierPath" : "meta::pure::metamodel::type::Enumeration",
+  "content" : {
+    "_type" : "Enumeration",
+    "name" : "City",
+    "package" : "model",
+    "values" : [ {
+      "value" : "London"
+    }, {
+      "value" : "NY"
+    } ]
+  }
+}

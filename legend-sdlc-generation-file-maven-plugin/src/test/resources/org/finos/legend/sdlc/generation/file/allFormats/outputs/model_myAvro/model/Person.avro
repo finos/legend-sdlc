@@ -1,0 +1,44 @@
+{
+  "type" : "record",
+  "name" : "Person",
+  "fields" : [ {
+    "name" : "lastName",
+    "type" : "string"
+  }, {
+    "name" : "firstName",
+    "type" : "string"
+  }, {
+    "name" : "dateOfBirth",
+    "type" : {
+      "type" : "long",
+      "logicalType" : "timestamp-micros"
+    }
+  }, {
+    "name" : "middleName",
+    "type" : "string"
+  }, {
+    "name" : "address",
+    "type" : {
+      "type" : "record",
+      "name" : "Address",
+      "fields" : [ {
+        "name" : "Street",
+        "type" : "string"
+      }, {
+        "name" : "City",
+        "type" : {
+          "type" : "enum",
+          "name" : "City",
+          "symbols" : [ "London", "NY" ]
+        }
+      }, {
+        "name" : "Country",
+        "type" : {
+          "type" : "enum",
+          "name" : "Country",
+          "symbols" : [ "UK", "USA" ]
+        }
+      } ]
+    }
+  } ]
+}
