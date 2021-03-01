@@ -1,0 +1,23 @@
+{
+  "classifierPath": "meta::pure::generation::metamodel::GenerationSpecification",
+  "content": {
+    "_type": "generationSpecification",
+    "fileGenerations": [
+      {
+        "path": "model::myAvro",
+        "type": "FILE_GENERATION"
+      },
+      {
+        "path": "model::myRosetta",
+        "type": "FILE_GENERATION"
+      },
+      {
+        "path": "model::myProtobuf",
+        "type": "FILE_GENERATION"
+      }
+    ],
+    "generationNodes": [],
+    "name": "MyGenerationSpecification",
+    "package": "model"
+  }
+}

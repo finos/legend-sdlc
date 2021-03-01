@@ -1,0 +1,22 @@
+{
+  "type" : "record",
+  "name" : "Address",
+  "fields" : [ {
+    "name" : "Street",
+    "type" : "string"
+  }, {
+    "name" : "City",
+    "type" : {
+      "type" : "enum",
+      "name" : "City",
+      "symbols" : [ "London", "NY" ]
+    }
+  }, {
+    "name" : "Country",
+    "type" : {
+      "type" : "enum",
+      "name" : "Country",
+      "symbols" : [ "UK", "USA" ]
+    }
+  } ]
+}

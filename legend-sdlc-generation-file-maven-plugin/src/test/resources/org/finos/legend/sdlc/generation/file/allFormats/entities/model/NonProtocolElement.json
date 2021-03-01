@@ -1,0 +1,8 @@
+{
+  "classifierPath" : "meta::myClassifier",
+  "content" : {
+    "id" : "8883aad7-7ea0-42fa-993b-07d261132adc",
+    "name" : "NonProtocolElement",
+    "package" : "model"
+  }
+}

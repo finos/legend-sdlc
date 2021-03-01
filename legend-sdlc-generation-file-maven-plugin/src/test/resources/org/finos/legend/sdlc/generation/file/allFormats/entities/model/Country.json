@@ -1,0 +1,13 @@
+{
+  "classifierPath" : "meta::pure::metamodel::type::Enumeration",
+  "content" : {
+    "_type" : "Enumeration",
+    "name" : "Country",
+    "package" : "model",
+    "values" : [ {
+      "value" : "UK"
+    }, {
+      "value" : "USA"
+    } ]
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "classifierPath" : "meta::pure::generation::metamodel::GenerationConfiguration",
+  "content" : {
+    "_type" : "fileGeneration",
+    "configurationProperties" : [ {
+      "name" : "includeNamespace",
+      "value" : false
+    } ],
+    "name" : "myAvro",
+    "package" : "model",
+    "scopeElements" : [ "model", "complex" ],
+    "type" : "avro"
+  }
+}

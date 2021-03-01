@@ -1,0 +1,8 @@
+{
+  "type" : "record",
+  "name" : "AddressWithConstraint",
+  "fields" : [ {
+    "name" : "strike",
+    "type" : "string"
+  } ]
+}
