@@ -17,12 +17,9 @@ package org.finos.legend.sdlc.generation.file;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.multimap.list.MutableListMultimap;
 import org.eclipse.collections.impl.utility.Iterate;
-import org.finos.legend.engine.external.format.avro.schema.generations.AvroGenerationConfig;
 import org.finos.legend.engine.external.shared.format.extension.GenerationExtension;
-import org.finos.legend.engine.language.pure.dsl.generation.config.ConfigBuilder;
 import org.finos.legend.engine.shared.core.operational.Assert;
 import org.finos.legend.pure.generated.Root_meta_pure_generation_metamodel_GenerationOutput;
-import org.finos.legend.pure.generated.core_external_format_avro_tramsformation_avroSchemaGenerator;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
@@ -75,15 +72,6 @@ public class FileGenerator
 
     private List<? extends Root_meta_pure_generation_metamodel_GenerationOutput> transform()
     {
-        if (this.fileGeneration.type.equals("avro"))
-        {
-            // TODO remove once fix in Avro extension is released
-            AvroGenerationConfig avroConfig = new AvroGenerationConfig();
-            ConfigBuilder.duplicateCheck(fileGeneration.configurationProperties);
-            ConfigBuilder.setScopeElements(fileGeneration, avroConfig);
-            fileGeneration.configurationProperties.forEach(e -> ConfigBuilder.setConfigurationProperty(fileGeneration, e, avroConfig));
-            return core_external_format_avro_tramsformation_avroSchemaGenerator.Root_meta_external_format_avro_generation_generateAvroFromPureWithScope_AvroConfig_1__AvroOutput_MANY_(avroConfig.process(pureModel), pureModel.getExecutionSupport()).toList();
-        }
         GenerationExtension extension = this.extensions.get(fileGeneration.type).getFirst();
         Assert.assertTrue(extension != null, () -> "Can't find a handler for the file type '" + fileGeneration.type.toLowerCase() + "'");
         List<Root_meta_pure_generation_metamodel_GenerationOutput> outputs =  extension.generateFromElement(fileGeneration, pureModel.getContext());
