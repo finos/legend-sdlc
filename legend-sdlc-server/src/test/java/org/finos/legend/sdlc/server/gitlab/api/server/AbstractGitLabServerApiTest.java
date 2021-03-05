@@ -23,15 +23,12 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.TestHttpServletRequest;
-import org.finos.legend.sdlc.server.gitlab.api.docker.AbstractGitLabApiTest;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabOAuthAuthenticator;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
@@ -40,8 +37,6 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletRequest;
 import java.security.SecureRandom;
 import java.util.List;
-
-import static org.junit.Assert.assertNotNull;
 
 /**
  * This test suite is run against the actual GitLab server with testing account setup.
@@ -61,13 +56,13 @@ public class AbstractGitLabServerApiTest
     static final String TEST_MEMBER_USERNAME = "";
     static final String TEST_MEMBER_PASSWORD = "";
     static final String TEST_HOST_SCHEME = "https";
-    static final String TEST_HOST_HOST = "gitlab.com";
+    static final String TEST_HOST_HOST = "gitlab.com"; // next.gitlab.com
     static final Integer TEST_HOST_PORT = null;
     static final String TEST_HOST_URL = "https://gitlab.com";
 
     static final BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
 
-    static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
+    static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabServerApiTest.class);
 
     @BeforeClass
     public static void suiteSetup()
@@ -161,31 +156,29 @@ public class AbstractGitLabServerApiTest
         HttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
         TestGitLabSession session = new TestGitLabSession(username);
-        GitLabApi oauthGitLabApi;
-        Version version;
+        String oauthToken;
+
+        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
+        // TODO: 127.0.0.1:7075/api/pac4j/login/callback
+        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, "4404bb50f01295b8646a7f7435cbf338732d3910ec40c033ef97047de55086db", "424b02c52d21acf2b8c622b27cb7a1e48e5e93e17d03d0098bc4b4614169cd8d", "https://127.0.0.1:7075/api/auth/callback"); // "https://127.0.0.1:7075/api/auth/callback" "https://127.0.0.1:7075/api/pac4j/login/callback"
+        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
+
+        session.setModeInfo(gitLabModeInfo);
 
         try
         {
-//            oauthGitLabApi = new GitLabApi(GitLabApi.ApiVersion.V4, TEST_HOST_URL, token);
-            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, username, password, null, null, true); // TODO: check token valid
-            assertNotNull(oauthGitLabApi);
-            version = oauthGitLabApi.getVersion();
+//            oauthToken = "66b080cebaefda106a330138e1daabe54925fd45afdbf220de3d9527a1946320";
+            oauthToken = GitLabOAuthAuthenticator.newAuthenticator(session.getModeInfo(gitLabMode)).getOAuthTokenForTestSession(username, password); //"66b080cebaefda106a330138e1daabe54925fd45afdbf220de3d9527a1946320";
+            System.out.println("oauth token: " + oauthToken);
         }
-        catch (GitLabApiException exception)
+        catch (Exception e)
         {
-            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + exception.getMessage(), exception);
+            System.out.println("exception caught.");
+            throw new LegendSDLCServerException("Cannot instantiate GitLab via OAuth: " + e.getMessage(), e);
         }
-
-        String oauthToken = oauthGitLabApi.getAuthToken();
         LOGGER.info("Retrieved access token: {}", oauthToken);
-        assertNotNull(version);
-
-        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
-        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
-        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
-
         session.setAccessToken(oauthToken);
-        session.setModeInfo(gitLabModeInfo);
+
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
         return new GitLabUserContext(httpServletRequest, null);
     }

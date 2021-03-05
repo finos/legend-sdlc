@@ -42,21 +42,26 @@ import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenBuilder;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.gitlab4j.api.GitLabApiException;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletRequest;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.net.URI;
-import java.net.URISyntaxException;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.net.*;
 import java.nio.charset.Charset;
 import java.security.SecureRandom;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-class GitLabOAuthAuthenticator
+public class GitLabOAuthAuthenticator
 {
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final ObjectMapper JSON = new ObjectMapper();
@@ -99,6 +104,13 @@ class GitLabOAuthAuthenticator
     {
         Cookie sessionCookie = GitLabSAMLAuthenticator.authenticateAndGetSessionCookie(this.modeInfo, subject);
         return getOAuthTokenFromSAMLSession(sessionCookie);
+    }
+
+    public String getOAuthTokenForTestSession(String username, String password) throws IOException, GitLabApiException
+    {
+        String authorizationCode = getOAuthAuthorizationCode(username, password);
+//        return getOAuthTokenFromAuthCode(authorizationCode);
+        return authorizationCode;
     }
 
     private String getOAuthTokenFromSAMLSession(Cookie sessionCookie)
@@ -217,6 +229,244 @@ class GitLabOAuthAuthenticator
         }
     }
 
+    private String getOAuthAuthorizationCode(String username, String password) throws IOException, GitLabApiException
+    {
+//        String cookie = loginUserAndSetSessionCookie(username, password);
+//
+//        System.out.println("cookie: " + cookie);
+
+//        CookieStore cookieStore = new BasicCookieStore();
+//        cookieStore.addCookie(new Cookie()
+//        {
+//            @Override
+//            public String getName() {
+//                return "_gitlab_session";
+//            }
+//
+//            @Override
+//            public String getValue() {
+//                return cookie;
+//            }
+//
+//            @Override
+//            public String getComment() {
+//                return null;
+//            }
+//
+//            @Override
+//            public String getCommentURL() {
+//                return null;
+//            }
+//
+//            @Override
+//            public Date getExpiryDate() {
+//                return null;
+//            }
+//
+//            @Override
+//            public boolean isPersistent() {
+//                return false;
+//            }
+//
+//            @Override
+//            public String getDomain() {
+//                return null;
+//            }
+//
+//            @Override
+//            public String getPath() {
+//                return null;
+//            }
+//
+//            @Override
+//            public int[] getPorts() {
+//                return new int[0];
+//            }
+//
+//            @Override
+//            public boolean isSecure() {
+//                return false;
+//            }
+//
+//            @Override
+//            public int getVersion() {
+//                return 0;
+//            }
+//
+//            @Override
+//            public boolean isExpired(Date date) {
+//                return false;
+//            }
+//        });
+
+//        CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).setRedirectStrategy(this.redirectStrategy).build();
+
+        CloseableHttpClient client = HttpClientBuilder.create().setRedirectStrategy(this.redirectStrategy).build();
+
+        String state = getRandomState();
+//        URI authURI = buildAuthURI(state);
+        URI authURI = buildAuthURI(this.modeInfo, state, CODE_RESPONSE_TYPE); // Using code response type instead of token
+
+        System.out.println("authURI: " + authURI.toString());
+
+        CloseableHttpResponse response = client.execute(new HttpGet(authURI)); // 503
+
+        System.out.println("response to string (?): " + response.toString());
+        System.out.println("response headers: " + Arrays.toString(response.getAllHeaders()));
+        System.out.println("response body: " + EntityUtils.toString(response.getEntity()));
+
+//        String location = getLocationHeaderValue(response);
+
+//        return getAccessTokenFromLocation(location, state);
+
+        return null;
+    }
+
+    private String loginUserAndSetSessionCookie(String username, String password) throws IOException, GitLabApiException
+    {
+        String urlString = "https://gitlab.com/users/sign_in";
+        String cookieHeader = "Set-Cookie";
+        URL url = new URL(urlString);
+        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+        connection.setRequestMethod("GET");
+        connection.addRequestProperty("User-Agent", "SDLC");
+//        connection.setReadTimeout(10000);
+//        connection.setConnectTimeout(10000);
+
+        int responseCode = connection.getResponseCode();
+        System.out.println("response code: " + responseCode);
+        System.out.println("response message: " + connection.getResponseMessage());
+
+        BufferedReader br;
+        if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399)
+        {
+            br = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        }
+        else
+        {
+            br = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+        }
+        System.out.println("login response body:");
+        System.out.println(br.lines().collect(Collectors.joining("\n")));
+
+
+        if (responseCode != 200)
+        {
+            throw new LegendSDLCServerException("Invalid state, aborting!");
+        }
+
+        // Get the session cookie from the headers
+        String[] cookieParts = connection.getHeaderField(cookieHeader).split(";");
+        String cookies = cookieParts[0];
+
+        // Extract the authenticity token from the content, need this to submit the
+        // login form
+        String content = getContent(connection);
+        Matcher matcher = Pattern.compile("\"new_user\".*name=\\\"authenticity_token\\\"\\svalue=\\\"([^\\\"]*)\\\".*new_new_user").matcher(content);
+        if (!matcher.find()) {
+            throw new LegendSDLCServerException("authenticity_token not found, aborting!");
+        }
+
+        String csrfToken = matcher.group(1);
+
+        connection = (HttpURLConnection) url.openConnection();
+//        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+        connection.setRequestProperty("Charset", "utf-8");
+
+        connection.setRequestProperty("Cookie", cookies);
+        connection.setReadTimeout(10000);
+        connection.setConnectTimeout(10000);
+        connection.setRequestMethod("POST");
+        connection.setDoInput(true);
+        connection.setDoOutput(true);
+
+        StringBuilder formData = new StringBuilder();
+        addFormData(formData, "user[login]", username);
+        addFormData(formData, "user[password]", password);
+        addFormData(formData, "authenticity_token", csrfToken);
+        connection.setRequestProperty("Content-Length", String.valueOf(formData.length()));
+
+        OutputStream output = connection.getOutputStream();
+        output.write(formData.toString().getBytes());
+        output.flush();
+        output.close();
+
+        // Make sure a redirect was provided, otherwise it is a login failure
+        responseCode = connection.getResponseCode();
+        if (responseCode != 302) {
+            throw new GitLabApiException("Login failure, aborting!", 401);
+        }
+
+        cookieParts = connection.getHeaderField(cookieHeader).split(";");
+        cookies = cookieParts[0];
+
+        // Follow the redirect with the provided session cookie
+        String redirectUrl = connection.getHeaderField("Location");
+        url = new URL(redirectUrl);
+        connection = (HttpURLConnection) url.openConnection();
+//        connection.setRequestProperty("User-Agent", USER_AGENT);
+        connection.setRequestProperty("Cookie", cookies);
+        connection.setReadTimeout(10000);
+        connection.setConnectTimeout(10000);
+
+        // The response code should be 200, otherwise something is wrong, consider it a login failure
+        responseCode = connection.getResponseCode();
+        if (responseCode != 200) {
+            throw new GitLabApiException("Login failure, aborting!", 401);
+        }
+
+        return (cookies);
+    }
+
+    /**
+     * Adds the specified form param to the form data StringBuilder.  If the provided formData is null,
+     * will create the StringBuilder instance first.
+     *
+     * @param formData the StringBuilder instance holding the form data, if null will create the StringBuilder
+     * @param name the form param name
+     * @param value the form param value
+     * @return the form data StringBuilder
+     * @throws GitLabApiException if any error occurs.
+     */
+    public static final StringBuilder addFormData(StringBuilder formData, String name, String value) throws GitLabApiException {
+
+        if (formData == null) {
+            formData = new StringBuilder();
+        } else if (formData.length() > 0) {
+            formData.append("&");
+        }
+
+        formData.append(name);
+        formData.append("=");
+        try {
+            formData.append(URLEncoder.encode(value, "UTF-8"));
+            return (formData);
+        } catch (Exception e) {
+            throw new GitLabApiException(e);
+        }
+    }
+
+    /**
+     * Reads and returns the content from the provided URLConnection.
+     *
+     * @param connection the URLConnection to read the content from
+     * @return the read content as a String
+     * @throws GitLabApiException if any error occurs
+     */
+    protected static String getContent(URLConnection connection) throws GitLabApiException {
+
+        StringBuilder buf = new StringBuilder();
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getInputStream()))) {
+            reader.lines().forEach(b -> buf.append(b));
+        } catch (IOException ioe) {
+            throw new GitLabApiException(ioe);
+        }
+
+        return (buf.toString());
+    }
+
     String getOAuthTokenFromAuthCode(String code)
     {
         try (CloseableHttpClient client = HttpClientBuilder.create().build())
@@ -303,6 +553,8 @@ class GitLabOAuthAuthenticator
 
     private boolean locationStartsWithRedirectURI(String location)
     {
+        System.out.println("location: " + location);
+        System.out.println("app redirect uri: " + getAppRedirectURI());
         return (location != null) && location.startsWith(getAppRedirectURI());
     }
 
@@ -377,7 +629,7 @@ class GitLabOAuthAuthenticator
         return Hex.encodeHexString(bytes);
     }
 
-    static GitLabOAuthAuthenticator newAuthenticator(GitLabModeInfo modeInfo)
+    public static GitLabOAuthAuthenticator newAuthenticator(GitLabModeInfo modeInfo)
     {
         return new GitLabOAuthAuthenticator(modeInfo);
     }
