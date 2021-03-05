@@ -1071,5 +1071,11 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>skip-integration-tests</id>
+            <properties>
+                <skipITs>true</skipITs>
+            </properties>
+        </profile>
     </profiles>
 </project>
