@@ -43,10 +43,10 @@ import javax.servlet.http.HttpServletRequest;
  * Only run before the GitLab integration tests during integration-test phase in-between docker start and stop.
  * Skipped during Junit tests.
  *
- * IMPORTANT: Please note that if wishing to run this integration test suite locally,
- * it is requiresd to have local Docker installed, with recommended at least 4 Gi memory allocated.
- * If encountering GitLab not responding issues, please raise the wait time to approximately 450000ms on line 118,
- * legend-sdlc-server/pom.xml.
+ * IMPORTANT: Please note that if wishing to run this integration test suite in an environment where the Docker
+ * container will be run in a VM, it is required to have local Docker installed, with recommended at least 4 Gi
+ * memory allocated. If encountering GitLab not responding issues, please raise the docker-maven-plugin wait time
+ * to approximately 450000ms in legend-sdlc-server/pom.xml.
  * If your machine cannot suffice the resource requirements or fail to pass the test suite, please use maven profile
  * skip-integration-tests to skip them during the build.
  */
