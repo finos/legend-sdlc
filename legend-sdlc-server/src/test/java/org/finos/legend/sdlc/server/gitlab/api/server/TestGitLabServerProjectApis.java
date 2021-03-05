@@ -42,6 +42,7 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     public static void setup() throws LegendSDLCServerException
     {
         setUpProjectApi();
+        System.out.println("created gitlab project api.");
         cleanUpTestProjects(gitLabProjectApi);
     }
 
@@ -106,6 +107,8 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
+
+        System.out.println("gitlabProjectApi: " + gitLabProjectApi.toString());
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
