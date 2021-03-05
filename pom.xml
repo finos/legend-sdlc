@@ -1071,5 +1071,29 @@
                 </plugins>
             </build>
         </profile>
+        <profile>
+            <id>skip-integration-tests</id>
+            <properties>
+                <skipITs>true</skipITs>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-latest-gitlab</id>
+            <properties>
+                <gitlab.version>latest</gitlab.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-nightly-gitlab</id>
+            <properties>
+                <gitlab.version>nightly</gitlab.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-latest-twelve-gitlab</id>
+            <properties>
+                <gitlab.version>12.10.14-ee.0</gitlab.version>
+            </properties>
+        </profile>
     </profiles>
 </project>
