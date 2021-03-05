@@ -38,6 +38,7 @@
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-generation-file</module>
+        <module>legend-sdlc-generation-model</module>
         <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-generation-file-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
@@ -465,6 +466,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-model</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
