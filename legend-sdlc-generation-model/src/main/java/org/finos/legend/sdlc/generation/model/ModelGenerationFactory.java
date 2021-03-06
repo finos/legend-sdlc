@@ -76,6 +76,12 @@ public class ModelGenerationFactory
         return new ModelGenerationFactory(generationSpecification, protocol, pureModel);
     }
 
+    public static ModelGenerationFactory newFactory(GenerationSpecification generationSpecification, PureModelContextData protocol)
+    {
+        PureModel pureModel =  new PureModel(protocol, null, null, DeploymentMode.PROD);
+        return new ModelGenerationFactory(generationSpecification, protocol, pureModel);
+    }
+
     public PureModelContextData generate() throws Exception
     {
         if ((this.generationSpecification._package == null) || this.generationSpecification._package.isEmpty())
@@ -90,23 +96,34 @@ public class ModelGenerationFactory
             List<Function3<String, SourceInformation, CompileContext, org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement>> extraModelGenerationSpecificationResolvers = ListIterate.flatCollect(HelperGenerationSpecificationBuilder.getGenerationCompilerExtensions(this.pureModel.getContext()), GenerationCompilerExtension::getExtraModelGenerationSpecificationResolvers);
             org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement generationElement = extraModelGenerationSpecificationResolvers.stream().map(resolver -> resolver.value(node.generationElement, node.sourceInformation, this.pureModel.getContext())).filter(Objects::nonNull).findFirst()
                     .orElseThrow(() -> new EngineException("Can't find generation element '" + node.generationElement + "'", node.sourceInformation, EngineErrorType.COMPILATION));
-            try
-            {
-                ModelGenerator modelGenerator = ModelGenerator.newGenerator(generationElement, this.pureModel);
-                PureModelContextData generatedModelFromModelGenerator = modelGenerator.generateModel();
-                LOGGER.info("Finished generating model for '" + node.generationElement + "', " + generatedModelFromModelGenerator.getElements().size() + " elements generated");
-                this.fullModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
-                this.generatedModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
-            }
-            catch (Exception error)
-            {
-                LOGGER.info("Error generating element '" + node.generationElement + "'", error.getMessage());
-                throw error;
-            }
-            LOGGER.info("Recompiling graph with generated elements");
-            this.pureModel = new PureModel(this.fullModelBuilder.build(), null, null, DeploymentMode.PROD);
-            LOGGER.info("Finished recompiling graph");
+            ModelGenerator modelGenerator = ModelGenerator.newGenerator(generationElement, this.pureModel);
+            processModelGenerator(modelGenerator);
         }
+        return validateAndBuildGeneratedModel();
+    }
+
+
+    public void processModelGenerator(ModelGeneratorInterface modelGeneratorInterface)
+    {
+        try
+        {
+            PureModelContextData generatedModelFromModelGenerator = modelGeneratorInterface.generateModel();
+            LOGGER.info("Finished generating model for '" + modelGeneratorInterface.getName() + "', " + generatedModelFromModelGenerator.getElements().size() + " elements generated");
+            this.fullModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
+            this.generatedModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
+        }
+        catch (Exception error)
+        {
+            LOGGER.info("Error generating element '" + modelGeneratorInterface.getName() + "'", error.getMessage());
+            throw error;
+        }
+        LOGGER.info("Recompiling graph with generated elements");
+        this.pureModel = new PureModel(this.fullModelBuilder.build(), null, null, DeploymentMode.PROD);
+        LOGGER.info("Finished recompiling graph");
+    }
+
+    public PureModelContextData validateAndBuildGeneratedModel()
+    {
         LOGGER.info("Validating generated elements");
         PureModelContextData generatedPureModelContextData = this.generatedModelBuilder.build();
         validateGeneratedElements(generatedPureModelContextData);
@@ -122,16 +139,25 @@ public class ModelGenerationFactory
             PackageableElement coreElement = this.coreModelElementIndex.get(path);
             if (coreElement != null)
             {
-                throw new RuntimeException("Generated element '" + path + "' of type " + e.getClass().getSimpleName() + " can't override existing element of type" + coreElement.getClass().getSimpleName());
+                throw new RuntimeException("Generated element '" + path + "' of type " + e.getClass().getSimpleName() + " can't override existing element of type " + coreElement.getClass().getSimpleName());
             }
         });
     }
 
-
-    // available for testing
     public PureModelContextData getFullModel()
     {
         return this.fullModelBuilder.build();
     }
+
+    public PureModelContextData getGeneratedModel()
+    {
+        return this.generatedModelBuilder.build();
+    }
+
+    public PureModel getPureModel()
+    {
+        return this.pureModel;
+    }
+
 }
 

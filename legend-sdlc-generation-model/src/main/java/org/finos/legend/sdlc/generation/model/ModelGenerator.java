@@ -22,6 +22,7 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.generation.model.extension.ModelGenerationExtension;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.pure.PureClientVersions;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement;
 
@@ -29,11 +30,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
-public class ModelGenerator
+public class ModelGenerator implements ModelGeneratorInterface
 {
     private PackageableElement generator;
     private MutableList<ModelGenerationExtension> extensions;
     private PureModel pureModel;
+
 
     private ModelGenerator(PackageableElement generator, PureModel pureModel)
     {
@@ -47,14 +49,21 @@ public class ModelGenerator
         return new ModelGenerator(packageableElement, pureModel);
     }
 
+    @Override
+    public String getName()
+    {
+        return this.generator.getName();
+    }
+
+    @Override
     public PureModelContextData generateModel()
     {
-
         List<Function3<PackageableElement, CompileContext, String, PureModelContextData>> generators = ListIterate.flatCollect(extensions, ModelGenerationExtension::getPureModelContextDataGenerators);
         return generators.stream()
-                .map(generator -> generator.value(this.generator, this.pureModel.getContext(), "vX_X_X"))
+                .map(generator -> generator.value(this.generator, this.pureModel.getContext(), PureClientVersions.latest))
                 .filter(Objects::nonNull).findFirst()
-                .orElseThrow(() -> new UnsupportedOperationException("Unsupported generator '" + this.generator.getClass().getSimpleName() + "'"));
+                .orElseThrow(() -> new UnsupportedOperationException("No model generator found for element '" + this.generator.getClass().getSimpleName() + "'"));
     }
+
 
 }
