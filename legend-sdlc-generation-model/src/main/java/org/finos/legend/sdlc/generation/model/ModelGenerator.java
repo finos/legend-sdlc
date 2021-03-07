@@ -30,12 +30,16 @@ import java.util.List;
 import java.util.Objects;
 import java.util.ServiceLoader;
 
-public class ModelGenerator implements ModelGeneratorInterface
+public class ModelGenerator
 {
     private PackageableElement generator;
     private MutableList<ModelGenerationExtension> extensions;
     private PureModel pureModel;
 
+    public ModelGenerator()
+    {
+
+    }
 
     private ModelGenerator(PackageableElement generator, PureModel pureModel)
     {
@@ -49,13 +53,11 @@ public class ModelGenerator implements ModelGeneratorInterface
         return new ModelGenerator(packageableElement, pureModel);
     }
 
-    @Override
     public String getName()
     {
         return this.generator.getName();
     }
 
-    @Override
     public PureModelContextData generateModel()
     {
         List<Function3<PackageableElement, CompileContext, String, PureModelContextData>> generators = ListIterate.flatCollect(extensions, ModelGenerationExtension::getPureModelContextDataGenerators);
@@ -64,6 +66,5 @@ public class ModelGenerator implements ModelGeneratorInterface
                 .filter(Objects::nonNull).findFirst()
                 .orElseThrow(() -> new UnsupportedOperationException("No model generator found for element '" + this.generator.getClass().getSimpleName() + "'"));
     }
-
 
 }

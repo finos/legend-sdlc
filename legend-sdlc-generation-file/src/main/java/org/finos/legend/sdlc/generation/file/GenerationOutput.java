@@ -48,6 +48,11 @@ public class GenerationOutput
         return fileName;
     }
 
+    public String getFormat()
+    {
+        return format;
+    }
+
     public String extractFileContent() throws IOException
     {
         if (this.format.equals("json"))

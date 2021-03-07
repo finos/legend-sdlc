@@ -103,7 +103,7 @@ public class ModelGenerationFactory
     }
 
 
-    public void processModelGenerator(ModelGeneratorInterface modelGeneratorInterface)
+    public void processModelGenerator(ModelGenerator modelGeneratorInterface)
     {
         try
         {

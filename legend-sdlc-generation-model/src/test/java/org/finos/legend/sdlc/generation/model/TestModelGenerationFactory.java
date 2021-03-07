@@ -18,6 +18,7 @@ import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
+import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -41,14 +42,14 @@ public class TestModelGenerationFactory
         PureModelContextData.Builder builder = PureModelContextData.newBuilder();
         builder.addElement(generationSpecification);
         ModelGenerationFactory factory = ModelGenerationFactory.newFactory(generationSpecification, builder.build());
-        Assert.assertEquals(factory.getFullModel().getElements().size(), 1);
-        Assert.assertEquals(factory.getGeneratedModel().getElements().size(), 0);
+        Assert.assertEquals(1, factory.getFullModel().getElements().size());
+        Assert.assertEquals(0, factory.getGeneratedModel().getElements().size());
         factory.generate();
-        Assert.assertEquals(factory.getFullModel().getElements().size(), 1);
-        Assert.assertEquals(factory.getGeneratedModel().getElements().size(), 0);
+        Assert.assertEquals(1, factory.getFullModel().getElements().size());
+        Assert.assertEquals(0, factory.getGeneratedModel().getElements().size());
     }
 
-    ModelGeneratorInterface simpleClassGenerator = new ModelGeneratorInterface()
+    ModelGenerator simpleClassGenerator = new ModelGenerator()
     {
         @Override
         public String getName()
@@ -68,7 +69,7 @@ public class TestModelGenerationFactory
         }
     };
 
-    ModelGeneratorInterface classDependedOnSimpleClassGenerator = new ModelGeneratorInterface()
+    ModelGenerator classDependedOnSimpleClassGenerator = new ModelGenerator()
     {
         @Override
         public String getName()
@@ -97,10 +98,10 @@ public class TestModelGenerationFactory
         builder.addElement(generationSpecification);
         ModelGenerationFactory factory = ModelGenerationFactory.newFactory(generationSpecification, builder.build());
         factory.processModelGenerator(simpleClassGenerator);
-        Assert.assertEquals(factory.getFullModel().getElements().size(), 2);
-        Assert.assertEquals(factory.getGeneratedModel().getAllElements().size(), 1);
+        Assert.assertEquals(2, factory.getFullModel().getElements().size());
+        Assert.assertEquals(1, factory.getGeneratedModel().getElements().size());
         PureModelContextData generatedModel = factory.validateAndBuildGeneratedModel();
-        Assert.assertEquals(generatedModel.getElements().size(), 1);
+        Assert.assertEquals(1, generatedModel.getElements().size());
         Class myClass = (Class) generatedModel.getElements().get(0);
         Assert.assertEquals("MyClass", myClass.name);
     }
@@ -116,10 +117,10 @@ public class TestModelGenerationFactory
         factory.processModelGenerator(classDependedOnSimpleClassGenerator);
         PureModel pureModel = factory.getPureModel();
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> _class = pureModel.getClass("model::MyComplexClass");
-        Assert.assertEquals(_class.getName(), "MyComplexClass");
-        Assert.assertEquals(pureModel.getModelClasses().size(), 2);
+        Assert.assertEquals("MyComplexClass", _class.getName());
+        Assert.assertEquals(2, pureModel.getModelClasses().size());
         PureModelContextData generatedModel = factory.validateAndBuildGeneratedModel();
-        Assert.assertEquals(generatedModel.getElements().size(), 2);
+        Assert.assertEquals(2, generatedModel.getElements().size());
     }
 
     @Test
@@ -129,15 +130,8 @@ public class TestModelGenerationFactory
         PureModelContextData.Builder builder = PureModelContextData.newBuilder();
         builder.addElement(generationSpecification);
         ModelGenerationFactory factory = ModelGenerationFactory.newFactory(generationSpecification, builder.build());
-        try
-        {
-            factory.processModelGenerator(classDependedOnSimpleClassGenerator);
-            Assert.fail("Expected a compile error, but no compile error occurred");
-        }
-        catch (Exception exception)
-        {
-            Assert.assertEquals("Error in 'model::MyComplexClass': Can't find type 'model::MyClass'", exception.getMessage());
-        }
+        EngineException compileEngineException = Assert.assertThrows(EngineException.class, () -> factory.processModelGenerator(classDependedOnSimpleClassGenerator));
+        Assert.assertEquals("Error in 'model::MyComplexClass': Can't find type 'model::MyClass'", compileEngineException.getMessage());
     }
 
     @Test
@@ -152,15 +146,8 @@ public class TestModelGenerationFactory
         builder.addElement(myClass);
         ModelGenerationFactory factory = ModelGenerationFactory.newFactory(generationSpecification, builder.build());
         factory.processModelGenerator(simpleClassGenerator);
-        try
-        {
-            factory.validateAndBuildGeneratedModel();
-            Assert.fail("Expected a validation error but no error occurred");
-        }
-        catch (Exception error)
-        {
-            Assert.assertEquals("Generated element 'model::MyClass' of type Class can't override existing element of type Class", error.getMessage());
-        }
+        RuntimeException runtimeException = Assert.assertThrows(RuntimeException.class, factory::validateAndBuildGeneratedModel);
+        Assert.assertEquals("Generated element 'model::MyClass' of type Class can't override existing element of type Class", runtimeException.getMessage());
     }
 
 }
