@@ -23,8 +23,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>legend-sdlc-generation-file</artifactId>
-    <name>Legend SDLC Generation - File</name>
+    <artifactId>legend-sdlc-generation-model</artifactId>
+    <name>Legend SDLC Generation - Model</name>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -32,19 +32,14 @@
         <!-- PURE -->
         <dependency>
             <groupId>org.finos.legend.pure</groupId>
-            <artifactId>legend-pure-code-java-compiled-core</artifactId>
+            <artifactId>legend-pure-m3-core</artifactId>
         </dependency>
-        <!-- PURE-->
+        <!-- PURE -->
 
         <!-- ENGINE -->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-shared-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-shared</artifactId>
         </dependency>
 
         <dependency>
@@ -61,7 +56,8 @@
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-language-pure-compiler</artifactId>
         </dependency>
-        <!-- ENGINE-->
+
+        <!-- ENGINE -->
 
         <dependency>
             <groupId>org.eclipse.collections</groupId>
@@ -74,47 +70,16 @@
         </dependency>
 
         <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-text</artifactId>
-            <scope>compile</scope>
-        </dependency>
-
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-        </dependency>
-
         <!-- TEST -->
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-protobuf</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-avro</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-rosetta</artifactId>
-            <scope>test</scope>
-        </dependency>
-
         <!-- TEST -->
 
     </dependencies>

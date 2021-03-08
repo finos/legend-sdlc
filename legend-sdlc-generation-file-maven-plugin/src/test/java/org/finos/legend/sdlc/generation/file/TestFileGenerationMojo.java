@@ -142,7 +142,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(actualGeneratedSourceFiles.size(), 9);
+        Assert.assertEquals(9, actualGeneratedSourceFiles.size());
         verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
 
@@ -237,7 +237,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(actualGeneratedSourceFiles.size(), 9);
+        Assert.assertEquals(9, actualGeneratedSourceFiles.size());
     }
 
     @Test
@@ -258,15 +258,8 @@ public class TestFileGenerationMojo
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
         assertDirectoryEmpty(outputDir);
-        try
-        {
-            executeMojo(projectDir, entitySourceDirectories);
-            Assert.fail("Execution should of failed");
-        }
-        catch (Exception e)
-        {
-            Assert.assertEquals("Error generating files: File Generation 'model::myAvro' not in current project", e.getMessage());
-        }
+        Exception mojoException = Assert.assertThrows(Exception.class, () -> executeMojo(projectDir, entitySourceDirectories));
+        Assert.assertEquals("Error generating files: File Generation 'model::myAvro' not in current project", mojoException.getMessage());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)

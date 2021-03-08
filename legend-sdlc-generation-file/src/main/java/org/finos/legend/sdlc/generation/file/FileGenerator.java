@@ -66,14 +66,14 @@ public class FileGenerator
         catch (Exception e)
         {
             LOGGER.info("Error generating file Generation '" + fileGeneration.getPath() + "':", e);
-            throw new RuntimeException(e);
+            throw e;
         }
     }
 
     private List<? extends Root_meta_pure_generation_metamodel_GenerationOutput> transform()
     {
         GenerationExtension extension = this.extensions.get(fileGeneration.type).getFirst();
-        Assert.assertTrue(extension != null, () -> "Can't find a handler for the file type '" + fileGeneration.type.toLowerCase() + "'");
+        Assert.assertTrue(extension != null, () -> "Can't find a handler for the file generation type '" + fileGeneration.type.toLowerCase() + "'");
         List<Root_meta_pure_generation_metamodel_GenerationOutput> outputs =  extension.generateFromElement(fileGeneration, pureModel.getContext());
         Assert.assertTrue(outputs != null, () -> "No generator found for file generation for file type '" + fileGeneration.type.toLowerCase() + "'");
         return outputs;
