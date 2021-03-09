@@ -101,7 +101,7 @@
                     <images>
                         <image>
                             <name>gitlab/gitlab-ee:${gitlab.version}</name>
-                            <alias>gitlabLatest</alias>
+                            <alias>testGitLabContainer</alias>
                             <run>
                                 <namingStrategy>alias</namingStrategy>
                                 <skip>${gitlab.skip-docker-start}</skip>
@@ -129,6 +129,9 @@
                         <goals>
                             <goal>start</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipITs}</skip>
+                        </configuration>
                     </execution>
                     <execution>
                         <id>stop</id>
@@ -136,6 +139,9 @@
                         <goals>
                             <goal>stop</goal>
                         </goals>
+                        <configuration>
+                            <skip>${skipITs}</skip>
+                        </configuration>
                     </execution>
                 </executions>
             </plugin>
@@ -362,6 +368,24 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>test-latest-gitlab</id>
+            <properties>
+                <gitlab.version>latest</gitlab.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-nightly-gitlab</id>
+            <properties>
+                <gitlab.version>nightly</gitlab.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>test-latest-twelve-gitlab</id>
+            <properties>
+                <gitlab.version>12.10.14-ee.0</gitlab.version>
+            </properties>
         </profile>
     </profiles>
 </project>

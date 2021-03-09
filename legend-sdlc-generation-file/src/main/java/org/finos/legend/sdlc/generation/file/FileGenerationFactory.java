@@ -24,6 +24,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
+import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 
 import java.util.List;
 
@@ -42,6 +43,12 @@ public class FileGenerationFactory
 
     public static FileGenerationFactory newFactory(GenerationSpecification generationSpecification, PureModelContextData pureModelContextData, PureModel pureModel)
     {
+        return new FileGenerationFactory(generationSpecification, pureModelContextData, pureModel);
+    }
+
+    public static FileGenerationFactory newFactory(GenerationSpecification generationSpecification, PureModelContextData pureModelContextData)
+    {
+        PureModel pureModel =  new PureModel(pureModelContextData, null, null, DeploymentMode.PROD);
         return new FileGenerationFactory(generationSpecification, pureModelContextData, pureModel);
     }
 
