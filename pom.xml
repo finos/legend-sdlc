@@ -60,9 +60,9 @@
         <maven.compiler.release>8</maven.compiler.release>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>2.16.0</legend.engine.version>
-        <legend.pure.version>1.12.0</legend.pure.version>
-        <legend.shared.version>0.5.0</legend.shared.version>
+        <legend.engine.version>2.17.0</legend.engine.version>
+        <legend.pure.version>1.13.1</legend.pure.version>
+        <legend.shared.version>0.7.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -693,6 +693,17 @@
                 <groupId>io.dropwizard</groupId>
                 <artifactId>dropwizard-assets</artifactId>
                 <version>${dropwizard.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.dropwizard</groupId>
+                <artifactId>dropwizard-logging</artifactId>
+                <version>${dropwizard.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>jcl-over-slf4j</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>io.dropwizard</groupId>
