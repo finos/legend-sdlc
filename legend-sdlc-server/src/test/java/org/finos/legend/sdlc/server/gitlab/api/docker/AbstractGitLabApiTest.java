@@ -12,31 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api;
+package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
-import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabApiTestSetupUtil;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.User;
-import org.gitlab4j.api.models.Version;
 import org.junit.AfterClass;
-import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.security.SecureRandom;
 import java.util.Optional;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * Prepares subclass GitLab integration tests.
@@ -46,7 +38,7 @@ import javax.servlet.http.HttpServletRequest;
  * IMPORTANT: Please note that if wishing to run this integration test suite in an environment where the Docker
  * container will be run in a VM, it is required to have local Docker installed, with recommended at least 4 Gi
  * memory allocated. If encountering GitLab not responding issues, please raise the docker-maven-plugin wait time
- * to approximately 450000ms in legend-sdlc-server/pom.xml.
+ * to approximately 450000 ms in legend-sdlc-server/pom.xml.
  * If your machine cannot suffice the resource requirements or fail to pass the test suite, please use maven profile
  * skip-integration-tests to skip them during the build.
  */
@@ -159,51 +151,13 @@ public class AbstractGitLabApiTest
 
     /**
      * Authenticates to GitLab and creates a test GitLabUserContext.
+     *
      * @param username the name of user for whom we create this context.
      * @param password the password of user for whom we create this context.
      */
     private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
-        GitLabMode gitLabMode = GitLabMode.UAT;
-        HttpServletRequest httpServletRequest = new TestHttpServletRequest();
-
-        TestGitLabSession session = new TestGitLabSession(username);
-        GitLabApi oauthGitLabApi;
-        Version version;
-
-        try
-        {
-            oauthGitLabApi = GitLabApi.oauth2Login(TEST_HOST_URL, username, password, null, null, true);
-            Assert.assertNotNull(oauthGitLabApi);
-            version = oauthGitLabApi.getVersion();
-        }
-        catch (GitLabApiException e)
-        {
-            StringBuilder builder = new StringBuilder("Error instantiating GitLabApi via OAuth2; response status: ").append(e.getHttpStatus());
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append("; error message: ").append(eMessage);
-            }
-            if (e.hasValidationErrors())
-            {
-                builder.append("; validation error(s): ").append(e.getValidationErrors());
-            }
-            throw new LegendSDLCServerException(builder.toString(), e);
-        }
-
-        String oauthToken = oauthGitLabApi.getAuthToken();
-        LOGGER.info("Retrieved access token: {}", oauthToken);
-        Assert.assertNotNull(version);
-
-        GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
-        GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
-        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
-
-        session.setAccessToken(oauthToken);
-        session.setModeInfo(gitLabModeInfo);
-        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
-        return new GitLabUserContext(httpServletRequest, null);
+        return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT, LOGGER);
     }
 
     /**

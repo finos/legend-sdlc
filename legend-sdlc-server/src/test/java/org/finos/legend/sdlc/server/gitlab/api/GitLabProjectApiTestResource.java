@@ -19,33 +19,29 @@ import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
+/**
+ * Substantial test resource class for project API tests shared by the docker-based and server-based GitLab tests.
+ */
+public class GitLabProjectApiTestResource
 {
-    private static GitLabProjectApi gitLabProjectApi;
+    private final GitLabProjectApi gitLabProjectApi;
 
-    @BeforeClass
-    public static void setup() throws LegendSDLCServerException
+    public GitLabProjectApiTestResource(GitLabProjectApi gitLabProjectApi)
     {
-        setUpProjectApi();
+        this.gitLabProjectApi = gitLabProjectApi;
     }
 
-    @Test
-    public void testCreateProject() throws LegendSDLCServerException
+    public void runCreateProjectTest() throws LegendSDLCServerException
     {
         String projectName = "TestProjectOne";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -59,12 +55,11 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
     }
 
-    @Test
-    public void testGetProject() throws LegendSDLCServerException
+    public void runGetProjectTest() throws LegendSDLCServerException
     {
         String projectName = "TestProjectTwo";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -86,15 +81,16 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(retrievedProject.getTags()));
     }
 
-    @Test
-    public void testUpdateProject()
+    public void runUpdateProjectTest()
     {
         String projectName = "TestProjectThree";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
+
+        System.out.println("gitlabProjectApi: " + gitLabProjectApi.toString());
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
@@ -124,17 +120,8 @@ public class IntegrationTestGitLabProjectApis extends AbstractGitLabApiTest
         assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
     }
 
-    /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
-     *
-     * @throws LegendSDLCServerException if cannot authenticates to GitLab.
-     */
-    private static void setUpProjectApi() throws LegendSDLCServerException
+    public GitLabProjectApi getGitLabProjectApi()
     {
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
-        ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
-        GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
-
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        return gitLabProjectApi;
     }
 }

@@ -19,36 +19,33 @@ import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.gitlab4j.api.GitLabApiException;
-import org.junit.BeforeClass;
-import org.junit.Test;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
+/**
+ * Substantial test resource class for Workspace API tests shared by the docker-based and server-based GitLab tests.
+ */
+public class GitLabWorkspaceApiTestResource
 {
-    private static GitLabRevisionApi gitLabRevisionApi;
-    private static GitLabWorkspaceApi gitLabWorkspaceApi;
-    private static GitLabProjectApi gitLabProjectApi;
+    private final GitLabRevisionApi gitLabRevisionApi;
+    private final GitLabWorkspaceApi gitLabWorkspaceApi;
+    private final GitLabProjectApi gitLabProjectApi;
 
-    @BeforeClass
-    public static void setup() throws GitLabApiException
+    public GitLabWorkspaceApiTestResource(GitLabRevisionApi gitLabRevisionApi, GitLabWorkspaceApi gitLabWorkspaceApi, GitLabProjectApi gitLabProjectApi)
     {
-        setUpWorkspaceApi();
+        this.gitLabRevisionApi = gitLabRevisionApi;
+        this.gitLabWorkspaceApi = gitLabWorkspaceApi;
+        this.gitLabProjectApi = gitLabProjectApi;
     }
 
-    @Test
-    public void testCreateWorkspace()
+    public void runCreateWorkspaceTest()
     {
         String projectName = "WorkspaceTestProject";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -70,17 +67,8 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         assertEquals(projectId, createdWorkspace.getProjectId());
     }
 
-    /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
-     */
-    private static void setUpWorkspaceApi()
+    public GitLabProjectApi getGitLabProjectApi()
     {
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
-        ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
-        GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
-
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        return gitLabProjectApi;
     }
 }
