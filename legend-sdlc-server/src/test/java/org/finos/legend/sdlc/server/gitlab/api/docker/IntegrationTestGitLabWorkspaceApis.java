@@ -14,31 +14,20 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.docker;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
-import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
-
 public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
 {
-    private static GitLabRevisionApi gitLabRevisionApi;
-    private static GitLabWorkspaceApi gitLabWorkspaceApi;
-    private static GitLabProjectApi gitLabProjectApi;
+    private static GitLabWorkspaceApiTestResource gitLabWorkspaceApiTestResource;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
@@ -49,28 +38,7 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     @Test
     public void testCreateWorkspace()
     {
-        String projectName = "WorkspaceTestProject";
-        String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
-        String groupId = "org.finos.sdlc.test";
-        String artifactId = "worktestproj";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
-        String workspaceId = "testworkspace";
-
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
-
-        assertNotNull(createdProject);
-        assertEquals(projectName, createdProject.getName());
-        assertEquals(description, createdProject.getDescription());
-        assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
-
-        String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceId);
-
-        assertNotNull(createdWorkspace);
-        assertEquals(workspaceId, createdWorkspace.getWorkspaceId());
-        assertEquals(projectId, createdWorkspace.getProjectId());
+        gitLabWorkspaceApiTestResource.runCreateWorkspaceTest();
     }
 
     /**
@@ -82,8 +50,9 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
+        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        gitLabWorkspaceApiTestResource = new GitLabWorkspaceApiTestResource(gitLabRevisionApi, gitLabWorkspaceApi, gitLabProjectApi);
     }
 }
