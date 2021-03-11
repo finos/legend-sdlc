@@ -109,7 +109,7 @@ public abstract class ProjectStructure
 
     protected ProjectStructure(ProjectConfiguration projectConfiguration, String entitiesDirectory, EntitySerializer entitySerializer)
     {
-        this(projectConfiguration, new EntitySourceDirectory(entitiesDirectory, entitySerializer));
+        this(projectConfiguration, newEntitySourceDirectory(entitiesDirectory, entitySerializer));
     }
 
     protected ProjectStructure(ProjectConfiguration projectConfiguration, String entitiesDirectory)
@@ -858,6 +858,11 @@ public abstract class ProjectStructure
         {
             throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
         }
+    }
+
+    protected static EntitySourceDirectory newEntitySourceDirectory(String directory, EntitySerializer serializer)
+    {
+        return new EntitySourceDirectory(directory, serializer);
     }
 
     public static class EntitySourceDirectory
