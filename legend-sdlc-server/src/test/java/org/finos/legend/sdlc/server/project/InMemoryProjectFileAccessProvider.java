@@ -22,7 +22,6 @@ import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
 
 import java.io.InputStream;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -44,7 +43,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
+    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         switch (workspaceAccessType)
         {
@@ -82,13 +81,13 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, String path, WorkspaceAccessType workspaceAccessType)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
     {
         switch (workspaceAccessType)
         {
             case WORKSPACE:
             {
-                return new AbstractRevisionAccessContext(path)
+                return new AbstractRevisionAccessContext(paths)
                 {
                     @Override
                     protected SimpleInMemoryVCS getContextVCS()
@@ -105,9 +104,9 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     }
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, String path)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
     {
-        return new AbstractRevisionAccessContext(path)
+        return new AbstractRevisionAccessContext(paths)
         {
             @Override
             protected SimpleInMemoryVCS getContextVCS()
@@ -120,7 +119,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Modification Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
+    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         switch (workspaceAccessType)
         {
@@ -404,7 +403,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         protected Stream<ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
         {
             Stream<ProjectFile> stream = getContextVCS().getFiles(this.revisionId).map(VCSFileWrapper::new);
-            if (!directories.contains(ROOT_DIRECTORY))
+            if (!directories.contains(ProjectPaths.ROOT_DIRECTORY))
             {
                 stream = stream.filter(f -> directories.anySatisfy(d -> f.getPath().startsWith(d)));
             }
@@ -423,11 +422,11 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
 
     private abstract static class AbstractRevisionAccessContext implements RevisionAccessContext
     {
-        private final String path;
+        private final MutableList<String> paths;
 
-        protected AbstractRevisionAccessContext(String path)
+        protected AbstractRevisionAccessContext(Iterable<? extends String> paths)
         {
-            this.path = path;
+            this.paths = (paths == null) ? null : ProjectPaths.canonicalizeAndReduceDirectories(paths);
         }
 
         @Override
@@ -441,13 +440,13 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         public Revision getCurrentRevision()
         {
             SimpleInMemoryVCS.Revision revision;
-            if (this.path == null)
+            if (this.paths == null)
             {
                 revision = getContextVCS().getLatestRevision();
             }
             else
             {
-                revision = getContextVCS().getRevisions(Collections.singletonList(this.path), null, null, 1).findFirst().orElse(null);
+                revision = getContextVCS().getRevisions(this.paths, null, null, 1).findFirst().orElse(null);
             }
             return (revision == null) ? null : new VCSRevisionWrapper(revision);
         }
@@ -456,13 +455,13 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         public Revision getRevision(String revisionId)
         {
             SimpleInMemoryVCS.Revision revision = getContextVCS().getRevision(revisionId);
-            return ((revision == null) || ((this.path != null) && !revision.isPathAffectedByRevision(this.path))) ? null : new VCSRevisionWrapper(revision);
+            return ((revision == null) || ((this.paths != null) && this.paths.noneSatisfy(revision::isPathAffectedByRevision))) ? null : new VCSRevisionWrapper(revision);
         }
 
         @Override
         public Stream<Revision> getAllRevisions(Predicate<? super Revision> predicate, Instant since, Instant until, Integer limit)
         {
-            Stream<Revision> stream = getContextVCS().getRevisions((this.path == null) ? null : Collections.singletonList(this.path), since, until, null).map(VCSRevisionWrapper::new);
+            Stream<Revision> stream = getContextVCS().getRevisions(this.paths, since, until, null).map(VCSRevisionWrapper::new);
             if (predicate != null)
             {
                 stream = stream.filter(predicate);

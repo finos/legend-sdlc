@@ -25,13 +25,20 @@ public abstract class AbstractFileAccessContext implements ProjectFileAccessProv
     @Override
     public Stream<ProjectFile> getFiles()
     {
-        return getFilesInCanonicalDirectories(Lists.fixedSize.with(ROOT_DIRECTORY));
+        return getFilesInCanonicalDirectories(Lists.fixedSize.with(ProjectPaths.ROOT_DIRECTORY));
     }
 
     @Override
     public Stream<ProjectFile> getFilesInDirectory(String directory)
     {
         return getFilesInCanonicalDirectories(Lists.fixedSize.with(ProjectPaths.canonicalizeDirectory(directory)));
+    }
+
+    @Override
+    public Stream<ProjectFile> getFilesInDirectories(Stream<? extends String> directories)
+    {
+        MutableList<String> canonicalDirectories = ProjectPaths.canonicalizeAndReduceDirectories(directories);
+        return canonicalDirectories.isEmpty() ? Stream.empty() : getFilesInCanonicalDirectories(canonicalDirectories);
     }
 
     @Override

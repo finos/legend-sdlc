@@ -20,7 +20,9 @@ import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
 import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -38,6 +40,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileModifi
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.RevisionAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectFiles;
+import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.IOTools;
@@ -73,9 +76,11 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -133,7 +138,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     private String getCurrentRevisionId(GitLabProjectId projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        Revision revision = new GitLabRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getCurrentRevision();
+        Revision revision = new GitLabRevisionAccessContext(projectId, workspaceId, workspaceAccessType, null).getCurrentRevision();
         return (revision == null) ? null : revision.getId();
     }
 
@@ -142,7 +147,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         // File Access Access Context
 
         @Override
-        public FileAccessContext getFileAccessContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
+        public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
         {
             return new GitLabProjectFileAccessContext(parseProjectId(projectId), workspaceId, revisionId, workspaceAccessType);
         }
@@ -156,21 +161,21 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         // Revision Access Context
 
         @Override
-        public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, String path, WorkspaceAccessType workspaceAccessType)
+        public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
         {
-            return new GitLabRevisionAccessContext(parseProjectId(projectId), workspaceId, path, workspaceAccessType);
+            return new GitLabRevisionAccessContext(parseProjectId(projectId), workspaceId, workspaceAccessType, paths);
         }
 
         @Override
-        public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, String path)
+        public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
         {
-            return new GitLabProjectVersionRevisionAccessContext(parseProjectId(projectId), versionId, path);
+            return new GitLabProjectVersionRevisionAccessContext(parseProjectId(projectId), versionId, paths);
         }
 
         // File Modification Context
 
         @Override
-        public FileModificationContext getFileModificationContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
+        public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
         {
             return new GitLabProjectFileFileModificationContext(parseProjectId(projectId), workspaceId, revisionId, workspaceAccessType);
         }
@@ -247,7 +252,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 if (directories.size() == 1)
                 {
                     String directory = directories.get(0);
-                    if (!ROOT_DIRECTORY.equals(directory))
+                    if (!ProjectPaths.ROOT_DIRECTORY.equals(directory))
                     {
                         stream = stream.filter(f -> f.getPath().startsWith(directory));
                     }
@@ -297,7 +302,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             MutableList<Pager<TreeItem>> pagers = Lists.mutable.ofInitialCapacity(directories.size());
             for (String directory : directories)
             {
-                String filePath = ROOT_DIRECTORY.equals(directory) ? null : directory.substring(1);
+                String filePath = ProjectPaths.ROOT_DIRECTORY.equals(directory) ? null : directory.substring(1);
                 Pager<TreeItem> pager;
                 try
                 {
@@ -473,12 +478,27 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     private abstract class AbstractGitLabRevisionAccessContext implements RevisionAccessContext
     {
         protected final GitLabProjectId projectId;
-        protected final String path;
+        protected final MutableList<String> paths;
 
-        AbstractGitLabRevisionAccessContext(GitLabProjectId projectId, String path)
+        AbstractGitLabRevisionAccessContext(GitLabProjectId projectId, Iterable<? extends String> paths)
         {
             this.projectId = projectId;
-            this.path = path;
+            if (paths == null)
+            {
+                this.paths = null;
+            }
+            else
+            {
+                MutableList<String> canonicalPaths = ProjectPaths.canonicalizeAndReduceDirectories(paths);
+                if ((canonicalPaths.size() == 1) && ProjectPaths.ROOT_DIRECTORY.equals(canonicalPaths.get(0)))
+                {
+                    this.paths = null;
+                }
+                else
+                {
+                    this.paths = canonicalPaths.collect(p -> p.substring(1));
+                }
+            }
         }
 
         @Override
@@ -486,38 +506,60 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             try
             {
-                GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
+                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
                 String referenceId = getReference();
-                Pager<Commit> pager = withRetries(() -> gitLabApi.getCommitsApi().getCommits(this.projectId.getGitLabId(), referenceId, null, null, getFilePath(), 1));
-                List<Commit> page = pager.next();
-                if ((page == null) || page.isEmpty())
-                {
-                    if (!referenceExists())
-                    {
-                        throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
-                    }
 
-                    // Reference exists, but cannot get commits - check if we can get a base revision
-                    String baseRevisionId;
-                    try
-                    {
-                        baseRevisionId = resolveRevisionId(RevisionAlias.BASE.getValue(), this);
-                    }
-                    catch (Exception ignore)
-                    {
-                        baseRevisionId = null;
-                    }
-                    if (baseRevisionId != null)
-                    {
-                        // We got a base revision but no commit - perhaps the reference is corrupt?
-                        LOGGER.debug("Can't get current revision for {} even when the project has more than one revision (workspace or project may be corrupt)", getDescriptionForExceptionMessage());
-                        throw new LegendSDLCServerException("Can't get current revision for " + getDescriptionForExceptionMessage() + " (workspace or project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
-                    }
-                    // This happens when project is created but has no revision
-                    LOGGER.debug("Can't get current revision for {} because the project is created but has no revision", getDescriptionForExceptionMessage());
-                    return null;
+                // Search for current commit
+                Commit currentCommit;
+                if (this.paths == null)
+                {
+                    currentCommit = getCurrentCommit(commitsApi, referenceId, null);
                 }
-                return fromGitLabCommit(page.get(0));
+                else
+                {
+                    Comparator<Commit> comparator = Comparator.nullsFirst(Comparator.comparing(Commit::getCommittedDate, Comparator.nullsFirst(Comparator.naturalOrder())));
+                    currentCommit = null;
+                    for (String path : this.paths)
+                    {
+                        Commit currentPathCommit = getCurrentCommit(commitsApi, referenceId, path);
+                        if (comparator.compare(currentPathCommit, currentCommit) > 0)
+                        {
+                            currentCommit = currentPathCommit;
+                        }
+                    }
+                }
+
+                // Found a current commit
+                if (currentCommit != null)
+                {
+                    return fromGitLabCommit(currentCommit);
+                }
+
+                // Check if reference exists
+                if (!referenceExists())
+                {
+                    throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                }
+
+                // Reference exists, but cannot get commits - check if we can get a base revision
+                String baseRevisionId;
+                try
+                {
+                    baseRevisionId = resolveRevisionId(RevisionAlias.BASE.getValue(), this);
+                }
+                catch (Exception ignore)
+                {
+                    baseRevisionId = null;
+                }
+                if (baseRevisionId != null)
+                {
+                    // We got a base revision but no commit - perhaps the reference is corrupt?
+                    LOGGER.debug("Can't get current revision for {} even when the project has more than one revision (workspace or project may be corrupt)", getDescriptionForExceptionMessage());
+                    throw new LegendSDLCServerException("Can't get current revision for " + getDescriptionForExceptionMessage() + " (workspace or project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
+                }
+                // This happens when project is created but has no revision
+                LOGGER.debug("Can't get current revision for {} because the project is created but has no revision", getDescriptionForExceptionMessage());
+                return null;
             }
             catch (Exception e)
             {
@@ -528,25 +570,56 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
         }
 
+        private Commit getCurrentCommit(CommitsApi commitsApi, String referenceId, String filePath) throws GitLabApiException
+        {
+            Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), referenceId, null, null, filePath, 1));
+            List<Commit> page = pager.next();
+            return ((page == null) || page.isEmpty()) ? null : page.get(0);
+        }
+
         @Override
         public Revision getBaseRevision()
         {
             try
             {
+                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
                 String referenceId = getReference();
-                Pager<Commit> pager = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi().getCommits(this.projectId.getGitLabId(), referenceId, null, null, getFilePath(), ITEMS_PER_PAGE));
-                List<Commit> page = pager.last();
-                if ((page == null) || page.isEmpty())
+
+                // Search for base commit
+                Commit baseCommit;
+                if (this.paths == null)
                 {
-                    if (!referenceExists())
-                    {
-                        throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
-                    }
-                    // This happens when project is created but has no revision
-                    LOGGER.debug("Can't get base revision for {} because the project is created but has no revision", getDescriptionForExceptionMessage());
-                    return null;
+                    baseCommit = getBaseCommit(commitsApi, referenceId, null);
                 }
-                return fromGitLabCommit(page.get(page.size() - 1));
+                else
+                {
+                    Comparator<Commit> comparator = Comparator.nullsLast(Comparator.comparing(Commit::getCommittedDate, Comparator.nullsLast(Comparator.naturalOrder())));
+                    baseCommit = null;
+                    for (String path : this.paths)
+                    {
+                        Commit basePathCommit = getBaseCommit(commitsApi, referenceId, path);
+                        if (comparator.compare(basePathCommit, baseCommit) < 0)
+                        {
+                            baseCommit = basePathCommit;
+                        }
+                    }
+                }
+
+                // Found base commit
+                if (baseCommit != null)
+                {
+                    return fromGitLabCommit(baseCommit);
+                }
+
+                // Check if the reference exists
+                if (!referenceExists())
+                {
+                    throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                }
+
+                // This happens when project is created but has no revision
+                LOGGER.debug("Can't get base revision for {} because the project is created but has no revision", getDescriptionForExceptionMessage());
+                return null;
             }
             catch (Exception e)
             {
@@ -557,12 +630,18 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
         }
 
+        private Commit getBaseCommit(CommitsApi commitsApi, String referenceId, String filePath) throws GitLabApiException
+        {
+            Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), referenceId, null, null, filePath, 1));
+            List<Commit> page = pager.last();
+            return ((page == null) || page.isEmpty()) ? null : page.get(0);
+        }
+
         @Override
         public Revision getRevision(String revisionId)
         {
             LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-            GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
-            CommitsApi commitsApi = gitLabApi.getCommitsApi();
+            CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
             String resolvedRevisionId;
             try
             {
@@ -594,40 +673,34 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         () -> "Error accessing revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage());
             }
 
-            // Validate the commit is for the appropriate branch and file path
-            if (this.path == null)
+            // Validate the commit is for the appropriate branch
+            String referenceId = getReference();
+            try
             {
-                // If there's no file path to validate with, we can just check the commit refs
-                Stream<CommitRef> commitRefs;
-                try
-                {
-                    Pager<CommitRef> commitRefPager = withRetries(() -> commitsApi.getCommitRefs(this.projectId.getGitLabId(), resolvedRevisionId, RefType.BRANCH, ITEMS_PER_PAGE));
-                    commitRefs = PagerTools.stream(commitRefPager);
-                }
-                catch (Exception e)
-                {
-                    throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
-                            () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
-                            () -> "Error accessing revision " + resolvedRevisionId + "for " + getDescriptionForExceptionMessage());
-                }
-                String referenceId = getReference();
-                if (commitRefs.noneMatch(cr -> referenceId.equals(cr.getName())))
+                Pager<CommitRef> commitRefPager = withRetries(() -> commitsApi.getCommitRefs(this.projectId.getGitLabId(), resolvedRevisionId, RefType.BRANCH, ITEMS_PER_PAGE));
+                if (PagerTools.stream(commitRefPager).map(CommitRef::getName).noneMatch(referenceId::equals))
                 {
                     throw new LegendSDLCServerException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
                 }
             }
-            else
+            catch (Exception e)
             {
-                // NOTE: Gitlab commit API is not respecting MOVE operation as part of the file path filter. So if we happen to
-                // restructure the project by changing the artifactId, project structure or so in project configuration, the API to
-                // get revision by path will not report accurately
-                Date commitDate = commit.getCommittedDate();
-                // TODO What if commit date is null? Can that happen?
-                Pager<Commit> commitPager;
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
+                        () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
+                        () -> "Error accessing revision " + resolvedRevisionId + "for " + getDescriptionForExceptionMessage());
+            }
+
+            // Validate the commit is for the appropriate files
+            if (this.paths != null)
+            {
                 try
                 {
-                    commitPager = commitsApi.getCommits(this.projectId.getGitLabId(), getReference(), commitDate, commitDate, getFilePath(), ITEMS_PER_PAGE);
+                    Stream<Commit> commitStream = getAllCommits(commitsApi, referenceId, commit.getCommittedDate(), commit.getCommittedDate(), ITEMS_PER_PAGE);
+                    if ((commitStream == null) || commitStream.map(Commit::getId).noneMatch(resolvedRevisionId::equals))
+                    {
+                        throw new LegendSDLCServerException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    }
                 }
                 catch (Exception e)
                 {
@@ -635,10 +708,6 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                             () -> "User " + getCurrentUser() + " is not allowed to access revisions for " + getDescriptionForExceptionMessage(),
                             () -> "Unknown: " + getDescriptionForExceptionMessage(),
                             () -> "Error accessing revisions for " + getDescriptionForExceptionMessage());
-                }
-                if (PagerTools.stream(commitPager).noneMatch(c -> resolvedRevisionId.equals(c.getId())))
-                {
-                    throw new LegendSDLCServerException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
                 }
             }
 
@@ -652,23 +721,28 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
             try
             {
+                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
                 String branchName = getReference();
-                Pager<Commit> pager = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi().getCommits(this.projectId.getGitLabId(), branchName, toDateIfNotNull(since), toDateIfNotNull(until), getFilePath(), itemsPerPage));
-                if (PagerTools.isEmpty(pager) && !referenceExists())
+                Stream<Commit> commitStream = getAllCommits(commitsApi, branchName, toDateIfNotNull(since), toDateIfNotNull(until), itemsPerPage);
+                if (commitStream == null)
                 {
-                    throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    if (!referenceExists())
+                    {
+                        throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    }
+                    return Stream.empty();
                 }
 
-                Stream<Revision> stream = PagerTools.stream(pager).map(GitLabApiWithFileAccess::fromGitLabCommit);
+                Stream<Revision> revisionStream = commitStream.map(GitLabApiWithFileAccess::fromGitLabCommit);
                 if (predicate != null)
                 {
-                    stream = stream.filter(predicate);
+                    revisionStream = revisionStream.filter(predicate);
                 }
                 if (limited)
                 {
-                    stream = stream.limit(limit);
+                    revisionStream = revisionStream.limit(limit);
                 }
-                return stream;
+                return revisionStream;
             }
             catch (Exception e)
             {
@@ -679,6 +753,34 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
         }
 
+        private Stream<Commit> getAllCommits(CommitsApi commitsApi, String branchName, Date since, Date until, int itemsPerPage) throws GitLabApiException
+        {
+            if (this.paths == null)
+            {
+                Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), branchName, since, until, null, itemsPerPage));
+                return PagerTools.isEmpty(pager) ? null : PagerTools.stream(pager);
+            }
+
+            Stream<Commit> commitStream = null;
+            int streamCount = 0;
+            for (String path : this.paths)
+            {
+                Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), branchName, since, until, path, itemsPerPage));
+                if (!PagerTools.isEmpty(pager))
+                {
+                    streamCount++;
+                    Stream<Commit> pathCommitStream = PagerTools.stream(pager);
+                    commitStream = (commitStream == null) ? pathCommitStream : Stream.concat(commitStream, pathCommitStream);
+                }
+            }
+            if (streamCount > 1)
+            {
+                MutableSet<String> ids = Sets.mutable.empty();
+                commitStream = commitStream.filter(commit -> ids.add(commit.getId()));
+            }
+            return commitStream;
+        }
+
         protected abstract String getReference();
 
         protected abstract boolean referenceExists() throws GitLabApiException;
@@ -686,9 +788,17 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         protected String getDescriptionForExceptionMessage()
         {
             StringBuilder builder = new StringBuilder();
-            if (this.path != null)
+            if (this.paths != null)
             {
-                builder.append(this.path).append(" in ");
+                if (this.paths.size() == 1)
+                {
+                    builder.append(this.paths.get(0));
+                }
+                else
+                {
+                    this.paths.appendString(builder, "{", ", ", "}");
+                }
+                builder.append(" in ");
             }
             int lengthBefore = builder.length();
             appendReferenceDescription(builder);
@@ -702,11 +812,6 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         }
 
         protected abstract void appendReferenceDescription(StringBuilder builder);
-
-        protected String getFilePath()
-        {
-            return ((this.path != null) && this.path.startsWith("/")) ? this.path.substring(1) : this.path;
-        }
     }
 
     private class GitLabRevisionAccessContext extends AbstractGitLabRevisionAccessContext
@@ -714,9 +819,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         private final String workspaceId;
         private final ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
 
-        private GitLabRevisionAccessContext(GitLabProjectId projectId, String workspaceId, String path, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+        private GitLabRevisionAccessContext(GitLabProjectId projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
         {
-            super(projectId, path);
+            super(projectId, paths);
             this.workspaceId = workspaceId;
             this.workspaceAccessType = workspaceAccessType;
             if (this.workspaceId != null && this.workspaceAccessType == null)
@@ -741,7 +846,8 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
             try
             {
-                Branch branch = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi().getBranch(this.projectId.getGitLabId(), getReference());
+                RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+                Branch branch = withRetries(() -> repositoryApi.getBranch(this.projectId.getGitLabId(), getReference()));
                 return branch != null;
             }
             catch (GitLabApiException e)
@@ -766,46 +872,37 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         public Revision getBaseRevision()
         {
+            if (this.workspaceId == null)
+            {
+                return super.getBaseRevision();
+            }
+
             try
             {
-                // if no workspace ID is provided, get the base revision of the project
-                // if an entity path is specified, we need to use superclass method to use gitlab commit filter
-                // otherwise, return the merge base of the branch
-                if (this.workspaceId != null)
+                RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+                Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, getReference()))));
+                if (this.paths == null)
                 {
-                    Revision baseRevision = fromGitLabCommit(withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi().getMergeBase(this.projectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, getReference()))));
-                    if (this.path == null)
-                    {
-                        return baseRevision;
-                    }
-                    // NOTE: Since Gitlab get commit filter will consider all commits from workspace HEAD to project BASE, we need to handle case when path is specified differently
-                    // TODO: maybe we want to refactor this code to dedupe it
-                    try
-                    {
-                        String referenceId = getReference();
-                        Pager<Commit> pager = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi().getCommits(this.projectId.getGitLabId(), referenceId, Date.from(baseRevision.getCommittedTimestamp()), null, getFilePath(), ITEMS_PER_PAGE));
-                        List<Commit> page = pager.last();
-                        if ((page == null) || page.isEmpty())
-                        {
-                            if (!referenceExists())
-                            {
-                                throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
-                            }
-                            // This happens when project is created but has no revision
-                            return null;
-                        }
-                        return fromGitLabCommit(page.get(page.size() - 1));
-                    }
-                    catch (Exception e)
-                    {
-                        throw buildException(e,
-                                () -> "User " + getCurrentUser() + " is not allowed to get base revision for " + getDescriptionForExceptionMessage(),
-                                () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                                () -> "Error getting base revision for " + getDescriptionForExceptionMessage());
-                    }
+                    return workspaceBaseRevision;
                 }
-                // call the getBaseRevision of project, effectively getting the first commit of the project
-                return super.getBaseRevision();
+
+                Revision pathsBaseRevision = super.getBaseRevision();
+                if (workspaceBaseRevision == null)
+                {
+                    return pathsBaseRevision;
+                }
+                if (pathsBaseRevision == null)
+                {
+                    return workspaceBaseRevision;
+                }
+                if (Objects.equals(workspaceBaseRevision.getId(), pathsBaseRevision.getId()))
+                {
+                    return workspaceBaseRevision;
+                }
+
+                Instant workspaceCommitted = workspaceBaseRevision.getCommittedTimestamp();
+                Instant pathCommitted = pathsBaseRevision.getCommittedTimestamp();
+                return ((pathCommitted != null) && (workspaceCommitted != null) && pathCommitted.isAfter(workspaceCommitted)) ? pathsBaseRevision : workspaceBaseRevision;
             }
             catch (Exception e)
             {
@@ -821,9 +918,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     {
         private final VersionId versionId;
 
-        private GitLabProjectVersionRevisionAccessContext(GitLabProjectId projectId, VersionId versionId, String path)
+        private GitLabProjectVersionRevisionAccessContext(GitLabProjectId projectId, VersionId versionId, Iterable<? extends String> paths)
         {
-            super(projectId, path);
+            super(projectId, paths);
             this.versionId = versionId;
         }
 

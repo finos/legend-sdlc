@@ -42,7 +42,7 @@ public class CachingFileAccessContext extends AbstractFileAccessContext
         if (directories.size() == 1)
         {
             String directory = directories.get(0);
-            if (!ROOT_DIRECTORY.equals(directory))
+            if (!ProjectPaths.ROOT_DIRECTORY.equals(directory))
             {
                 stream = stream.filter(f -> f.getKey().startsWith(directory));
             }

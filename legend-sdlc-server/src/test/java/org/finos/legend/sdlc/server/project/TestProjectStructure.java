@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.project;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
@@ -40,6 +41,8 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.function.BiConsumer;
@@ -130,7 +133,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         buildProjectStructure(projectType);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         List<Entity> testEntities = getTestEntities();
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         String message = "Add entities";
 
         Instant before = Instant.now();
@@ -170,7 +173,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         Revision entitiesRevision = this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -245,7 +248,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
         TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
 
-        Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(PROJECT_ID, null, configUpdateRevision.getId(), ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
+        Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(PROJECT_ID, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, configUpdateRevision.getId()).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
 
         List<String> unExpectedFiles = actualFiles.keySet().stream().filter(filePath -> !filePath.equals("/pom.xml") && filePath.endsWith("/pom.xml") && !filePath.startsWith("/" + ARTIFACT_ID_2)).collect(Collectors.toList());
         Assert.assertTrue("non expected files " + Arrays.toString(unExpectedFiles.toArray()), unExpectedFiles.isEmpty());
@@ -279,7 +282,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         ProjectStructure projectStructure = buildProjectStructure(projectType);
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -430,7 +433,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         ProjectStructure projectStructure = buildProjectStructure(projectType);
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -581,7 +584,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
             ProjectStructure otherProjectStructure = buildProjectStructure(i, null, projectType, null, null);
 
-            List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(otherProjectStructure.entityPathToFilePath(e.getPath()), otherProjectStructure.serializeEntity(e))).collect(Collectors.toList());
+            List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, otherProjectStructure);
             Revision revision = this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
             ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -644,7 +647,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
             ProjectStructure otherProjectStructure = buildProjectStructure(i, null, projectType, null, null);
 
-            List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(otherProjectStructure.entityPathToFilePath(e.getPath()), otherProjectStructure.serializeEntity(e))).collect(Collectors.toList());
+            List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, otherProjectStructure);
             Revision revision = this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
             ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -740,19 +743,12 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected void testEntitiesDirectory(ProjectType projectType)
     {
         ProjectStructure structure = buildProjectStructure(projectType);
+        Assert.assertEquals(Collections.emptyList(), ListIterate.reject(structure.getEntitySourceDirectories(), sd -> sd.getDirectory().matches("(/[-\\w]++)++")));
 
-        String entitiesDirectory = structure.getEntitiesDirectory();
-        Assert.assertTrue(entitiesDirectory, entitiesDirectory.matches("(/[-\\w]+)+"));
-        Assert.assertEquals(entitiesDirectory.length(), structure.getEntitiesDirectoryLength());
-
-        StringBuilder builder = new StringBuilder();
-        structure.appendEntitiesDirectory(builder);
-        Assert.assertEquals(entitiesDirectory, builder.toString());
-
-        Assert.assertTrue(structure.startsWithEntitiesDirectory(entitiesDirectory));
-        Assert.assertTrue(structure.startsWithEntitiesDirectory(entitiesDirectory + "/someFile.json"));
-        Assert.assertFalse(structure.startsWithEntitiesDirectory("/not/an/entities/directory.json"));
-        Assert.assertFalse(structure.startsWithEntitiesDirectory("/pom.xml"));
+//        Assert.assertTrue(structure.startsWithEntitiesDirectory(entitiesDirectory));
+//        Assert.assertTrue(structure.startsWithEntitiesDirectory(entitiesDirectory + "/someFile.json"));
+//        Assert.assertFalse(structure.startsWithEntitiesDirectory("/not/an/entities/directory.json"));
+//        Assert.assertFalse(structure.startsWithEntitiesDirectory("/pom.xml"));
     }
 
     @Test
@@ -802,7 +798,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         if (!expectedFiles.isEmpty() || !unexpectedFiles.isEmpty())
         {
-            Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, revisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
+            Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
             expectedFiles.forEach((path, expectedContent) ->
             {
                 String actualContent = actualFiles.get(path);
@@ -842,6 +838,16 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         );
     }
 
+    private ProjectFileOperation generateAddOperationForEntity(Entity entity, ProjectStructure projectStructure)
+    {
+        ProjectStructure.EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+        if (sourceDirectory == null)
+        {
+            throw new RuntimeException("Cannot find source directory for entity \"" + entity.getPath() + "\" with classifier \"" + entity.getClassifierPath() + "\"");
+        }
+        return ProjectFileOperation.addFile(sourceDirectory.entityPathToFilePath(entity.getPath()), sourceDirectory.serializeToBytes(entity));
+    }
+
     private List<Entity> getActualEntities(String projectId)
     {
         return getActualEntities(projectId, null, null);
@@ -849,13 +855,16 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
     private List<Entity> getActualEntities(String projectId, String workspaceId, String revisionId)
     {
-        return getActualEntities(this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, revisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        return getActualEntities(this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
     }
 
     private List<Entity> getActualEntities(ProjectFileAccessProvider.FileAccessContext fileAccessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-        return fileAccessContext.getFiles().filter(f -> projectStructure.isEntityFilePath(f.getPath())).map(projectStructure::deserializeEntity).collect(Collectors.toList());
+        return fileAccessContext.getFiles()
+                .map(f -> Optional.ofNullable(projectStructure.findSourceDirectoryForEntityFilePath(f.getPath())).map(sd -> sd.deserialize(f)).orElse(null))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 
     protected abstract int getProjectStructureVersion();
@@ -950,7 +959,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             String entityName = "TestClass_" + versionId.toVersionIdString('_');
             this.fileAccessProvider.createWorkspace(projectId, workspaceId);
             Entity newClass = TestTools.newClassEntity(entityName, modelPackage, TestTools.newProperty("prop1", "String", 0, 1));
-            ProjectFileOperation addEntityOperation = ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(newClass.getPath()), projectStructure.serializeEntity(newClass));
+            ProjectFileOperation addEntityOperation = generateAddOperationForEntity(newClass, projectStructure);
             this.fileAccessProvider.getWorkspaceFileModificationContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).submit("Add " + modelPackage + "::" + entityName, Collections.singletonList(addEntityOperation));
             this.fileAccessProvider.commitWorkspace(projectId, workspaceId);
             this.fileAccessProvider.createVersion(projectId, versionId);
@@ -991,7 +1000,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1160,7 +1169,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1231,7 +1240,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         ProjectStructure projectStructure = buildProjectStructure(projectType);
         List<Entity> testEntities = getTestEntities();
 
-        List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1375,7 +1384,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         if (!configs.isEmpty())
         {
             List<Entity> testEntities = getTestEntities();
-            List<ProjectFileOperation> addEntityOperations = testEntities.stream().map(e -> ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(e.getPath()), projectStructure.serializeEntity(e))).collect(Collectors.toList());
+            List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
             this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
 
             ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
