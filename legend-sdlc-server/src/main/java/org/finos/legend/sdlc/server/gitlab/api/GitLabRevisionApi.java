@@ -15,6 +15,10 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
@@ -26,6 +30,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.GitLabApi;
@@ -35,15 +40,16 @@ import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.CommitRef.RefType;
 import org.gitlab4j.api.models.Tag;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabRevisionApi extends GitLabApiWithFileAccess implements RevisionApi
 {
@@ -57,7 +63,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     public RevisionAccessContext getProjectRevisionContext(String projectId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
     }
 
     @Override
@@ -69,8 +75,15 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         {
             throw new LegendSDLCServerException("Invalid entity path: " + entityPath, Status.BAD_REQUEST);
         }
-        String filePath = getProjectStructure(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).entityPathToFilePath(entityPath);
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, filePath, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), new PackageablePathExceptionProcessor(entityPath, filePath));
+        ProjectFileAccessProvider fileAccessProvider = getProjectFileAccessProvider();
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+        String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
+        if (filePath == null)
+        {
+            throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in project " + projectId, Status.NOT_FOUND);
+        }
+        return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, filePath), new PackageablePathExceptionProcessor(entityPath, filePath));
     }
 
     @Override
@@ -82,8 +95,9 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         {
             throw new LegendSDLCServerException("Invalid package path: " + packagePath, Status.BAD_REQUEST);
         }
-        String filePath = getProjectStructure(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).packagePathToFilePath(packagePath);
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, filePath, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), new PackageablePathExceptionProcessor(packagePath, filePath));
+        ProjectStructure projectStructure = getProjectStructure(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        MutableList<String> directories = Iterate.collectWith(projectStructure.getEntitySourceDirectories(), ProjectStructure.EntitySourceDirectory::packagePathToFilePath, packagePath, Lists.mutable.empty());
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, directories), new PackageablePathExceptionProcessor(packagePath, directories));
     }
 
     @Override
@@ -109,16 +123,16 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType));
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType));
     }
 
     @Override
     public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return this.getWorkspaceEntityRevisionContextByWorkspaceAccessType(projectId, workspaceId, entityPath, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceEntityRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, entityPath);
     }
 
-    private RevisionAccessContext getWorkspaceEntityRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, String entityPath, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private RevisionAccessContext getWorkspaceEntityRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, String entityPath)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -128,17 +142,25 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         {
             throw new LegendSDLCServerException("Invalid entity path: " + entityPath, Status.BAD_REQUEST);
         }
-        String filePath = getProjectStructure(projectId, workspaceId, null, workspaceAccessType).entityPathToFilePath(entityPath);
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, filePath, workspaceAccessType), new PackageablePathExceptionProcessor(entityPath, filePath));
+
+        ProjectFileAccessProvider fileAccessProvider = getProjectFileAccessProvider();
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
+        ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+        String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
+        if (filePath == null)
+        {
+            throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId, Status.NOT_FOUND);
+        }
+        return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, filePath), new PackageablePathExceptionProcessor(entityPath, filePath));
     }
 
     @Override
     public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return this.getWorkspacePackageRevisionContextByWorkspaceAccessType(projectId, workspaceId, packagePath, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspacePackageRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, packagePath);
     }
 
-    private RevisionAccessContext getWorkspacePackageRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, String packagePath, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private RevisionAccessContext getWorkspacePackageRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, String packagePath)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -148,8 +170,9 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         {
             throw new LegendSDLCServerException("Invalid package path: " + packagePath, Status.BAD_REQUEST);
         }
-        String filePath = getProjectStructure(projectId, workspaceId, null, workspaceAccessType).packagePathToFilePath(packagePath);
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, filePath, workspaceAccessType), new PackageablePathExceptionProcessor(packagePath, filePath));
+        ProjectStructure projectStructure = getProjectStructure(projectId, workspaceId, null, workspaceAccessType);
+        MutableList<String> directories = Iterate.collectWith(projectStructure.getEntitySourceDirectories(), ProjectStructure.EntitySourceDirectory::packagePathToFilePath, packagePath, Lists.mutable.empty());
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, directories), new PackageablePathExceptionProcessor(packagePath, directories));
     }
 
     @Override
@@ -243,24 +266,40 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     private static class PackageablePathExceptionProcessor implements Function<LegendSDLCServerException, LegendSDLCServerException>
     {
         private final String packageablePath;
-        private final String filePath;
+        private final ListIterable<String> filePaths;
+
+        private PackageablePathExceptionProcessor(String packageablePath, ListIterable<String> filePaths)
+        {
+            this.packageablePath = packageablePath;
+            this.filePaths = filePaths;
+        }
 
         private PackageablePathExceptionProcessor(String packageablePath, String filePath)
         {
-            this.packageablePath = packageablePath;
-            this.filePath = filePath;
+            this(packageablePath, Lists.immutable.with(filePath));
         }
 
         @Override
         public LegendSDLCServerException apply(LegendSDLCServerException e)
         {
             String message = e.getMessage();
-            if (message.contains(this.filePath))
+            ListIterable<String> found = this.filePaths.select(message::contains);
+            if (found.size() == 1)
             {
-                String newMessage = message.replace(this.filePath, this.packageablePath);
+                String newMessage = message.replace(found.get(0), this.packageablePath);
                 if (!newMessage.equals(message))
                 {
-                    throw new LegendSDLCServerException(newMessage, e.getStatus(), e);
+                    return new LegendSDLCServerException(newMessage, e.getStatus(), e);
+                }
+            }
+            else if (found.notEmpty())
+            {
+                String anyFoundPattern = LazyIterate.collect(found, Pattern::quote).makeString("((", ")|(", "))");
+                String patternString = "\\{?+(" + anyFoundPattern + ",\\s*+)*+" + anyFoundPattern + "}?+";
+                String newMessage = message.replaceAll(patternString, this.packageablePath);
+                if (!newMessage.equals(message))
+                {
+                    return new LegendSDLCServerException(newMessage, e.getStatus(), e);
                 }
             }
             return e;
