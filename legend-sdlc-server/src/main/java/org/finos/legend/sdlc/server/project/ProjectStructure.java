@@ -991,6 +991,11 @@ public abstract class ProjectStructure
 
         // Serialization
 
+        public EntitySerializer getSerializer()
+        {
+            return this.serializer;
+        }
+
         public boolean canSerialize(Entity entity)
         {
             return this.serializer.canSerialize(entity);
