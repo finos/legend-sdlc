@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
@@ -23,7 +22,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFil
 import java.util.Map;
 import java.util.stream.Stream;
 
-public class CachingFileAccessContext extends AbstractFileAccessContext
+class CachingFileAccessContext implements FileAccessContext
 {
     private final FileAccessContext delegate;
     private final MutableMap<String, byte[]> cache = Maps.mutable.empty();
@@ -35,25 +34,14 @@ public class CachingFileAccessContext extends AbstractFileAccessContext
     }
 
     @Override
-    protected Stream<ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
+    public Stream<ProjectFile> getFilesInDirectory(String directory)
     {
         fillCache();
         Stream<Map.Entry<String, byte[]>> stream = this.cache.entrySet().stream();
-        if (directories.size() == 1)
+        String canonicalDirectory = directory.endsWith("/") ? directory : (directory + "/");
+        if (!"/".equals(directory))
         {
-            String directory = directories.get(0);
-            if (!ProjectPaths.ROOT_DIRECTORY.equals(directory))
-            {
-                stream = stream.filter(f -> f.getKey().startsWith(directory));
-            }
-        }
-        else
-        {
-            stream = stream.filter(f ->
-            {
-                String path = f.getKey();
-                return directories.anySatisfy(path::startsWith);
-            });
+            stream = stream.filter(f -> f.getKey().startsWith(canonicalDirectory));
         }
         return stream.map(e -> ProjectFiles.newByteArrayProjectFile(e.getKey(), e.getValue()));
     }
@@ -101,7 +89,7 @@ public class CachingFileAccessContext extends AbstractFileAccessContext
         }
     }
 
-    public static CachingFileAccessContext wrap(FileAccessContext fileAccessContext)
+    static CachingFileAccessContext wrap(FileAccessContext fileAccessContext)
     {
         if (fileAccessContext == null)
         {

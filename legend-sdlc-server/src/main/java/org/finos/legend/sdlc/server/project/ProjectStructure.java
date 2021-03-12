@@ -21,9 +21,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.list.mutable.ListAdapter;
-import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
@@ -36,18 +33,14 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.serialization.EntityTextSerializer;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.tools.StringTools;
 
-import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -85,36 +78,22 @@ public abstract class ProjectStructure
     public static final String PROJECT_CONFIG_PATH = "/project.json";
 
     private static final String PACKAGE_SEPARATOR = "::";
+    private static final String ENTITIES_DIRECTORY_NAME = "entities";
 
     private static final Set<ArtifactType> FORBIDDEN_ARTIFACT_GENERATION_TYPES = Collections.unmodifiableSet(EnumSet.of(ArtifactType.entities, ArtifactType.versioned_entities, ArtifactType.service_execution));
 
     private final ProjectConfiguration projectConfiguration;
-    private final MutableList<EntitySourceDirectory> entitySourceDirectories;
+    private final EntityTextSerializer entitySerializer;
 
-    protected ProjectStructure(ProjectConfiguration projectConfiguration, MutableList<EntitySourceDirectory> entitySourceDirectories)
+    protected ProjectStructure(ProjectConfiguration projectConfiguration, EntityTextSerializer entitySerializer)
     {
         this.projectConfiguration = projectConfiguration;
-        this.entitySourceDirectories = entitySourceDirectories.asUnmodifiable();
+        this.entitySerializer = entitySerializer;
     }
 
-    protected ProjectStructure(ProjectConfiguration projectConfiguration, List<EntitySourceDirectory> entitySourceDirectories)
+    protected ProjectStructure(ProjectConfiguration projectConfiguration)
     {
-        this(projectConfiguration, ListAdapter.adapt(entitySourceDirectories));
-    }
-
-    protected ProjectStructure(ProjectConfiguration projectConfiguration, EntitySourceDirectory entitySourceDirectory)
-    {
-        this(projectConfiguration, Lists.fixedSize.with(entitySourceDirectory));
-    }
-
-    protected ProjectStructure(ProjectConfiguration projectConfiguration, String entitiesDirectory, EntitySerializer entitySerializer)
-    {
-        this(projectConfiguration, newEntitySourceDirectory(entitiesDirectory, entitySerializer));
-    }
-
-    protected ProjectStructure(ProjectConfiguration projectConfiguration, String entitiesDirectory)
-    {
-        this(projectConfiguration, entitiesDirectory, EntitySerializers.getDefaultJsonSerializer());
+        this(projectConfiguration, EntitySerializers.getDefaultJsonSerializer());
     }
 
     @Override
@@ -133,52 +112,192 @@ public abstract class ProjectStructure
         return this.projectConfiguration;
     }
 
-    public List<EntitySourceDirectory> getEntitySourceDirectories()
+    /**
+     * Return the file path corresponding to the given entity path.
+     * The slash character ('/') is used to separate directories
+     * within the path. Paths will always begin with /, and will
+     * never be empty. Note that the file path will be returned
+     * regardless of whether the file actually exists.
+     *
+     * @param entityPath entity path
+     * @return corresponding file path
+     */
+    public String entityPathToFilePath(String entityPath)
     {
-        return this.entitySourceDirectories;
+        StringBuilder builder = new StringBuilder(getEntitiesDirectoryLength() + entityPath.length() + getEntityFileExtensionLength());
+        appendEntitiesDirectory(builder);
+        appendPackageablePathAsFilePath(builder, entityPath);
+        builder.append('.').append(this.entitySerializer.getDefaultFileExtension());
+        return builder.toString();
     }
 
     /**
-     * Find the path for the file that represents the given entity.
+     * Return the file path corresponding to the given package path.
+     * The slash character ('/') is used to separate directories
+     * within the path. Paths will always begin with /, and will
+     * never be empty. Note the the file path will refer to a
+     * directory and will be returned regardless of whether the
+     * directory actually exists.
      *
-     * @param entityPath        entity path
-     * @param fileAccessContext file access context
-     * @return entity file path, if it exists
+     * @param packagePath package path
+     * @return corresponding file path
      */
-    public String findEntityFile(String entityPath, FileAccessContext fileAccessContext)
+    public String packagePathToFilePath(String packagePath)
     {
-        for (EntitySourceDirectory sourceDirectory : this.entitySourceDirectories)
+        StringBuilder builder = new StringBuilder(getEntitiesDirectoryLength() + packagePath.length());
+        appendEntitiesDirectory(builder);
+        appendPackageablePathAsFilePath(builder, packagePath);
+        return builder.toString();
+    }
+
+    /**
+     * Return whether the given file path is an entity file path. Note
+     * that this is a purely syntactic check and does not imply anything
+     * about whether the file actually exists or what it contains.
+     *
+     * @param filePath file path
+     * @return whether filePath is an entity file path
+     */
+    public boolean isEntityFilePath(String filePath)
+    {
+        int entitiesDirectoryLength = getEntitiesDirectoryLength();
+        return (filePath.length() > (entitiesDirectoryLength + getEntityFileExtensionLength() + 1)) &&
+                startsWithEntitiesDirectory(filePath) && (filePath.charAt(entitiesDirectoryLength) == '/') &&
+                endsWithEntityFileExtension(filePath);
+    }
+
+    /**
+     * Return the packageable (entity or package) path that corresponds
+     * to the given file path.
+     *
+     * @param filePath file path
+     * @return corresponding packageable path
+     */
+    public String filePathToPackageablePath(String filePath)
+    {
+        int start = getEntitiesDirectoryLength() + 1;
+        int end = endsWithEntityFileExtension(filePath) ? (filePath.length() - getEntityFileExtensionLength()) : filePath.length();
+        int length = end - start;
+        StringBuilder builder = new StringBuilder(length + (length / 4));
+        appendFilePathAsPackageablePath(builder, filePath, start, end);
+        return builder.toString();
+    }
+
+    public byte[] serializeEntity(Entity entity)
+    {
+        try
         {
-            String filePath = sourceDirectory.entityPathToFilePath(entityPath);
-            if (fileAccessContext.fileExists(filePath))
+            return this.entitySerializer.serializeToBytes(entity);
+        }
+        catch (Exception e)
+        {
+            StringBuilder message = new StringBuilder("Error serializing entity ").append(entity.getPath());
+            String eMessage = e.getMessage();
+            if (eMessage != null)
             {
-                return filePath;
+                message.append(": ").append(eMessage);
+            }
+            throw new RuntimeException(message.toString(), e);
+        }
+    }
+
+    public byte[] serializeEntity(String entityPath, String classifierPath, Map<String, ?> content)
+    {
+        return serializeEntity(Entity.newEntity(entityPath, classifierPath, content));
+    }
+
+    public Entity deserializeEntity(ProjectFile projectFile)
+    {
+        try
+        {
+            String entityPath = filePathToPackageablePath(projectFile.getPath());
+            try (Reader reader = projectFile.getContentAsReader())
+            {
+                return deserializeEntity(entityPath, reader);
             }
         }
-        return null;
+        catch (Exception e)
+        {
+            String eMessage = e.getMessage();
+            if ((e instanceof RuntimeException) && (eMessage != null) && eMessage.startsWith("Error deserializing entity "))
+            {
+                throw (RuntimeException) e;
+            }
+            StringBuilder message = new StringBuilder("Error deserializing entity from file ").append(projectFile.getPath());
+            if (eMessage != null)
+            {
+                message.append(": ").append(eMessage);
+            }
+            throw new RuntimeException(message.toString(), e);
+        }
     }
 
-    /**
-     * Find the first source directory where the given entity can be serialized.
-     *
-     * @param entity entity to serialize
-     * @return source directory where the entity can be serialized
-     */
-    public EntitySourceDirectory findSourceDirectoryForEntity(Entity entity)
+    public Entity deserializeEntity(String entityPath, Reader reader)
     {
-        return this.entitySourceDirectories.detectWith(EntitySourceDirectory::canSerialize, entity);
+        try
+        {
+            Entity entity = this.entitySerializer.deserialize(reader);
+            if ((entityPath != null) && !entityPath.equals(entity.getPath()))
+            {
+                throw new RuntimeException("Expected entity path " + entityPath + ", found " + entity.getPath());
+            }
+            return entity;
+        }
+        catch (Exception e)
+        {
+            StringBuilder message = new StringBuilder("Error deserializing entity ").append(entityPath);
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                message.append(": ").append(eMessage);
+            }
+            throw new RuntimeException(message.toString(), e);
+        }
     }
 
-    /**
-     * Find the first source directory where the given file is possibly an entity file.
-     *
-     * @param path entity file path
-     * @return source directory where the file is possibly an entity file
-     */
-    public EntitySourceDirectory findSourceDirectoryForEntityFilePath(String path)
+    public String getEntitiesDirectory()
     {
-        return this.entitySourceDirectories.detectWith(EntitySourceDirectory::isPossiblyEntityFilePath, path);
+        return appendEntitiesDirectory(new StringBuilder(getEntitiesDirectoryLength())).toString();
     }
+
+    public String getEntitiesParentDirectory()
+    {
+        return appendEntitiesParentDirectory(new StringBuilder(getEntitiesParentDirectoryLength())).toString();
+    }
+
+    public StringBuilder appendEntitiesDirectory(StringBuilder builder)
+    {
+        return appendEntitiesParentDirectory(builder).append(ENTITIES_DIRECTORY_NAME);
+    }
+
+    public abstract StringBuilder appendEntitiesParentDirectory(StringBuilder builder);
+
+    int getEntitiesDirectoryLength()
+    {
+        return getEntitiesParentDirectoryLength() + ENTITIES_DIRECTORY_NAME.length();
+    }
+
+    public abstract int getEntitiesParentDirectoryLength();
+
+    boolean startsWithEntitiesDirectory(String filePath)
+    {
+        return startsWithEntitiesParentDirectory(filePath) && filePath.startsWith(ENTITIES_DIRECTORY_NAME, getEntitiesParentDirectoryLength());
+    }
+
+    protected int getEntityFileExtensionLength()
+    {
+        return this.entitySerializer.getDefaultFileExtension().length() + 1;
+    }
+
+    protected boolean endsWithEntityFileExtension(String path)
+    {
+        String fileExtension = this.entitySerializer.getDefaultFileExtension();
+        return (path.length() > fileExtension.length()) &&
+                path.endsWith(fileExtension) &&
+                (path.charAt(path.length() - (fileExtension.length() + 1)) == '.');
+    }
+
+    public abstract boolean startsWithEntitiesParentDirectory(String filePath);
 
     public abstract void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, FileAccessContext fileAccessContext, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<ProjectFileOperation> operationConsumer);
 
@@ -309,7 +428,7 @@ public abstract class ProjectStructure
 
     public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType));
     }
 
     public static ProjectStructure getProjectStructure(FileAccessContext fileAccessContext)
@@ -325,7 +444,7 @@ public abstract class ProjectStructure
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType));
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId, ProjectFileAccessProvider projectFileAccessProvider)
@@ -399,7 +518,7 @@ public abstract class ProjectStructure
         // if revisionId not specified, get the current revision
         if (revisionId == null)
         {
-            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType).getCurrentRevision();
+            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getCurrentRevision();
             if (currentRevision != null)
             {
                 revisionId = currentRevision.getId();
@@ -417,7 +536,7 @@ public abstract class ProjectStructure
         }
 
         // find out what we need to update for project structure
-        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        FileAccessContext fileAccessContext = projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType);
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId, projectType) : readProjectConfiguration(configFile);
         if (projectType != currentConfig.getProjectType())
@@ -652,49 +771,23 @@ public abstract class ProjectStructure
         ProjectStructure currentProjectStructure = getProjectStructure(currentConfig);
         ProjectStructure newProjectStructure = getProjectStructure(newConfig);
 
-        // Move or re-serialize entities if necessary
-        List<EntitySourceDirectory> currentEntityDirectories = currentProjectStructure.getEntitySourceDirectories();
-        List<EntitySourceDirectory> newEntityDirectories = newProjectStructure.getEntitySourceDirectories();
-        if (!currentEntityDirectories.equals(newEntityDirectories))
+        // Move entities if necessary
+        String currentEntitiesDirectory = currentProjectStructure.getEntitiesDirectory();
+        String newEntitiesDirectory = newProjectStructure.getEntitiesDirectory();
+        if (!newEntitiesDirectory.equals(currentEntitiesDirectory))
         {
-            currentEntityDirectories.forEach(currentSourceDirectory ->
-                    fileAccessContext.getFilesInDirectory(currentSourceDirectory.getDirectory()).forEach(file ->
+            fileAccessContext.getFilesInDirectory(currentProjectStructure.getEntitiesDirectory())
+                    .forEach(file ->
                     {
                         String currentPath = file.getPath();
-                        if (currentSourceDirectory.isPossiblyEntityFilePath(currentPath))
+                        if (currentProjectStructure.isEntityFilePath(currentPath))
                         {
-                            byte[] currentBytes = file.getContentAsBytes();
-                            Entity entity;
-                            try
-                            {
-                                entity = currentSourceDirectory.deserialize(currentBytes);
-                            }
-                            catch (Exception e)
-                            {
-                                StringBuilder builder = new StringBuilder("Error deserializing entity from file \"").append(currentPath).append('"');
-                                StringTools.appendThrowableMessageIfPresent(builder, e);
-                                throw new LegendSDLCServerException(builder.toString(), e);
-                            }
-                            EntitySourceDirectory newSourceDirectory = Iterate.detectWith(newEntityDirectories, EntitySourceDirectory::canSerialize, entity);
-                            if (newSourceDirectory == null)
-                            {
-                                throw new LegendSDLCServerException("Could not find a new source directory for entity " + entity.getPath() + ", currently in " + currentPath);
-                            }
-                            if (!currentSourceDirectory.equals(newSourceDirectory))
-                            {
-                                String newPath = newSourceDirectory.entityPathToFilePath(entity.getPath());
-                                byte[] newBytes = newSourceDirectory.serializeToBytes(entity);
-                                if (!newPath.equals(currentPath))
-                                {
-                                    operations.add(ProjectFileOperation.moveFile(currentPath, newPath, newBytes));
-                                }
-                                else if (!Arrays.equals(currentBytes, newBytes))
-                                {
-                                    operations.add(ProjectFileOperation.modifyFile(currentPath, newBytes));
-                                }
-                            }
+                            // move entities to new directory
+                            String newPath = newEntitiesDirectory + currentPath.substring(currentEntitiesDirectory.length());
+                            byte[] content = file.getContentAsBytes();
+                            operations.add(ProjectFileOperation.moveFile(currentPath, newPath, content));
                         }
-                    }));
+                    });
         }
 
         // Collect any further update operations
@@ -708,7 +801,7 @@ public abstract class ProjectStructure
         }
 
         // Submit changes
-        return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
+        return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, revisionId, workspaceAccessType).submit(updateBuilder.getMessage(), operations);
     }
 
 
@@ -857,189 +950,6 @@ public abstract class ProjectStructure
         if (!isValid)
         {
             throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
-        }
-    }
-
-    protected static EntitySourceDirectory newEntitySourceDirectory(String directory, EntitySerializer serializer)
-    {
-        return new EntitySourceDirectory(directory, serializer);
-    }
-
-    public static class EntitySourceDirectory
-    {
-        private final String directory;
-        private final EntitySerializer serializer;
-
-        private EntitySourceDirectory(String directory, EntitySerializer serializer)
-        {
-            this.directory = directory;
-            this.serializer = serializer;
-        }
-
-        @Override
-        public boolean equals(Object other)
-        {
-            if (this == other)
-            {
-                return true;
-            }
-            if (!(other instanceof EntitySourceDirectory))
-            {
-                return false;
-            }
-            EntitySourceDirectory that = (EntitySourceDirectory) other;
-            return this.directory.equals(that.directory) && this.serializer.getName().equals(that.serializer.getName());
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return this.directory.hashCode() ^ this.serializer.getName().hashCode();
-        }
-
-        @Override
-        public String toString()
-        {
-            return "<EntitySourceDirectory directory=" + this.directory + " serializer=" + this.serializer.getName() + ">";
-        }
-
-        // File paths
-
-        public String getDirectory()
-        {
-            return this.directory;
-        }
-
-        /**
-         * Return whether the given file path is possibly an entity file path. Note that this is a purely syntactic
-         * check and does not imply anything about whether the file actually exists or what it contains.
-         *
-         * @param filePath file path
-         * @return whether filePath is possibly an entity file path
-         */
-        public boolean isPossiblyEntityFilePath(String filePath)
-        {
-            return (filePath != null) &&
-                    (filePath.length() > (this.directory.length() + this.serializer.getDefaultFileExtension().length() + 2)) &&
-                    filePathStartsWithDirectory(filePath) &&
-                    filePathHasEntityExtension(filePath);
-        }
-
-        /**
-         * Return the file path corresponding to the given entity path. The slash character ('/') is used to separate
-         * directories within the path. Paths will always begin with /, and will never be empty. Note that the file
-         * path will be returned regardless of whether the file actually exists.
-         *
-         * @param entityPath entity path
-         * @return corresponding file path
-         */
-        public String entityPathToFilePath(String entityPath)
-        {
-            StringBuilder builder = new StringBuilder(this.directory.length() + entityPath.length() + this.serializer.getDefaultFileExtension().length());
-            builder.append(this.directory);
-            appendPackageablePathAsFilePath(builder, entityPath);
-            builder.append('.').append(this.serializer.getDefaultFileExtension());
-            return builder.toString();
-        }
-
-        /**
-         * Return the entity path that corresponds to the given file path.
-         *
-         * @param filePath file path
-         * @return corresponding entity path
-         * @throws IllegalArgumentException if filePath is not a valid file path
-         */
-        public String filePathToEntityPath(String filePath)
-        {
-            int start = this.directory.length() + 2;
-            int end = filePath.length() - (this.serializer.getDefaultFileExtension().length() + 1);
-            int length = end - start;
-            StringBuilder builder = new StringBuilder(length + (length / 4));
-            appendFilePathAsPackageablePath(builder, filePath, start, end);
-            return builder.toString();
-        }
-
-        /**
-         * Return the file path corresponding to the given package path. The slash character ('/') is used to separate
-         * directories within the path. Paths will always begin with /, and will never be empty. Note the the file path
-         * will refer to a directory and will be returned regardless of whether the directory actually exists.
-         *
-         * @param packagePath package path
-         * @return corresponding file path
-         */
-        public String packagePathToFilePath(String packagePath)
-        {
-            StringBuilder builder = new StringBuilder(this.directory.length() + packagePath.length());
-            builder.append(this.directory).append('/');
-            appendPackageablePathAsFilePath(builder, packagePath);
-            return builder.toString();
-        }
-
-        private boolean filePathStartsWithDirectory(String filePath)
-        {
-            return filePath.startsWith(this.directory) &&
-                    ((filePath.length() == this.directory.length()) || (filePath.charAt(this.directory.length()) == '/'));
-        }
-
-        private boolean filePathHasEntityExtension(String filePath)
-        {
-            String extension = this.serializer.getDefaultFileExtension();
-            return filePath.endsWith(extension) &&
-                    (filePath.length() > extension.length()) &&
-                    (filePath.charAt(filePath.length() - (extension.length() + 1)) == '.');
-        }
-
-        // Serialization
-
-        public EntitySerializer getSerializer()
-        {
-            return this.serializer;
-        }
-
-        public boolean canSerialize(Entity entity)
-        {
-            return this.serializer.canSerialize(entity);
-        }
-
-        public byte[] serializeToBytes(Entity entity)
-        {
-            try
-            {
-                return this.serializer.serializeToBytes(entity);
-            }
-            catch (Exception e)
-            {
-                StringBuilder message = new StringBuilder("Error serializing entity ").append(entity.getPath());
-                StringTools.appendThrowableMessageIfPresent(message, e);
-                throw new LegendSDLCServerException(message.toString(), e);
-            }
-        }
-
-        public Entity deserialize(ProjectFile projectFile)
-        {
-            try (InputStream stream = projectFile.getContentAsInputStream())
-            {
-                return this.serializer.deserialize(stream);
-            }
-            catch (Exception e)
-            {
-                String eMessage = e.getMessage();
-                if ((e instanceof RuntimeException) && (eMessage != null) && eMessage.startsWith("Error deserializing entity "))
-                {
-                    throw (RuntimeException) e;
-                }
-                StringBuilder builder = new StringBuilder("Error deserializing entity from file ").append(projectFile.getPath());
-                if (eMessage != null)
-                {
-                    builder.append(": ").append(eMessage);
-                }
-                throw new LegendSDLCServerException(builder.toString(), e);
-            }
-        }
-
-        public Entity deserialize(byte[] content) throws IOException
-        {
-            return this.serializer.deserialize(content);
         }
     }
 }

@@ -33,10 +33,10 @@ import org.gitlab4j.api.models.Diff;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 
+import javax.inject.Inject;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
 
 public class GitLabComparisonApi extends GitLabApiWithFileAccess implements ComparisonApi
 {
@@ -184,23 +184,10 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
             // 3. other files: e.g. users can go in and modify pom.xml, add some non-entity files, etc. we DO NOT keep track of these
             String oldPath = diff.getOldPath().startsWith(FILE_PATH_DELIMITER) ? diff.getOldPath() : FILE_PATH_DELIMITER + diff.getOldPath();
             String newPath = diff.getNewPath().startsWith(FILE_PATH_DELIMITER) ? diff.getNewPath() : FILE_PATH_DELIMITER + diff.getNewPath();
-
-            // project configuration change
-            if (ProjectStructure.PROJECT_CONFIG_PATH.equals(oldPath) || ProjectStructure.PROJECT_CONFIG_PATH.equals(newPath))
+            String oldEntityPath = fromProjectStructure.isEntityFilePath(oldPath) ? fromProjectStructure.filePathToPackageablePath(oldPath) : oldPath;
+            String newEntityPath = toProjectStructure.isEntityFilePath(newPath) ? toProjectStructure.filePathToPackageablePath(newPath) : newPath;
+            if (fromProjectStructure.isEntityFilePath(oldPath) || fromProjectStructure.isEntityFilePath(newPath))
             {
-                // technically, we know the only probable operation that can happen is MODIFICATION, CREATE is really an edge case
-                isProjectConfigurationUpdated.set(true);
-                return;
-            }
-
-            ProjectStructure.EntitySourceDirectory oldPathSourceDirectory = fromProjectStructure.findSourceDirectoryForEntityFilePath(oldPath);
-            ProjectStructure.EntitySourceDirectory newPathSourceDirectory = toProjectStructure.findSourceDirectoryForEntityFilePath(newPath);
-
-            // entity file change
-            if ((oldPathSourceDirectory != null) || (newPathSourceDirectory != null))
-            {
-                String oldEntityPath = (oldPathSourceDirectory == null) ? oldPath : oldPathSourceDirectory.filePathToEntityPath(oldPath);
-                String newEntityPath = (newPathSourceDirectory == null) ? newPath : newPathSourceDirectory.filePathToEntityPath(newPath);
                 EntityChangeType entityChangeType;
                 if (diff.getDeletedFile())
                 {
@@ -239,7 +226,11 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
                     }
                 });
             }
-
+            else if (oldEntityPath.equals(ProjectStructure.PROJECT_CONFIG_PATH) || newEntityPath.equals(ProjectStructure.PROJECT_CONFIG_PATH))
+            {
+                // technically, we know the only probable operation that can happen is MODIFICATION, CREATE is really an edge case
+                isProjectConfigurationUpdated.set(true);
+            }
             // SKIP non-entity, non-config file
         });
         return new Comparison()
