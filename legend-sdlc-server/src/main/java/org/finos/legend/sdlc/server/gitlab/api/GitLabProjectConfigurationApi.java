@@ -36,10 +36,10 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Collections;
 import java.util.List;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess implements ProjectConfigurationApi
 {
@@ -79,7 +79,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, null, null));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
         }
         catch (Exception e)
         {
@@ -170,7 +170,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType));
         }
         catch (Exception e)
         {
@@ -295,7 +295,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         try
         {
             ProjectFileAccessProvider fileAccessProvider = getProjectFileAccessProvider();
-            Revision currentRevision = fileAccessProvider.getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getCurrentRevision();
+            Revision currentRevision = fileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType).getCurrentRevision();
 
             if (currentRevision == null)
             {
