@@ -16,7 +16,6 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
@@ -28,26 +27,23 @@ import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
@@ -68,7 +64,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             @Override
             protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
             {
-                return projectFileAccessProvider.getFileAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+                return projectFileAccessProvider.getFileAccessContext(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             }
 
             @Override
@@ -93,7 +89,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 String resolvedRevisionId;
                 try
                 {
-                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, null, null));
                 }
                 catch (Exception e)
                 {
@@ -107,7 +103,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
-                return projectFileAccessProvider.getFileAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, resolvedRevisionId);
+                return projectFileAccessProvider.getFileAccessContext(projectId, null, resolvedRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             }
 
             @Override
@@ -136,7 +132,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 @Override
                 protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
                 {
-                    return projectFileAccessProvider.getFileAccessContext(projectId, null, null, revisionId);
+                    return projectFileAccessProvider.getFileAccessContext(projectId, null, revisionId, null);
                 }
 
                 @Override
@@ -170,7 +166,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 @Override
                 protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
                 {
-                    return projectFileAccessProvider.getFileAccessContext(projectId, null, null, revisionId);
+                    return projectFileAccessProvider.getFileAccessContext(projectId, null, revisionId, null);
                 }
 
                 @Override
@@ -223,7 +219,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             @Override
             protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
             {
-                return projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
+                return projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, null, workspaceAccessType);
             }
 
             @Override
@@ -267,7 +263,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 String resolvedRevisionId;
                 try
                 {
-                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType));
+                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType));
                 }
                 catch (Exception e)
                 {
@@ -281,7 +277,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
-                return projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, resolvedRevisionId);
+                return projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, resolvedRevisionId, workspaceAccessType);
             }
 
             @Override
@@ -335,7 +331,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private void validateRevision(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        Revision revision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType).getRevision(revisionId);
+        Revision revision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getRevision(revisionId);
         if (revision == null)
         {
             throw new LegendSDLCServerException("Revision " + revisionId + " is unknown for " + getReferenceInfo(projectId, workspaceId, null), Status.NOT_FOUND);
@@ -347,28 +343,16 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public Entity getEntity(String path)
         {
+            ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
             try
             {
-                ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
                 ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+                ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(projectStructure.entityPathToFilePath(path));
+                if (file == null)
                 {
-                    String filePath = sourceDirectory.entityPathToFilePath(path);
-                    ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
-                    if (file != null)
-                    {
-                        try
-                        {
-                            return sourceDirectory.deserialize(file);
-                        }
-                        catch (Exception e)
-                        {
-                            StringBuilder builder = new StringBuilder("Error deserializing entity \"").append(path).append("\" from file \"").append(filePath).append('"');
-                            StringTools.appendThrowableMessageIfPresent(builder, e);
-                            throw new LegendSDLCServerException(builder.toString(), e);
-                        }
-                    }
+                    throw new LegendSDLCServerException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
                 }
+                return projectStructure.deserializeEntity(path, file.getContentAsReader());
             }
             catch (Exception e)
             {
@@ -378,7 +362,6 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                         () -> "Failed to get entity " + path + " for " + getInfoForException()
                 );
             }
-            throw new LegendSDLCServerException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
         }
 
         @Override
@@ -525,7 +508,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             throw new LegendSDLCServerException((errorMessages.size() == 1) ? errorMessages.get(0) : "There are errors with entity definitions:\n\t" + String.join("\n\t", errorMessages), Status.BAD_REQUEST);
         }
 
-        Revision currentWorkspaceRevision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceAccessType).getCurrentRevision();
+        Revision currentWorkspaceRevision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, null, workspaceAccessType).getCurrentRevision();
         if (currentWorkspaceRevision == null)
         {
             throw new LegendSDLCServerException("Could not find current revision for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceAccessType.getLabel() + " may be corrupt");
@@ -587,10 +570,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         LOGGER.debug("Committing {} changes to {} {} in project {}: {}", changeCount, workspaceAccessType.getLabel(), workspaceId, projectId, message);
         try
         {
-            ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceAccessType, referenceRevisionId);
-            ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-            List<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
-            return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, workspaceAccessType, referenceRevisionId).submit(message, fileOperations);
+            ProjectStructure projectStructure = getProjectStructure(projectId, workspaceId, referenceRevisionId, workspaceAccessType);
+            List<ProjectFileOperation> fileOperations = changes.stream().map(c -> entityChangeToFileOperation(c, projectStructure)).collect(Collectors.toCollection(() -> Lists.mutable.ofInitialCapacity(changeCount)));
+            return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, referenceRevisionId, workspaceAccessType).submit(message, fileOperations);
         }
         catch (Exception e)
         {
@@ -601,73 +583,25 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
     }
 
-    private ProjectFileOperation entityChangeToFileOperation(EntityChange change, ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext)
+    private ProjectFileOperation entityChangeToFileOperation(EntityChange change, ProjectStructure projectStructure)
     {
         switch (change.getType())
         {
             case CREATE:
             {
-                String entityPath = change.getEntityPath();
-
-                // check if a file already exists for this entity
-                if (projectStructure.findEntityFile(entityPath, fileAccessContext) != null)
-                {
-                    throw new LegendSDLCServerException("Unable to handle operation " + change + ": entity \"" + entityPath + "\" already exists");
-                }
-
-                Entity entity = Entity.newEntity(entityPath, change.getClassifierPath(), change.getContent());
-                ProjectStructure.EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
-                if (sourceDirectory == null)
-                {
-                    throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
-                }
-                return ProjectFileOperation.addFile(sourceDirectory.entityPathToFilePath(change.getEntityPath()), sourceDirectory.serializeToBytes(entity));
+                return ProjectFileOperation.addFile(projectStructure.entityPathToFilePath(change.getEntityPath()), projectStructure.serializeEntity(change.getEntityPath(), change.getClassifierPath(), change.getContent()));
             }
             case DELETE:
             {
-                String entityPath = change.getEntityPath();
-                String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
-                if (filePath == null)
-                {
-                    throw new LegendSDLCServerException("Unable to handle operation " + change + ": could not find entity \"" + entityPath + "\"");
-                }
-                return ProjectFileOperation.deleteFile(filePath);
+                return ProjectFileOperation.deleteFile(projectStructure.entityPathToFilePath(change.getEntityPath()));
             }
             case MODIFY:
             {
-                String entityPath = change.getEntityPath();
-                Entity entity = Entity.newEntity(entityPath, change.getClassifierPath(), change.getContent());
-
-                // find current file
-                String currentFilePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
-                if (currentFilePath == null)
-                {
-                    throw new LegendSDLCServerException("Unable to handle operation " + change + ": could not find entity \"" + entityPath + "\"");
-                }
-
-                ProjectStructure.EntitySourceDirectory newSourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
-                if (newSourceDirectory == null)
-                {
-                    throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
-                }
-
-                String newFilePath = newSourceDirectory.entityPathToFilePath(entityPath);
-                byte[] serialized = newSourceDirectory.serializeToBytes(entity);
-                return currentFilePath.equals(newFilePath) ? ProjectFileOperation.modifyFile(currentFilePath, serialized) : ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+                return ProjectFileOperation.modifyFile(projectStructure.entityPathToFilePath(change.getEntityPath()), projectStructure.serializeEntity(change.getEntityPath(), change.getClassifierPath(), change.getContent()));
             }
             case RENAME:
             {
-                String currentEntityPath = change.getEntityPath();
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
-                {
-                    String filePath = sourceDirectory.entityPathToFilePath(currentEntityPath);
-                    if (fileAccessContext.fileExists(filePath))
-                    {
-                        String newFilePath = sourceDirectory.entityPathToFilePath(change.getNewEntityPath());
-                        return ProjectFileOperation.moveFile(filePath, newFilePath);
-                    }
-                }
-                throw new LegendSDLCServerException("Unable to handle operation " + change + ": could not find entity \"" + currentEntityPath + "\"");
+                return ProjectFileOperation.moveFile(projectStructure.entityPathToFilePath(change.getEntityPath()), projectStructure.entityPathToFilePath(change.getNewEntityPath()));
             }
             default:
             {
@@ -678,7 +612,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private Stream<EntityProjectFile> getEntityProjectFiles(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return getEntityProjectFiles(getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        return getEntityProjectFiles(getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType));
     }
 
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate)
@@ -702,16 +636,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(accessContext);
-        List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
-        ProjectFileAccessProvider.FileAccessContext cachingAccessContext = (sourceDirectories.size() > 1) ? CachingFileAccessContext.wrap(accessContext) : accessContext;
-        return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(cachingAccessContext, sd));
-    }
-
-    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, ProjectStructure.EntitySourceDirectory sourceDirectory)
-    {
-        return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
-                .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
-                .map(f -> new EntityProjectFile(sourceDirectory, f));
+        return accessContext.getFilesInDirectory(projectStructure.getEntitiesDirectory()).filter(f -> projectStructure.isEntityFilePath(f.getPath())).map(f -> new EntityProjectFile(projectStructure, f));
     }
 
     private static void validateEntityChanges(List<? extends EntityChange> entityChanges)
@@ -866,14 +791,14 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private static class EntityProjectFile
     {
-        private final ProjectStructure.EntitySourceDirectory sourceDirectory;
+        private final ProjectStructure projectStructure;
         private final ProjectFileAccessProvider.ProjectFile file;
         private String path;
         private Entity entity;
 
-        private EntityProjectFile(ProjectStructure.EntitySourceDirectory sourceDirectory, ProjectFileAccessProvider.ProjectFile file)
+        private EntityProjectFile(ProjectStructure projectStructure, ProjectFileAccessProvider.ProjectFile file)
         {
-            this.sourceDirectory = sourceDirectory;
+            this.projectStructure = projectStructure;
             this.file = file;
         }
 
@@ -881,7 +806,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             if (this.path == null)
             {
-                this.path = this.sourceDirectory.filePathToEntityPath(this.file.getPath());
+                this.path = this.projectStructure.filePathToPackageablePath(this.file.getPath());
             }
             return this.path;
         }
@@ -890,12 +815,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             if (this.entity == null)
             {
-                Entity localEntity = this.sourceDirectory.deserialize(this.file);
-                if (!Objects.equals(localEntity.getPath(), getEntityPath()))
-                {
-                    throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
-                }
-                this.entity = localEntity;
+                this.entity = this.projectStructure.deserializeEntity(getEntityPath(), this.file.getContentAsReader());
             }
             return this.entity;
         }

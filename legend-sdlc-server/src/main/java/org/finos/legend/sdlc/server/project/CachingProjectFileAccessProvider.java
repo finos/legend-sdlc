@@ -33,11 +33,11 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
     {
         if (revisionId == null)
         {
-            return this.delegate.getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
+            return this.delegate.getFileAccessContext(projectId, workspaceId, null, workspaceAccessType);
         }
 
         CacheKey cacheKey = getCacheKey(projectId, workspaceId, revisionId);
@@ -46,7 +46,7 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
             CachingFileAccessContext fileAccessContext = this.cache.get(cacheKey);
             if (fileAccessContext == null)
             {
-                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, workspaceId, revisionId, workspaceAccessType));
                 if (fileAccessContext != null)
                 {
                     this.cache.put(cacheKey, fileAccessContext);
@@ -78,15 +78,9 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String path)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, String path, WorkspaceAccessType workspaceAccessType)
     {
-        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, path);
-    }
-
-    @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
-    {
-        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, paths);
+        return this.delegate.getRevisionAccessContext(projectId, workspaceId, path, workspaceAccessType);
     }
 
     @Override
@@ -95,18 +89,12 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
         return this.delegate.getRevisionAccessContext(projectId, versionId, path);
     }
 
-    @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
-    {
-        return this.delegate.getRevisionAccessContext(projectId, versionId, paths);
-    }
-
     // File Modification Access Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, String revisionId, WorkspaceAccessType workspaceAccessType)
     {
-        return this.delegate.getFileModificationContext(projectId, workspaceId, workspaceAccessType, revisionId);
+        return this.delegate.getFileModificationContext(projectId, workspaceId, revisionId, workspaceAccessType);
     }
 
     public void clearCache()
