@@ -1,0 +1,235 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "_type": "mapping",
+    "classMappings": [
+      {
+        "_type": "relational",
+        "class": "model::domain::TargetClass1",
+        "distinct": false,
+        "id": "tc1",
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "id"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "id",
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "TestEnumerationMappingInt",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "type"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "type",
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "TestEnumerationMappingString",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "otherType"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "otherType",
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "other"
+            },
+            "relationalOperation": {
+              "_type": "elemtWithJoins",
+              "joins": [
+                {
+                  "db": "model::domain::TestDatabase",
+                  "name": "Table1_Table2"
+                }
+              ]
+            },
+            "source": "tc1",
+            "target": "tc2"
+          }
+        ],
+        "root": false
+      },
+      {
+        "_type": "relational",
+        "class": "model::domain::TargetClass2",
+        "distinct": false,
+        "id": "tc2",
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass2",
+              "property": "id"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "id",
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "table": "Table2"
+              },
+              "tableAlias": "Table2"
+            },
+            "source": "tc2"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass2",
+              "property": "name"
+            },
+            "relationalOperation": {
+              "_type": "dynaFunc",
+              "funcName": "lower",
+              "parameters": [
+                {
+                  "_type": "column",
+                  "column": "name",
+                  "table": {
+                    "_type": "Table",
+                    "database": "model::domain::TestDatabase",
+                    "mainTableDb": "model::domain::TestDatabase",
+                    "schema": "default",
+                    "table": "Table2"
+                  },
+                  "tableAlias": "Table2"
+                }
+              ]
+            },
+            "source": "tc2"
+          }
+        ],
+        "root": false
+      }
+    ],
+    "enumerationMappings": [
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "TYPE1",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE2",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE3",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 300
+              },
+              {
+                "_type": "integerSourceValue",
+                "value": 400
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::domain::TestEnumeration",
+        "id": "TestEnumerationMappingInt"
+      },
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "TYPE1",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "abc"
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE2",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "def"
+              },
+              {
+                "_type": "stringSourceValue",
+                "value": "ghi"
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE3",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "jlk"
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::domain::TestEnumeration",
+        "id": "TestEnumerationMappingString"
+      }
+    ],
+    "includedMappings": [
+      {
+        "includedMapping": "model::mapping::OtherMapping"
+      }
+    ],
+    "name": "TestMapping",
+    "package": "model::mapping"
+  }
+}

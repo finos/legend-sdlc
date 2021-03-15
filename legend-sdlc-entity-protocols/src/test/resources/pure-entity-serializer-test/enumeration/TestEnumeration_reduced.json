@@ -1,0 +1,67 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Enumeration",
+  "content": {
+    "_type": "Enumeration",
+    "name": "TestEnumeration",
+    "package": "model::domain",
+    "values": [
+      {
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype1"
+          }
+        ],
+        "taggedValues": [],
+        "value": "VALUE1"
+      },
+      {
+        "stereotypes": [],
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some value"
+          }
+        ],
+        "value": "VALUE2"
+      },
+      {
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype1"
+          },
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype2"
+          }
+        ],
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some other value"
+          },
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag2"
+            },
+            "value": "yet another value"
+          }
+        ],
+        "value": "VALUE3"
+      },
+      {
+        "stereotypes": [],
+        "taggedValues": [],
+        "value": "VALUE4"
+      }
+    ]
+  }
+}

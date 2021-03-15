@@ -1,0 +1,7 @@
+Enum model::domain::TestEnumeration
+{
+  <<model::domain::TestProfile.stereotype1>> VALUE1,
+  {model::domain::TestProfile.tag1 = 'some value'} VALUE2,
+  <<model::domain::TestProfile.stereotype1, model::domain::TestProfile.stereotype2>> {model::domain::TestProfile.tag1 = 'some other value', model::domain::TestProfile.tag2 = 'yet another value'} VALUE3,
+  VALUE4
+}

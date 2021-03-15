@@ -1,0 +1,209 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Enumeration",
+  "content": {
+    "_type": "Enumeration",
+    "name": "TestEnumeration",
+    "package": "model::domain",
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 7,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [],
+    "taggedValues": [],
+    "values": [
+      {
+        "sourceInformation": {
+          "endColumn": 51,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "profileSourceInformation": {
+              "endColumn": 30,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "sourceInformation": {
+              "endColumn": 42,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "value": "stereotype1"
+          }
+        ],
+        "taggedValues": [],
+        "value": "VALUE1"
+      },
+      {
+        "sourceInformation": {
+          "endColumn": 57,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [
+          {
+            "sourceInformation": {
+              "endColumn": 49,
+              "endLine": 4,
+              "sourceId": "",
+              "startColumn": 4,
+              "startLine": 4
+            },
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "profileSourceInformation": {
+                "endColumn": 29,
+                "endLine": 4,
+                "sourceId": "",
+                "startColumn": 4,
+                "startLine": 4
+              },
+              "sourceInformation": {
+                "endColumn": 34,
+                "endLine": 4,
+                "sourceId": "",
+                "startColumn": 31,
+                "startLine": 4
+              },
+              "value": "tag1"
+            },
+            "value": "some value"
+          }
+        ],
+        "value": "VALUE2"
+      },
+      {
+        "sourceInformation": {
+          "endColumn": 201,
+          "endLine": 5,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 5
+        },
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "profileSourceInformation": {
+              "endColumn": 30,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 5
+            },
+            "sourceInformation": {
+              "endColumn": 42,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 5
+            },
+            "value": "stereotype1"
+          },
+          {
+            "profile": "model::domain::TestProfile",
+            "profileSourceInformation": {
+              "endColumn": 70,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 45,
+              "startLine": 5
+            },
+            "sourceInformation": {
+              "endColumn": 82,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 45,
+              "startLine": 5
+            },
+            "value": "stereotype2"
+          }
+        ],
+        "taggedValues": [
+          {
+            "sourceInformation": {
+              "endColumn": 138,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 87,
+              "startLine": 5
+            },
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "profileSourceInformation": {
+                "endColumn": 112,
+                "endLine": 5,
+                "sourceId": "",
+                "startColumn": 87,
+                "startLine": 5
+              },
+              "sourceInformation": {
+                "endColumn": 117,
+                "endLine": 5,
+                "sourceId": "",
+                "startColumn": 114,
+                "startLine": 5
+              },
+              "value": "tag1"
+            },
+            "value": "some other value"
+          },
+          {
+            "sourceInformation": {
+              "endColumn": 193,
+              "endLine": 5,
+              "sourceId": "",
+              "startColumn": 141,
+              "startLine": 5
+            },
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "profileSourceInformation": {
+                "endColumn": 166,
+                "endLine": 5,
+                "sourceId": "",
+                "startColumn": 141,
+                "startLine": 5
+              },
+              "sourceInformation": {
+                "endColumn": 171,
+                "endLine": 5,
+                "sourceId": "",
+                "startColumn": 168,
+                "startLine": 5
+              },
+              "value": "tag2"
+            },
+            "value": "yet another value"
+          }
+        ],
+        "value": "VALUE3"
+      },
+      {
+        "sourceInformation": {
+          "endColumn": 8,
+          "endLine": 6,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 6
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "value": "VALUE4"
+      }
+    ]
+  }
+}

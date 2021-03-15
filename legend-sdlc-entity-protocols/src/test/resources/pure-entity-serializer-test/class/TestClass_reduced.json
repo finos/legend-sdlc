@@ -1,0 +1,113 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "name": "TestClass",
+    "package": "model::domain",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "oneName",
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "profileSourceInformation": {
+              "endColumn": 30,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "sourceInformation": {
+              "endColumn": 41,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "value": "identifier"
+          }
+        ],
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some value"
+          },
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag2"
+            },
+            "value": "some other value"
+          }
+        ],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "anotherName",
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "oneDate",
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some kind of date"
+          }
+        ],
+        "type": "StrictDate"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "anotherDate",
+        "type": "DateTime"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "oneNumber",
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype1"
+          },
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype2"
+          }
+        ],
+        "taggedValues": [],
+        "type": "Integer"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "moreNumbers",
+        "type": "Float"
+      }
+    ]
+  }
+}

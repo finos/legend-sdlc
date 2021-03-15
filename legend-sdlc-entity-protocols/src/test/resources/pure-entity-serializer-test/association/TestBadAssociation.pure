@@ -1,0 +1,5 @@
+Association <<model::domain::TestProfile.stereotype1>> model::domain::TestAssociation
+{
+  employees: model::domain::Person[*];
+  employer: model::domain::Firm[0..1;
+}

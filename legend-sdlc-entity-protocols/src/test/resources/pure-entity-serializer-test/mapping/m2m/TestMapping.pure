@@ -1,0 +1,33 @@
+###Mapping
+Mapping model::mapping::TestMapping
+(
+  include model::mapping::OtherMapping
+
+  model::domain::TargetClass1[tc1]: Pure
+  {
+    ~src model::domain::SourceClass1
+    id: $src.id,
+    type: EnumerationMapping TestEnumerationMappingInt: $src.type,
+    otherType: EnumerationMapping TestEnumerationMappingString: $src.otherType,
+    other[tc2]: $src.other
+  }
+  model::domain::TargetClass2[tc2]: Pure
+  {
+    ~src model::domain::SourceClass2
+    id: $src.id,
+    name: $src.name->toLowerCase()
+  }
+
+  model::domain::TestEnumeration: EnumerationMapping TestEnumerationMappingInt
+  {
+    TYPE1: [100],
+    TYPE2: [200],
+    TYPE3: [300, 400]
+  }
+  model::domain::TestEnumeration: EnumerationMapping TestEnumerationMappingString
+  {
+    TYPE1: ['abc'],
+    TYPE2: ['def', 'ghi'],
+    TYPE3: ['jlk']
+  }
+)

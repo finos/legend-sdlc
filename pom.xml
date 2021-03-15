@@ -34,6 +34,7 @@
         <module>legend-sdlc-entity-serialization</module>
         <module>legend-sdlc-protocol</module>
         <module>legend-sdlc-protocol-pure</module>
+        <module>legend-sdlc-entity-protocols</module>
         <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
@@ -41,6 +42,7 @@
         <module>legend-sdlc-generation-model</module>
         <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-generation-file-maven-plugin</module>
+        <module>legend-sdlc-generation-model-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>test-reports</module>
     </modules>
@@ -483,6 +485,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-entity-protocols</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -568,6 +575,21 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-dsl-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-text</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-diagram</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -776,6 +798,12 @@
                 <groupId>io.dropwizard.metrics</groupId>
                 <artifactId>metrics-healthchecks</artifactId>
                 <version>${dropwizard.metrics.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>4.8.25</version>
             </dependency>
 
             <dependency>

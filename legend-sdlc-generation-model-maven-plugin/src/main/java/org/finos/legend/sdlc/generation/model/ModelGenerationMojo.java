@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.generation.file;
+package org.finos.legend.sdlc.generation.model;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
@@ -20,23 +20,24 @@ import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.utility.LazyIterate;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationTreeNode;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
+import org.finos.legend.sdlc.protocols.pure.v1.PureToEntityConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.legend.sdlc.serialization.EntitySerializer;
+import org.finos.legend.sdlc.serialization.EntitySerializers;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
@@ -46,11 +47,9 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@Mojo(name = "generate-file-generations", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
-public class FileGenerationMojo extends AbstractMojo
+@Mojo(name = "generate-model-generations", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+public class ModelGenerationMojo extends AbstractMojo
 {
-    public static final String PATH_SEPARATOR = "::";
-
     @Parameter(required = true)
     private IncludedElementsSpecification inclusions;
 
@@ -61,11 +60,12 @@ public class FileGenerationMojo extends AbstractMojo
     public void execute() throws MojoExecutionException
     {
         long generateStart = System.nanoTime();
-        if (this.inclusions != null)
+        if (inclusions != null)
         {
             getLog().info("Included elements directories: " + Arrays.toString(this.inclusions.directories));
         }
         getLog().info("Output directory: " + this.outputDirectory);
+
         getLog().info("Start loading included elements");
         ResolvedIncludedGenerationElement resolvedIncludedGenerationElement;
         if (this.inclusions == null)
@@ -84,7 +84,6 @@ public class FileGenerationMojo extends AbstractMojo
                 throw new MojoExecutionException("Error loading entities from model", e);
             }
         }
-
         // Load Model
         long modelStart = System.nanoTime();
         getLog().info("Start loading model");
@@ -106,18 +105,17 @@ public class FileGenerationMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Error loading entities from model", e);
         }
-        getLog().info("Compiling model");
         PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.build();
         PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
         PureModel pureModel = pureModelWithContextData.getPureModel();
         long modelEnd = System.nanoTime();
-        getLog().info(String.format("Finished loading and compiling model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
-        Map<String, GenerationSpecification> generationSpecificationMap = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), GenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
+        getLog().info(String.format("Finished loading model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
+        // Checks/Filters on generation specifications
+        Map<String, GenerationSpecification> generationSpecificationMap = Iterate.groupByUniqueKey(pureModelContextData.getElementsOfType(GenerationSpecification.class), PackageableElement::getPath);
         if (resolvedIncludedGenerationElement != null)
         {
             generationSpecificationMap.keySet().removeIf(path -> resolvedIncludedGenerationElement.notMatches(path, GenerationSpecification.class));
         }
-        // Checks on generation specifications
         if (generationSpecificationMap.isEmpty())
         {
             getLog().info("No generation specification found, nothing to generate");
@@ -127,81 +125,64 @@ public class FileGenerationMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Only one generation specification allowed per project, found: " + generationSpecificationMap.size());
         }
-
         try
         {
             // Start generating
             GenerationSpecification generationSpecification = generationSpecificationMap.values().iterator().next();
-            validateGenerationSpecification(generationSpecification, resolvedIncludedGenerationElement);
-            getLog().info(String.format("Start generating file generations for generation specification '%s', %,d file generations found", generationSpecification.getPath(), generationSpecification.fileGenerations.size()));
-            FileGenerationFactory fileGenerationFactory = FileGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
-            MutableMap<FileGenerationSpecification, List<GenerationOutput>> outputs = fileGenerationFactory.generateFiles();
-            this.serializeOutput(outputs);
+            validModelGenerationSpecification(generationSpecification, resolvedIncludedGenerationElement);
+            ModelGenerationFactory modelGenerationFactory = ModelGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
+            PureModelContextData fullGeneratedModel = modelGenerationFactory.generate();
+            this.serializePureModelContextData(fullGeneratedModel);
             getLog().info(String.format("Done (%.9fs)", (System.nanoTime() - generateStart) / 1_000_000_000.0));
         }
         catch (Exception e)
+
         {
-            throw new MojoExecutionException("Error generating files: " + e.getMessage(), e);
+            throw new MojoExecutionException("Error generating model generation: " + e.getMessage(), e);
         }
     }
 
-    private void validateGenerationSpecification(GenerationSpecification generationSpecification, ResolvedIncludedGenerationElement resolvedIncludedGenerationElement)
+    private void serializePureModelContextData(PureModelContextData pureModelContextData) throws Exception
     {
-        for (PackageableElementPointer fileGenerationPointer : generationSpecification.fileGenerations)
-        {
-            String fullPath = fileGenerationPointer.path;
-            if ((resolvedIncludedGenerationElement != null) && resolvedIncludedGenerationElement.notMatches(fullPath, FileGenerationSpecification.class))
-            {
-                throw new RuntimeException("File Generation '" + fullPath + "' not in current project");
-            }
-        }
+        PureToEntityConverter converter = new PureToEntityConverter();
+        List<Entity> entities = ListIterate.collect(pureModelContextData.getAllElements(), converter::toEntity);
+        this.serializeEntities(entities);
     }
 
-    protected void serializeOutput(MutableMap<FileGenerationSpecification, List<GenerationOutput>> generationGenerationOutputMap) throws IOException
+    private void serializeEntities(List<Entity> entities) throws IOException
     {
         long serializeStart = System.nanoTime();
-        getLog().info("Start serializing file generations");
+        getLog().info(String.format("Serializing %,d entities to %s", entities.size(), this.outputDirectory));
         Path outputDirPath = this.outputDirectory.toPath();
-        Pattern pkgSepPattern = Pattern.compile(PATH_SEPARATOR, Pattern.LITERAL);
+        Path entitiesDir = outputDirPath.resolve("entities");
+        Pattern pkgSepPattern = Pattern.compile("::", Pattern.LITERAL);
         String replacement = Matcher.quoteReplacement(outputDirPath.getFileSystem().getSeparator());
-        for (Map.Entry<FileGenerationSpecification, List<GenerationOutput>> fileOutputPair : generationGenerationOutputMap.entrySet())
+        EntitySerializer entitySerializer = EntitySerializers.getDefaultJsonSerializer();
+        for (Entity entity : entities)
         {
-            FileGenerationSpecification fileGenerationSpecification = fileOutputPair.getKey();
-            List<GenerationOutput> generationOutputs = fileOutputPair.getValue();
-            String generationOutPath = fileGenerationSpecification.generationOutputPath;
-            String rootFolder = (generationOutPath != null && !generationOutPath.isEmpty()) ? generationOutPath : fileGenerationSpecification.getPath().replaceAll("::", "_");
-            getLog().info(String.format("Serializing %,d files for '%s'", generationOutputs.size(), fileGenerationSpecification.getPath()));
-            for (GenerationOutput output : generationOutputs)
+            Path entityFilePath = entitiesDir.resolve(pkgSepPattern.matcher(entity.getPath()).replaceAll(replacement) + "." + entitySerializer.getDefaultFileExtension());
+            Files.createDirectories(entityFilePath.getParent());
+            try (OutputStream stream = Files.newOutputStream(entityFilePath))
             {
-                String fileName = rootFolder + '/' + output.getFileName();
-                String resolver = pkgSepPattern.matcher(fileName).replaceAll(replacement);
-                Path entityFilePath = outputDirPath.resolve(resolver);
-                Files.createDirectories(entityFilePath.getParent());
-                try (OutputStream stream = Files.newOutputStream(entityFilePath))
-                {
-                    stream.write(output.extractFileContent().getBytes(StandardCharsets.UTF_8));
-                }
+                entitySerializer.serialize(entity, stream);
             }
-            getLog().info("Done serializing files for'" + fileGenerationSpecification.getPath() + "'");
         }
-        getLog().info(String.format("Done serializing %,d file generations' output to %s (%.9fs)", generationGenerationOutputMap.size(), this.outputDirectory, (System.nanoTime() - serializeStart) / 1_000_000_000.0));
+        getLog().info(String.format("Done serializing %,d entities to %s (%.9fs)", entities.size(), this.outputDirectory, (System.nanoTime() - serializeStart) / 1_000_000_000.0));
     }
-
 
     public static class IncludedElementsSpecification
     {
         File[] directories;
         List<Entity> includedGenerationEntities;
 
+        public List<Entity> getIncludedGenerationEntities()
+        {
+            return includedGenerationEntities;
+        }
 
         public File[] getDirectories()
         {
             return directories;
-        }
-
-        public List<Entity> getIncludedGenerationEntities()
-        {
-            return includedGenerationEntities;
         }
 
         public void setDirectories(File[] directories)
@@ -215,28 +196,34 @@ public class FileGenerationMojo extends AbstractMojo
         }
     }
 
+
     public static class ResolvedIncludedGenerationElement
     {
-        Map<String, PackageableElement> allIncludedElements;
+        private final Map<String, PackageableElement> allIncludedElements;
 
-        public ResolvedIncludedGenerationElement(Map<String, PackageableElement> allIncludedElements)
+        ResolvedIncludedGenerationElement(Map<String, PackageableElement> allIncludedElements)
         {
             this.allIncludedElements = allIncludedElements;
         }
 
         boolean matches(String fullPath, Class<? extends PackageableElement> elementClass)
         {
-            PackageableElement packageableElement = allIncludedElements.get(fullPath);
-            if (packageableElement == null)
-            {
-                return false;
-            }
-            return packageableElement.getClass().equals(elementClass);
+            return elementClass.isInstance(this.allIncludedElements.get(fullPath));
         }
 
         boolean notMatches(String fullPath, Class<? extends PackageableElement> elementClass)
         {
             return !matches(fullPath, elementClass);
+        }
+
+        boolean matches(String fullPath)
+        {
+            return this.allIncludedElements.get(fullPath) != null;
+        }
+
+        boolean notMatches(String fullPath)
+        {
+            return !matches(fullPath);
         }
 
         public Map<String, PackageableElement> getAllIncludedElements()
@@ -270,4 +257,21 @@ public class FileGenerationMojo extends AbstractMojo
         }
         return new ResolvedIncludedGenerationElement(allIncludedElements);
     }
+
+
+    private void validModelGenerationSpecification(GenerationSpecification specification, ResolvedIncludedGenerationElement resolvedIncludedGenerationElement)
+    {
+        for (GenerationTreeNode nodes : specification.generationNodes)
+        {
+            String fullPath = nodes.generationElement;
+            if (resolvedIncludedGenerationElement != null)
+            {
+                if (resolvedIncludedGenerationElement.notMatches(fullPath))
+                {
+                    throw new RuntimeException("Model generation element '" + fullPath + "' not in current project");
+                }
+            }
+        }
+    }
+
 }
