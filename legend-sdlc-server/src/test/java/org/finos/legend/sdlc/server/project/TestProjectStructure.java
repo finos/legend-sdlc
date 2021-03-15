@@ -14,9 +14,14 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -149,7 +154,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         assertStateValid(PROJECT_ID, null, null);
 
-        TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+        assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
 
 //        System.out.println("==========\nProject Structure version: " + this.projectStructureVersion + "\nProject Structure Extension version: " + this.projectStructureExtensionVersion + "\nProject type: " + projectType + "\n==========\n");
 //        this.fileAccessProvider.getProjectFileAccessContext(PROJECT_ID).getFiles().forEach(f -> System.out.println("==========\n" + f.getPath() + "\n==========\n" + f.getContentAsString() + "\n==========\n"));
@@ -246,7 +251,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureExtensionVersion, projectConfigUpdateRevisionConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getMetamodelDependencies());
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
-        TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+        assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
 
         Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(PROJECT_ID, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, configUpdateRevision.getId()).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
 
@@ -407,7 +412,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getMetamodelDependencies());
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
 
-        TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+        assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
     }
 
     @Test
@@ -557,7 +562,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getMetamodelDependencies());
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
 
-        TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+        assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
     }
 
     @Test
@@ -618,7 +623,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             Assert.assertEquals(Collections.emptyList(), afterConfig.getMetamodelDependencies());
             Assert.assertEquals(Collections.emptyList(), afterConfig.getProjectDependencies());
 
-            TestTools.assertEntitiesEquivalent("convert version " + i + " to " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
+            assertEntitiesEquivalent("convert version " + i + " to " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
         }
     }
 
@@ -679,7 +684,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             Assert.assertEquals(this.projectStructureVersion, afterConfig.getProjectStructureVersion().getVersion());
             Assert.assertEquals(this.projectStructureExtensionVersion, afterConfig.getProjectStructureVersion().getExtensionVersion());
 
-            TestTools.assertEntitiesEquivalent("convert version " + i + " to " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
+            assertEntitiesEquivalent("convert version " + i + " to " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
         }
     }
 
@@ -1125,7 +1130,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getMetamodelDependencies());
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
 
-        TestTools.assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+        assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
         //todo assert non expected files
     }
 
@@ -1474,5 +1479,115 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         assertStateValid(PROJECT_ID, addGenerationsWorkspaceId, null);
         assertMultiformatGenerationStateValid(PROJECT_ID, addGenerationsWorkspaceId, null, type);
+    }
+
+    private void assertEntitiesEquivalent(Iterable<? extends Entity> expectedEntities, Iterable<? extends Entity> actualEntities)
+    {
+        assertEntitiesEquivalent(null, expectedEntities, actualEntities);
+    }
+
+    private void assertEntitiesEquivalent(String message, Iterable<? extends Entity> expectedEntities, Iterable<? extends Entity> actualEntities)
+    {
+        List<Entity> expectedEntitiesList = normalizeEntitiesForEquivalence(expectedEntities);
+        List<Entity> actualEntitiesList = normalizeEntitiesForEquivalence(actualEntities);
+
+        JsonMapper jsonMapper = JsonMapper.builder()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .build();
+        String expectedJson;
+        String actualJson;
+        try
+        {
+            expectedJson = jsonMapper.writeValueAsString(expectedEntitiesList);
+            actualJson = jsonMapper.writeValueAsString(actualEntitiesList);
+        }
+        catch (JsonProcessingException e)
+        {
+            throw new RuntimeException(e);
+        }
+        Assert.assertEquals(message, expectedJson, actualJson);
+    }
+
+    private List<Entity> normalizeEntitiesForEquivalence(Iterable<? extends Entity> entities)
+    {
+        return Iterate.collect(entities, this::normalizeEntityForEquivalence, Lists.mutable.empty()).sortThisBy(Entity::getPath);
+    }
+
+    private Entity normalizeEntityForEquivalence(Entity entity)
+    {
+        Map<String, ?> newContent = normalizeEntityContent(entity.getContent());
+        return (newContent == null) ? entity : Entity.newEntity(entity.getPath(), entity.getClassifierPath(), newContent);
+    }
+
+    private <K> Map<K, ?> normalizeEntityContent(Map<K, ?> map)
+    {
+        Map<K, Object> newMap = Maps.mutable.ofMap(map);
+        boolean changed = false;
+        for (Map.Entry<K, ?> entry : map.entrySet())
+        {
+            K key = entry.getKey();
+            Object value = entry.getValue();
+            if ((value == null) || "sourceInformation".equals(key) || "propertyTypeSourceInformation".equals(key))
+            {
+                newMap.remove(key);
+                changed = true;
+            }
+            else if (value instanceof Map)
+            {
+                Map<?, ?> replacement = normalizeEntityContent((Map<?, ?>) value);
+                if (replacement != null)
+                {
+                    newMap.put(key, replacement);
+                    changed = true;
+                }
+            }
+            else if (value instanceof List)
+            {
+                List<?> list = (List<?>) value;
+                if (list.isEmpty())
+                {
+                    newMap.remove(key);
+                    changed = true;
+                }
+                else
+                {
+                    List<Object> replacement = normalizeEntityContent(list);
+                    if (replacement != null)
+                    {
+                        newMap.put(key, replacement);
+                        changed = true;
+                    }
+                }
+            }
+        }
+        return changed ? newMap : null;
+    }
+
+    private List<Object> normalizeEntityContent(List<?> list)
+    {
+        List<Object> newList = Lists.mutable.ofInitialCapacity(list.size());
+        boolean changed = false;
+        for (Object value : list)
+        {
+            if (value instanceof List)
+            {
+                List<?> newValue = normalizeEntityContent((List<?>) value);
+                changed |= (newValue != null);
+                newList.add((newValue == null) ? value : newValue);
+            }
+            else if (value instanceof Map)
+            {
+                Map<?, ?> newValue = normalizeEntityContent((Map<?, ?>) value);
+                changed |= (newValue != null);
+                newList.add((newValue == null) ? value : newValue);
+            }
+            else
+            {
+                newList.add(value);
+            }
+        }
+        return changed ? newList : null;
     }
 }
