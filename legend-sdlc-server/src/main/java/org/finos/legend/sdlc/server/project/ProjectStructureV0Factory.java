@@ -52,37 +52,13 @@ public class ProjectStructureV0Factory extends ProjectStructureVersionFactory
 
         private ProjectStructureV0(ProjectConfiguration projectConfiguration)
         {
-            super(projectConfiguration);
+            super(projectConfiguration, "/entities");
         }
 
         @Override
         public int getVersion()
         {
             return 0;
-        }
-
-        @Override
-        public String getEntitiesParentDirectory()
-        {
-            return "/";
-        }
-
-        @Override
-        public StringBuilder appendEntitiesParentDirectory(StringBuilder builder)
-        {
-            return builder.append('/');
-        }
-
-        @Override
-        public int getEntitiesParentDirectoryLength()
-        {
-            return 1;
-        }
-
-        @Override
-        public boolean startsWithEntitiesParentDirectory(String filePath)
-        {
-            return (filePath.length() > 0) && (filePath.charAt(0) == '/');
         }
 
         @Override
