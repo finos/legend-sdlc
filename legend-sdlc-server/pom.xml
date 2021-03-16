@@ -130,7 +130,7 @@
                             <goal>start</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipITs}</skip>
+                            <skip>${skipGitLabDockerTests}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -140,7 +140,7 @@
                             <goal>stop</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipITs}</skip>
+                            <skip>${skipGitLabDockerTests}</skip>
                         </configuration>
                     </execution>
                 </executions>

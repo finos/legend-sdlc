@@ -27,10 +27,8 @@ import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration
 import org.gitlab4j.api.GitLabApiException;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class TestGitLabServerEntityApis extends AbstractGitLabServerApiTest
 {
     private static GitLabEntityApiTestResource gitLabEntityApiTestResource;

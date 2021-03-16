@@ -96,6 +96,7 @@
 
         <!-- Integration tests -->
         <skipITs>true</skipITs>
+        <skipGitLabDockerTests>true</skipGitLabDockerTests>
     </properties>
 
     <scm>
@@ -355,6 +356,7 @@
                     </reportsDirectory>
                     <excludes>
                         <exclude>**/IntegrationTestGitLab*.java</exclude>
+                        <exclude>**/TestGitLabServer*.java</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -1108,16 +1110,11 @@
             </properties>
         </profile>
         <profile>
-            <id>skip-integration-tests</id>
-            <properties>
-                <skipITs>true</skipITs>
-            </properties>
-        </profile>
-        <profile>
             <id>test-latest-gitlab</id>
             <properties>
                 <gitlab.version>latest</gitlab.version>
                 <skipITs>false</skipITs>
+                <skipGitLabDockerTests>false</skipGitLabDockerTests>
             </properties>
         </profile>
         <profile>
@@ -1125,6 +1122,7 @@
             <properties>
                 <gitlab.version>nightly</gitlab.version>
                 <skipITs>false</skipITs>
+                <skipGitLabDockerTests>false</skipGitLabDockerTests>
             </properties>
         </profile>
         <profile>
@@ -1132,7 +1130,30 @@
             <properties>
                 <gitlab.version>12.10.14-ee.0</gitlab.version>
                 <skipITs>false</skipITs>
+                <skipGitLabDockerTests>false</skipGitLabDockerTests>
             </properties>
+        </profile>
+        <profile>
+            <id>test-prod-gitlab</id>
+            <properties>
+                <skipITs>false</skipITs>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/TestGitLabServer*.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

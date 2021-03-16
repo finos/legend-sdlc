@@ -22,10 +22,8 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
-@Ignore
 public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
 {
     private static GitLabProjectApiTestResource gitLabProjectApiTestResource;

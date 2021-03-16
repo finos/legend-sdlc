@@ -30,14 +30,17 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * This test suite is run against the actual GitLab server with testing account setup.
+ * This test suite is run against the actual GitLab server with testing account setup. The suite is skipped by default.
+ * If wishing to run these tests, please run maven verify with the test-prod-gitlab maven profile
  */
 public class AbstractGitLabServerApiTest
 {
-    static final String TEST_OWNER_USERNAME = "";
-    static final String TEST_OWNER_PASSWORD = "";
-    static final String TEST_MEMBER_USERNAME = "";
-    static final String TEST_MEMBER_PASSWORD = "";
+    // Note that for the gitlab.com -based tests, the test member and owner are of the same GitLab account
+    // thus have the same credentials, yet used to create separate GitLab API instances for merge request related tests.
+    static final String TEST_OWNER_USERNAME = System.getenv("GITLAB_USERNAME");
+    static final String TEST_OWNER_PASSWORD = System.getenv("GITLAB_PASSWORD");
+    static final String TEST_MEMBER_USERNAME = TEST_OWNER_USERNAME;
+    static final String TEST_MEMBER_PASSWORD = TEST_OWNER_PASSWORD;
     static final String TEST_HOST_SCHEME = "https";
     static final String TEST_HOST_HOST = "gitlab.com";
     static final Integer TEST_HOST_PORT = null;

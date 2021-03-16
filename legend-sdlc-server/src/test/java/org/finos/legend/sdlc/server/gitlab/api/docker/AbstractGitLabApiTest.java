@@ -35,12 +35,12 @@ import java.util.Optional;
  * Only run before the GitLab integration tests during integration-test phase in-between docker start and stop.
  * Skipped during Junit tests.
  *
- * IMPORTANT: Please note that if wishing to run this integration test suite in an environment where the Docker
- * container will be run in a VM, it is required to have local Docker installed, with recommended at least 4 Gi
- * memory allocated. If encountering GitLab not responding issues, please raise the docker-maven-plugin wait time
- * to approximately 450000 ms in legend-sdlc-server/pom.xml.
- * If your machine cannot suffice the resource requirements or fail to pass the test suite, please use maven profile
- * skip-integration-tests to skip them during the build.
+ * IMPORTANT: Please note that this docker-based test suite is skipped by default. Please run maven verify with
+ * one of maven profiles test-#version-gitlab to unskip these tests, where #version is the GitLab Docker image version used.
+ * If wishing to run this integration test suite in an environment where the Docker container will be run in a VM,
+ * it is required to have local Docker installed, with recommended at least 4 Gi memory allocated.
+ * If encountering GitLab not responding issues, please raise the docker-maven-plugin wait time to
+ * approximately 450000 ms in legend-sdlc-server/pom.xml.
  */
 public class AbstractGitLabApiTest
 {
