@@ -387,5 +387,24 @@
                 <gitlab.version>12.10.14-ee.0</gitlab.version>
             </properties>
         </profile>
+        <profile>
+            <id>test-prod-gitlab</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/TestGitLabServer*.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
     </profiles>
 </project>
