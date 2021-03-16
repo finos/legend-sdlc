@@ -65,7 +65,7 @@ jobs:
         run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
       - name: Build + Test
         if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
-        run: mvn install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-prod-gitlab
+        run: mvn install verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-prod-gitlab
       - name: Build + Test + Sonar + Maven Deploy
         if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
-        run: mvn javadoc:javadoc deploy -Psonar -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+        run: mvn javadoc:javadoc deploy verify -Psonar -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-prod-gitlab
