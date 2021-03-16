@@ -970,7 +970,7 @@ public abstract class ProjectStructure
         public String packagePathToFilePath(String packagePath)
         {
             StringBuilder builder = new StringBuilder(this.directory.length() + packagePath.length());
-            builder.append(this.directory).append('/');
+            builder.append(this.directory);
             appendPackageablePathAsFilePath(builder, packagePath);
             return builder.toString();
         }
