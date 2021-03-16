@@ -951,7 +951,7 @@ public abstract class ProjectStructure
          */
         public String filePathToEntityPath(String filePath)
         {
-            int start = this.directory.length() + 2;
+            int start = this.directory.length() + 1;
             int end = filePath.length() - (this.serializer.getDefaultFileExtension().length() + 1);
             int length = end - start;
             StringBuilder builder = new StringBuilder(length + (length / 4));
