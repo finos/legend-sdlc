@@ -22,7 +22,13 @@ env:
   GITLAB_USERNAME: ${{ secrets.GITLAB_USERNAME }}
   GITLAB_PASSWORD: ${{ secrets.GITLAB_PASSWORD }}
 
-on: []
+on:
+  workflow_dispatch:
+    inputs:
+      logLevel:
+        description: 'Log level'
+        required: true
+        default: 'warning'
 
 jobs:
   build:
