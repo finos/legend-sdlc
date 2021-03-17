@@ -41,6 +41,7 @@
         <module>legend-sdlc-generation-model</module>
         <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-generation-file-maven-plugin</module>
+        <module>legend-sdlc-generation-model-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>test-reports</module>
     </modules>
@@ -441,6 +442,13 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-protocol</artifactId>
+                <version>${project.version}</version>
+                <type>test-jar</type>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-protocol-pure</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -484,6 +492,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-model-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
