@@ -1104,7 +1104,7 @@
                 </plugins>
             </build>
             <properties>
-                <skipITs>false</skipITs>
+                <skipITs>true</skipITs>
             </properties>
         </profile>
         <profile>
