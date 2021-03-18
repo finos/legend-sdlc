@@ -25,7 +25,6 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
 {
     private final Map<Class<? extends PackageableElement>, String> classToClassifier = ProtocolToClassifierPathLoader.getProtocolClassToClassifierMap();
 
-
     public PureToEntityConverter()
     {
         super(ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports());
@@ -34,7 +33,7 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
     @Override
     protected String getClassifierForClass(Class<?> cls)
     {
-        return classToClassifier.get(cls);
+        return this.classToClassifier.get(cls);
     }
 
     @Override
@@ -42,6 +41,5 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
     {
         return element.getPath();
     }
-
 }
 

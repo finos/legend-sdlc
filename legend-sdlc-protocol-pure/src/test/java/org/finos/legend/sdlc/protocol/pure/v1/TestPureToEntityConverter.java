@@ -49,6 +49,5 @@ public class TestPureToEntityConverter
         Assert.assertTrue(entity.isPresent());
         TestProtocolToEntityConverter.assertEntityEqualsClass(cls, entity.get());
     }
-
 }
 
