@@ -773,7 +773,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     commitStream = (commitStream == null) ? pathCommitStream : Stream.concat(commitStream, pathCommitStream);
                 }
             }
-            if (streamCount > 1)
+            if ((commitStream != null) && (streamCount > 1))
             {
                 MutableSet<String> ids = Sets.mutable.empty();
                 commitStream = commitStream.filter(commit -> ids.add(commit.getId()));
