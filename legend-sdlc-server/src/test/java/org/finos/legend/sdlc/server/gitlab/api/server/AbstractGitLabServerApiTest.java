@@ -31,14 +31,14 @@ import java.util.List;
 
 /**
  * This test suite is run against the actual GitLab server with testing account setup. The suite is skipped by default.
- * If wishing to run these tests, please run maven verify with the test-prod-gitlab maven profile
+ * If wishing to run these tests, please run maven verify with the test-gitlab-com maven profile
  */
 public class AbstractGitLabServerApiTest
 {
     // Note that for the gitlab.com -based tests, the test member and owner are of the same GitLab account
     // thus have the same credentials, yet used to create separate GitLab API instances for merge request related tests.
-    static final String TEST_OWNER_USERNAME = System.getenv("GITLAB_USERNAME");
-    static final String TEST_OWNER_PASSWORD = System.getenv("GITLAB_PASSWORD");
+    static final String TEST_OWNER_USERNAME = "CptTeddy"; //System.getenv("GITLAB_USERNAME");
+    static final String TEST_OWNER_PASSWORD = "lfx6666ddaa"; //System.getenv("GITLAB_PASSWORD");
     static final String TEST_MEMBER_USERNAME = TEST_OWNER_USERNAME;
     static final String TEST_MEMBER_PASSWORD = TEST_OWNER_PASSWORD;
     static final String TEST_HOST_SCHEME = "https";
@@ -95,7 +95,7 @@ public class AbstractGitLabServerApiTest
      */
     private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
-        return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT, LOGGER);
+        return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
     }
 
     /**
@@ -106,9 +106,19 @@ public class AbstractGitLabServerApiTest
         List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.empty(), Lists.mutable.empty());
         for (Project project : projectsToBeCleaned)
         {
-            LOGGER.info("Deleting test project id: {}, name: {}", project.getProjectId(), project.getName());
-            gitLabProjectApi.deleteProject(project.getProjectId());
-            LOGGER.info("Deleted test project id: {}, name: {}", project.getProjectId(), project.getName());
+            String projectId = project.getProjectId();
+            String projectName = project.getName();
+
+            LOGGER.info("Deleting test project id: {}, name: {}", projectId, projectName);
+            try
+            {
+                gitLabProjectApi.deleteProject(projectId);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName);
+            }
+            LOGGER.info("Deleted test project id: {}, name: {}", projectId, projectName);
         }
     }
 }

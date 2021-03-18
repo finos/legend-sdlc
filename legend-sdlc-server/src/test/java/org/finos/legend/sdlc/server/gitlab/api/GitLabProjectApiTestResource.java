@@ -90,8 +90,6 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
 
-        System.out.println("gitlabProjectApi: " + gitLabProjectApi.toString());
-
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
         assertNotNull(createdProject);

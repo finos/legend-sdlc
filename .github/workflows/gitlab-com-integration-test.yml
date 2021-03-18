@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: legend-sdlc-prod-gitlab-tests
+name: gitlab-com-integration-test
 
 env:
   CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
@@ -65,7 +65,4 @@ jobs:
         run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
       - name: Build + Test
         if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
-        run: mvn install verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-prod-gitlab
-      - name: Build + Test + Sonar + Maven Deploy
-        if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
-        run: mvn javadoc:javadoc deploy verify -Psonar -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-prod-gitlab
+        run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-com

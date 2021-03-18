@@ -1134,7 +1134,7 @@
             </properties>
         </profile>
         <profile>
-            <id>test-prod-gitlab</id>
+            <id>test-gitlab-com</id>
             <properties>
                 <skipITs>false</skipITs>
             </properties>

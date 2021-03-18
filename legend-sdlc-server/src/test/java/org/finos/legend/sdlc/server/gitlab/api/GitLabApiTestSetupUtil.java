@@ -22,16 +22,18 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Version;
 import org.junit.Assert;
 import org.slf4j.Logger;
-
-import javax.servlet.http.HttpServletRequest;
+import org.slf4j.LoggerFactory;
 
 public class GitLabApiTestSetupUtil
 {
+    static final Logger LOGGER = LoggerFactory.getLogger(GitLabApiTestSetupUtil.class);
+
     /**
      * Authenticates to GitLab and creates a test GitLabUserContext.
      *
@@ -42,10 +44,10 @@ public class GitLabApiTestSetupUtil
      * @param hostHost the test host.
      * @param hostPort the port (if necessary) of the test host.
      */
-    public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort, Logger LOGGER) throws LegendSDLCServerException
+    public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort) throws LegendSDLCServerException
     {
         GitLabMode gitLabMode = GitLabMode.PROD;
-        HttpServletRequest httpServletRequest = new TestHttpServletRequest();
+        TestHttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
         TestGitLabSession session = new TestGitLabSession(username);
         GitLabApi oauthGitLabApi;
@@ -60,11 +62,7 @@ public class GitLabApiTestSetupUtil
         catch (GitLabApiException e)
         {
             StringBuilder builder = new StringBuilder("Error instantiating GitLabApi via OAuth2; response status: ").append(e.getHttpStatus());
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append("; error message: ").append(eMessage);
-            }
+            StringTools.appendThrowableMessageIfPresent(builder, e, "; error message: ");
             if (e.hasValidationErrors())
             {
                 builder.append("; validation error(s): ").append(e.getValidationErrors());
@@ -83,6 +81,10 @@ public class GitLabApiTestSetupUtil
         session.setAccessToken(oauthToken);
         session.setModeInfo(gitLabModeInfo);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
+
+        // Set canary to true in httpRequest cookie to test against next.gitlab.com
+        httpServletRequest.setGitLabCanaryCookie();
+
         return new GitLabUserContext(httpServletRequest, null);
     }
 }

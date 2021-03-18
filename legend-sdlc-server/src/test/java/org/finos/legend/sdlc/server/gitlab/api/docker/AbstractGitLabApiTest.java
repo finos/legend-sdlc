@@ -157,7 +157,7 @@ public class AbstractGitLabApiTest
      */
     private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
     {
-        return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT, LOGGER);
+        return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
     }
 
     /**

@@ -32,15 +32,13 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.security.Principal;
-import java.util.Collection;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.Map;
+import java.util.*;
 
 public class TestHttpServletRequest implements HttpServletRequest
 {
     private final Map<String, Object> attributes = new HashMap<>();
+
+    private List<Cookie> cookies = new ArrayList<>();
 
     @Override
     public String getAuthType()
@@ -51,7 +49,8 @@ public class TestHttpServletRequest implements HttpServletRequest
     @Override
     public Cookie[] getCookies()
     {
-        return new Cookie[0];
+        Cookie[] cookies = new Cookie[this.cookies.size()];
+        return this.cookies.toArray(cookies);
     }
 
     @Override
@@ -454,5 +453,10 @@ public class TestHttpServletRequest implements HttpServletRequest
     public DispatcherType getDispatcherType()
     {
         return null;
+    }
+
+    public void setGitLabCanaryCookie()
+    {
+        cookies.add(new Cookie("gitlab_canary", "true"));
     }
 }

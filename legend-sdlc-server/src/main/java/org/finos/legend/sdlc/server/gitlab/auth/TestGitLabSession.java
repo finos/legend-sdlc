@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.Set;
 
 public class TestGitLabSession implements GitLabSession
@@ -54,10 +54,7 @@ public class TestGitLabSession implements GitLabSession
     @Override
     public Set<GitLabMode> getValidModes()
     {
-        Set<GitLabMode> modes = new HashSet<GitLabMode>();
-        modes.add(GitLabMode.PROD);
-
-        return Collections.unmodifiableSet(modes);
+        return Collections.unmodifiableSet(EnumSet.of(GitLabMode.PROD));
     }
 
     @Override
