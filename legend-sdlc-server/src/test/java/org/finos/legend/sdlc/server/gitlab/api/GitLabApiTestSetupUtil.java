@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 public class GitLabApiTestSetupUtil
 {
-    static final Logger LOGGER = LoggerFactory.getLogger(GitLabApiTestSetupUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabApiTestSetupUtil.class);
 
     /**
      * Authenticates to GitLab and creates a test GitLabUserContext.

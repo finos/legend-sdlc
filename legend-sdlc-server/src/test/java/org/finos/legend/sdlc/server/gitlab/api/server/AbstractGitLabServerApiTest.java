@@ -37,8 +37,8 @@ public class AbstractGitLabServerApiTest
 {
     // Note that for the gitlab.com -based tests, the test member and owner are of the same GitLab account
     // thus have the same credentials, yet used to create separate GitLab API instances for merge request related tests.
-    static final String TEST_OWNER_USERNAME = "CptTeddy"; //System.getenv("GITLAB_USERNAME");
-    static final String TEST_OWNER_PASSWORD = "lfx6666ddaa"; //System.getenv("GITLAB_PASSWORD");
+    static final String TEST_OWNER_USERNAME = System.getenv("GITLAB_INTEGRATION_TEST_USERNAME");
+    static final String TEST_OWNER_PASSWORD = System.getenv("GITLAB_INTEGRATION_TEST_PASSWORD");
     static final String TEST_MEMBER_USERNAME = TEST_OWNER_USERNAME;
     static final String TEST_MEMBER_PASSWORD = TEST_OWNER_PASSWORD;
     static final String TEST_HOST_SCHEME = "https";
