@@ -130,7 +130,7 @@
                             <goal>start</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipITs}</skip>
+                            <skip>${skipGitLabDockerTests}</skip>
                         </configuration>
                     </execution>
                     <execution>
@@ -140,7 +140,7 @@
                             <goal>stop</goal>
                         </goals>
                         <configuration>
-                            <skip>${skipITs}</skip>
+                            <skip>${skipGitLabDockerTests}</skip>
                         </configuration>
                     </execution>
                 </executions>
@@ -386,6 +386,25 @@
             <properties>
                 <gitlab.version>12.10.14-ee.0</gitlab.version>
             </properties>
+        </profile>
+        <profile>
+            <id>test-gitlab-com</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/TestGitLabServer*.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
     </profiles>
 </project>

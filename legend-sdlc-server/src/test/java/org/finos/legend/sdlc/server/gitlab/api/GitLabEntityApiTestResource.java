@@ -22,45 +22,50 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.MergeRequest;
 import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
+/**
+ * Substantial test resource class for Entity API tests shared by the docker-based and server-based GitLab tests.
+ */
+public class GitLabEntityApiTestResource
 {
-    private static GitLabProjectApi gitLabProjectApi;
-    private static GitLabWorkspaceApi gitLabWorkspaceApi;
-    private static GitLabRevisionApi gitLabRevisionApi;
-    private static GitLabEntityApi gitLabEntityApi;
-    private static GitLabReviewApi gitLabCommitterReviewApi;
-    private static GitLabReviewApi gitLabApproverReviewApi;
+    private final GitLabProjectApi gitLabProjectApi;
+    private final GitLabWorkspaceApi gitLabWorkspaceApi;
+    private final GitLabEntityApi gitLabEntityApi;
+    private final GitLabReviewApi gitLabCommitterReviewApi;
+    private final GitLabReviewApi gitLabApproverReviewApi;
 
-    private static GitLabUserContext gitLabMemberUserContext;
+    private final GitLabUserContext gitLabMemberUserContext;
 
-    @BeforeClass
-    public static void setup() throws GitLabApiException
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabEntityApiTestResource.class);
+
+    public GitLabEntityApiTestResource(GitLabProjectApi gitLabProjectApi, GitLabWorkspaceApi gitLabWorkspaceApi, GitLabEntityApi gitLabEntityApi, GitLabReviewApi gitLabCommitterReviewApi, GitLabReviewApi gitLabApproverReviewApi, GitLabUserContext gitLabMemberUserContext)
     {
-        setUpEntityApi();
+        this.gitLabProjectApi = gitLabProjectApi;
+        this.gitLabWorkspaceApi = gitLabWorkspaceApi;
+        this.gitLabEntityApi = gitLabEntityApi;
+        this.gitLabCommitterReviewApi = gitLabCommitterReviewApi;
+        this.gitLabApproverReviewApi = gitLabApproverReviewApi;
+        this.gitLabMemberUserContext = gitLabMemberUserContext;
     }
 
-    @Test
-    public void testEntitiesInNormalWorkflow() throws GitLabApiException
+    public void runEntitiesInNormalWorkflowTest() throws GitLabApiException
     {
         String projectName = "CommitFlowTestProject";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PROTOTYPE;
+        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "entitytestproj";
         List<String> tags = Lists.mutable.with("doe", "moffitt");
@@ -135,21 +140,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
         Assert.assertEquals(projectEntity.getContent(), entityContentMap);
     }
 
-    /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabEntityApi.
-     */
-    private static void setUpEntityApi()
+    public GitLabProjectApi getGitLabProjectApi()
     {
-        gitLabMemberUserContext = prepareGitLabMemberUserContext();
-        GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
-        ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
-
-        gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
-        gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
-        gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
+        return gitLabProjectApi;
     }
 }
