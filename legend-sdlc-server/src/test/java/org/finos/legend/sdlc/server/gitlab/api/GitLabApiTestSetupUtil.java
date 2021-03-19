@@ -82,9 +82,6 @@ public class GitLabApiTestSetupUtil
         session.setModeInfo(gitLabModeInfo);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 
-        // Set canary to true in httpRequest cookie to test against next.gitlab.com
-        httpServletRequest.setGitLabCanaryCookie();
-
         return new GitLabUserContext(httpServletRequest, null);
     }
 }
