@@ -1,29 +1,17 @@
-.DS_Store
+# OS
+.DS_STORE
+*.swp
+*~
+[Dd]esktop.ini
+Thumbs.db
 
-# Docusaurus generated folders
-website/translated_docs/
-website/build/
-website/i18n/
-
-# Yarn build
-website/node_modules/
-
-# Generated docs
-docs/contributing.md
-
-# We use YARN
-website/package-lock.json
-
-# Project and build files
+# IDE
 .idea/**
 **/*.iml
+
+# Build
 **/target
 **/lib
 **/surefire-reports-aggregate
 **/dependency-reduced-pom.xml
-
-# VS Code
-.vscode
-.classpath
-.settings
-.project
+/logs
