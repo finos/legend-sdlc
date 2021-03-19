@@ -192,11 +192,36 @@ public class FileGenerationMojo extends AbstractMojo
     {
         File[] directories;
         List<Entity> includedGenerationEntities;
+
+        public File[] getDirectories()
+        {
+            return directories;
+        }
+
+        public List<Entity> getIncludedGenerationEntities()
+        {
+            return includedGenerationEntities;
+        }
+
+        public void setDirectories(File[] directories)
+        {
+            this.directories = directories;
+        }
+
+        public void setIncludedGenerationEntities(List<Entity> includedGenerationEntities)
+        {
+            this.includedGenerationEntities = includedGenerationEntities;
+        }
     }
 
     public static class ResolvedIncludedGenerationElement
     {
         Map<String, PackageableElement> allIncludedElements;
+
+        public Map<String, PackageableElement> getAllIncludedElements()
+        {
+            return allIncludedElements;
+        }
 
         public ResolvedIncludedGenerationElement(Map<String, PackageableElement> allIncludedElements)
         {
