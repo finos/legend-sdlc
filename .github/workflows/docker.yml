@@ -1,0 +1,32 @@
+name: Docker
+
+on:
+  schedule:
+    - cron: '0 0 * * 2' # every Tuesday on default/base branch
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - "**"
+
+jobs:
+  release:
+    name: Run Image Checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      - name: Build simplified Docker image for checks
+        # NOTE: we do this to make this action run faster by not actually building out the full JAR
+        # Also, if this gets more complicated, consider having this as a bash script.
+        run: mkdir -p ./legend-sdlc-server/target && touch ./legend-sdlc-server/target/legend-sdlc-server-dummy-shaded.jar && docker build --quiet --tag local/legend-sdlc-server:${{ github.sha }} ./legend-sdlc-server
+      - name: Scan image for security issues
+        uses: Azure/container-scan@v0
+        env:
+          # Skip `won't fix` CVEs
+          # See https://github.com/Azure/container-scan/issues/61
+          TRIVY_IGNORE_UNFIXED: true
+        with:
+          image-name: local/legend-sdlc-server:${{ github.sha }}
+          severity-threshold: CRITICAL
