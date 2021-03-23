@@ -17,7 +17,7 @@ applicationName: Legend SDLC
 server:
   applicationConnectors:
     - type: http
-      port: 7075
+      port: 7070
       maxRequestHeaderSize: 128KiB
   adminConnectors:
     - type: http
