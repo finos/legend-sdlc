@@ -44,6 +44,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.Date;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
@@ -447,12 +448,21 @@ abstract class BaseGitLabApi
 
     protected LegendSDLCServerException buildException(Exception e, Supplier<String> message)
     {
-        return buildException(e, null, null, ex -> message.get());
+        return buildException(e, null, null, (message == null) ? null : ex -> message.get());
     }
 
     protected LegendSDLCServerException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
     {
-        return buildException(e, (forbiddenMessage == null) ? null : ex -> forbiddenMessage.get(), (notFoundMessage == null) ? null : ex -> notFoundMessage.get(), ex -> defaultMessage.get());
+        return buildException(e,
+                (forbiddenMessage == null) ?
+                        null :
+                        ex -> Optional.ofNullable(forbiddenMessage.get()).map(m -> StringTools.appendThrowableMessageIfPresent(m, ex)).orElse(null),
+                (notFoundMessage == null) ?
+                        null :
+                        ex -> notFoundMessage.get(),
+                (defaultMessage == null) ?
+                        null :
+                        ex -> Optional.ofNullable(defaultMessage.get()).map(m -> StringTools.appendThrowableMessageIfPresent(m, ex)).orElse(null));
     }
 
     protected LegendSDLCServerException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
@@ -498,15 +508,7 @@ abstract class BaseGitLabApi
                         }
                     }
                 },
-                (defaultMessage == null) ? null : ex ->
-                {
-                    String message = defaultMessage.apply(ex);
-                    if (message == null)
-                    {
-                        return null;
-                    }
-                    return new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent(message, ex), ex);
-                }
+                (defaultMessage == null) ? null : ex -> Optional.ofNullable(defaultMessage.apply(ex)).map(m -> new LegendSDLCServerException(m, ex)).orElse(null)
         );
     }
 
