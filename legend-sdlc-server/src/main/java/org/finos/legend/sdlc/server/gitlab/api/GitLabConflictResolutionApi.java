@@ -283,6 +283,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         Branch newBackupBranch;
         try
         {
+            Thread.sleep(1000); // Wait to allow nodes to communicate that backup branch is already deleted
             newBackupBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
@@ -320,6 +321,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         Branch newWorkspaceBranch;
         try
         {
+            Thread.sleep(1000); // Wait to allow nodes to communicate that original branch is already deleted.
             newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION), 30, 1_000);
@@ -340,6 +342,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         boolean conflictResolutionWorkspaceDeleted;
         try
         {
+            // No need to waste wait time here since conflict resolution branch was long created during update
             conflictResolutionWorkspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION), 20, 1_000);
         }
@@ -357,6 +360,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         // Delete backup branch
         try
         {
+            Thread.sleep(500); // Wait extra 500 ms to allow nodes to communicate that backup branch was recreated
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP), 20, 1_000);
             if (!deleted)
