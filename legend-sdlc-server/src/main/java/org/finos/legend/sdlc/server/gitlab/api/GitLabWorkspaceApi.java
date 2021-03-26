@@ -26,10 +26,12 @@ import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.Constants.StateEvent;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.RepositoryApi;
@@ -795,22 +797,18 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             // Check rebase status
             // This only throws when we have 403, so we need to keep polling till we know the result
             // See https://docs.gitlab.com/ee/api/merge_requests.html#rebase-a-merge-request
-            MergeRequest mergeRequestWithRebaseStatus = withRetries(() -> mergeRequestApi.getRebaseStatus(gitLabProjectId.getGitLabId(), mergeRequest.getIid()));
-            while (mergeRequestWithRebaseStatus.getRebaseInProgress())
+            CallUntil<MergeRequest, GitLabApiException> rebaseStatusCallUntil = CallUntil.callUntil(
+                    () -> withRetries(() -> mergeRequestApi.getRebaseStatus(gitLabProjectId.getGitLabId(), mergeRequest.getIid())),
+                    mr -> !mr.getRebaseInProgress(),
+                    600,
+                    1000L);
+            if (!rebaseStatusCallUntil.succeeded())
             {
-                try
-                {
-                    Thread.sleep(1000);
-                    mergeRequestWithRebaseStatus = withRetries(() -> mergeRequestApi.getRebaseStatus(gitLabProjectId.getGitLabId(), mergeRequest.getIid()));
-                }
-                catch (InterruptedException e)
-                {
-                    LOGGER.warn("Interrupted while waiting", e);
-                    Thread.currentThread().interrupt();
-                }
+                LOGGER.warn("Timeout waiting for merge request " + mergeRequest.getIid() + " in project " + projectId + " to finish rebasing");
+                return false;
             }
             // Check if there is merge conflict
-            if (mergeRequestWithRebaseStatus.getMergeError() != null)
+            if (rebaseStatusCallUntil.getResult().getMergeError() != null)
             {
                 return false;
             }
