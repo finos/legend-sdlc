@@ -283,6 +283,15 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         Branch newBackupBranch;
         try
         {
+            Thread.sleep(1000); // Wait to allow nodes to synchronize that backup branch is already deleted
+        }
+        catch (InterruptedException e)
+        {
+            LOGGER.warn("Interrupted while waiting for nodes to synchronize that backup branch was deleted.", e);
+            Thread.currentThread().interrupt();
+        }
+        try
+        {
             newBackupBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
@@ -320,6 +329,15 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         Branch newWorkspaceBranch;
         try
         {
+            Thread.sleep(1000); // Wait to allow nodes to synchronize that original branch is already deleted.
+        }
+        catch (InterruptedException e)
+        {
+            LOGGER.warn("Interrupted while waiting for nodes to synchronize that original branch was deleted.", e);
+            Thread.currentThread().interrupt();
+        }
+        try
+        {
             newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION), 30, 1_000);
@@ -340,6 +358,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         boolean conflictResolutionWorkspaceDeleted;
         try
         {
+            // No need to waste wait time here since conflict resolution branch was long created during update
             conflictResolutionWorkspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
                     getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION), 20, 1_000);
         }
@@ -355,6 +374,15 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
             throw new LegendSDLCServerException("Failed to delete workspace with conflict resolution " + workspaceId + " in project " + projectId);
         }
         // Delete backup branch
+        try
+        {
+            Thread.sleep(500); // Wait extra 500 ms to allow nodes to synchronize that backup branch was recreated
+        }
+        catch (InterruptedException e)
+        {
+            LOGGER.warn("Interrupted while waiting for nodes to synchronize that backup branch was recreated.", e);
+            Thread.currentThread().interrupt();
+        }
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
