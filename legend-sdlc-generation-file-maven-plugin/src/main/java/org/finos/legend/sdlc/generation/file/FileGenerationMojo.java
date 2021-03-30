@@ -27,11 +27,11 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
+import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 
@@ -49,6 +49,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @Mojo(name = "generate-file-generations", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class FileGenerationMojo extends AbstractMojo
@@ -111,7 +112,7 @@ public class FileGenerationMojo extends AbstractMojo
         long modelEnd = System.nanoTime();
         getLog().info(String.format("Finished loading and compiling model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
         Map<String, GenerationSpecification> generationSpecificationMap = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), GenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
-        ResolvedGenerationSpecificationFilter resolvedInclusions = filterGenerationSpecsByIncludes(generationSpecificationMap);
+        filterGenerationSpecsByIncludes(generationSpecificationMap);
         filterGenerationSpecsByExcludes(generationSpecificationMap);
         if (generationSpecificationMap.isEmpty())
         {
@@ -127,7 +128,6 @@ public class FileGenerationMojo extends AbstractMojo
         {
             // Start generating
             GenerationSpecification generationSpecification = generationSpecificationMap.values().iterator().next();
-            validateGenerationSpecification(generationSpecification, resolvedInclusions);
             getLog().info(String.format("Start generating file generations for generation specification '%s', %,d file generations found", generationSpecification.getPath(), generationSpecification.fileGenerations.size()));
             FileGenerationFactory fileGenerationFactory = FileGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
             MutableMap<FileGenerationSpecification, List<GenerationOutput>> outputs = fileGenerationFactory.generateFiles();
@@ -137,20 +137,6 @@ public class FileGenerationMojo extends AbstractMojo
         catch (Exception e)
         {
             throw new MojoExecutionException("Error generating files: " + e.getMessage(), e);
-        }
-    }
-
-    private void validateGenerationSpecification(GenerationSpecification generationSpecification, ResolvedGenerationSpecificationFilter resolvedInclusions)
-    {
-        if ((resolvedInclusions != null) && (resolvedInclusions.fileGenerationPaths != null))
-        {
-            for (PackageableElementPointer fileGenerationPointer : generationSpecification.fileGenerations)
-            {
-                if (!resolvedInclusions.fileGenerationPaths.contains(fileGenerationPointer.path))
-                {
-                    throw new RuntimeException("File Generation '" + fileGenerationPointer.path + "' not in current project");
-                }
-            }
         }
     }
 
@@ -184,28 +170,25 @@ public class FileGenerationMojo extends AbstractMojo
         getLog().info(String.format("Done serializing %,d file generations' output to %s (%.9fs)", generationGenerationOutputMap.size(), this.outputDirectory, (System.nanoTime() - serializeStart) / 1_000_000_000.0));
     }
 
-    private ResolvedGenerationSpecificationFilter filterGenerationSpecsByIncludes(Map<String, GenerationSpecification> generationSpecsByPath) throws MojoExecutionException
+    private void filterGenerationSpecsByIncludes(Map<String, GenerationSpecification> generationSpecsByPath) throws MojoExecutionException
     {
-        if (this.inclusions == null)
+        if (this.inclusions != null)
         {
-            return null;
+            ResolvedGenerationSpecificationFilter filter;
+            try
+            {
+                filter = resolveGenerationSpecFilter(this.inclusions);
+            }
+            catch (Exception e)
+            {
+                throw new MojoExecutionException("Error resolving included GenerationSpecifications", e);
+            }
+            generationSpecsByPath.keySet().removeIf(filter.negate());
+            if ((filter.generationSpecPaths != null) && Iterate.anySatisfy(filter.generationSpecPaths, p -> !generationSpecsByPath.containsKey(p)))
+            {
+                throw new MojoExecutionException(LazyIterate.reject(filter.generationSpecPaths, generationSpecsByPath::containsKey).makeString("Could not find included GenerationSpecifications: ", ", ", ""));
+            }
         }
-
-        ResolvedGenerationSpecificationFilter filter;
-        try
-        {
-            filter = resolveGenerationSpecFilter(this.inclusions);
-        }
-        catch (Exception e)
-        {
-            throw new MojoExecutionException("Error resolving included GenerationSpecifications", e);
-        }
-        generationSpecsByPath.keySet().removeIf(filter.negate());
-        if ((filter.generationSpecPaths != null) && Iterate.anySatisfy(filter.generationSpecPaths, p -> !generationSpecsByPath.containsKey(p)))
-        {
-            throw new MojoExecutionException(LazyIterate.reject(filter.generationSpecPaths, generationSpecsByPath::containsKey).makeString("Could not find included GenerationSpecifications: ", ", ", ""));
-        }
-        return filter;
     }
 
     private void filterGenerationSpecsByExcludes(Map<String, GenerationSpecification> generationSpecsByPath) throws MojoExecutionException
@@ -228,25 +211,14 @@ public class FileGenerationMojo extends AbstractMojo
     private static ResolvedGenerationSpecificationFilter resolveGenerationSpecFilter(GenerationSpecificationFilter generationSpec) throws Exception
     {
         Set<String> generationSpecPaths;
-        Set<String> fileGenerationPaths;
         if (generationSpec.directories != null)
         {
-            generationSpecPaths = Sets.mutable.empty();
-            fileGenerationPaths = Sets.mutable.empty();
             try (EntityLoader directoriesLoader = EntityLoader.newEntityLoader(generationSpec.directories))
             {
-                directoriesLoader.getAllEntities()
-                        .forEach(e ->
-                        {
-                            if (GENERATION_SPECIFICATION_CLASSIFIER_PATH.equals(e.getClassifierPath()))
-                            {
-                                generationSpecPaths.add(e.getPath());
-                            }
-                            else if (FILE_GENERATION_CLASSIFIER_PATH.equals(e.getClassifierPath()))
-                            {
-                                fileGenerationPaths.add(e.getPath());
-                            }
-                        });
+                generationSpecPaths = directoriesLoader.getAllEntities()
+                        .filter(e -> GENERATION_SPECIFICATION_CLASSIFIER_PATH.equals(e.getClassifierPath()))
+                        .map(Entity::getPath)
+                        .collect(Collectors.toCollection(Sets.mutable::empty));
             }
             if (generationSpec.paths != null)
             {
@@ -256,10 +228,9 @@ public class FileGenerationMojo extends AbstractMojo
         else
         {
             generationSpecPaths = generationSpec.paths;
-            fileGenerationPaths = null;
         }
 
-        return new ResolvedGenerationSpecificationFilter(generationSpecPaths, fileGenerationPaths, generationSpec.packages);
+        return new ResolvedGenerationSpecificationFilter(generationSpecPaths, generationSpec.packages);
     }
 
     public static class GenerationSpecificationFilter
@@ -272,13 +243,11 @@ public class FileGenerationMojo extends AbstractMojo
     private static class ResolvedGenerationSpecificationFilter implements Predicate<String>
     {
         private final Set<String> generationSpecPaths;
-        private final Set<String> fileGenerationPaths;
         private final ListIterable<String> packages;
 
-        private ResolvedGenerationSpecificationFilter(Set<String> generationSpecPaths, Set<String> fileGenerationPaths, Set<String> packages)
+        private ResolvedGenerationSpecificationFilter(Set<String> generationSpecPaths, Set<String> packages)
         {
             this.generationSpecPaths = generationSpecPaths;
-            this.fileGenerationPaths = fileGenerationPaths;
             if (packages == null)
             {
                 this.packages = null;

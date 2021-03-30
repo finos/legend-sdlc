@@ -22,7 +22,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -61,10 +61,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class TestFileGenerationMojo
 {
-    static final String BLANK = "";
-    public static final Pattern IGNORE_WHITE_SPACES = Pattern.compile("\\s+");
+    private static final Pattern LINE_BREAK = Pattern.compile("\\R");
     private static final String GENERATION_SPECIFICATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationSpecification";
-    private static final String FILE_GENERATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationConfiguration";
 
     private static final String GOAL = "generate-file-generations";
 
@@ -183,7 +181,7 @@ public class TestFileGenerationMojo
 
     private static void verifyDirsAreEqual(Path actualPath, Path expectedPath) throws IOException
     {
-        List<FileDiff> fileDiffs = new FastList<>();
+        List<FileDiff> fileDiffs = Lists.mutable.empty();
         Files.walkFileTree(actualPath, new SimpleFileVisitor<Path>()
         {
             @Override
@@ -198,8 +196,7 @@ public class TestFileGenerationMojo
                 String expectedContent = new String(Files.readAllBytes(fileInOther), StandardCharsets.UTF_8);
                 String actualContent = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
                 // FIXME: order is not preserved for cdm so we do not assert on the file content
-                if (!file.getFileName().toString().equals("rosettaTypes.txt") && !sameContent(actualContent, expectedContent)
-                )
+                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(actualContent, expectedContent))
                 {
                     fileDiffs.add(new FileDiff(file.getFileName().toString(), actualContent, expectedContent));
                 }
@@ -214,7 +211,8 @@ public class TestFileGenerationMojo
 
     private static boolean sameContent(String expectedContent, String actual)
     {
-        return IGNORE_WHITE_SPACES.matcher(expectedContent).replaceAll(BLANK).equals(IGNORE_WHITE_SPACES.matcher(actual).replaceAll(BLANK));
+        // normalize line breaks so that tests behave the same regardless of OS
+        return LINE_BREAK.matcher(expectedContent).replaceAll("\n").equals(LINE_BREAK.matcher(actual).replaceAll("\n"));
     }
 
     @Test
@@ -239,28 +237,6 @@ public class TestFileGenerationMojo
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(9, actualGeneratedSourceFiles.size());
-    }
-
-    @Test
-    public void testFileGenerationNotInProject() throws Exception
-    {
-        File includedDirectory = this.tempFolder.newFolder("includedDirectories");
-        File entitySourceDirectories = this.tempFolder.newFolder("entitySourceDirectories");
-        List<Entity> entities;
-        try (EntityLoader testEntities = getEntities("org/finos/legend/sdlc/generation/file/allFormats"))
-        {
-            entities = testEntities.getAllEntities()
-                    .collect(Collectors.toList());
-        }
-        Assert.assertEquals(12, entities.size());
-        entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
-        entities.stream().filter(p -> !FILE_GENERATION_CLASSIFIER_PATH.equals(p.getClassifierPath())).forEach(e -> writeEntityToDirectory(includedDirectory.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", includedDirectory);
-        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
-        Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
-        assertDirectoryEmpty(outputDir);
-        Exception mojoException = Assert.assertThrows(Exception.class, () -> executeMojo(projectDir, entitySourceDirectories));
-        Assert.assertEquals("Error generating files: File Generation 'model::myAvro' not in current project", mojoException.getMessage());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)
