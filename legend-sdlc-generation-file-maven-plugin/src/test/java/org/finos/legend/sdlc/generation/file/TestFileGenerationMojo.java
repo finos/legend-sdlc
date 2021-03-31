@@ -22,7 +22,8 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.eclipse.collections.impl.list.mutable.FastList;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -60,10 +61,8 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class TestFileGenerationMojo
 {
-    static final String BLANK = "";
-    public static final Pattern IGNORE_WHITE_SPACES = Pattern.compile("\\s+");
+    private static final Pattern LINE_BREAK = Pattern.compile("\\R");
     private static final String GENERATION_SPECIFICATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationSpecification";
-    private static final String FILE_GENERATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationConfiguration";
 
     private static final String GOAL = "generate-file-generations";
 
@@ -77,7 +76,7 @@ public class TestFileGenerationMojo
     public void testEmptyEntitiesDirectory() throws Exception
     {
         File[] emptyEntityDirs = {this.tempFolder.newFolder("empty1"), this.tempFolder.newFolder("empty2")};
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, emptyEntityDirs, null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", emptyEntityDirs);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -93,7 +92,7 @@ public class TestFileGenerationMojo
     {
         File tempPath = this.tempFolder.getRoot();
         File[] nonExistentEntityDirectories = {new File(tempPath, "nonexistent1"), new File(tempPath, "nonexistent2")};
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, nonExistentEntityDirectories, null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", nonExistentEntityDirectories);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
@@ -115,7 +114,7 @@ public class TestFileGenerationMojo
         }
         Assert.assertEquals(11, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, new File[]{entitiesDir}, null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
         assertDirectoryEmpty(outputDir);
@@ -135,7 +134,7 @@ public class TestFileGenerationMojo
         }
         Assert.assertEquals(12, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, new File[]{entitiesDir}, null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
         Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
@@ -182,7 +181,7 @@ public class TestFileGenerationMojo
 
     private static void verifyDirsAreEqual(Path actualPath, Path expectedPath) throws IOException
     {
-        List<FileDiff> fileDiffs = new FastList<>();
+        List<FileDiff> fileDiffs = Lists.mutable.empty();
         Files.walkFileTree(actualPath, new SimpleFileVisitor<Path>()
         {
             @Override
@@ -197,8 +196,7 @@ public class TestFileGenerationMojo
                 String expectedContent = new String(Files.readAllBytes(fileInOther), StandardCharsets.UTF_8);
                 String actualContent = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
                 // FIXME: order is not preserved for cdm so we do not assert on the file content
-                if (!file.getFileName().toString().equals("rosettaTypes.txt") && !sameContent(actualContent, expectedContent)
-                )
+                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(actualContent, expectedContent))
                 {
                     fileDiffs.add(new FileDiff(file.getFileName().toString(), actualContent, expectedContent));
                 }
@@ -213,13 +211,14 @@ public class TestFileGenerationMojo
 
     private static boolean sameContent(String expectedContent, String actual)
     {
-        return IGNORE_WHITE_SPACES.matcher(expectedContent).replaceAll(BLANK).equals(IGNORE_WHITE_SPACES.matcher(actual).replaceAll(BLANK));
+        // normalize line breaks so that tests behave the same regardless of OS
+        return LINE_BREAK.matcher(expectedContent).replaceAll("\n").equals(LINE_BREAK.matcher(actual).replaceAll("\n"));
     }
 
     @Test
     public void testDifferentIncludeDirectories() throws Exception
     {
-        File includedDirectories = this.tempFolder.newFolder("includedDirectories");
+        File includedDirectory = this.tempFolder.newFolder("includedDirectories");
         File entitySourceDirectories = this.tempFolder.newFolder("entitySourceDirectories");
         List<Entity> entities;
         try (EntityLoader testEntities = getEntities("org/finos/legend/sdlc/generation/file/allFormats"))
@@ -229,8 +228,8 @@ public class TestFileGenerationMojo
         }
         Assert.assertEquals(12, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
-        entities.forEach(e -> writeEntityToDirectory(includedDirectories.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, new File[]{includedDirectories}, null);
+        entities.forEach(e -> writeEntityToDirectory(includedDirectory.toPath(), e));
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", includedDirectory);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
         Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
@@ -238,28 +237,6 @@ public class TestFileGenerationMojo
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(9, actualGeneratedSourceFiles.size());
-    }
-
-    @Test
-    public void testFileGenerationNotInProject() throws Exception
-    {
-        File includedDirectories = this.tempFolder.newFolder("includedDirectories");
-        File entitySourceDirectories = this.tempFolder.newFolder("entitySourceDirectories");
-        List<Entity> entities;
-        try (EntityLoader testEntities = getEntities("org/finos/legend/sdlc/generation/file/allFormats"))
-        {
-            entities = testEntities.getAllEntities()
-                    .collect(Collectors.toList());
-        }
-        Assert.assertEquals(12, entities.size());
-        entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
-        entities.stream().filter(p -> !FILE_GENERATION_CLASSIFIER_PATH.equals(p.getClassifierPath())).forEach(e -> writeEntityToDirectory(includedDirectories.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, new File[]{includedDirectories}, null);
-        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
-        Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
-        assertDirectoryEmpty(outputDir);
-        Exception mojoException = Assert.assertThrows(Exception.class, () -> executeMojo(projectDir, entitySourceDirectories));
-        Assert.assertEquals("Error generating files: File Generation 'model::myAvro' not in current project", mojoException.getMessage());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)
@@ -274,9 +251,14 @@ public class TestFileGenerationMojo
         return mavenModel;
     }
 
-    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, List<Entity> entities, File[] directories, File outputDirectory) throws IOException
+    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, File... includedDirectories) throws IOException
     {
-        Model mavenModel = buildMavenModelWithPlugin(groupId, artifactId, version, entities, directories, outputDirectory);
+        return buildSingleModuleProject(projectDirName, groupId, artifactId, version, includedDirectories, null, null, null, null, null, null);
+    }
+
+    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, File[] includedDirectories, Set<String> includedPaths, Set<String> includedPackages, File[] excludedDirectories, Set<String> excludedPaths, Set<String> excludedPackages, File outputDirectory) throws IOException
+    {
+        Model mavenModel = buildMavenModelWithPlugin(groupId, artifactId, version, includedDirectories, includedPaths, includedPackages, excludedDirectories, excludedPaths, excludedPackages, outputDirectory);
         return buildProject(projectDirName, mavenModel);
     }
 
@@ -296,16 +278,16 @@ public class TestFileGenerationMojo
         serializeMavenModel(projectDir.toPath(), mavenModel);
     }
 
-    private Model buildMavenModelWithPlugin(String groupId, String artifactId, String version, List<Entity> entities, File[] directories, File outputDirectory)
+    private Model buildMavenModelWithPlugin(String groupId, String artifactId, String version, File[] includedDirectories, Set<String> includedPaths, Set<String> includedPackages, File[] excludedDirectories, Set<String> excludedPaths, Set<String> excludedPackages, File outputDirectory)
     {
         Model mavenModel = buildMavenModel(groupId, artifactId, version, null);
         Build build = new Build();
-        build.addPlugin(buildPlugin(buildIncludedElementsSpecification(entities, directories), outputDirectory));
+        build.addPlugin(buildPlugin(includedDirectories, includedPaths, includedPackages, excludedDirectories, excludedPaths, excludedPackages, outputDirectory));
         mavenModel.setBuild(build);
         return mavenModel;
     }
 
-    private Plugin buildPlugin(FileGenerationMojo.IncludedElementsSpecification inclusions, File outputDirectory)
+    private Plugin buildPlugin(File[] includedDirectories, Set<String> includedPaths, Set<String> includedPackages, File[] excludedDirectories, Set<String> excludedPaths, Set<String> excludedPackages, File outputDirectory)
     {
         Plugin plugin = new Plugin();
         plugin.setGroupId("org.finos.legend.sdlc");
@@ -313,16 +295,27 @@ public class TestFileGenerationMojo
         // config
         Xpp3Dom configuration = newXpp3Dom("configuration", null, null);
         plugin.setConfiguration(configuration);
+
+        // inclusions
+        if ((includedDirectories != null) || (includedPaths != null) || (includedPackages != null))
+        {
+            Xpp3Dom inclusions = buildGenerationSpecFilter("inclusions", includedDirectories, includedPaths, includedPackages);
+            configuration.addChild(inclusions);
+        }
+
+        // exclusions
+        if ((excludedDirectories != null) || (excludedPaths != null) || (excludedPackages != null))
+        {
+            Xpp3Dom exclusions = buildGenerationSpecFilter("exclusions", excludedDirectories, excludedPaths, excludedPackages);
+            configuration.addChild(exclusions);
+        }
+
         // output
         if (outputDirectory != null)
         {
             newXpp3Dom("outputDirectory", outputDirectory.getAbsolutePath(), configuration);
         }
-        if (inclusions != null)
-        {
-            Xpp3Dom includesElement = buildIncludedElementsSpecification("inclusions", inclusions);
-            configuration.addChild(includesElement);
-        }
+
         // execution
         PluginExecution execution = new PluginExecution();
         plugin.addExecution(execution);
@@ -331,34 +324,25 @@ public class TestFileGenerationMojo
         return plugin;
     }
 
-    private Xpp3Dom buildIncludedElementsSpecification(String name, FileGenerationMojo.IncludedElementsSpecification inclusions)
+    private Xpp3Dom buildGenerationSpecFilter(String name, File[] directories, Set<String> paths, Set<String> packages)
     {
         Xpp3Dom element = newXpp3Dom(name, null, null);
-        if (inclusions.directories != null)
-        {
-            Xpp3Dom directories = newXpp3Dom("directories", null, element);
-            Arrays.stream(inclusions.directories).forEach(d -> newXpp3Dom("directory", d.getAbsolutePath(), directories));
-        }
-        if (inclusions.includedGenerationEntities != null)
-        {
-            Xpp3Dom includedGenerationEntities = newXpp3Dom("includedGenerationEntities", null, element);
-            inclusions.includedGenerationEntities.forEach(p -> newXpp3Dom("entity", p.getPath(), includedGenerationEntities));
-        }
-        return element;
-    }
-
-    private FileGenerationMojo.IncludedElementsSpecification buildIncludedElementsSpecification(List<Entity> entities, File[] directories)
-    {
-        FileGenerationMojo.IncludedElementsSpecification inclusions = new FileGenerationMojo.IncludedElementsSpecification();
-        if (entities != null)
-        {
-            inclusions.includedGenerationEntities = entities;
-        }
         if (directories != null)
         {
-            inclusions.directories = directories;
+            Xpp3Dom directoriesDom = newXpp3Dom("directories", null, element);
+            ArrayIterate.forEach(directories, d -> newXpp3Dom("directory", d.getAbsolutePath(), directoriesDom));
         }
-        return inclusions;
+        if (paths != null)
+        {
+            Xpp3Dom pathsDom = newXpp3Dom("paths", null, element);
+            paths.forEach(p -> newXpp3Dom("path", p, pathsDom));
+        }
+        if (packages != null)
+        {
+            Xpp3Dom packagesDom = newXpp3Dom("packages", null, element);
+            packages.forEach(p -> newXpp3Dom("package", p, packagesDom));
+        }
+        return element;
     }
 
     private void serializeMavenModel(Path projectDir, Model mavenModel) throws IOException
