@@ -86,7 +86,12 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
     public void run(C configuration, Environment environment)
     {
         ChainFixingFilterHandler.apply(environment.getApplicationContext(), configuration.getFilterPriorities());
-        environment.servlets().setSessionHandler(new SessionHandler());
+        SessionHandler sessionHandler = new SessionHandler();
+        if (configuration.getSessionCookie() != null)
+        {
+            sessionHandler.setSessionCookie(configuration.getSessionCookie());
+        }
+        environment.servlets().setSessionHandler(sessionHandler);
 
         // Enable CORS
         FilterRegistration.Dynamic corsFilter = environment.servlets().addFilter("CORS", CrossOriginFilter.class);

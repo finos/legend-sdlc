@@ -38,6 +38,11 @@ public class ServerConfiguration extends Configuration
     @JsonProperty("errors")
     private ErrorHandlingConfiguration errorConfig;
 
+    // This can be set to avoid Jetty session cookie name collision between multiple servers running on `localhost` during development
+    // See https://stackoverflow.com/questions/16789495/two-applications-on-the-same-server-use-the-same-jsessionid
+    @JsonProperty("sessionCookie")
+    private String sessionCookie;
+
     public String getApplicationName()
     {
         return this.applicationName;
@@ -61,5 +66,10 @@ public class ServerConfiguration extends Configuration
     public ErrorHandlingConfiguration getErrorHandlingConfiguration()
     {
         return this.errorConfig;
+    }
+
+    public String getSessionCookie()
+    {
+        return this.sessionCookie;
     }
 }

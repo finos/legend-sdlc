@@ -40,10 +40,11 @@ Once you have your configuration file, you can run the server with Java 8 or lat
 to start the server:
 
 ```sh
-java -cp legend-sdlc-server-shaded.jar org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
+java -cp $SHADED_JAR_PATH org.finos.legend.sdlc.server.LegendSDLCServer server $CONFIG_DIR/config.yaml
 ```
 
-You may include additional libraries on the classpath to add functionality extensions.
+If you want to use the shaded JAR built by `mvn install` in this project, you can get it from `legend-sdlc-server/target/legend-sdlc-server-*-shaded.jar`.
+You may also include additional libraries on the classpath to add functionality extensions.
 
 ## Development setup
 
