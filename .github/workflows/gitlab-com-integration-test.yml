@@ -23,6 +23,8 @@ env:
   GITLAB_INTEGRATION_TEST_PASSWORD: ${{ secrets.GITLAB_INTEGRATION_TEST_PASSWORD }}
 
 on:
+  schedule:
+    - cron: '0 17 * * *' # daily at 17:00
   workflow_dispatch:
     inputs:
       logLevel:
