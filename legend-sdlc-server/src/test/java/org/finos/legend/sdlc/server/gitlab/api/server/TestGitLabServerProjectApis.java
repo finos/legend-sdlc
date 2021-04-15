@@ -38,7 +38,10 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     @AfterClass
     public static void teardown() throws LegendSDLCServerException
     {
-        cleanUpTestProjects(gitLabProjectApiTestResource.getGitLabProjectApi());
+        if (gitLabProjectApiTestResource != null)
+        {
+            cleanUpTestProjects(gitLabProjectApiTestResource.getGitLabProjectApi());
+        }
     }
 
     @Test
