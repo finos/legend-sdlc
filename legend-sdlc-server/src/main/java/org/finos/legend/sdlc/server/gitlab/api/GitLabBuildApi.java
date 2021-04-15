@@ -247,40 +247,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
 
     private Build fromGitLabPipeline(GitLabProjectId projectId, Pipeline pipeline)
     {
-        // TODO remove this once Pipeline has webURL property
-        List<Job> pipelineJobs;
-        try
-        {
-            pipelineJobs = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getJobApi().getJobsForPipeline(projectId.getGitLabId(), pipeline.getId()));
-        }
-        catch (Exception ignore)
-        {
-            pipelineJobs = null;
-        }
-
-        String webURL = null;
-        if ((pipelineJobs != null) && !pipelineJobs.isEmpty())
-        {
-            webURL = pipelineJobs.stream()
-                    .map(job ->
-                    {
-                        String jobURL = job.getWebUrl();
-                        if (jobURL != null)
-                        {
-                            int index = jobURL.lastIndexOf("/-/jobs/");
-                            if (index != -1)
-                            {
-                                return jobURL.substring(0, index) + "/pipelines/" + pipeline.getId();
-                            }
-                        }
-                        return null;
-                    })
-                    .filter(Objects::nonNull)
-                    .findAny()
-                    .orElse(null);
-        }
-
-        return fromGitLabPipeline(projectId.toString(), pipeline, webURL);
+        return fromGitLabPipeline(projectId.toString(), pipeline, pipeline.getWebUrl());
     }
 
     private static Build fromGitLabPipeline(String projectId, Pipeline pipeline, String webURL)
