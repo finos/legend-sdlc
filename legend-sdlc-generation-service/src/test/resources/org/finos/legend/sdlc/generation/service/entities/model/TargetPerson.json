@@ -1,0 +1,26 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "name": "TargetPerson",
+    "package": "model",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "fullName",
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "age",
+        "type": "Integer"
+      }
+    ]
+  }
+}
