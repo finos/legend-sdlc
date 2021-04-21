@@ -128,6 +128,19 @@ public class GitLabEntityApiTestResource
         LOGGER.info("Waited {} times for merge to have status \"{}\"", callUntil.getTryCount(), requiredStatus);
 
         gitLabCommitterReviewApi.commitReview(projectId, reviewId, "add two math courses");
+
+        String requiredMergedStatus = "merged";
+        CallUntil<MergeRequest, GitLabApiException> callUntilMerged = CallUntil.callUntil(
+                () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
+                mr -> requiredMergedStatus.equals(mr.getState()),
+                10,
+                500);
+        if (!callUntilMerged.succeeded())
+        {
+            throw new RuntimeException("Merge request " + reviewId + " still does not have state \"" + requiredMergedStatus + "\" after " + callUntilMerged.getTryCount() + " tries");
+        }
+        LOGGER.info("Waited {} times for merge request to have state \"{}\"", callUntilMerged.getTryCount(), requiredMergedStatus);
+
         List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
