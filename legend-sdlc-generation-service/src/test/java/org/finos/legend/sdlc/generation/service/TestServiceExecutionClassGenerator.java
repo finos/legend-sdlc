@@ -100,6 +100,22 @@ public class TestServiceExecutionClassGenerator
         assertExecuteMethodsExist(cls, String.class);
     }
 
+    @Test
+    public void testSimpleRelational() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::RelationalService");
+        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
+        assertExecuteMethodsExist(cls);
+    }
+
+    @Test
+    public void testSimpleRelationalWithParams() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithParams");
+        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
+        assertExecuteMethodsExist(cls, String.class, String.class);
+    }
+
     private Class<?> loadAndCompileService(String packagePrefix, String servicePath) throws ClassNotFoundException
     {
         Service service = SERVICES.get(servicePath);

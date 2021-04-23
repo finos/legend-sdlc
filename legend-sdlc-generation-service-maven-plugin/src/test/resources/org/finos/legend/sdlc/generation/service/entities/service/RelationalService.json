@@ -1,0 +1,309 @@
+{
+  "content": {
+    "_type": "service",
+    "autoActivateUpdates": true,
+    "documentation": "",
+    "execution": {
+      "_type": "pureSingleExecution",
+      "func": {
+        "_type": "lambda",
+        "body": [
+          {
+            "_type": "func",
+            "function": "project",
+            "parameters": [
+              {
+                "_type": "func",
+                "function": "getAll",
+                "parameters": [
+                  {
+                    "_type": "class",
+                    "fullPath": "model::SourcePerson",
+                    "sourceInformation": {
+                      "endColumn": 31,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 13,
+                      "startLine": 162
+                    }
+                  }
+                ],
+                "sourceInformation": {
+                  "endColumn": 37,
+                  "endLine": 162,
+                  "sourceId": "",
+                  "startColumn": 32,
+                  "startLine": 162
+                }
+              },
+              {
+                "_type": "collection",
+                "multiplicity": {
+                  "lowerBound": 3,
+                  "upperBound": 3
+                },
+                "sourceInformation": {
+                  "endColumn": 88,
+                  "endLine": 162,
+                  "sourceId": "",
+                  "startColumn": 48,
+                  "startLine": 162
+                },
+                "values": [
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "property",
+                        "parameters": [
+                          {
+                            "_type": "var",
+                            "name": "x",
+                            "sourceInformation": {
+                              "endColumn": 52,
+                              "endLine": 162,
+                              "sourceId": "",
+                              "startColumn": 51,
+                              "startLine": 162
+                            }
+                          }
+                        ],
+                        "property": "age",
+                        "sourceInformation": {
+                          "endColumn": 56,
+                          "endLine": 162,
+                          "sourceId": "",
+                          "startColumn": 54,
+                          "startLine": 162
+                        }
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ],
+                    "sourceInformation": {
+                      "endColumn": 56,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 50,
+                      "startLine": 162
+                    }
+                  },
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "property",
+                        "parameters": [
+                          {
+                            "_type": "var",
+                            "name": "x",
+                            "sourceInformation": {
+                              "endColumn": 62,
+                              "endLine": 162,
+                              "sourceId": "",
+                              "startColumn": 61,
+                              "startLine": 162
+                            }
+                          }
+                        ],
+                        "property": "firstName",
+                        "sourceInformation": {
+                          "endColumn": 72,
+                          "endLine": 162,
+                          "sourceId": "",
+                          "startColumn": 64,
+                          "startLine": 162
+                        }
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ],
+                    "sourceInformation": {
+                      "endColumn": 72,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 60,
+                      "startLine": 162
+                    }
+                  },
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "property",
+                        "parameters": [
+                          {
+                            "_type": "var",
+                            "name": "x",
+                            "sourceInformation": {
+                              "endColumn": 78,
+                              "endLine": 162,
+                              "sourceId": "",
+                              "startColumn": 77,
+                              "startLine": 162
+                            }
+                          }
+                        ],
+                        "property": "lastName",
+                        "sourceInformation": {
+                          "endColumn": 87,
+                          "endLine": 162,
+                          "sourceId": "",
+                          "startColumn": 80,
+                          "startLine": 162
+                        }
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ],
+                    "sourceInformation": {
+                      "endColumn": 87,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 76,
+                      "startLine": 162
+                    }
+                  }
+                ]
+              },
+              {
+                "_type": "collection",
+                "multiplicity": {
+                  "lowerBound": 3,
+                  "upperBound": 3
+                },
+                "sourceInformation": {
+                  "endColumn": 124,
+                  "endLine": 162,
+                  "sourceId": "",
+                  "startColumn": 91,
+                  "startLine": 162
+                },
+                "values": [
+                  {
+                    "_type": "string",
+                    "multiplicity": {
+                      "lowerBound": 1,
+                      "upperBound": 1
+                    },
+                    "sourceInformation": {
+                      "endColumn": 96,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 92,
+                      "startLine": 162
+                    },
+                    "values": [
+                      "Age"
+                    ]
+                  },
+                  {
+                    "_type": "string",
+                    "multiplicity": {
+                      "lowerBound": 1,
+                      "upperBound": 1
+                    },
+                    "sourceInformation": {
+                      "endColumn": 110,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 99,
+                      "startLine": 162
+                    },
+                    "values": [
+                      "First Name"
+                    ]
+                  },
+                  {
+                    "_type": "string",
+                    "multiplicity": {
+                      "lowerBound": 1,
+                      "upperBound": 1
+                    },
+                    "sourceInformation": {
+                      "endColumn": 123,
+                      "endLine": 162,
+                      "sourceId": "",
+                      "startColumn": 113,
+                      "startLine": 162
+                    },
+                    "values": [
+                      "Last Name"
+                    ]
+                  }
+                ]
+              }
+            ],
+            "sourceInformation": {
+              "endColumn": 46,
+              "endLine": 162,
+              "sourceId": "",
+              "startColumn": 40,
+              "startLine": 162
+            }
+          }
+        ],
+        "parameters": []
+      },
+      "mapping": "model::RelationalMapping",
+      "runtime": {
+        "_type": "engineRuntime",
+        "connections": [
+          {
+            "store": {
+              "path": "store::MyDatabase",
+              "type": "STORE"
+            },
+            "storeConnections": [
+              {
+                "connection": {
+                  "_type": "RelationalDatabaseConnection",
+                  "authenticationStrategy": {
+                    "_type": "h2Default"
+                  },
+                  "datasourceSpecification": {
+                    "_type": "static",
+                    "databaseName": "myDb",
+                    "host": "myHost",
+                    "port": 80
+                  },
+                  "element": "store::MyDatabase",
+                  "type": "H2"
+                },
+                "id": "connection_1"
+              }
+            ]
+          }
+        ],
+        "mappings": [
+          {
+            "path": "model::RelationalMapping",
+            "type": "MAPPING"
+          }
+        ]
+      }
+    },
+    "name": "RelationalService",
+    "owners": [],
+    "package": "service",
+    "pattern": "/relationalService",
+    "test": {
+      "_type": "singleExecutionTest",
+      "asserts": [],
+      "data": ""
+    }
+  },
+  "classifierPath": "meta::legend::service::metamodel::Service"
+}

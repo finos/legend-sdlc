@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.generation.service;
 
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
@@ -30,9 +32,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -48,8 +48,8 @@ public class ServiceExecutionClassGenerator
     private final String packagePrefix;
     private final String planResourceName;
 
-    private final Set<String> javaImports = new HashSet<>();
-    private final Set<String> otherImports = new HashSet<>();
+    private final Set<String> javaImports = Sets.mutable.empty();
+    private final Set<String> otherImports = Sets.mutable.empty();
     private String packageName;
     private String constructor;
     private String executeMethod;
@@ -199,8 +199,8 @@ public class ServiceExecutionClassGenerator
             throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
         }
         Lambda lambda = ((PureExecution) execution).func;
-        List<ExecutionParameter> parameters = new ArrayList<>(lambda.parameters.size() + 1);
-        Set<String> javaParameterNames = new HashSet<>(lambda.parameters.size() + 1);
+        List<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
+        Set<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         if (execution instanceof PureMultiExecution)
         {
             String executionKey = ((PureMultiExecution) execution).executionKey;

@@ -49,15 +49,9 @@ import javax.lang.model.SourceVersion;
 @Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ServicesGenerationMojo extends AbstractMojo
 {
+    private final RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
 
-    public RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
-    public MutableList<PlanTransformer> transformers;
-
-    public ServicesGenerationMojo()
-    {
-        this.extensions =  Lists.fixedSize.empty();
-        this.transformers = LegendPlanTransformers.transformers;
-    }
+    private final MutableList<PlanTransformer> transformers;
 
     @Parameter
     private ServicesSpecification inclusions;
@@ -73,6 +67,17 @@ public class ServicesGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File resourceOutputDirectory;
+
+    public ServicesGenerationMojo(RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformer)
+    {
+        this.extensions =  extensions;
+        this.transformers = transformer;
+    }
+
+    public ServicesGenerationMojo()
+    {
+        this(Lists.fixedSize.empty(), LegendPlanTransformers.transformers);
+    }
 
     @Override
     public void execute() throws MojoExecutionException

@@ -1,0 +1,60 @@
+{
+  "content": {
+    "_type": "relational",
+    "filters": [],
+    "includedStores": [],
+    "joins": [],
+    "name": "MyDatabase",
+    "package": "store",
+    "schemas": [
+      {
+        "name": "MAIN_SCHEMA",
+        "tables": [
+          {
+            "columns": [
+              {
+                "name": "ID",
+                "nullable": false,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 16777216
+                }
+              },
+              {
+                "name": "FIRST_NAME",
+                "nullable": true,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 16777216
+                }
+              },
+              {
+                "name": "LAST_NAME",
+                "nullable": true,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 16777216
+                }
+              },
+              {
+                "name": "AGE",
+                "nullable": true,
+                "type": {
+                  "_type": "Numeric",
+                  "precision": 38,
+                  "scale": 0
+                }
+              }
+            ],
+            "name": "PERSON_TABLE",
+            "primaryKey": [
+              "ID"
+            ]
+          }
+        ],
+        "views": []
+      }
+    ]
+  },
+  "classifierPath": "meta::relational::metamodel::Database"
+}

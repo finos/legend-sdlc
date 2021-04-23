@@ -1,5 +1,5 @@
 {
-  "classifierPath": "meta::alloy::service::metamodel::Service",
+  "classifierPath": "meta::legend::service::metamodel::Service",
   "content": {
     "_type": "service",
     "autoActivateUpdates": true,

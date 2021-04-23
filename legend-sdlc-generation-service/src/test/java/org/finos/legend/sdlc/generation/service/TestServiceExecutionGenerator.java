@@ -30,6 +30,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
+import org.finos.legend.pure.generated.core_relational_relational_router_router_extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -107,9 +108,6 @@ public class TestServiceExecutionGenerator
         OBJECT_MAPPER = null;
     }
 
-
-
-
     @Before
     public void setUpDirectories() throws Exception
     {
@@ -125,7 +123,6 @@ public class TestServiceExecutionGenerator
         generateAndCompile(packagePrefix, service);
     }
 
-
     @Test
     public void testSimpleServiceWithParam() throws Exception
     {
@@ -134,7 +131,6 @@ public class TestServiceExecutionGenerator
         ClassLoader classLoader = generateAndCompile(packagePrefix, service);
         assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceWithParam", String.class);
     }
-
 
     @Test
     public void testSimpleMultiService() throws Exception
@@ -145,6 +141,23 @@ public class TestServiceExecutionGenerator
         assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceMulti", String.class);
     }
 
+    @Test
+    public void testSimpleRelational() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::RelationalService");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalService");
+    }
+
+    @Test
+    public void testRelationalWithParams() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::RelationalServiceWithParams");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithParams", String.class, String.class);
+    }
 
     @Test
     public void testResultSimpleService() throws Exception
@@ -177,8 +190,6 @@ public class TestServiceExecutionGenerator
 
         }
     }
-
-
 
     @Test
     public void testAllServices() throws Exception
@@ -224,7 +235,7 @@ public class TestServiceExecutionGenerator
         // Generate
         for (Service service : services)
         {
-            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, Lists.fixedSize.empty(), LegendPlanTransformers.transformers, "vX_X_X").generate();
+            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, core_relational_relational_router_router_extension.Root_meta_pure_router_extension_defaultRelationalExtensions__RouterExtension_MANY_(PURE_MODEL.getExecutionSupport()), LegendPlanTransformers.transformers, "vX_X_X").generate();
         }
 
         // Check generated files
