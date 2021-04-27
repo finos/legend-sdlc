@@ -46,8 +46,12 @@ public class VersionBuildsResource extends BaseResource
         this.buildApi = buildApi;
     }
 
+    /**
+     * @deprecated Use {@link VersionWorkflowsResource#getWorkflows} instead
+     */
     @GET
-    @ApiOperation(value = "Get builds for a version", notes = "Get builds for a version. If status is provided, then only builds with the given status are returned. Otherwise, all builds are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get builds for a version", notes = "DEPRECATED: use corresponding Workflows API instead. Get builds for a version. If status is provided, then only builds with the given status are returned. Otherwise, all builds are returned. If status is UNKNOWN, results are undefined.")
+    @Deprecated
     public List<Build> getBuilds(@PathParam("projectId") String projectId,
                                  @PathParam("versionId") String versionId,
                                  @QueryParam("revisionId")
@@ -63,9 +67,13 @@ public class VersionBuildsResource extends BaseResource
         );
     }
 
+    /**
+     * @deprecated Use {@link VersionWorkflowsResource#getWorkflow} instead
+     */
     @GET
     @Path("{buildId}")
-    @ApiOperation("Get a build for a version")
+    @ApiOperation(value = "Get a build for a version", notes = "DEPRECATED: use corresponding Workflows API instead")
+    @Deprecated
     public Build getBuild(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId, @PathParam("buildId") String buildId)
     {
         return executeWithLogging(
