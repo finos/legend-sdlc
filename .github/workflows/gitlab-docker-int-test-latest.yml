@@ -33,7 +33,7 @@ on:
 jobs:
   build:
     name: Run GitLab Docker Integration Tests
-#    if: (github.repository == 'finos/legend-sdlc')
+    if: (github.repository == 'finos/legend-sdlc')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
@@ -72,9 +72,8 @@ jobs:
           --name gitlab
           gitlab/gitlab-ee:latest
       - name: Wait until gitlab container is up and running
-        run: sleep 1
+        run: sleep 450
       - name: Build + Test
         run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-docker
       - name: Shutdown GitLab container
-        if: succeeded() || failed()
         run: docker stop gitlab
