@@ -1,0 +1,97 @@
+{
+  "content": {
+    "_type": "mapping",
+    "classMappings": [
+      {
+        "_type": "relational",
+        "class": "model::SourcePerson",
+        "distinct": false,
+        "mainTable": {
+          "_type": "Table",
+          "database": "store::MyDatabase",
+          "schema": "MAIN_SCHEMA",
+          "table": "PERSON_TABLE"
+        },
+        "primaryKey": [
+          {
+            "_type": "column",
+            "column": "ID",
+            "table": {
+              "_type": "Table",
+              "database": "store::MyDatabase",
+              "schema": "MAIN_SCHEMA",
+              "table": "PERSON_TABLE"
+            },
+            "tableAlias": "PERSON_TABLE"
+          }
+        ],
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::SourcePerson",
+              "property": "firstName"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "FIRST_NAME",
+              "table": {
+                "_type": "Table",
+                "database": "store::MyDatabase",
+                "schema": "MAIN_SCHEMA",
+                "table": "PERSON_TABLE"
+              },
+              "tableAlias": "PERSON_TABLE"
+            },
+            "source": "model_SourcePerson"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::SourcePerson",
+              "property": "lastName"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "LAST_NAME",
+              "table": {
+                "_type": "Table",
+                "database": "store::MyDatabase",
+                "schema": "MAIN_SCHEMA",
+                "table": "PERSON_TABLE"
+              },
+              "tableAlias": "PERSON_TABLE"
+            },
+            "source": "model_SourcePerson"
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::SourcePerson",
+              "property": "age"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "AGE",
+              "table": {
+                "_type": "Table",
+                "database": "store::MyDatabase",
+                "schema": "MAIN_SCHEMA",
+                "table": "PERSON_TABLE"
+              },
+              "tableAlias": "PERSON_TABLE"
+            },
+            "source": "model_SourcePerson"
+          }
+        ],
+        "root": false
+      }
+    ],
+    "enumerationMappings": [],
+    "includedMappings": [],
+    "name": "RelationalMapping",
+    "package": "model",
+    "tests": []
+  },
+  "classifierPath": "meta::pure::mapping::Mapping"
+}
