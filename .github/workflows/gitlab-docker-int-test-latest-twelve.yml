@@ -12,19 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: gitlab-com-integration-test
+name: gitlab-docker-int-test-latest-twelve
 
 env:
   CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
   CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-  GITLAB_INTEGRATION_TEST_USERNAME: ${{ secrets.GITLAB_INTEGRATION_TEST_USERNAME }}
-  GITLAB_INTEGRATION_TEST_PASSWORD: ${{ secrets.GITLAB_INTEGRATION_TEST_PASSWORD }}
 
 on:
   schedule:
-    - cron: '0 17 * * *' # daily at 17:00 UTC
+    - cron: '0 20 * * *' # daily at 20:00 UTC
   workflow_dispatch:
     inputs:
       logLevel:
@@ -34,7 +32,7 @@ on:
 
 jobs:
   build:
-    name: Run gitlab.com Integration Tests
+    name: Run GitLab Docker Integration Tests
     if: (github.repository == 'finos/legend-sdlc')
     runs-on: ubuntu-latest
     steps:
@@ -66,5 +64,16 @@ jobs:
           git config --global author.name "${GITHUB_ACTOR}"
       - name: Download deps and plugins
         run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
+      - name: Configure and start GitLab container
+        run: docker run --detach
+          --hostname localhost
+          --env GITLAB_OMNIBUS_CONFIG="gitlab_rails['initial_root_password'] = 'ac0018BD19066353'"
+          --publish 8090:80
+          --name gitlab
+          gitlab/gitlab-ee:12.10.14-ee.0
+      - name: Wait until gitlab container is up and running
+        run: sleep 450
       - name: Build + Test
-        run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-com
+        run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-docker
+      - name: Shutdown GitLab container
+        run: docker stop gitlab
