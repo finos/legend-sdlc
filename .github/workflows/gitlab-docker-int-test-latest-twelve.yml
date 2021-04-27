@@ -70,7 +70,7 @@ jobs:
           --env GITLAB_OMNIBUS_CONFIG="gitlab_rails['initial_root_password'] = 'ac0018BD19066353'"
           --publish 8090:80
           --name gitlab
-          gitlab/gitlab-ee:latest
+          gitlab/gitlab-ee:12.10.14-ee.0
       - name: Wait until gitlab container is up and running
         run: sleep 450
       - name: Build + Test
