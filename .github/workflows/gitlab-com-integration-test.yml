@@ -24,7 +24,7 @@ env:
 
 on:
   schedule:
-    - cron: '0 17 * * *' # daily at 17:00
+    - cron: '0 17 * * *' # daily at 17:00 UTC
   workflow_dispatch:
     inputs:
       logLevel:
