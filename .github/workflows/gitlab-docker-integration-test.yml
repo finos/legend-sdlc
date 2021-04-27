@@ -72,8 +72,8 @@ jobs:
           --name gitlab
           gitlab/gitlab-ee:latest
       - name: Wait until gitlab container is up and running
-        run: sleep 8.5
+        run: sleep 450
       - name: Build + Test
         run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-docker
       - name: Shutdown GitLab container
-        run: docker-compose stop
+        run: docker stop gitlab
