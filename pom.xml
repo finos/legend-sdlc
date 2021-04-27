@@ -97,7 +97,6 @@
 
         <!-- Integration tests -->
         <skipITs>true</skipITs>
-        <skipGitLabDockerTests>true</skipGitLabDockerTests>
     </properties>
 
     <scm>
@@ -1117,27 +1116,9 @@
             </properties>
         </profile>
         <profile>
-            <id>test-latest-gitlab</id>
+            <id>test-gitlab-docker</id>
             <properties>
-                <gitlab.version>latest</gitlab.version>
                 <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-nightly-gitlab</id>
-            <properties>
-                <gitlab.version>nightly</gitlab.version>
-                <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-latest-twelve-gitlab</id>
-            <properties>
-                <gitlab.version>12.10.14-ee.0</gitlab.version>
-                <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
             </properties>
         </profile>
         <profile>

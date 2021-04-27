@@ -27,14 +27,6 @@
     <name>Legend SDLC Server</name>
     <packaging>jar</packaging>
 
-    <properties>
-<!--        <gitlab.version>latest</gitlab.version>-->
-        <gitlab.version>13.8.4-ee.0</gitlab.version>
-        <gitlab.autoremove-container>true</gitlab.autoremove-container>
-        <gitlab.skip-docker-start>false</gitlab.skip-docker-start>
-        <gitlab.port>8090</gitlab.port>
-    </properties>
-
     <build>
         <plugins>
             <plugin>
@@ -92,58 +84,6 @@
                         <include>**/IntegrationTestGitLab*.java</include>
                     </includes>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>io.fabric8</groupId>
-                <artifactId>docker-maven-plugin</artifactId>
-                <version>0.30.0</version>
-                <configuration>
-                    <images>
-                        <image>
-                            <name>gitlab/gitlab-ee:${gitlab.version}</name>
-                            <alias>testGitLabContainer</alias>
-                            <run>
-                                <namingStrategy>alias</namingStrategy>
-                                <skip>${gitlab.skip-docker-start}</skip>
-                                <env>
-                                    <GITLAB_OMNIBUS_CONFIG>gitlab_rails['initial_root_password']="ac0018BD19066353";
-                                        gitlab_rails['lfs_enabled']=false;
-                                    </GITLAB_OMNIBUS_CONFIG>
-                                </env>
-                                <ports>
-                                    <port>${gitlab.port}:80</port>
-                                </ports>
-                                <wait>
-                                    <healthy>true</healthy>
-                                    <time>240000</time>
-                                </wait>
-                            </run>
-                        </image>
-                    </images>
-                    <removeVolumes>true</removeVolumes>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>start</id>
-                        <phase>pre-integration-test</phase>
-                        <goals>
-                            <goal>start</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipGitLabDockerTests}</skip>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>stop</id>
-                        <phase>post-integration-test</phase>
-                        <goals>
-                            <goal>stop</goal>
-                        </goals>
-                        <configuration>
-                            <skip>${skipGitLabDockerTests}</skip>
-                        </configuration>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>
@@ -368,24 +308,6 @@
                     </plugin>
                 </plugins>
             </build>
-        </profile>
-        <profile>
-            <id>test-latest-gitlab</id>
-            <properties>
-                <gitlab.version>latest</gitlab.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-nightly-gitlab</id>
-            <properties>
-                <gitlab.version>nightly</gitlab.version>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-latest-twelve-gitlab</id>
-            <properties>
-                <gitlab.version>12.10.14-ee.0</gitlab.version>
-            </properties>
         </profile>
         <profile>
             <id>test-gitlab-com</id>
