@@ -30,6 +30,7 @@ import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.user.UserApi;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -48,6 +49,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryRevisionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryUserApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryVersionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowApi;
+import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowJobApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkspaceApi;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
@@ -76,6 +78,7 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(ConflictResolutionApi.class).to(InMemoryConflictResolutionApi.class);
         binder.bind(BackupApi.class).to(InMemoryBackupApi.class);
         binder.bind(WorkflowApi.class).to(InMemoryWorkflowApi.class);
+        binder.bind(WorkflowJobApi.class).to(InMemoryWorkflowJobApi.class);
         binder.bind(GitLabUserContext.class);
         binder.bind(GitLabAuthResource.class);
         binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
