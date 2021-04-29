@@ -47,8 +47,12 @@ public class WorkspaceBuildsResource extends BaseResource
         this.buildApi = buildApi;
     }
 
+    /**
+     * @deprecated Use {@link WorkspaceWorkflowsResource#getWorkflows} instead
+     */
     @GET
-    @ApiOperation(value = "Get builds for a workspace", notes = "Get builds for a workspace. If status is provided, then only builds with the given status are returned. Otherwise, all builds are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get builds for a workspace", notes = "DEPRECATED: use corresponding Workflows API instead. Get builds for a workspace. If status is provided, then only builds with the given status are returned. Otherwise, all builds are returned. If status is UNKNOWN, results are undefined.")
+    @Deprecated
     public List<Build> getBuilds(@PathParam("projectId") String projectId,
                                  @PathParam("workspaceId") String workspaceId,
                                  @QueryParam("revisionId")
@@ -64,9 +68,13 @@ public class WorkspaceBuildsResource extends BaseResource
         );
     }
 
+    /**
+     * @deprecated Use {@link WorkspaceWorkflowsResource#getWorkflow} instead
+     */
     @GET
     @Path("{buildId}")
-    @ApiOperation("Get a build for a workspace")
+    @ApiOperation(value = "Get a build for a workspace", notes = "DEPRECATED: use corresponding Workflows API instead")
+    @Deprecated
     public Build getBuild(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("buildId") String buildId)
     {
         return executeWithLogging(

@@ -38,10 +38,12 @@
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-generation-file</module>
+        <module>legend-sdlc-generation-service</module>
         <module>legend-sdlc-generation-model</module>
         <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-generation-file-maven-plugin</module>
         <module>legend-sdlc-generation-model-maven-plugin</module>
+        <module>legend-sdlc-generation-service-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>test-reports</module>
     </modules>
@@ -94,10 +96,6 @@
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <json-smart.version>2.4.2</json-smart.version>
-
-        <!-- Integration tests -->
-        <skipITs>true</skipITs>
-        <skipGitLabDockerTests>true</skipGitLabDockerTests>
     </properties>
 
     <scm>
@@ -489,7 +487,17 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-service</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -584,6 +592,41 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-dsl-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-executionPlan-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-executionPlan-execution</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-executionPlan-execution-store-relational</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-executionPlan-execution-store-inMemory</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service-execution</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -684,6 +727,13 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
+                <exclusions>
+                    <!-- excluding to resolve level 7 sonatype CVE against Apache Freemarker -->
+                    <exclusion>
+                        <groupId>io.dropwizard</groupId>
+                        <artifactId>dropwizard-views-freemarker</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -706,6 +756,11 @@
                 <groupId>commons-lang</groupId>
                 <artifactId>commons-lang</artifactId>
                 <version>${commons-lang.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.github.classgraph</groupId>
+                <artifactId>classgraph</artifactId>
+                <version>4.8.25</version>
             </dependency>
 
             <dependency>
@@ -1112,39 +1167,28 @@
                     </plugin>
                 </plugins>
             </build>
-            <properties>
-                <skipITs>true</skipITs>
-            </properties>
         </profile>
         <profile>
-            <id>test-latest-gitlab</id>
-            <properties>
-                <gitlab.version>latest</gitlab.version>
-                <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-nightly-gitlab</id>
-            <properties>
-                <gitlab.version>nightly</gitlab.version>
-                <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
-            </properties>
-        </profile>
-        <profile>
-            <id>test-latest-twelve-gitlab</id>
-            <properties>
-                <gitlab.version>12.10.14-ee.0</gitlab.version>
-                <skipITs>false</skipITs>
-                <skipGitLabDockerTests>false</skipGitLabDockerTests>
-            </properties>
+            <id>test-gitlab-docker</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-failsafe-plugin</artifactId>
+                        <configuration>
+                            <excludes>
+                                <exclude>none</exclude>
+                            </excludes>
+                            <includes>
+                                <include>**/IntegrationTestGitLab*.java</include>
+                            </includes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
         </profile>
         <profile>
             <id>test-gitlab-com</id>
-            <properties>
-                <skipITs>false</skipITs>
-            </properties>
             <build>
                 <plugins>
                     <plugin>

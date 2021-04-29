@@ -66,6 +66,7 @@ import org.finos.legend.sdlc.server.resources.ProjectRevisionEntityPathsResource
 import org.finos.legend.sdlc.server.resources.ProjectRevisionProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.ProjectRevisionsResource;
 import org.finos.legend.sdlc.server.resources.ProjectVersionDependenciesResource;
+import org.finos.legend.sdlc.server.resources.ProjectWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.ProjectsResource;
 import org.finos.legend.sdlc.server.resources.ReviewsResource;
 import org.finos.legend.sdlc.server.resources.UsersResource;
@@ -73,6 +74,7 @@ import org.finos.legend.sdlc.server.resources.VersionBuildsResource;
 import org.finos.legend.sdlc.server.resources.VersionEntitiesResource;
 import org.finos.legend.sdlc.server.resources.VersionEntityPathsResource;
 import org.finos.legend.sdlc.server.resources.VersionProjectConfigurationResource;
+import org.finos.legend.sdlc.server.resources.VersionWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.VersionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceBuildsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceEntitiesResource;
@@ -86,11 +88,12 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionEntitiesResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceRevisionEntityPathsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceRevisionProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
+import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
-import java.util.List;
 import javax.inject.Named;
+import java.util.List;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
@@ -181,6 +184,9 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectRevisionDependenciesResource.class);
         binder.bind(ProjectVersionDependenciesResource.class);
         binder.bind(WorkspaceRevisionDependenciesResource.class);
+        binder.bind(ProjectWorkflowsResource.class);
+        binder.bind(VersionWorkflowsResource.class);
+        binder.bind(WorkspaceWorkflowsResource.class);
     }
 
     private void configureCommonApis(Binder binder)
