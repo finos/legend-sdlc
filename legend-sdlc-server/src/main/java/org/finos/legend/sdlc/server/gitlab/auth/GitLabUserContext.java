@@ -93,7 +93,7 @@ public class GitLabUserContext extends UserContext
                             }
                             catch (GitLabAuthFailureException e)
                             {
-                                throw new LegendSDLCServerException(e.getMessage(), Status.UNAUTHORIZED, e);
+                                throw new LegendSDLCServerException(e.getMessage(), Status.FORBIDDEN, e);
                             }
                             catch (GitLabAuthException e)
                             {
@@ -107,7 +107,7 @@ public class GitLabUserContext extends UserContext
                         }
                         else
                         {
-                            throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.UNAUTHORIZED);
+                            throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                         }
                     }
                     api = new GitLabApi(ApiVersion.V4, modeInfo.getServerInfo().getGitLabURLString(), TokenType.OAUTH2_ACCESS, accessToken);
