@@ -155,7 +155,7 @@ public class GitLabAuthResource extends BaseResource
                                         }
                                         case 401:
                                         {
-                                            errorStatus = Status.UNAUTHORIZED;
+                                            errorStatus = Status.FORBIDDEN;
                                             break;
                                         }
                                         default:
