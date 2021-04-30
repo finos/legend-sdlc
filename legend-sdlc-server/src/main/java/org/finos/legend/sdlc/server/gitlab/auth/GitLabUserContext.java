@@ -93,7 +93,7 @@ public class GitLabUserContext extends UserContext
                             }
                             catch (GitLabAuthFailureException e)
                             {
-                                throw new LegendSDLCServerException(e.getMessage(), Status.UNAUTHORIZED, e);
+                                throw new LegendSDLCServerException(e.getMessage(), Status.FORBIDDEN, e);
                             }
                             catch (GitLabAuthException e)
                             {
