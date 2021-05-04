@@ -40,13 +40,14 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
+import org.eclipse.collections.impl.utility.StringIterate;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenBuilder;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.security.auth.Subject;
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -55,9 +56,13 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletRequest;
 
 class GitLabOAuthAuthenticator
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOAuthAuthenticator.class);
+
     private static final SecureRandom RANDOM = new SecureRandom();
     private static final ObjectMapper JSON = new ObjectMapper();
 
@@ -98,11 +103,6 @@ class GitLabOAuthAuthenticator
     String getOAuthToken(Subject subject)
     {
         Cookie sessionCookie = GitLabSAMLAuthenticator.authenticateAndGetSessionCookie(this.modeInfo, subject);
-        return getOAuthTokenFromSAMLSession(sessionCookie);
-    }
-
-    private String getOAuthTokenFromSAMLSession(Cookie sessionCookie)
-    {
         CookieStore cookieStore = new BasicCookieStore();
         cookieStore.addCookie(sessionCookie);
 
@@ -125,56 +125,29 @@ class GitLabOAuthAuthenticator
                     case HttpStatus.SC_UNAUTHORIZED:
                     case HttpStatus.SC_FORBIDDEN:
                     {
-                        String responseString;
-                        try
-                        {
-                            responseString = EntityUtils.toString(response.getEntity());
-                        }
-                        catch (Exception ignore)
-                        {
-                            responseString = "(error getting response)";
-                        }
-                        throw new GitLabAuthFailureException(this.modeInfo.getMode(), "Failed to get OAuth token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        // This means that the user has successfully authenticated, but the request for an OAuth token
+                        // has been denied (401 or 403). This could mean the user has enabled 2 factor authentication.
+                        String message = "Failed to get OAuth token after successful authentication (perhaps 2 factor authentication is enabled); status: " + response.getStatusLine() + "; response: " + readResponseEntityForAuthError(response);
+                        LOGGER.warn(message);
+                        throw new GitLabAuthFailureException(this.modeInfo.getMode(), message);
                     }
                     case HttpStatus.SC_BAD_GATEWAY:
                     case HttpStatus.SC_SERVICE_UNAVAILABLE:
                     case HttpStatus.SC_GATEWAY_TIMEOUT:
                     {
-                        String responseString;
-                        try
-                        {
-                            responseString = EntityUtils.toString(response.getEntity());
-                        }
-                        catch (Exception ignore)
-                        {
-                            responseString = "(error getting response)";
-                        }
-                        throw new GitLabAuthAccessException(this.modeInfo.getMode(), "Error accessing auth server: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        // This means that there was some issue accessing the auth server.
+                        String message = "Error accessing auth server; status: " + response.getStatusLine() + "; response: " + readResponseEntityForAuthError(response);
+                        LOGGER.warn(message);
+                        throw new GitLabAuthAccessException(this.modeInfo.getMode(), message);
                     }
                     default:
                     {
                         // Check that this is a redirect
-                        if ((statusCode < HttpStatus.SC_MOVED_PERMANENTLY) || (statusCode > HttpStatus.SC_TEMPORARY_REDIRECT))
+                        if (!isRedirectStatus(statusCode))
                         {
-                            StringBuilder message = new StringBuilder("Error getting OAuth token - expected redirect to ");
-                            message.append(getAppRedirectURI());
-                            message.append(", got: ");
-                            message.append(response.getStatusLine());
-                            String responseString;
-                            try
-                            {
-                                responseString = EntityUtils.toString(response.getEntity());
-                            }
-                            catch (Exception ignore)
-                            {
-                                responseString = "(error getting response)";
-                            }
-                            if ((responseString != null) && !responseString.isEmpty())
-                            {
-                                message.append("\nResponse:\n");
-                                message.append(responseString);
-                            }
-                            throw new GitLabAuthOtherException(this.modeInfo.getMode(), message.toString());
+                            String message = "Error getting OAuth token - expected redirect to " + getAppRedirectURI() + "; got status: " + response.getStatusLine() + "; response: " + readResponseEntityForAuthError(response);
+                            LOGGER.warn(message);
+                            throw new GitLabAuthOtherException(this.modeInfo.getMode(), message);
                         }
                     }
                 }
@@ -236,16 +209,11 @@ class GitLabOAuthAuthenticator
             try (CloseableHttpResponse response = client.execute(post))
             {
                 StatusLine statusLine = response.getStatusLine();
-                responseString = EntityUtils.toString(response.getEntity());
-                if (statusLine.getStatusCode() != HttpStatus.SC_OK)
+                if (!isSuccessStatus(statusLine.getStatusCode()))
                 {
-                    StringBuilder message = new StringBuilder("Got status: ").append(statusLine);
-                    if (responseString != null)
-                    {
-                        message.append("\nResponse: ").append(responseString);
-                    }
-                    throw new GitLabAuthOtherException(this.modeInfo.getMode(), message.toString());
+                    throw new GitLabAuthOtherException(this.modeInfo.getMode(), "Got status: " + statusLine + "; response: " + readResponseEntityForAuthError(response));
                 }
+                responseString = EntityUtils.toString(response.getEntity());
             }
 
             Map<?, ?> responseObject;
@@ -275,13 +243,31 @@ class GitLabOAuthAuthenticator
         }
         catch (Exception e)
         {
-            StringBuilder builder = new StringBuilder("Error getting OAuth token");
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append(": ").append(eMessage);
-            }
-            throw new GitLabAuthOtherException(this.modeInfo.getMode(), builder.toString(), e);
+            throw new GitLabAuthOtherException(this.modeInfo.getMode(), StringTools.appendThrowableMessageIfPresent("Error getting OAuth token", e), e);
+        }
+    }
+
+    private boolean isSuccessStatus(int statusCode)
+    {
+        return (200 <= statusCode) && (statusCode < 300);
+    }
+
+    private boolean isRedirectStatus(int statusCode)
+    {
+        return (301 <= statusCode) && (statusCode < 400);
+    }
+
+    private String readResponseEntityForAuthError(HttpResponse response)
+    {
+        try
+        {
+            String responseString = EntityUtils.toString(response.getEntity());
+            return StringIterate.isEmptyOrWhitespace(responseString) ? "<empty response>" : responseString;
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error getting response during authorization (status {})", response.getStatusLine(), e);
+            return "<error getting response>";
         }
     }
 
