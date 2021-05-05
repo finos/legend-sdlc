@@ -151,7 +151,6 @@ public class GitLabEntityApiTestResource
                 500);
         if (!callUntilBranchDeleted.succeeded())
         {
-            LOGGER.info("branch looks like: " + repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()).toString());
             throw new RuntimeException("Branch is still not deleted post merge after " + callUntilBranchDeleted.getTryCount() + " tries");
         }
         LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
