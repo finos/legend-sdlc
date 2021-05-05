@@ -27,6 +27,8 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.RepositoryApi;
+import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -141,11 +143,21 @@ public class GitLabEntityApiTestResource
         }
         LOGGER.info("Waited {} times for merge request to have state \"{}\"", callUntilMerged.getTryCount(), requiredMergedStatus);
 
-        List<Entity> newWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        RepositoryApi repositoryApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getRepositoryApi();
+        CallUntil<List<Branch>, GitLabApiException> callUntilBranchDeleted = CallUntil.callUntil(
+                () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
+                GitLabEntityApiTestResource::hasOnlyMasterBranch,
+                10,
+                500);
+        if (!callUntilBranchDeleted.succeeded())
+        {
+            throw new RuntimeException("Branch is still not deleted post merge after " + callUntilBranchDeleted.getTryCount() + " tries");
+        }
+        LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
+
         List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
-        Assert.assertEquals(Collections.emptyList(), newWorkspaceEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
         Entity projectEntity = postCommitProjectEntities.get(0);
         Assert.assertEquals(projectEntity.getPath(), entityPath);
@@ -156,5 +168,10 @@ public class GitLabEntityApiTestResource
     public GitLabProjectApi getGitLabProjectApi()
     {
         return gitLabProjectApi;
+    }
+
+    private static boolean hasOnlyMasterBranch(List<Branch> branchList)
+    {
+        return branchList.size() == 1 && "master".equals(branchList.get(0).getName());
     }
 }
