@@ -1,0 +1,31 @@
+{
+  "classifierPath": "meta::pure::metamodel::relationship::Association",
+  "content": {
+    "_type": "association",
+    "name": "TestAssociation",
+    "package": "model::domain",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employees",
+        "type": "model::domain::Person"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "employer",
+        "type": "model::domain::Firm"
+      }
+    ],
+    "stereotypes": [
+      {
+        "profile": "model::domain::TestProfile",
+        "value": "stereotype1"
+      }
+    ]
+  }
+}

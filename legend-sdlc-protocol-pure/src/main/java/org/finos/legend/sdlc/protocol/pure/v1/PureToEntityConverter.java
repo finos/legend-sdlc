@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.set.ImmutableSet;
 import org.finos.legend.engine.protocol.pure.v1.ProtocolToClassifierPathLoader;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.shared.core.ObjectMapperFactory;
@@ -24,6 +26,8 @@ import java.util.Map;
 public class PureToEntityConverter extends ProtocolToEntityConverter<PackageableElement>
 {
     private final Map<Class<? extends PackageableElement>, String> classToClassifier = ProtocolToClassifierPathLoader.getProtocolClassToClassifierMap();
+
+    private final ImmutableSet<String> supportedClassifiers = Sets.immutable.withAll(this.classToClassifier.values());
 
     public PureToEntityConverter()
     {
@@ -40,6 +44,11 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
     protected String getEntityPath(PackageableElement element)
     {
         return element.getPath();
+    }
+
+    boolean isSupportedClassifier(String classifierPath)
+    {
+        return this.supportedClassifiers.contains(classifierPath);
     }
 }
 

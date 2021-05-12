@@ -1,0 +1,31 @@
+###Mapping
+Mapping model::mapping::TestMapping
+(
+  include model::mapping::OtherMapping
+
+  model::domain::TargetClass1[tc1]: Relational
+  {
+    id: [model::domain::TestDatabase]Table1.id,
+    type: EnumerationMapping TestEnumerationMappingInt: [model::domain::TestDatabase]Table1.type,
+    otherType: EnumerationMapping TestEnumerationMappingString: [model::domain::TestDatabase]Table1.otherType,
+    other[tc2]: [model::domain::TestDatabase]@Table1_Table2
+  }
+  model::domain::TargetClass2[tc2]: Relational
+  {
+    id: [model::domain::TestDatabase]Table2.id,
+    name: lower([model::domain::TestDatabase]Table2.name)
+  }
+
+  model::domain::TestEnumeration: EnumerationMapping TestEnumerationMappingInt
+  {
+    TYPE1: [100],
+    TYPE2: [200],
+    TYPE3: [300, 400]
+  }
+  model::domain::TestEnumeration: EnumerationMapping TestEnumerationMappingString
+  {
+    TYPE1: ['abc'],
+    TYPE2: ['def', 'ghi'],
+    TYPE3: ['jlk']
+  }
+)

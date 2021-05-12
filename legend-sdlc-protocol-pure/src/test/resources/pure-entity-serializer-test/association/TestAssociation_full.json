@@ -1,0 +1,87 @@
+{
+  "classifierPath": "meta::pure::metamodel::relationship::Association",
+  "content": {
+    "_type": "association",
+    "name": "TestAssociation",
+    "originalMilestonedProperties": [],
+    "package": "model::domain",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employees",
+        "propertyTypeSourceInformation": {
+          "endColumn": 34,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 3
+        },
+        "sourceInformation": {
+          "endColumn": 38,
+          "endLine": 3,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 3
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Person"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "employer",
+        "propertyTypeSourceInformation": {
+          "endColumn": 31,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 13,
+          "startLine": 4
+        },
+        "sourceInformation": {
+          "endColumn": 38,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Firm"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 5,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 1
+    },
+    "stereotypes": [
+      {
+        "profile": "model::domain::TestProfile",
+        "profileSourceInformation": {
+          "endColumn": 40,
+          "endLine": 1,
+          "sourceId": "",
+          "startColumn": 15,
+          "startLine": 1
+        },
+        "sourceInformation": {
+          "endColumn": 52,
+          "endLine": 1,
+          "sourceId": "",
+          "startColumn": 15,
+          "startLine": 1
+        },
+        "value": "stereotype1"
+      }
+    ],
+    "taggedValues": []
+  }
+}

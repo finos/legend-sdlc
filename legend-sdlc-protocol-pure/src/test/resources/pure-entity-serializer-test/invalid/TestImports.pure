@@ -1,0 +1,11 @@
+import model::domain::*;
+
+Class model::domain::TestClass
+{
+  <<TestProfile.identifier>> {TestProfile.tag1 = 'some value', TestProfile.tag2 = 'some other value'} oneName: String[1];
+  anotherName: String[0..1];
+  {TestProfile.tag1 = 'some kind of date'} oneDate: StrictDate[0..1];
+  anotherDate: DateTime[0..1];
+  <<TestProfile.stereotype1, TestProfile.stereotype2>> oneNumber: Integer[1];
+  moreNumbers: Float[*];
+}
