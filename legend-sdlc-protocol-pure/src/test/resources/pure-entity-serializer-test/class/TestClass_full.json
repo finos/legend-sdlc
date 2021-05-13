@@ -1,0 +1,291 @@
+{
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "TestClass",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain",
+    "properties" : [ {
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "oneName",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 162,
+        "endLine" : 3,
+        "sourceId" : "",
+        "startColumn" : 157,
+        "startLine" : 3
+      },
+      "sourceInformation" : {
+        "endColumn" : 166,
+        "endLine" : 3,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 3
+      },
+      "stereotypes" : [ {
+        "profile" : "model::domain::TestProfile",
+        "profileSourceInformation" : {
+          "endColumn" : 30,
+          "endLine" : 3,
+          "sourceId" : "",
+          "startColumn" : 5,
+          "startLine" : 3
+        },
+        "sourceInformation" : {
+          "endColumn" : 41,
+          "endLine" : 3,
+          "sourceId" : "",
+          "startColumn" : 5,
+          "startLine" : 3
+        },
+        "value" : "identifier"
+      } ],
+      "taggedValues" : [ {
+        "sourceInformation" : {
+          "endColumn" : 91,
+          "endLine" : 3,
+          "sourceId" : "",
+          "startColumn" : 46,
+          "startLine" : 3
+        },
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "profileSourceInformation" : {
+            "endColumn" : 71,
+            "endLine" : 3,
+            "sourceId" : "",
+            "startColumn" : 46,
+            "startLine" : 3
+          },
+          "sourceInformation" : {
+            "endColumn" : 76,
+            "endLine" : 3,
+            "sourceId" : "",
+            "startColumn" : 73,
+            "startLine" : 3
+          },
+          "value" : "tag1"
+        },
+        "value" : "some value"
+      }, {
+        "sourceInformation" : {
+          "endColumn" : 145,
+          "endLine" : 3,
+          "sourceId" : "",
+          "startColumn" : 94,
+          "startLine" : 3
+        },
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "profileSourceInformation" : {
+            "endColumn" : 119,
+            "endLine" : 3,
+            "sourceId" : "",
+            "startColumn" : 94,
+            "startLine" : 3
+          },
+          "sourceInformation" : {
+            "endColumn" : 124,
+            "endLine" : 3,
+            "sourceId" : "",
+            "startColumn" : 121,
+            "startLine" : 3
+          },
+          "value" : "tag2"
+        },
+        "value" : "some other value"
+      } ],
+      "type" : "String"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "anotherName",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 21,
+        "endLine" : 4,
+        "sourceId" : "",
+        "startColumn" : 16,
+        "startLine" : 4
+      },
+      "sourceInformation" : {
+        "endColumn" : 28,
+        "endLine" : 4,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 4
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "type" : "String"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "oneDate",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 77,
+        "endLine" : 5,
+        "sourceId" : "",
+        "startColumn" : 68,
+        "startLine" : 5
+      },
+      "sourceInformation" : {
+        "endColumn" : 84,
+        "endLine" : 5,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 5
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ {
+        "sourceInformation" : {
+          "endColumn" : 56,
+          "endLine" : 5,
+          "sourceId" : "",
+          "startColumn" : 4,
+          "startLine" : 5
+        },
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "profileSourceInformation" : {
+            "endColumn" : 29,
+            "endLine" : 5,
+            "sourceId" : "",
+            "startColumn" : 4,
+            "startLine" : 5
+          },
+          "sourceInformation" : {
+            "endColumn" : 34,
+            "endLine" : 5,
+            "sourceId" : "",
+            "startColumn" : 31,
+            "startLine" : 5
+          },
+          "value" : "tag1"
+        },
+        "value" : "some kind of date"
+      } ],
+      "type" : "StrictDate"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "anotherDate",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 23,
+        "endLine" : 6,
+        "sourceId" : "",
+        "startColumn" : 16,
+        "startLine" : 6
+      },
+      "sourceInformation" : {
+        "endColumn" : 30,
+        "endLine" : 6,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 6
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "type" : "DateTime"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "oneNumber",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 103,
+        "endLine" : 7,
+        "sourceId" : "",
+        "startColumn" : 97,
+        "startLine" : 7
+      },
+      "sourceInformation" : {
+        "endColumn" : 107,
+        "endLine" : 7,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 7
+      },
+      "stereotypes" : [ {
+        "profile" : "model::domain::TestProfile",
+        "profileSourceInformation" : {
+          "endColumn" : 30,
+          "endLine" : 7,
+          "sourceId" : "",
+          "startColumn" : 5,
+          "startLine" : 7
+        },
+        "sourceInformation" : {
+          "endColumn" : 42,
+          "endLine" : 7,
+          "sourceId" : "",
+          "startColumn" : 5,
+          "startLine" : 7
+        },
+        "value" : "stereotype1"
+      }, {
+        "profile" : "model::domain::TestProfile",
+        "profileSourceInformation" : {
+          "endColumn" : 70,
+          "endLine" : 7,
+          "sourceId" : "",
+          "startColumn" : 45,
+          "startLine" : 7
+        },
+        "sourceInformation" : {
+          "endColumn" : 82,
+          "endLine" : 7,
+          "sourceId" : "",
+          "startColumn" : 45,
+          "startLine" : 7
+        },
+        "value" : "stereotype2"
+      } ],
+      "taggedValues" : [ ],
+      "type" : "Integer"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 0
+      },
+      "name" : "moreNumbers",
+      "propertyTypeSourceInformation" : {
+        "endColumn" : 20,
+        "endLine" : 8,
+        "sourceId" : "",
+        "startColumn" : 16,
+        "startLine" : 8
+      },
+      "sourceInformation" : {
+        "endColumn" : 24,
+        "endLine" : 8,
+        "sourceId" : "",
+        "startColumn" : 3,
+        "startLine" : 8
+      },
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "type" : "Float"
+    } ],
+    "qualifiedProperties" : [ ],
+    "sourceInformation" : {
+      "endColumn" : 1,
+      "endLine" : 9,
+      "sourceId" : "",
+      "startColumn" : 1,
+      "startLine" : 1
+    },
+    "stereotypes" : [ ],
+    "superTypes" : [ ],
+    "taggedValues" : [ ]
+  }
+}

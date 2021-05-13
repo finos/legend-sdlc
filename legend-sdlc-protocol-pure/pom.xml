@@ -53,6 +53,10 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-protocol</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-entity-serialization</artifactId>
+        </dependency>
         <!-- SDLC -->
 
         <!-- ENGINE -->
@@ -68,8 +72,23 @@
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-protocol-pure</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-language-pure-grammar</artifactId>
+        </dependency>
         <!-- ENGINE -->
-
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
         <!-- ECLIPSE COLLECTIONS -->
         <dependency>
             <groupId>org.eclipse.collections</groupId>
@@ -89,11 +108,6 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-entity-serialization</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-model</artifactId>
             <type>test-jar</type>
             <scope>test</scope>
@@ -106,7 +120,7 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-language-pure-grammar</artifactId>
+            <artifactId>legend-engine-language-pure-store-relational</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- TEST -->

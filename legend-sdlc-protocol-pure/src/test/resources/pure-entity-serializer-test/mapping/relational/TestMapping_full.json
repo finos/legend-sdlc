@@ -1,0 +1,472 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "_type": "mapping",
+    "associationMappings": [],
+    "classMappings": [
+      {
+        "_type": "relational",
+        "class": "model::domain::TargetClass1",
+        "classSourceInformation": {
+          "endColumn": 29,
+          "endLine": 6,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 6
+        },
+        "distinct": false,
+        "groupBy": [],
+        "id": "tc1",
+        "primaryKey": [],
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "id",
+              "sourceInformation": {
+                "endColumn": 6,
+                "endLine": 8,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 8
+              }
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "id",
+              "sourceInformation": {
+                "endColumn": 46,
+                "endLine": 8,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 9,
+                "startLine": 8
+              },
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 43,
+                  "endLine": 8,
+                  "sourceId": "model::mapping::TestMapping",
+                  "startColumn": 38,
+                  "startLine": 8
+                },
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1",
+            "sourceInformation": {
+              "endColumn": 46,
+              "endLine": 8,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 7,
+              "startLine": 8
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "TestEnumerationMappingInt",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "type",
+              "sourceInformation": {
+                "endColumn": 8,
+                "endLine": 9,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 9
+              }
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "type",
+              "sourceInformation": {
+                "endColumn": 96,
+                "endLine": 9,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 57,
+                "startLine": 9
+              },
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 91,
+                  "endLine": 9,
+                  "sourceId": "model::mapping::TestMapping",
+                  "startColumn": 86,
+                  "startLine": 9
+                },
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1",
+            "sourceInformation": {
+              "endColumn": 96,
+              "endLine": 9,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 9,
+              "startLine": 9
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "TestEnumerationMappingString",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "otherType",
+              "sourceInformation": {
+                "endColumn": 13,
+                "endLine": 10,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 10
+              }
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "otherType",
+              "sourceInformation": {
+                "endColumn": 109,
+                "endLine": 10,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 65,
+                "startLine": 10
+              },
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 99,
+                  "endLine": 10,
+                  "sourceId": "model::mapping::TestMapping",
+                  "startColumn": 94,
+                  "startLine": 10
+                },
+                "table": "Table1"
+              },
+              "tableAlias": "Table1"
+            },
+            "source": "tc1",
+            "sourceInformation": {
+              "endColumn": 109,
+              "endLine": 10,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 14,
+              "startLine": 10
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass1",
+              "property": "other",
+              "sourceInformation": {
+                "endColumn": 9,
+                "endLine": 11,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 11
+              }
+            },
+            "relationalOperation": {
+              "_type": "elemtWithJoins",
+              "joins": [
+                {
+                  "db": "model::domain::TestDatabase",
+                  "name": "Table1_Table2",
+                  "sourceInformation": {
+                    "endColumn": 59,
+                    "endLine": 11,
+                    "sourceId": "model::mapping::TestMapping",
+                    "startColumn": 46,
+                    "startLine": 11
+                  }
+                }
+              ],
+              "sourceInformation": {
+                "endColumn": 59,
+                "endLine": 11,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 17,
+                "startLine": 11
+              }
+            },
+            "source": "tc1",
+            "sourceInformation": {
+              "endColumn": 59,
+              "endLine": 11,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 15,
+              "startLine": 11
+            },
+            "target": "tc2"
+          }
+        ],
+        "root": false,
+        "sourceInformation": {
+          "endColumn": 3,
+          "endLine": 12,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 6
+        }
+      },
+      {
+        "_type": "relational",
+        "class": "model::domain::TargetClass2",
+        "classSourceInformation": {
+          "endColumn": 29,
+          "endLine": 13,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 13
+        },
+        "distinct": false,
+        "groupBy": [],
+        "id": "tc2",
+        "primaryKey": [],
+        "propertyMappings": [
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass2",
+              "property": "id",
+              "sourceInformation": {
+                "endColumn": 6,
+                "endLine": 15,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 15
+              }
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "id",
+              "sourceInformation": {
+                "endColumn": 46,
+                "endLine": 15,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 9,
+                "startLine": 15
+              },
+              "table": {
+                "_type": "Table",
+                "database": "model::domain::TestDatabase",
+                "mainTableDb": "model::domain::TestDatabase",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 43,
+                  "endLine": 15,
+                  "sourceId": "model::mapping::TestMapping",
+                  "startColumn": 38,
+                  "startLine": 15
+                },
+                "table": "Table2"
+              },
+              "tableAlias": "Table2"
+            },
+            "source": "tc2",
+            "sourceInformation": {
+              "endColumn": 46,
+              "endLine": 15,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 7,
+              "startLine": 15
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "property": {
+              "class": "model::domain::TargetClass2",
+              "property": "name",
+              "sourceInformation": {
+                "endColumn": 8,
+                "endLine": 16,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 5,
+                "startLine": 16
+              }
+            },
+            "relationalOperation": {
+              "_type": "dynaFunc",
+              "funcName": "lower",
+              "parameters": [
+                {
+                  "_type": "column",
+                  "column": "name",
+                  "sourceInformation": {
+                    "endColumn": 56,
+                    "endLine": 16,
+                    "sourceId": "model::mapping::TestMapping",
+                    "startColumn": 17,
+                    "startLine": 16
+                  },
+                  "table": {
+                    "_type": "Table",
+                    "database": "model::domain::TestDatabase",
+                    "mainTableDb": "model::domain::TestDatabase",
+                    "schema": "default",
+                    "sourceInformation": {
+                      "endColumn": 51,
+                      "endLine": 16,
+                      "sourceId": "model::mapping::TestMapping",
+                      "startColumn": 46,
+                      "startLine": 16
+                    },
+                    "table": "Table2"
+                  },
+                  "tableAlias": "Table2"
+                }
+              ],
+              "sourceInformation": {
+                "endColumn": 57,
+                "endLine": 16,
+                "sourceId": "model::mapping::TestMapping",
+                "startColumn": 11,
+                "startLine": 16
+              }
+            },
+            "source": "tc2",
+            "sourceInformation": {
+              "endColumn": 57,
+              "endLine": 16,
+              "sourceId": "model::mapping::TestMapping",
+              "startColumn": 9,
+              "startLine": 16
+            }
+          }
+        ],
+        "root": false,
+        "sourceInformation": {
+          "endColumn": 3,
+          "endLine": 17,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 13
+        }
+      }
+    ],
+    "enumerationMappings": [
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "TYPE1",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 100
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE2",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE3",
+            "sourceValues": [
+              {
+                "_type": "integerSourceValue",
+                "value": 300
+              },
+              {
+                "_type": "integerSourceValue",
+                "value": 400
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::domain::TestEnumeration",
+        "id": "TestEnumerationMappingInt",
+        "sourceInformation": {
+          "endColumn": 3,
+          "endLine": 24,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 19
+        }
+      },
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "TYPE1",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "abc"
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE2",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "def"
+              },
+              {
+                "_type": "stringSourceValue",
+                "value": "ghi"
+              }
+            ]
+          },
+          {
+            "enumValue": "TYPE3",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "jlk"
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::domain::TestEnumeration",
+        "id": "TestEnumerationMappingString",
+        "sourceInformation": {
+          "endColumn": 3,
+          "endLine": 30,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 25
+        }
+      }
+    ],
+    "includedMappings": [
+      {
+        "includedMapping": "model::mapping::OtherMapping",
+        "sourceInformation": {
+          "endColumn": 38,
+          "endLine": 4,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 4
+        }
+      }
+    ],
+    "name": "TestMapping",
+    "package": "model::mapping",
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 31,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 2
+    },
+    "tests": []
+  }
+}
