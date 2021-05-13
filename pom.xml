@@ -46,6 +46,7 @@
         <module>legend-sdlc-generation-model-maven-plugin</module>
         <module>legend-sdlc-generation-service-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
+        <module>legend-sdlc-test-utils</module>
         <module>test-reports</module>
     </modules>
 
@@ -97,6 +98,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <json-smart.version>2.4.2</json-smart.version>
+        <h2.version>1.4.200</h2.version>
     </properties>
 
     <scm>
@@ -557,6 +559,21 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-runtime-java-extension-external-json</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-m2-dsl-mapping</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
+                <artifactId>legend-pure-runtime-java-extension-dsl-mapping</artifactId>
+                <version>${legend.pure.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-m3-core</artifactId>
                 <version>${legend.pure.version}</version>
             </dependency>
@@ -588,6 +605,21 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-grammar</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-test-runner-shared</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-test-runner-mapping</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-test-runner-service</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -728,7 +760,11 @@
                 <artifactId>oauth2-oidc-sdk</artifactId>
                 <version>6.5</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.h2database</groupId>
+                <artifactId>h2</artifactId>
+                <version>${h2.version}</version>
+            </dependency>
             <dependency>
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>

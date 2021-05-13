@@ -1,0 +1,106 @@
+{
+  "classifierPath" : "meta::pure::mapping::Mapping",
+  "content" : {
+    "_type" : "mapping",
+    "classMappings" : [ {
+      "_type" : "pureInstance",
+      "class" : "legend::demo::B",
+      "propertyMappings" : [ {
+        "_type" : "purePropertyMapping",
+        "explodeProperty" : false,
+        "property" : {
+          "class" : "legend::demo::B",
+          "property" : "ii"
+        },
+        "source" : "legend_demo_B",
+        "transform" : {
+          "_type" : "lambda",
+          "body" : [ {
+            "_type" : "func",
+            "function" : "plus",
+            "parameters" : [ {
+              "_type" : "collection",
+              "multiplicity" : {
+                "lowerBound" : 2,
+                "upperBound" : 2
+              },
+              "values" : [ {
+                "_type" : "property",
+                "parameters" : [ {
+                  "_type" : "var",
+                  "name" : "src"
+                } ],
+                "property" : "i"
+              }, {
+                "_type" : "string",
+                "multiplicity" : {
+                  "lowerBound" : 1,
+                  "upperBound" : 1
+                },
+                "values" : [ " 'f'" ]
+              } ]
+            } ]
+          } ],
+          "parameters" : [ ]
+        }
+      } ],
+      "root" : true,
+      "srcClass" : "legend::demo::A"
+    } ],
+    "enumerationMappings" : [ ],
+    "includedMappings" : [ ],
+    "name" : "AB",
+    "package" : "legend::demo",
+    "tests" : [ {
+      "assert" : {
+        "_type" : "expectedOutputMappingTestAssert",
+        "expectedOutput" : "{\"defects\":[],\"source\":{\"defects\":[],\"source\":{\"number\":1,\"record\":\"{\\\"i\\\":\\\"test\\\"}\"},\"value\":{\"i\":\"test\"}},\"value\":{\"ii\":\"test \\'f\\'\"}}"
+      },
+      "inputData" : [ {
+        "_type" : "object",
+        "data" : "{\"i\":\"test\"}",
+        "inputType" : "JSON",
+        "sourceClass" : "legend::demo::A"
+      } ],
+      "name" : "test",
+      "query" : {
+        "_type" : "lambda",
+        "body" : [ {
+          "_type" : "func",
+          "function" : "serialize",
+          "parameters" : [ {
+            "_type" : "func",
+            "function" : "graphFetchChecked",
+            "parameters" : [ {
+              "_type" : "func",
+              "function" : "getAll",
+              "parameters" : [ {
+                "_type" : "class",
+                "fullPath" : "legend::demo::B"
+              } ]
+            }, {
+              "_type" : "rootGraphFetchTree",
+              "class" : "legend::demo::B",
+              "subTrees" : [ {
+                "_type" : "propertyGraphFetchTree",
+                "parameters" : [ ],
+                "property" : "ii",
+                "subTrees" : [ ]
+              } ]
+            } ]
+          }, {
+            "_type" : "rootGraphFetchTree",
+            "class" : "legend::demo::B",
+            "subTrees" : [ {
+              "_type" : "propertyGraphFetchTree",
+              "parameters" : [ ],
+              "property" : "ii",
+              "subTrees" : [ ]
+            } ]
+          } ]
+        } ],
+        "parameters" : [ ]
+      }
+    } ]
+  }
+}
