@@ -733,13 +733,6 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
-                <exclusions>
-                    <!-- excluding to resolve level 7 sonatype CVE against Apache Freemarker -->
-                    <exclusion>
-                        <groupId>io.dropwizard</groupId>
-                        <artifactId>dropwizard-views-freemarker</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
