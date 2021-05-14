@@ -158,7 +158,7 @@ public class StringTools
     // Log sanitizing
 
     private static final Pattern SINGLE_UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile("[^ \\w\\p{Punct}]");
-    private static final Pattern MULTI_UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile(SINGLE_UNSAFE_LOG_MESSAGE_PATTERN.pattern() + "+");
+    private static final Pattern MULTI_UNSAFE_LOG_MESSAGE_PATTERN = Pattern.compile(SINGLE_UNSAFE_LOG_MESSAGE_PATTERN.pattern() + "++");
 
     public static String sanitizeForLogging(String string, String replacement, boolean replaceGroups)
     {
@@ -169,7 +169,7 @@ public class StringTools
     // Vertical whitespace replacement
 
     private static final Pattern SINGLE_VERTICAL_WHITESPACE_PATTERN = Pattern.compile("\\v");
-    private static final Pattern MULTI_VERTICAL_WHITESPACE_PATTERN = Pattern.compile(SINGLE_VERTICAL_WHITESPACE_PATTERN.pattern() + "+");
+    private static final Pattern MULTI_VERTICAL_WHITESPACE_PATTERN = Pattern.compile(SINGLE_VERTICAL_WHITESPACE_PATTERN.pattern() + "++");
 
     public static String replaceVerticalWhitespace(String string, String replacement, boolean replaceGroups)
     {

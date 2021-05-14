@@ -35,6 +35,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 public class TestPureEntitySerializer
 {
@@ -45,6 +46,8 @@ public class TestPureEntitySerializer
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
             .build();
+
+    private static final Pattern LINE_BREAK = Pattern.compile("\\R");
 
     private final PureEntitySerializer pureSerializer = new PureEntitySerializer();
     private final EntityTextSerializer defaultJsonSerializer = EntitySerializers.getDefaultJsonSerializer();
@@ -133,9 +136,9 @@ public class TestPureEntitySerializer
         String pureCode = readTextFromResource(baseName + ".pure");
 
         Assert.assertTrue(this.pureSerializer.canSerialize(fullEntity));
-        Assert.assertEquals(pureCode, this.pureSerializer.serializeToString(fullEntity));
+        assertTextEquivalent(pureCode, this.pureSerializer.serializeToString(fullEntity));
         Assert.assertTrue(this.pureSerializer.canSerialize(reducedEntity));
-        Assert.assertEquals(pureCode, this.pureSerializer.serializeToString(reducedEntity));
+        assertTextEquivalent(pureCode, this.pureSerializer.serializeToString(reducedEntity));
         assertEntitiesEqual(fullEntity, this.pureSerializer.deserialize(pureCode));
     }
 
@@ -206,5 +209,15 @@ public class TestPureEntitySerializer
             throw new RuntimeException(e);
         }
         Assert.assertEquals(expectedJson, actualJson);
+    }
+
+    private void assertTextEquivalent(String expected, String actual)
+    {
+        Assert.assertEquals(normalizeLineBreaks(expected), normalizeLineBreaks(actual));
+    }
+
+    private static String normalizeLineBreaks(String string)
+    {
+        return LINE_BREAK.matcher(string).replaceAll("\n");
     }
 }
