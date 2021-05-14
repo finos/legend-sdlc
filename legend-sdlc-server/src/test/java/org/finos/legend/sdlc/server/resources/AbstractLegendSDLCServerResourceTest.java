@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
+import java.util.Optional;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
 
@@ -50,13 +51,21 @@ public abstract class AbstractLegendSDLCServerResourceTest
     private void configureClient()
     {
         this.client = this.sdlcServerClientRule.getClient();
-        this.client.target(String.format("http://localhost:%d", APP_RULE.getLocalPort())).request().get();
+        this.client.target(getServerUrl()).request().get();
     }
 
     protected WebTarget clientFor(String url)
     {
-        String hostPort = "http://localhost:%d";
-        String fullUrl = String.format(hostPort + url, APP_RULE.getLocalPort());
-        return this.client.target(fullUrl);
+        return this.client.target(getServerUrl(url));
+    }
+
+    protected String getServerUrl()
+    {
+        return getServerUrl(null);
+    }
+
+    protected String getServerUrl(String path)
+    {
+        return "http://localhost:" + APP_RULE.getLocalPort() + Optional.ofNullable(path).orElse("");
     }
 }
