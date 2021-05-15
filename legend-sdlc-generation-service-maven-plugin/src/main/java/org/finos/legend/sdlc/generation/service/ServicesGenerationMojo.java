@@ -24,7 +24,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
-import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
+import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
@@ -37,22 +37,19 @@ import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder
 import org.finos.legend.sdlc.serialization.EntityLoader;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.ServiceLoader;
 import java.util.stream.Collectors;
+import java.util.Set;
+import java.util.ArrayList;
+import java.util.Comparator;
 import javax.lang.model.SourceVersion;
 
 @Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
 public class ServicesGenerationMojo extends AbstractMojo
 {
-    private final RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
-
-    private final MutableList<PlanTransformer> transformers;
-
     @Parameter
     private ServicesSpecification inclusions;
 
@@ -67,17 +64,6 @@ public class ServicesGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File resourceOutputDirectory;
-
-    public ServicesGenerationMojo(RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformer)
-    {
-        this.extensions =  extensions;
-        this.transformers = transformer;
-    }
-
-    public ServicesGenerationMojo()
-    {
-        this(Lists.fixedSize.empty(), LegendPlanTransformers.transformers);
-    }
 
     @Override
     public void execute() throws MojoExecutionException
@@ -162,7 +148,10 @@ public class ServicesGenerationMojo extends AbstractMojo
             long serviceStart = System.nanoTime();
             try
             {
-                ServiceExecutionGenerator.newGenerator(service, pureModel, this.packagePrefix, this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath(), objectMapper, this.extensions, this.transformers, null).generate();
+                MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class));
+                RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> routerExtensions = extensions.flatCollect(e -> e.getExtraRouterExtensions(pureModel));
+                MutableList<PlanTransformer> planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
+                ServiceExecutionGenerator.newGenerator(service, pureModel, this.packagePrefix, this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath(), objectMapper, routerExtensions, planTransformers, null).generate();
             }
             catch (Exception e)
             {
