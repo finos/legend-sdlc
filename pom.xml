@@ -46,6 +46,8 @@
         <module>legend-sdlc-generation-model-maven-plugin</module>
         <module>legend-sdlc-generation-service-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
+        <module>legend-sdlc-extension-loader-execution</module>
+        <module>legend-sdlc-extension-loader</module>
         <module>test-reports</module>
     </modules>
 
@@ -97,6 +99,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <json-smart.version>2.4.2</json-smart.version>
+        <hikaricp.version>3.4.5</hikaricp.version>
     </properties>
 
     <scm>
@@ -582,6 +585,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-protocol-relational</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-store-relational</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
@@ -598,6 +606,16 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-dsl-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-diagram</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-text</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -623,6 +641,11 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-executionPlan-execution-store-inMemory</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-executionPlan-execution-store-relational-connection</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -653,6 +676,11 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-external-format-rosetta</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-external-format-jsonSchema</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
 
@@ -710,6 +738,12 @@
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
             </dependency>
 
             <dependency>
