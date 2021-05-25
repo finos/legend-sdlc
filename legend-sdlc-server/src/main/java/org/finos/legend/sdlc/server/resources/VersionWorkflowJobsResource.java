@@ -50,7 +50,7 @@ public class VersionWorkflowJobsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get workflow jobs for a workflow", notes = "Get workflows for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get jobs for a workflow", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
                                              @PathParam("versionId") String versionId,
                                              @PathParam("workflowId") String workflowId,
@@ -78,7 +78,7 @@ public class VersionWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}/logs")
-    @ApiOperation("Get a workflow job logs")
+    @ApiOperation("Get a workflow job log")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getWorkflowJobLogs(@PathParam("projectId") String projectId,
                                        @PathParam("versionId") String versionId,
