@@ -183,7 +183,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
         }
 
         @Override
-        public String getWorkflowJobsLogs(String workflowId, String workflowJobId)
+        public String getWorkflowJobLog(String workflowId, String workflowJobId)
         {
             int jobId = parseIntegerIdIfNotNull(workflowJobId);
             Job job;

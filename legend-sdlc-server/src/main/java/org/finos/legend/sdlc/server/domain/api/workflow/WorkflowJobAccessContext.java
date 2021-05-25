@@ -25,5 +25,5 @@ public interface WorkflowJobAccessContext
 
     List<WorkflowJob> getWorkflowJobs(String workflowId, Iterable<WorkflowJobStatus> statuses);
 
-    String getWorkflowJobsLogs(String workflowId, String workflowJobId);
+    String getWorkflowJobLog(String workflowId, String workflowJobId);
 }

@@ -89,7 +89,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                 "getting workflow job logs " + workflowJobId + " for project " + projectId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobsLogs(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
