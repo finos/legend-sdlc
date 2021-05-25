@@ -191,7 +191,16 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             try
             {
                 job = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getJob(this.projectId.getGitLabId(), jobId));
-                jobTrace = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getTrace(this.projectId.getGitLabId(), job.getId()));
+
+                if (!getRef().equals(job.getRef()))
+                {
+                    throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId, Response.Status.NOT_FOUND);
+                }
+
+                if (!workflowId.equals(toStringIfNotNull(job.getPipeline().getId())))
+                {
+                    throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ", workflow " + workflowId + ": " + workflowJobId, Response.Status.NOT_FOUND);
+                }
             }
             catch (Exception e)
             {
@@ -201,14 +210,16 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                         () -> "Error getting workflow job " + workflowJobId + " in " + getRefInfoForException());
             }
 
-            if (!getRef().equals(job.getRef()))
+            try
             {
-                throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId, Response.Status.NOT_FOUND);
+                jobTrace = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getTrace(this.projectId.getGitLabId(), job.getId()));
             }
-
-            if (!workflowId.equals(toStringIfNotNull(job.getPipeline().getId())))
+            catch (Exception e)
             {
-                throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ", workflow " + workflowId + ": " + workflowJobId, Response.Status.NOT_FOUND);
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access workflow job log for workflow job " + workflowJobId + " in " + getRefInfoForException(),
+                        () -> "Unknown workflow job log in " + getRefInfoForException() + ": " + workflowJobId,
+                        () -> "Error getting workflow job log for workflow job" + workflowJobId + " in " + getRefInfoForException());
             }
 
             return jobTrace;
