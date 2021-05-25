@@ -31,18 +31,18 @@ public class InMemoryWorkflowJobApi implements WorkflowJobApi
     @Override
     public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId)
     {
-        return null;
+        throw new UnsupportedOperationException();
     }
 }
