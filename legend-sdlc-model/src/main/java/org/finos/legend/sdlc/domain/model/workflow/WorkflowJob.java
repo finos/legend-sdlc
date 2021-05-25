@@ -20,6 +20,8 @@ public interface WorkflowJob
 {
     String getId();
 
+    String getWorkflowId();
+
     String getName();
 
     String getProjectId();

@@ -222,6 +222,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
     private static WorkflowJob fromGitLabJob(String projectId, Job job)
     {
         String id = toStringIfNotNull(job.getId());
+        String workflowId = toStringIfNotNull(job.getPipeline().getId());
         String name = toStringIfNotNull(job.getName());
         String revisionId = job.getPipeline().getSha();
         String webURL = job.getWebUrl();
@@ -235,6 +236,12 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             public String getId()
             {
                 return id;
+            }
+
+            @Override
+            public String getWorkflowId()
+            {
+                return workflowId;
             }
 
             @Override
