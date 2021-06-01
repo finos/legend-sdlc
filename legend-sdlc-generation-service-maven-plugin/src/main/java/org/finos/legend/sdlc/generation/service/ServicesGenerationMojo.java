@@ -34,6 +34,7 @@ import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
+import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 
 import java.io.File;
@@ -209,8 +210,9 @@ public class ServicesGenerationMojo extends AbstractMojo
         {
             try (EntityLoader directoriesLoader = EntityLoader.newEntityLoader(servicesSpec.directories))
             {
+                EntityToPureConverter converter = new EntityToPureConverter();
                 servicePaths = directoriesLoader.getAllEntities()
-                        .filter(e -> "meta::legend::service::metamodel::Service".equals(e.getClassifierPath()))
+                        .filter(e -> converter.fromEntityIfPossible(e).filter(s -> s instanceof Service).isPresent())
                         .map(Entity::getPath)
                         .collect(Collectors.toSet());
             }
