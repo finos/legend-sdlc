@@ -36,9 +36,9 @@ import java.util.regex.Pattern;
 
 public class EntityValidator
 {
-    private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^\\w+$");
-    private static final Pattern VALID_PACKAGE_PATTERN = Pattern.compile("^\\w+(::\\w+)*$");
-    private static final Pattern VALID_CLASSIFIER_PATH_PATTERN = Pattern.compile("^meta(::\\w+)+$");
+    private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^\\w++$");
+    private static final Pattern VALID_PACKAGE_PATTERN = Pattern.compile("^\\w++(::\\w++)*+$");
+    private static final Pattern VALID_CLASSIFIER_PATH_PATTERN = Pattern.compile("^meta(::\\w++)++$");
 
     private static final EntitySerializer ENTITY_SERIALIZER = EntitySerializers.getDefaultJsonSerializer();
     private static final String ENTITY_DIRECTORY = "entities";
