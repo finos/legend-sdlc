@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.test.junit;
 
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,5 +25,5 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 public @interface LegendSDLCTestCaseCollector
 {
-    String classifierPath();
+    Class<? extends PackageableElement> collectorClass();
 }

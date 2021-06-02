@@ -17,9 +17,6 @@ package org.finos.legend.sdlc.test.junit;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
-import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.test.PathTools;
 import org.junit.Assert;
@@ -33,8 +30,6 @@ import java.util.List;
 
 public class TestLegendSDLCTestSuiteBuilder
 {
-    private static PureModel PURE_MODEL = new PureModel(PureModelContextData.newBuilder().build(), null, Thread.currentThread().getContextClassLoader(), DeploymentMode.PROD);
-
     @Test
     public void testBuildM2MMappingWithTestsTestSuite() throws Exception
     {

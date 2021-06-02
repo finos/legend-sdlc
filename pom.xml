@@ -98,6 +98,7 @@
         <snakeyaml.version>1.27</snakeyaml.version>
         <json-smart.version>2.4.2</json-smart.version>
         <h2.version>1.4.200</h2.version>
+        <hikaricp.version>3.4.5</hikaricp.version>
     </properties>
 
     <scm>
@@ -770,6 +771,12 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>${hikaricp.version}</version>
             </dependency>
 
             <dependency>

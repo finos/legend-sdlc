@@ -64,7 +64,6 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
         }
         else if (richMappingTestResult.getResult() == TestResult.ERROR)
         {
-
             StringWriter stringWriter = new StringWriter();
             PrintWriter printWriter = new PrintWriter(stringWriter);
             richMappingTestResult.getException().printStackTrace(printWriter);
@@ -73,7 +72,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
         }
     }
 
-    @LegendSDLCTestCaseCollector(classifierPath = "meta::pure::mapping::Mapping")
+    @LegendSDLCTestCaseCollector(collectorClass = Mapping.class)
     public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions,String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         Mapping mapping = findPackageableElement(pureModelContextData.getElementsOfType(Mapping.class), entity.getPath());

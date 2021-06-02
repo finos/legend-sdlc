@@ -132,7 +132,7 @@ public class ServiceTestCase extends LegendPureV1TestCase<Service>
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
-    @LegendSDLCTestCaseCollector(classifierPath = "meta::legend::service::metamodel::Service")
+    @LegendSDLCTestCaseCollector(collectorClass = Service.class)
     public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         Service service = findPackageableElement(pureModelContextData.getElementsOfType(Service.class), entity.getPath());
