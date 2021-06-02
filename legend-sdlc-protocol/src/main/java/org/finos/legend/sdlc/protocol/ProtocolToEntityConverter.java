@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.protocol;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 
 import java.util.Map;
@@ -24,13 +24,13 @@ import java.util.Optional;
 
 public abstract class ProtocolToEntityConverter<T>
 {
-    private final ObjectMapper objectMapper;
+    private final JsonMapper jsonMapper;
     private final JavaType entityContentType;
 
-    protected ProtocolToEntityConverter(ObjectMapper objectMapper)
+    protected ProtocolToEntityConverter(JsonMapper jsonMapper)
     {
-        this.objectMapper = objectMapper;
-        this.entityContentType = objectMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class);
+        this.jsonMapper = jsonMapper;
+        this.entityContentType = jsonMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class);
     }
 
     public Entity toEntity(T element)
@@ -91,7 +91,7 @@ public abstract class ProtocolToEntityConverter<T>
     private Map<String, ?> convertContent(T element) throws JsonProcessingException
     {
         // Note that we cannot use ObjectMapper.convertValue, as some protocol elements may have custom serializers/deserializers which can cause problems with convertValue
-        String intermediateJSON = this.objectMapper.writeValueAsString(element);
-        return this.objectMapper.readValue(intermediateJSON, this.entityContentType);
+        String intermediateJSON = this.jsonMapper.writeValueAsString(element);
+        return this.jsonMapper.readValue(intermediateJSON, this.entityContentType);
     }
 }

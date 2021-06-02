@@ -51,6 +51,12 @@
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-shared-core</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.finos.legend.shared</groupId>
+                    <artifactId>legend-shared-pac4j-kerberos</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- ENGINE -->
 
