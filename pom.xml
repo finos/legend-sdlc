@@ -83,6 +83,7 @@
         <gitlab4j.version>4.16.0</gitlab4j.version>
         <guava.version>30.0-jre</guava.version>
         <guice.version>4.2.1</guice.version>
+        <h2.version>1.4.200</h2.version>
         <hk2.version>2.5.0-b32</hk2.version>
         <jackson.version>2.10.5</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
@@ -91,13 +92,12 @@
         <jersey.version>2.25.1</jersey.version>
         <jersey2-guice.version>1.0.6</jersey2-guice.version>
         <jetty.version>9.4.39.v20210325</jetty.version>
+        <json-smart.version>2.4.2</json-smart.version>
         <junit.version>4.13.1</junit.version>
         <apache.maven.version>3.6.2</apache.maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
-        <json-smart.version>2.4.2</json-smart.version>
-        <h2.version>1.4.200</h2.version>
     </properties>
 
     <scm>
@@ -744,15 +744,15 @@
             </dependency>
 
             <dependency>
-                <groupId>com.hubspot.dropwizard</groupId>
-                <artifactId>dropwizard-guicier</artifactId>
-                <version>${dropwizard-guicier.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>com.h2database</groupId>
                 <artifactId>h2</artifactId>
                 <version>${h2.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.hubspot.dropwizard</groupId>
+                <artifactId>dropwizard-guicier</artifactId>
+                <version>${dropwizard-guicier.version}</version>
             </dependency>
 
             <dependency>
