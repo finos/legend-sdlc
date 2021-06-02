@@ -14,11 +14,13 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.ImmutableSet;
 import org.finos.legend.engine.protocol.pure.v1.ProtocolToClassifierPathLoader;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.sdlc.protocol.ProtocolToEntityConverter;
 
 import java.util.Map;
@@ -31,7 +33,7 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
 
     public PureToEntityConverter()
     {
-        super(ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports());
+        super(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder().serializationInclusion(JsonInclude.Include.NON_NULL).build()));
     }
 
     @Override
