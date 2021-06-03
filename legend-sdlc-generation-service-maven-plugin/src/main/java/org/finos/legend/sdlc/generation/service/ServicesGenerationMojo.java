@@ -14,8 +14,12 @@
 
 package org.finos.legend.sdlc.generation.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -24,13 +28,13 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
-import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
@@ -38,14 +42,14 @@ import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-import java.util.stream.Collectors;
 import java.util.Set;
-import java.util.ArrayList;
-import java.util.Comparator;
+import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 
 @Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
@@ -126,9 +130,14 @@ public class ServicesGenerationMojo extends AbstractMojo
         long modelEnd = System.nanoTime();
         getLog().info(String.format("Finished loading model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
 
-        ObjectMapper objectMapper = ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports()
-                .configure(SerializationFeature.INDENT_OUTPUT, true)
-                .configure(SerializationFeature.CLOSE_CLOSEABLE, false);
+        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+                .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .build());
 
         long start = System.nanoTime();
         Map<String, Service> servicesByPath = pureModelContextData.getElementsOfType(Service.class).stream().collect(Collectors.toMap(PackageableElement::getPath, el -> el));
@@ -152,7 +161,7 @@ public class ServicesGenerationMojo extends AbstractMojo
                 MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class));
                 RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> routerExtensions = extensions.flatCollect(e -> e.getExtraRouterExtensions(pureModel));
                 MutableList<PlanTransformer> planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
-                ServiceExecutionGenerator.newGenerator(service, pureModel, this.packagePrefix, this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath(), objectMapper, routerExtensions, planTransformers, null).generate();
+                ServiceExecutionGenerator.newGenerator(service, pureModel, this.packagePrefix, this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath(), jsonMapper, routerExtensions, planTransformers, null).generate();
             }
             catch (Exception e)
             {
