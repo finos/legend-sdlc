@@ -93,10 +93,11 @@ public class GitLabApiTestSetupUtil
 
     protected static boolean hasOnlyBranchesWithNames(List<Branch> branchList, List<String> expectedNames)
     {
-        List<String> branchNames = Lists.mutable.withAll(branchList.stream().map(branch -> {
+        List<String> branchNames = Lists.mutable.withAll(branchList.stream().map(branch ->
+                                                                                        {
                                                                                             String branchName = branch.getName();
-                                                                                            return "master".equals(branchName)? branchName : branchName.substring(branchName.lastIndexOf('/') + 1);
-                                                                                           })
+                                                                                            return "master".equals(branchName) ? branchName : branchName.substring(branchName.lastIndexOf('/') + 1);
+                                                                                        })
                                                                             .collect(Collectors.toList()));
         Collections.sort(branchNames);
         Collections.sort(expectedNames);
