@@ -331,9 +331,16 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                 return WorkflowJobStatus.FAILED;
             }
             case SKIPPED:
+            {
+                return WorkflowJobStatus.SKIPPED;
+            }
             case CANCELED:
             {
                 return WorkflowJobStatus.CANCELED;
+            }
+            case MANUAL:
+            {
+                return WorkflowJobStatus.PENDING_MANUAL;
             }
             default:
             {
