@@ -172,6 +172,6 @@ public class GitLabEntityApiTestResource
 
     private static boolean hasOnlyMasterBranch(List<Branch> branchList)
     {
-        return branchList.size() == 1 && "master".equals(branchList.get(0).getName());
+        return GitLabApiTestSetupUtil.hasOnlyBranchesWithNames(branchList, Lists.mutable.with("master"));
     }
 }

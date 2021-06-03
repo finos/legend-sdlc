@@ -16,7 +16,9 @@ package org.finos.legend.sdlc.server.gitlab.api.server;
 
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApiTestResource;
@@ -53,18 +55,29 @@ public class TestGitLabServerWorkspaceApis extends AbstractGitLabServerApiTest
         gitLabWorkspaceApiTestResource.runCreateWorkspaceTest();
     }
 
+    @Test
+    public void testUpdateWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
+    {
+        gitLabWorkspaceApiTestResource.runUpdateWorkspaceWithRebaseNoConflictTest();
+    }
+
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
      */
     private static void setUpWorkspaceApi()
     {
+        GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
+        GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
-        GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor);
-        GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabUserContext, backgroundTaskProcessor);
-        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        gitLabWorkspaceApiTestResource = new GitLabWorkspaceApiTestResource(gitLabRevisionApi, gitLabWorkspaceApi, gitLabProjectApi);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor);
+        GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabReviewApi gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
+        GitLabReviewApi gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
+
+        gitLabWorkspaceApiTestResource = new GitLabWorkspaceApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext);
     }
 }
