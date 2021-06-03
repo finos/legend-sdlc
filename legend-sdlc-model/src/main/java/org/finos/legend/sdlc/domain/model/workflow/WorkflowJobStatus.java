@@ -16,5 +16,5 @@ package org.finos.legend.sdlc.domain.model.workflow;
 
 public enum WorkflowJobStatus
 {
-    PENDING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELED, PENDING_MANUAL, SKIPPED, UNKNOWN
+    WAITING, IN_PROGRESS, SUCCEEDED, FAILED, CANCELED, WAITING_MANUAL, SKIPPED, UNKNOWN
 }

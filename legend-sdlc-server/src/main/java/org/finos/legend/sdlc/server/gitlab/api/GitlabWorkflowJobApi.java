@@ -316,7 +316,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             case CREATED:
             case PENDING:
             {
-                return WorkflowJobStatus.PENDING;
+                return WorkflowJobStatus.WAITING;
             }
             case RUNNING:
             {
@@ -340,7 +340,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             }
             case MANUAL:
             {
-                return WorkflowJobStatus.PENDING_MANUAL;
+                return WorkflowJobStatus.WAITING_MANUAL;
             }
             default:
             {
