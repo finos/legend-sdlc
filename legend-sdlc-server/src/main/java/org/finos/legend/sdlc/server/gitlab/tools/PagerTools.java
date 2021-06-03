@@ -104,14 +104,27 @@ public class PagerTools
             return false;
         }
 
+        // Note: totalItems and totalPages are both negative -- we know nothing about them.
+        // Thus we check currentPage: if
+        //     1. currentPage > 1, we know item(s) exist and page is not empty.
+        //     2. currentPage == 1, we check the 1st page in accordance with logic in gitlab4j/Pager.
+        //     3. now currentPage <= 0, we check if pager hasNext: if so, we check if the next page is empty; if not, pager is empty.
         int currentPage = pager.getCurrentPage();
         if (currentPage > 1)
         {
             return false;
         }
-
-        List<?> page = pager.page(currentPage);
-        return (page == null) || page.isEmpty();
+        if (currentPage == 1)
+        {
+            List<?> page = pager.page(currentPage);
+            return (page == null) || page.isEmpty();
+        }
+        if (pager.hasNext())
+        {
+            List<?> page = pager.next();
+            return (page == null) || page.isEmpty();
+        }
+        return true;
     }
 
     public static <T> List<T> getNextWithRetries(Pager<T> pager)

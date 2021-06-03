@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
@@ -25,10 +26,15 @@ import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Version;
 import org.junit.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class GitLabApiTestSetupUtil
 {
@@ -83,5 +89,18 @@ public class GitLabApiTestSetupUtil
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 
         return new GitLabUserContext(httpServletRequest, null);
+    }
+
+    protected static boolean hasOnlyBranchesWithNames(List<Branch> branchList, List<String> expectedNames)
+    {
+        List<String> branchNames = Lists.mutable.withAll(branchList.stream().map(branch ->
+                                                                                        {
+                                                                                            String branchName = branch.getName();
+                                                                                            return "master".equals(branchName) ? branchName : branchName.substring(branchName.lastIndexOf('/') + 1);
+                                                                                        })
+                                                                            .collect(Collectors.toList()));
+        Collections.sort(branchNames);
+        Collections.sort(expectedNames);
+        return expectedNames.equals(branchNames);
     }
 }
