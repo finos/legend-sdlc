@@ -14,8 +14,12 @@
 
 package org.finos.legend.sdlc.generation.file;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.MapperFeature;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.commons.text.StringEscapeUtils;
-import org.finos.legend.engine.shared.core.ObjectMapperFactory;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -40,24 +44,31 @@ public class GenerationOutput
 
     public String getContent()
     {
-        return content;
+        return this.content;
     }
 
     public String getFileName()
     {
-        return fileName;
+        return this.fileName;
     }
 
     public String getFormat()
     {
-        return format;
+        return this.format;
     }
 
     public String extractFileContent() throws IOException
     {
-        if (this.format.equals("json"))
+        if ("json".equals(this.format))
         {
-            return ObjectMapperFactory.getNewStandardObjectMapper().readTree(this.content).toPrettyString();
+            return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                    .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                    .serializationInclusion(JsonInclude.Include.NON_NULL)
+                    .build())
+                    .readTree(this.content)
+                    .toPrettyString();
         }
         return StringEscapeUtils.unescapeJava(this.content);
     }

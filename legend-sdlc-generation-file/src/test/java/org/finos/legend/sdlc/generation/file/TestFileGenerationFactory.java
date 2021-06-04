@@ -14,39 +14,38 @@
 
 package org.finos.legend.sdlc.generation.file;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
-import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Objects;
-import java.util.Scanner;
 
 public class TestFileGenerationFactory
 {
-
     private PureModelContextData getPureModelContextDataFromPath(String path)
     {
+        URL url = Objects.requireNonNull(getClass().getClassLoader().getResource(path), "Can't find resource '" + path + "'");
         try
         {
-            ObjectMapper objectMapper = ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports();
-            String jsonString = new Scanner(Objects.requireNonNull(getClass().getClassLoader().getResourceAsStream(path), "Can't find resource '" + path + "'"), "UTF-8").useDelimiter("\\A").next();
-            return objectMapper.readValue(jsonString, PureModelContextData.class);
+            JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder().build());
+            return jsonMapper.readValue(url, PureModelContextData.class);
         }
-        catch (Exception error)
+        catch (Exception e)
         {
-            throw new EngineException("Unable to build PureModelContextData with path '" + path + "'");
+            throw new RuntimeException("Unable to build PureModelContextData with path '" + path + "'", e);
         }
     }
 

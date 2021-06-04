@@ -14,8 +14,12 @@
 
 package org.finos.legend.sdlc.generation.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteFeature;
+import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -24,9 +28,9 @@ import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanG
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.plan.platform.PlanPlatform;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 
 import java.io.IOException;
@@ -44,27 +48,27 @@ public class ServiceExecutionGenerator
     private final String packagePrefix;
     private final Path javaSourceOutputDirectory;
     private final Path resourceOutputDirectory;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;
     private final String clientVersion;
     private final RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
     private final MutableList<PlanTransformer> transformers;
 
-    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, ObjectMapper objectMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
     {
         this.service = service;
         this.pureModel = pureModel;
         this.packagePrefix = canonicalizePackagePrefix(packagePrefix);
         this.javaSourceOutputDirectory = javaSourceOutputDirectory;
         this.resourceOutputDirectory = resourceOutputDirectory;
-        this.objectMapper = (objectMapper == null) ? getDefaultObjectMapper() : objectMapper;
+        this.objectMapper = (jsonMapper == null) ? getDefaultJsonMapper() : jsonMapper;
         this.clientVersion = clientVersion;
         this.extensions = extensions;
         this.transformers = transformers;
     }
 
-    public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, ObjectMapper objectMapper)
+    public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper)
     {
-        this(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, objectMapper, Lists.mutable.empty(), Lists.mutable.empty(), null);
+        this(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, Lists.mutable.empty(), Lists.mutable.empty(), null);
     }
 
     public void generate() throws IOException
@@ -104,9 +108,9 @@ public class ServiceExecutionGenerator
         return newGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, null, Lists.mutable.empty(), Lists.mutable.empty(), null);
     }
 
-    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, ObjectMapper objectMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
     {
-        return new ServiceExecutionGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, objectMapper,extensions, transformers, clientVersion);
+        return new ServiceExecutionGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, extensions, transformers, clientVersion);
     }
 
     private Path getExecutionPlanResourcePath()
@@ -170,11 +174,16 @@ public class ServiceExecutionGenerator
         return builder.append(string, start, string.length());
     }
 
-    private static ObjectMapper getDefaultObjectMapper()
+    private static JsonMapper getDefaultJsonMapper()
     {
-        return ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports()
-                .configure(SerializationFeature.INDENT_OUTPUT, true)
-                .configure(SerializationFeature.CLOSE_CLOSEABLE, false);
+        return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+                .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .build());
     }
 
     private static String canonicalizePackagePrefix(String packagePrefix)
