@@ -66,20 +66,20 @@ public class AbstractGitLabApiTest
     @BeforeClass
     public static void suiteSetup()
     {
-        if (backgroundTaskProcessor != null)
-        {
-            JerseyGuiceUtils.install((s, serviceLocator) -> null);
-            backgroundTaskProcessor = new BackgroundTaskProcessor(1);
-            prepareGitLabUser();
-        }
+        JerseyGuiceUtils.install((s, serviceLocator) -> null);
+        backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+        prepareGitLabUser();
     }
 
     @AfterClass
     public static void shutDown()
     {
-        LOGGER.info("Shutting down backgroundTaskProcessor.");
-        backgroundTaskProcessor.shutdown();
-        LOGGER.info("Shut down backgroundTaskProcessor.");
+        if (backgroundTaskProcessor != null)
+        {
+            LOGGER.info("Shutting down backgroundTaskProcessor.");
+            backgroundTaskProcessor.shutdown();
+            LOGGER.info("Shut down backgroundTaskProcessor.");
+        }
     }
 
     /**
