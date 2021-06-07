@@ -108,12 +108,22 @@ public class LegendSDLCTestSuiteBuilder
         TestSuite suite = new TestSuite();
         suite.setName(name);
         Set<String> entitiesForTestingPaths = entitiesForTesting.stream().map(Entity::getPath).collect(Collectors.toSet());
-        PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder()
-                .withEntitiesIfPossible(entitiesForTesting)
-                .withEntitiesIfPossible(EntityLoader.newEntityLoader((classLoader == null) ? LegendSDLCTestSuiteBuilder.class.getClassLoader() : classLoader).getAllEntities().filter(e -> !entitiesForTestingPaths.contains(e.getPath())))
-                .build(classLoader);
-        PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
-        PureModel pureModel = pureModelWithContextData.getPureModel();
+        PureModelContextData pureModelContextData;
+        PureModel pureModel;
+        try (EntityLoader entityLoader = EntityLoader.newEntityLoader((classLoader == null) ? LegendSDLCTestSuiteBuilder.class.getClassLoader() : classLoader))
+        {
+            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder()
+                    .withEntitiesIfPossible(entitiesForTesting)
+                    .withEntitiesIfPossible(entityLoader.getAllEntities().filter(e -> !entitiesForTestingPaths.contains(e.getPath())))
+                    .build(classLoader);
+            pureModelContextData = pureModelWithContextData.getPureModelContextData();
+            pureModel = pureModelWithContextData.getPureModel();
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Error loading entities", e);
+            throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException("Error loading entities", e);
+        }
         EntityToPureConverter converter = new EntityToPureConverter();
         entitiesForTesting.stream()
                 .map(e ->
