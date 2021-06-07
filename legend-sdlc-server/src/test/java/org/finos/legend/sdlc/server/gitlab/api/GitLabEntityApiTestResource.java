@@ -147,8 +147,8 @@ public class GitLabEntityApiTestResource
         CallUntil<List<Branch>, GitLabApiException> callUntilBranchDeleted = CallUntil.callUntil(
                 () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
                 GitLabEntityApiTestResource::hasOnlyMasterBranch,
-                10,
-                500);
+                15,
+                1000);
         if (!callUntilBranchDeleted.succeeded())
         {
             throw new RuntimeException("Branch is still not deleted post merge after " + callUntilBranchDeleted.getTryCount() + " tries");

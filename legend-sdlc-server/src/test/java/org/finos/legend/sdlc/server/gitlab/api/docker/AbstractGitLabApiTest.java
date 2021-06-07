@@ -59,7 +59,7 @@ public class AbstractGitLabApiTest
     static final Integer TEST_HOST_PORT = 8090;
     static final String TEST_HOST_URL = TEST_HOST_SCHEME + "://" + TEST_HOST_HOST + ":" + TEST_HOST_PORT;
 
-    static final BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+    static BackgroundTaskProcessor backgroundTaskProcessor;
 
     static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabApiTest.class);
 
@@ -67,6 +67,7 @@ public class AbstractGitLabApiTest
     public static void suiteSetup()
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null);
+        backgroundTaskProcessor = new BackgroundTaskProcessor(1);
         prepareGitLabUser();
     }
 

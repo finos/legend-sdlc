@@ -46,7 +46,7 @@ public class AbstractGitLabServerApiTest
     static final Integer TEST_HOST_PORT = null;
     static final String TEST_HOST_URL = "https://gitlab.com";
 
-    static final BackgroundTaskProcessor backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+    static BackgroundTaskProcessor backgroundTaskProcessor;
 
     static final Logger LOGGER = LoggerFactory.getLogger(AbstractGitLabServerApiTest.class);
 
@@ -54,6 +54,7 @@ public class AbstractGitLabServerApiTest
     public static void suiteSetup()
     {
         JerseyGuiceUtils.install((s, serviceLocator) -> null);
+        backgroundTaskProcessor = new BackgroundTaskProcessor(1);
     }
 
     @AfterClass
