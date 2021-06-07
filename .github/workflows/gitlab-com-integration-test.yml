@@ -35,7 +35,7 @@ on:
 jobs:
   build:
     name: Run gitlab.com Integration Tests
-#    if: (github.repository == 'finos/legend-sdlc')
+    if: (github.repository == 'finos/legend-sdlc')
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
