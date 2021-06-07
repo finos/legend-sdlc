@@ -70,7 +70,7 @@ public class GitLabEntityApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "entitytestproj";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", "gitlab-integration-tests");
         String workspaceName = "entitytestworkspace";
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);

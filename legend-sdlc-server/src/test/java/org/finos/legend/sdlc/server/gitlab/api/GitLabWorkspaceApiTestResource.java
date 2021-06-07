@@ -71,7 +71,7 @@ public class GitLabWorkspaceApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestproj";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", "gitlab-integration-tests");
         String workspaceId = "testworkspace";
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
@@ -98,7 +98,7 @@ public class GitLabWorkspaceApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "wupdatetestproj";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", "gitlab-integration-tests");
         String workspaceName = "workspaceone";
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);

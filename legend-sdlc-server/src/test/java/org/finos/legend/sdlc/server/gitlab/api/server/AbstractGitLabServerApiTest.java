@@ -107,7 +107,7 @@ public class AbstractGitLabServerApiTest
      */
     protected static void cleanUpTestProjects(GitLabProjectApi gitLabProjectApi)
     {
-        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.empty(), Lists.mutable.empty());
+        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.with("gitlab-integration-tests"), Lists.mutable.empty());
         for (Project project : projectsToBeCleaned)
         {
             String projectId = project.getProjectId();
@@ -120,7 +120,7 @@ public class AbstractGitLabServerApiTest
             }
             catch (Exception e)
             {
-                LOGGER.error("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName, e);
+                LOGGER.warn("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName, e);
             }
             LOGGER.info("Handled test project id: {}, name: {}", projectId, projectName);
         }
