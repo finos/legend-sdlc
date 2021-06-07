@@ -29,6 +29,7 @@ import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.user.UserApi;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBackupApi;
@@ -45,6 +46,7 @@ import org.finos.legend.sdlc.server.gitlab.api.GitLabUserApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
 
@@ -74,6 +76,7 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(ConflictResolutionApi.class).to(GitLabConflictResolutionApi.class);
             binder.bind(BackupApi.class).to(GitLabBackupApi.class);
             binder.bind(WorkflowApi.class).to(GitlabWorkflowApi.class);
+            binder.bind(WorkflowJobApi.class).to(GitlabWorkflowJobApi.class);
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
