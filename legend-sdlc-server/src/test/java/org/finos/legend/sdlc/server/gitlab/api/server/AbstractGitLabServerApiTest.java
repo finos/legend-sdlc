@@ -116,9 +116,9 @@ public class AbstractGitLabServerApiTest
             }
             catch (Exception e)
             {
-                LOGGER.error("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName);
+                LOGGER.error("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName, e);
             }
-            LOGGER.info("Deleted test project id: {}, name: {}", projectId, projectName);
+            LOGGER.info("Handled test project id: {}, name: {}", projectId, projectName);
         }
     }
 }
