@@ -77,7 +77,10 @@ public class EntityValidator
             {
                 StringBuilder builder = new StringBuilder(violations.size() * 64);
                 builder.append("There are ");
-                new Formatter(builder).format("%,d", violations.size());
+                try (Formatter formatter = new Formatter(builder))
+                {
+                    formatter.format("%,d", violations.size());
+                }
                 builder.append(" violations:");
                 violations.forEach(v -> builder.append("\n\t").append(v));
                 return builder.toString();
