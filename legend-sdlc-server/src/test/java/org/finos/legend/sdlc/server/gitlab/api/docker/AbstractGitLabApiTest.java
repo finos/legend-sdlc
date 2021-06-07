@@ -66,9 +66,12 @@ public class AbstractGitLabApiTest
     @BeforeClass
     public static void suiteSetup()
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null);
-        backgroundTaskProcessor = new BackgroundTaskProcessor(1);
-        prepareGitLabUser();
+        if (backgroundTaskProcessor != null)
+        {
+            JerseyGuiceUtils.install((s, serviceLocator) -> null);
+            backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+            prepareGitLabUser();
+        }
     }
 
     @AfterClass

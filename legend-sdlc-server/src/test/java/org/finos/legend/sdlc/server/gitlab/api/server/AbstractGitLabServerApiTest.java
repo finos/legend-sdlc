@@ -60,9 +60,12 @@ public class AbstractGitLabServerApiTest
     @AfterClass
     public static void shutDown()
     {
-        LOGGER.info("Shutting down backgroundTaskProcessor.");
-        backgroundTaskProcessor.shutdown();
-        LOGGER.info("Shut down backgroundTaskProcessor.");
+        if (backgroundTaskProcessor != null)
+        {
+            LOGGER.info("Shutting down backgroundTaskProcessor.");
+            backgroundTaskProcessor.shutdown();
+            LOGGER.info("Shut down backgroundTaskProcessor.");
+        }
     }
 
     /**
