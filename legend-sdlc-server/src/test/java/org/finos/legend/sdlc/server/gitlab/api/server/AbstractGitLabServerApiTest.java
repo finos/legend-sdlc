@@ -45,7 +45,7 @@ public class AbstractGitLabServerApiTest
     static final String TEST_HOST_HOST = "gitlab.com";
     static final Integer TEST_HOST_PORT = null;
     static final String TEST_HOST_URL = "https://gitlab.com";
-    public static final String INTEGRATION_TEST_PROJECT_TAG = AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG;
+    public static final String INTEGRATION_TEST_PROJECT_TAG = "gitlab_integration_tests";
 
     static BackgroundTaskProcessor backgroundTaskProcessor;
 
