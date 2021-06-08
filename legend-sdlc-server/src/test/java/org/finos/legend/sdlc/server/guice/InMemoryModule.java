@@ -63,6 +63,13 @@ public class InMemoryModule extends AbstractBaseModule
     @Override
     protected void configureApis(Binder binder)
     {
+        configureLegendApis(binder);
+        binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
+
+    }
+
+    public static void configureLegendApis(Binder binder)
+    {
         binder.bind(InMemoryBackend.class);
         binder.bind(ProjectApi.class).to(InMemoryProjectApi.class);
         binder.bind(ProjectConfigurationApi.class).to(InMemoryProjectConfigurationApi.class);
@@ -81,7 +88,6 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(WorkflowJobApi.class).to(InMemoryWorkflowJobApi.class);
         binder.bind(GitLabUserContext.class);
         binder.bind(GitLabAuthResource.class);
-        binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
 
         binder.bind(Project.class).to(InMemoryProject.class);
     }
