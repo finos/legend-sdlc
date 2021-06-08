@@ -19,6 +19,7 @@ import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 
 import java.util.List;
 
@@ -44,7 +45,7 @@ public class GitLabProjectApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojone";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
@@ -62,7 +63,7 @@ public class GitLabProjectApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojtwo";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
@@ -88,7 +89,7 @@ public class GitLabProjectApiTestResource
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testprojthree";
-        List<String> tags = Lists.mutable.with("doe", "moffitt");
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
@@ -101,10 +102,10 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         String newProjectName = "TestProjectThreeMod";
         String newProjectDescription = "A modified test project.";
-        List<String> newTags = Lists.mutable.with("doe", "moffitt", "main-stacks");
+        List<String> newTags = Lists.mutable.with("doe", "moffitt", "main-stacks", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         List<String> tagsToAdd = Lists.mutable.with("bancroft");
         List<String> tagsToRemove = Lists.mutable.with("doe", "moffitt");
-        List<String> expectedTags = Lists.mutable.with("main-stacks", "bancroft");
+        List<String> expectedTags = Lists.mutable.with("main-stacks", "bancroft", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         gitLabProjectApi.changeProjectName(projectId, newProjectName);
         gitLabProjectApi.changeProjectDescription(projectId, newProjectDescription);

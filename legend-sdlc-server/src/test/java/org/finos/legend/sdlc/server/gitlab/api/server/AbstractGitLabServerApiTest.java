@@ -45,6 +45,7 @@ public class AbstractGitLabServerApiTest
     static final String TEST_HOST_HOST = "gitlab.com";
     static final Integer TEST_HOST_PORT = null;
     static final String TEST_HOST_URL = "https://gitlab.com";
+    public static final String INTEGRATION_TEST_PROJECT_TAG = "gitlab_integration_tests";
 
     static BackgroundTaskProcessor backgroundTaskProcessor;
 
@@ -107,7 +108,7 @@ public class AbstractGitLabServerApiTest
      */
     protected static void cleanUpTestProjects(GitLabProjectApi gitLabProjectApi)
     {
-        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.empty(), Lists.mutable.empty());
+        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.with(INTEGRATION_TEST_PROJECT_TAG), Lists.mutable.empty());
         for (Project project : projectsToBeCleaned)
         {
             String projectId = project.getProjectId();
@@ -120,7 +121,7 @@ public class AbstractGitLabServerApiTest
             }
             catch (Exception e)
             {
-                LOGGER.error("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName, e);
+                LOGGER.warn("Failed to delete project id {}, name: {} during cleanup.", projectId, projectName, e);
             }
             LOGGER.info("Handled test project id: {}, name: {}", projectId, projectName);
         }
