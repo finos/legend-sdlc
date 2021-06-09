@@ -22,7 +22,9 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.junit.Assert;
@@ -43,8 +45,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class TestServicesGenerationMojo
@@ -105,6 +110,49 @@ public class TestServicesGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
         assertDirectoryEmpty(outputDir);
+    }
+
+    @Test
+    public void testWithServices() throws Exception
+    {
+        File entitiesDir = this.tempFolder.newFolder("testEntities");
+        List<Entity> entities;
+        try (EntityLoader testEntities = getTestEntities())
+        {
+            entities = testEntities.getAllEntities().collect(Collectors.toList());
+        }
+        Assert.assertEquals(5, entities.stream().filter(this::isServiceEntity).count());
+        entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, "org.finos.test.test_project", null, null);
+
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+
+        Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
+        Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("generated-sources");
+        assertDirectoryEmpty(outputDir);
+        executeMojo(projectDir, entitiesDir);
+
+        String separator = outputDir.getFileSystem().getSeparator();
+
+        Set<String> expectedServicePlanPaths = entities.stream()
+                .filter(this::isServiceEntity)
+                .map(e -> "plans"  + separator + e.getPath().replace("::", separator) + ".json")
+                .collect(Collectors.toSet());
+        Set<String> actualOutputFiles = getFileStream(outputDir, true).map(Path::toString).collect(Collectors.toSet());
+        Assert.assertEquals(Collections.emptyList(), expectedServicePlanPaths.stream().filter(p -> !actualOutputFiles.contains(p)).sorted().collect(Collectors.toList()));
+
+        Set<String> expectedServiceClassJavaPaths = entities.stream()
+                .filter(this::isServiceEntity)
+                .map(e ->  e.getPath().replace("::", separator) + ".java")
+                .collect(Collectors.toSet());
+        Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
+        Assert.assertEquals(Collections.emptyList(), expectedServiceClassJavaPaths.stream().filter(p -> !actualGeneratedSourceFiles.contains(p)).sorted().collect(Collectors.toList()));
+    }
+
+    private boolean isServiceEntity(Entity entity)
+    {
+        EntityToPureConverter converter = new EntityToPureConverter();
+        return converter.fromEntityIfPossible(entity).filter(e -> e instanceof Service).isPresent();
     }
 
     private void executeMojo(File projectDir, File... entityDirectories) throws Exception
