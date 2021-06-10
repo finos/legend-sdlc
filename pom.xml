@@ -40,6 +40,7 @@
         <module>legend-sdlc-generation-file</module>
         <module>legend-sdlc-generation-service</module>
         <module>legend-sdlc-generation-model</module>
+        <module>legend-sdlc-extensions-collection-entity-serializer</module>
         <module>legend-sdlc-entity-maven-plugin</module>
         <module>legend-sdlc-generation-file-maven-plugin</module>
         <module>legend-sdlc-generation-model-maven-plugin</module>
