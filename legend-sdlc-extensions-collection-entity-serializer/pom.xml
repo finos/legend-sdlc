@@ -26,11 +26,6 @@
     <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
     <name>Legend SDLC Extensions Collection - Entity Serializer</name>
 
-    <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
-    </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
@@ -40,12 +35,6 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-serialization</artifactId>
         </dependency>
-        <!-- ECLIPSE COLLECTIONS -->
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
-        </dependency>
-        <!-- ECLIPSE COLLECTIONS -->
         <!-- TEST -->
         <!-- DO NOT ADD NEW FURTHER TEST DEPENDENCIES -->
         <dependency>

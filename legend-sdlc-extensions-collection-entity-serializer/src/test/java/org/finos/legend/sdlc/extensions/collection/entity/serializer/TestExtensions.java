@@ -14,19 +14,17 @@
 
 package org.finos.legend.sdlc.extensions.collection.entity.serializer;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.sdlc.protocol.pure.v1.PureEntitySerializer;
 import org.finos.legend.sdlc.serialization.DefaultJsonEntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
+import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.ServiceLoader;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class TestExtensions
 {
@@ -34,31 +32,13 @@ public class TestExtensions
     @Test
     public void testPlanGeneratorExtensionArePresent()
     {
-        assertHasExtensions(Lists.mutable.<Class<? extends EntitySerializer>>empty().with(PureEntitySerializer.class).with(DefaultJsonEntitySerializer.class), EntitySerializer.class, true);
+        Map<String, EntitySerializer> serializersByName = EntitySerializers.getAvailableSerializersByName();
+
+        Set<String> expectedNames = Stream.of("pure", "legend").collect(Collectors.toSet());
+        Assert.assertEquals(expectedNames, serializersByName.keySet());
+
+        Set<Class<? extends EntitySerializer>> expectedClasses = Stream.of(PureEntitySerializer.class, DefaultJsonEntitySerializer.class).collect(Collectors.toSet());
+        Set<Class<? extends EntitySerializer>> actualClasses = serializersByName.values().stream().map(EntitySerializer::getClass).collect(Collectors.toSet());
+        Assert.assertEquals(expectedClasses, actualClasses);
     }
-
-    private <T> void assertHasExtensions(Iterable<? extends Class<? extends T>> expectedExtensionClasses, Class<T> extensionClass, boolean failOnAdditional)
-    {
-
-        assertHasExtensions(Lists.mutable.withAll(ServiceLoader.load(extensionClass)), expectedExtensionClasses, extensionClass, failOnAdditional);
-    }
-
-    private <T> void assertHasExtensions(List<T> availableClasses, Iterable<? extends Class<? extends T>> expectedExtensionClasses, Class<T> extensionClass, boolean failOnAdditional)
-    {
-        MutableSet<Class<? extends T>> missingClasses = Sets.mutable.withAll(expectedExtensionClasses);
-        MutableList<Class<?>> unexpectedClasses = Lists.mutable.empty();
-        availableClasses.forEach(e ->
-        {
-            if (!missingClasses.remove(e.getClass()))
-            {
-                unexpectedClasses.add(e.getClass());
-            }
-        });
-        Assert.assertEquals("Missing extensions for " + extensionClass.getName(), Collections.emptySet(), missingClasses);
-        if (failOnAdditional)
-        {
-            Assert.assertEquals("Unexpected extensions for " + extensionClass.getName(), Collections.emptyList(), unexpectedClasses);
-        }
-    }
-
 }
