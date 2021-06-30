@@ -72,7 +72,6 @@ public class ServiceTestCase extends LegendPureV1TestCase<Service>
             }
             catch (Exception e)
             {
-                e.printStackTrace();
                 StringBuilder builder = new StringBuilder("Error running tests");
                 String eMessage = e.getMessage();
                 if (eMessage != null)
