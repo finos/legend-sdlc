@@ -320,7 +320,12 @@ public abstract class ProjectStructure
 
     public static ProjectStructure getProjectStructure(ProjectConfiguration projectConfiguration)
     {
-        return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration);
+        return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration, null);
+    }
+
+    public static ProjectStructure getProjectStructure(ProjectConfiguration projectConfiguration,ProjectExtensionsCollections projectExtensionsCollections)
+    {
+        return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration, projectExtensionsCollections);
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
@@ -649,8 +654,8 @@ public abstract class ProjectStructure
         String serializedNewConfig = serializeProjectConfiguration(newConfig);
         operations.add((configFile == null) ? ProjectFileOperation.addFile(PROJECT_CONFIG_PATH, serializedNewConfig) : ProjectFileOperation.modifyFile(PROJECT_CONFIG_PATH, serializedNewConfig));
 
-        ProjectStructure currentProjectStructure = getProjectStructure(currentConfig);
-        ProjectStructure newProjectStructure = getProjectStructure(newConfig);
+        ProjectStructure currentProjectStructure = getProjectStructure(currentConfig, updateBuilder.getProjectExtensionsCollections());
+        ProjectStructure newProjectStructure = getProjectStructure(newConfig, updateBuilder.getProjectExtensionsCollections());
 
         // Move or re-serialize entities if necessary
         List<EntitySourceDirectory> currentEntityDirectories = currentProjectStructure.getEntitySourceDirectories();

@@ -51,24 +51,34 @@ pac4j:
   clients:
     - org.finos.legend.server.pac4j.gitlab.GitlabClient:
         name: gitlab
-        clientId: $APP_ID
-        secret: $APP_SECRET
-        discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
+        clientId: 1a59fde385c8e57e2279c6409dd14c127124e65d3ebc5f1616f6847a304b77ce
+        secret: 6d8e2f311cba1a7cda55b70ea384fccab67aa40fcd4c6f0d9d52eaa6ec52bb55
+        discoveryUri: https://gitlab.com/.well-known/openid-configuration
         scope: openid profile api
   bypassPaths:
     - /api/info
 
 gitLab:
   newProjectVisibility: public
-  projectTag: legend
-  prod:
+  projectTag: pure
+  uat:
     server:
       scheme: https
-      host: $GITLAB_HOST
+      host: gitlab.com
     app:
-      id: $APP_ID
-      secret: $APP_SECRET
-      redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
+      id: 1a59fde385c8e57e2279c6409dd14c127124e65d3ebc5f1616f6847a304b77ce
+      secret: 6d8e2f311cba1a7cda55b70ea384fccab67aa40fcd4c6f0d9d52eaa6ec52bb55
+      redirectURI: http://127.0.0.1:7070/api/auth/callback
+
+projectStructure:
+  projectCreation:
+    groupIdPattern: ^org\.finos\.legend\..+
+  extensionsCollections:
+    platformGroupId: platform.alloy
+    version: 2.21.1
+    artifactIds:
+      generation: alloy-execution-extensions-collection-generation
+      execution: alloy-execution-extensions-collection-execution
 
 logging:
   # Change this to affect library class logging

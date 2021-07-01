@@ -148,6 +148,13 @@ public class ProjectCreationConfiguration
         return this.artifactIdPattern;
     }
 
+
+    @JsonCreator
+    public static ProjectCreationConfiguration newConfig(@JsonProperty("defaultProjectStructureVersion") Integer defaultProjectStructureVersion, @JsonProperty("groupIdPattern") Pattern groupIdPattern, @JsonProperty("artifactIdPattern") Pattern artifactIdPattern, @JsonProperty("disallowedTypes") Collection<DisallowedType> disallowedTypes)
+    {
+        return new ProjectCreationConfiguration(defaultProjectStructureVersion, groupIdPattern, artifactIdPattern, disallowedTypes);
+    }
+
     public boolean isDisallowedType(ProjectType type)
     {
         return this.disallowedTypes.contains(type);
@@ -158,11 +165,6 @@ public class ProjectCreationConfiguration
         return this.disallowedTypeMessages.get(type);
     }
 
-    @JsonCreator
-    public static ProjectCreationConfiguration newConfig(@JsonProperty("defaultProjectStructureVersion") Integer defaultProjectStructureVersion, @JsonProperty("groupIdPattern") Pattern groupIdPattern, @JsonProperty("artifactIdPattern") Pattern artifactIdPattern, @JsonProperty("disallowedTypes") Collection<DisallowedType> disallowedTypes)
-    {
-        return new ProjectCreationConfiguration(defaultProjectStructureVersion, groupIdPattern, artifactIdPattern, disallowedTypes);
-    }
 
     public static ProjectCreationConfiguration newConfig(Integer defaultProjectStructureVersion, String groupIdPattern, String artifactIdPattern, DisallowedType... disallowedTypes)
     {

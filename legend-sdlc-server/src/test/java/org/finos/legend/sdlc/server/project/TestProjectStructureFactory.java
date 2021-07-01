@@ -71,7 +71,7 @@ public class TestProjectStructureFactory
     {
         assertSupportsVersions(factory, 0);
 
-        ProjectStructure structure = factory.newProjectStructure(null);
+        ProjectStructure structure = factory.newProjectStructure(null, null);
         Assert.assertEquals(0, structure.getVersion());
         Assert.assertTrue(structure instanceof ProjectStructureV0Factory.ProjectStructureV0);
     }

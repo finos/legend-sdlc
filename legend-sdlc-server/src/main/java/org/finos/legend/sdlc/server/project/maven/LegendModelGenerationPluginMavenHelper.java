@@ -15,34 +15,20 @@
 package org.finos.legend.sdlc.server.project.maven;
 
 import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Plugin;
-import org.apache.maven.model.PluginExecution;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.Collections;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class LegendModelGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-    public LegendModelGenerationPluginMavenHelper(String groupId, String artifactId, String version)
-    {
-        super(groupId, artifactId, version, "compile", "generate-model-generations");
-    }
 
-    public LegendModelGenerationPluginMavenHelper(String version)
+    public LegendModelGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
-        this("org.finos.legend.sdlc", "legend-sdlc-generation-model-maven-plugin", version);
-    }
-
-    public Plugin getBuildHelperPlugin(String version)
-    {
-        Plugin plugin = MavenPluginTools.newPlugin("org.codehaus.mojo", "build-helper-maven-plugin", version);
-        PluginExecution execution = MavenPluginTools.newPluginExecution("initialize", "add-source");
-        MavenPluginTools.addPluginExecution(plugin, execution);
-        MavenPluginTools.addConfiguration(execution, MavenPluginTools.newDom("sources", MavenPluginTools.newDom("source", "${project.basedir}/target/generated-sources")));
-        return plugin;
+        super(groupId, artifactId, version, "compile", "generate-model-generations", Collections.singletonList(generationExtensionsCollection));
     }
 
     @Override
@@ -64,6 +50,7 @@ public class LegendModelGenerationPluginMavenHelper extends AbstractLegendMavenP
     @Override
     protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
     {
+        super.addDependencies(projectStructure, versionFileAccessContextProvider, dependencyConsumer);
         if (projectStructure instanceof MultiModuleMavenProjectStructure)
         {
             MultiModuleMavenProjectStructure multiModuleProjectStructure = (MultiModuleMavenProjectStructure) projectStructure;

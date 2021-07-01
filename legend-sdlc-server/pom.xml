@@ -89,6 +89,11 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server-shared</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-protocol-pure</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <!-- SDLC -->
 
         <!-- SHARED -->

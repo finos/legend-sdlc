@@ -30,6 +30,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.config.ProjectExtensionsCollectionConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
@@ -314,6 +315,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
                     .withArtifactGenerationsToAdd(artifactGenerationsToAdd)
                     .withArtifactGenerationsToRemove(artifactGenerationsToRemove)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectExtensionsOverride(ProjectExtensionsCollectionConfiguration.buildProjectExtensionsOverride(this.projectStructureConfig.getProjectExtensionsCollectionConfiguration()))
                     .updateProjectConfiguration();
         }
         catch (Exception e)

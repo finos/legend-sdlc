@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectExtensionsCollections;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -69,19 +70,28 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     private final Map<String, ArtifactType> otherModules;
     private final Map<String, Map<ModuleConfigType, Method>> moduleConfigMethods;
     private final boolean useDependencyManagement;
+    private final ProjectExtensionsCollections projectExtensionsCollections;
 
-    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
+    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement,
+    ProjectExtensionsCollections projectExtensionsCollections
+    )
     {
         super(projectConfiguration, validateEntitySourceDirectories(sourceDirectories, projectConfiguration, entitiesModuleName));
         this.entitiesModuleName = entitiesModuleName;
         this.otherModules = otherModules;
         this.moduleConfigMethods = getModuleConfigMethods();
         this.useDependencyManagement = useDependencyManagement;
+        this.projectExtensionsCollections = projectExtensionsCollections;
     }
 
     protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
     {
-        this(projectConfiguration, entitiesModuleName, Lists.fixedSize.with(getDefaultEntitySourceDirectory(projectConfiguration, entitiesModuleName)), otherModules, useDependencyManagement);
+        this(projectConfiguration, entitiesModuleName, Lists.fixedSize.with(getDefaultEntitySourceDirectory(projectConfiguration, entitiesModuleName)), otherModules, useDependencyManagement, null);
+    }
+
+    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
+    {
+        this(projectConfiguration, entitiesModuleName, sourceDirectories, otherModules, useDependencyManagement, null);
     }
 
     protected Stream<String> getGenerationModuleNames(ArtifactType type)
@@ -190,6 +200,26 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     {
         Stream<String> moduleNames = getModuleNamesForType(type);
         return (moduleNames == null) ? Stream.empty() : moduleNames.map(this::getModuleFullName);
+    }
+
+    public ProjectExtensionsCollections getProjectExtensionsCollections()
+    {
+        return this.projectExtensionsCollections;
+    }
+
+    public String getPlatformOverride()
+    {
+        return this.projectExtensionsCollections != null ? this.projectExtensionsCollections.getPlatformGroupId() : null;
+    }
+
+    public String getPlatformPropertyName()
+    {
+        return this.getPlatformOverride() != null ? this.getPlatformOverride() + ".version" : null;
+    }
+
+    public String getPlatformPropertyReference()
+    {
+        return this.getPlatformPropertyName() != null ? getPropertyReference(this.getPlatformPropertyName()) : null;
     }
 
     public abstract Stream<String> getModuleNamesForType(ArtifactType type);

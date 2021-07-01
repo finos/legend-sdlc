@@ -39,6 +39,7 @@ public class ProjectConfigurationUpdateBuilder
     private Integer projectStructureVersion;
     private Integer projectStructureExtensionVersion;
     private ProjectStructureExtensionProvider projectStructureExtensionProvider;
+    private ProjectExtensionsCollections projectExtensionsCollections;
     private String groupId;
     private String artifactId;
     private final Set<ProjectDependency> projectDependenciesToAdd = Sets.mutable.empty();
@@ -120,6 +121,15 @@ public class ProjectConfigurationUpdateBuilder
         this.projectStructureVersion = projectStructureVersion;
     }
 
+    public void setProjectExtensionsCollections(ProjectExtensionsCollections projectExtensionsCollections)
+    {
+        this.projectExtensionsCollections = projectExtensionsCollections;
+    }
+
+    public ProjectExtensionsCollections getProjectExtensionsCollections()
+    {
+        return projectExtensionsCollections;
+    }
 
     public boolean hasProjectStructureExtensionVersion()
     {
@@ -311,6 +321,12 @@ public class ProjectConfigurationUpdateBuilder
     public ProjectConfigurationUpdateBuilder withProjectStructureVersion(Integer projectStructureVersion)
     {
         setProjectStructureVersion(projectStructureVersion);
+        return this;
+    }
+
+    public ProjectConfigurationUpdateBuilder withProjectExtensionsOverride(ProjectExtensionsCollections projectExtensionsCollections)
+    {
+        setProjectExtensionsCollections(projectExtensionsCollections);
         return this;
     }
 
