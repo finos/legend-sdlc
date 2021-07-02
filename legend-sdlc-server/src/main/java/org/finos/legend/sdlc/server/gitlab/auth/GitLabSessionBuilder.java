@@ -115,11 +115,17 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         {
             return new GitLabOidcSession((OidcProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
+//        TODO uncomment once GitLabUserProfile is created
+//        if (this.profile instanceof GitLabUserProfile)
+//        {
+//            return new GitLabUserSession((GitLabUserProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
+//        }
         throw new IllegalStateException("Unsupported profile type: " + profile);
     }
 
     static boolean isSupportedProfile(CommonProfile profile)
     {
+        // TODO add GitLabUserProfile
         return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile);
     }
 

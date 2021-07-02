@@ -18,6 +18,7 @@ import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
+import org.gitlab4j.api.Constants.TokenType;
 
 import java.io.Serializable;
 import java.util.EnumMap;
@@ -29,7 +30,7 @@ class GitLabTokenManager implements Serializable
     private static final long serialVersionUID = 4579663645788521787L;
 
     private final GitLabModeInfos modeInfos;
-    private final Map<GitLabMode, String> tokens = new EnumMap<>(GitLabMode.class);
+    private final Map<GitLabMode, GitLabToken> tokens = new EnumMap<>(GitLabMode.class);
 
     private GitLabTokenManager(GitLabModeInfos modeInfos)
     {
@@ -80,12 +81,12 @@ class GitLabTokenManager implements Serializable
         return this.modeInfos.getModeInfo(mode);
     }
 
-    String getAccessToken(GitLabMode mode)
+    GitLabToken getGitLabToken(GitLabMode mode)
     {
         return this.tokens.get(mode);
     }
 
-    void clearAccessTokens()
+    void clearGitLabTokens()
     {
         synchronized (this.tokens)
         {
@@ -93,7 +94,17 @@ class GitLabTokenManager implements Serializable
         }
     }
 
-    void putAccessToken(GitLabMode mode, String token)
+    void putOAuthToken(GitLabMode mode, String token)
+    {
+        putGitLabToken(mode, GitLabToken.newOAuthToken(token));
+    }
+
+    void putPrivateAccessToken(GitLabMode mode, String token)
+    {
+        putGitLabToken(mode, GitLabToken.newPrivateAccessToken(token));
+    }
+
+    void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
         if (mode == null)
         {
@@ -106,6 +117,10 @@ class GitLabTokenManager implements Serializable
         if (token == null)
         {
             throw new IllegalArgumentException("token may not be null");
+        }
+        if (!token.getTokenType().equals(TokenType.OAUTH2_ACCESS) && !token.getTokenType().equals(TokenType.PRIVATE))
+        {
+            throw new UnsupportedOperationException(token.getTokenType().toString() + " token is not supported");
         }
         synchronized (this.tokens)
         {
@@ -122,8 +137,8 @@ class GitLabTokenManager implements Serializable
         }
         synchronized (this.tokens)
         {
-            String token = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromAuthCode(code);
-            String oldToken = this.tokens.put(mode, token);
+            GitLabToken token = GitLabToken.newOAuthToken(GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromAuthCode(code));
+            GitLabToken oldToken = this.tokens.put(mode, token);
             return !token.equals(oldToken);
         }
     }
@@ -136,10 +151,10 @@ class GitLabTokenManager implements Serializable
             int startLen = builder.length();
             for (GitLabMode mode : GitLabMode.values())
             {
-                String token = this.tokens.get(mode);
+                GitLabToken token = this.tokens.get(mode);
                 if (token != null)
                 {
-                    ((builder.length() == startLen) ? builder : builder.append(", ")).append(mode.name()).append('=').append(token);
+                    ((builder.length() == startLen) ? builder : builder.append(", ")).append(mode.name()).append('=').append(token.toString());
                 }
             }
             builder.append(']');
@@ -154,12 +169,13 @@ class GitLabTokenManager implements Serializable
             builder.putInt(this.tokens.size());
             for (GitLabMode mode : GitLabMode.values())
             {
-                String token = this.tokens.get(mode);
+                GitLabToken token = this.tokens.get(mode);
                 if (token != null)
                 {
                     builder.putString(mode.name());
                     builder.putString(this.modeInfos.getModeInfo(mode).getAppInfo().getAppId());
-                    builder.putString(token);
+                    builder.putString(token.getTokenType().toString());
+                    builder.putString(token.getToken());
                 }
             }
             return builder;
@@ -175,19 +191,22 @@ class GitLabTokenManager implements Serializable
                 // Read values
                 String modeName = reader.getString();
                 String appId = reader.getString();
+                String typeName = reader.getString();
                 String token = reader.getString();
 
-                if ((modeName != null) && (appId != null) && (token != null))
+                if ((modeName != null) && (appId != null) && (typeName != null) && (token != null))
                 {
-                    // Get mode
+                    // Get mode and token type
                     GitLabMode mode;
+                    TokenType type;
                     try
                     {
                         mode = GitLabMode.valueOf(modeName);
+                        type = TokenType.valueOf(typeName);
                     }
                     catch (IllegalArgumentException e)
                     {
-                        // unknown mode - token will be ignored
+                        // unknown mode or token type - token will be ignored
                         continue;
                     }
 
@@ -195,7 +214,18 @@ class GitLabTokenManager implements Serializable
                     GitLabModeInfo modeInfo = this.modeInfos.getModeInfo(mode);
                     if ((modeInfo != null) && appId.equals(modeInfo.getAppInfo().getAppId()))
                     {
-                        this.tokens.put(mode, token);
+                        if (type.equals(TokenType.OAUTH2_ACCESS))
+                        {
+                            this.tokens.put(mode, GitLabToken.newOAuthToken(token));
+                        }
+                        else if (type.equals(TokenType.PRIVATE))
+                        {
+                            this.tokens.put(mode, GitLabToken.newPrivateAccessToken(token));
+                        }
+                        else
+                        {
+                            throw new UnsupportedOperationException(typeName + " token is not supported");
+                        }
                     }
                 }
             }

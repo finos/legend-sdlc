@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.gitlab4j.api.Constants;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,21 +87,31 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     }
 
     @Override
-    public String getAccessToken(GitLabMode mode)
+    public GitLabToken getGitLabToken(GitLabMode mode)
     {
-        return this.tokenManager.getAccessToken(mode);
+        return this.tokenManager.getGitLabToken(mode);
     }
 
     @Override
-    public void clearAccessTokens()
+    public void clearGitLabTokens()
     {
-        this.tokenManager.clearAccessTokens();
+        this.tokenManager.clearGitLabTokens();
     }
 
     @Override
-    public void putAccessToken(GitLabMode mode, String token)
+    public void putGitLabToken(GitLabMode mode, String token)
     {
-        this.tokenManager.putAccessToken(mode, token);
+        this.tokenManager.putOAuthToken(mode, token);
+    }
+
+    @Override
+    public void putGitLabToken(GitLabMode mode, GitLabToken token)
+    {
+        // unsupported token type - token will be ignored
+        if (token.getTokenType().equals(Constants.TokenType.OAUTH2_ACCESS))
+        {
+            this.tokenManager.putGitLabToken(mode, token);
+        }
     }
 
     @Override
@@ -138,12 +149,12 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
                         LOGGER.debug("Found access token with appropriate scope for issuer: {}", issuer);
                         tokenManager.getValidModes()
                                 .stream()
-                                .filter(mode -> tokenManager.getAccessToken(mode) == null)
+                                .filter(mode -> tokenManager.getGitLabToken(mode) == null)
                                 .map(tokenManager::getModeInfo)
                                 .filter(modeInfo -> issuer.equals(modeInfo.getServerInfo().getGitLabURLString()))
                                 .forEach(modeInfo ->
                                 {
-                                    tokenManager.putAccessToken(modeInfo.getMode(), accessToken.getValue());
+                                    tokenManager.putOAuthToken(modeInfo.getMode(), accessToken.getValue());
                                     LOGGER.debug("Storing access token from profile for mode {}", modeInfo.getMode());
                                 });
                     }
