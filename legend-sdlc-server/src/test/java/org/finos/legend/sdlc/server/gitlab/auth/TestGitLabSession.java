@@ -25,7 +25,7 @@ import java.util.Set;
 public class TestGitLabSession implements GitLabSession
 {
     private final String userId;
-    private String accessToken;
+    private GitLabToken accessToken;
     private GitLabModeInfo gitLabModeInfo;
 
     public TestGitLabSession(String userId)
@@ -69,25 +69,36 @@ public class TestGitLabSession implements GitLabSession
         return false;
     }
 
-    public void setAccessToken(String token)
+    public void setOAuthToken(String token)
     {
-        this.accessToken = token;
+        this.accessToken = GitLabToken.newOAuthToken(token);
+    }
+
+    public void setPrivateAccessToken(String token)
+    {
+        this.accessToken = GitLabToken.newPrivateAccessToken(token);
     }
 
     @Override
-    public String getAccessToken(GitLabMode mode)
+    public GitLabToken getGitLabToken(GitLabMode mode)
     {
         return this.accessToken;
     }
 
     @Override
-    public void clearAccessTokens()
+    public void clearGitLabTokens()
     {
 
     }
 
     @Override
-    public void putAccessToken(GitLabMode mode, String token)
+    public void putGitLabToken(GitLabMode mode, String token)
+    {
+
+    }
+
+    @Override
+    public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
 
     }

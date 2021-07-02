@@ -14,47 +14,29 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.auth.BaseKerberosSession;
+import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
 import org.gitlab4j.api.Constants;
+import org.pac4j.oidc.profile.OidcProfile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Objects;
 import java.util.Set;
 
-public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> implements GitLabSession
+//public class GitLabUserSession extends BaseCommonProfileSession<GitLabUserProfile> implements GitLabSession
+public class GitLabUserSession extends BaseCommonProfileSession<OidcProfile> implements GitLabSession
 {
-    private static final long serialVersionUID = 7521009570390907467L;
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOidcSession.class);
 
     private final GitLabTokenManager tokenManager;
 
-    GitLabKerberosSession(KerberosProfile profile, String kerberosId, Instant creationTime, GitLabTokenManager tokenManager)
+    protected GitLabUserSession(OidcProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
     {
-        super(profile, kerberosId, creationTime);
+        super(profile, userId, creationTime);
         this.tokenManager = tokenManager;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-
-        if (!(other instanceof GitLabKerberosSession))
-        {
-            return false;
-        }
-
-        GitLabKerberosSession that = (GitLabKerberosSession)other;
-        return Objects.equals(this.getUserId(), that.getUserId()) &&
-                Objects.equals(this.getProfile(), that.getProfile()) &&
-                this.getCreationTime().equals(that.getCreationTime()) &&
-                this.tokenManager.equals(that.tokenManager);
     }
 
     @Override
@@ -96,14 +78,13 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     @Override
     public void putGitLabToken(GitLabMode mode, String token)
     {
-        this.tokenManager.putOAuthToken(mode, token);
+        this.tokenManager.putPrivateAccessToken(mode, token);
     }
 
     @Override
     public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        // unsupported token type - token will be ignored
-        if (token.getTokenType().equals(Constants.TokenType.OAUTH2_ACCESS))
+        if (token.getTokenType().equals(Constants.TokenType.PRIVATE))
         {
             this.tokenManager.putGitLabToken(mode, token);
         }

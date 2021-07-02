@@ -14,7 +14,10 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
+import org.junit.Assert;
+import org.junit.Test;
 import org.pac4j.core.profile.CommonProfile;
 
 import javax.security.auth.Subject;
@@ -35,5 +38,17 @@ public class TestGitLabKerberosSession extends AbstractTestGitLabSession
         KerberosProfile profile = new KerberosProfile(subject, null);
         profile.setId(id);
         return profile;
+    }
+
+    @Test
+    public void testAllSupportedTokenTypes()
+    {
+        GitLabMode mode = GitLabMode.UAT;
+        GitLabSession session = createSessionWithToken(mode, GitLabToken.newPrivateAccessToken("qQi7UzyxxxTtQbHhSq9"));
+        Assert.assertTrue("Private access token shouldn't be allowed in Kerberos Session", session.getGitLabToken(mode) == null);
+
+        GitLabToken oAuthToken = GitLabToken.newOAuthToken("6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        session = createSessionWithToken(mode, oAuthToken);
+        Assert.assertEquals("OAuth token should be added to Kerberos Session",  oAuthToken, session.getGitLabToken(mode));
     }
 }

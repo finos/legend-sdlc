@@ -42,7 +42,7 @@ public abstract class AbstractTestGitLabSession
     public void testEncoding_OneAccessToken()
     {
         GitLabSession session = newSession();
-        session.putAccessToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
+        session.putGitLabToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
         assertEncoding(session);
     }
 
@@ -50,8 +50,8 @@ public abstract class AbstractTestGitLabSession
     public void testEncoding_TwoAccessTokens()
     {
         GitLabSession session = newSession();
-        session.putAccessToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
-        session.putAccessToken(GitLabMode.PROD, "fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
+        session.putGitLabToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
+        session.putGitLabToken(GitLabMode.PROD, "fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
         assertEncoding(session);
     }
 
@@ -59,8 +59,8 @@ public abstract class AbstractTestGitLabSession
     public void testEncoding_TwoAccessTokens_Delay()
     {
         GitLabSession session = newSession();
-        session.putAccessToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
-        session.putAccessToken(GitLabMode.PROD, "fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
+        session.putGitLabToken(GitLabMode.UAT, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
+        session.putGitLabToken(GitLabMode.PROD, "fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
         assertEncoding(session, 1001L);
     }
 
@@ -70,16 +70,26 @@ public abstract class AbstractTestGitLabSession
         GitLabSession session = newSession();
         String uatToken = "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875";
         String prodToken = "fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a";
-        session.putAccessToken(GitLabMode.UAT, uatToken);
-        session.putAccessToken(GitLabMode.PROD, prodToken);
-        Assert.assertEquals(uatToken, session.getAccessToken(GitLabMode.UAT));
-        Assert.assertEquals(prodToken, session.getAccessToken(GitLabMode.PROD));
-        session.clearAccessTokens();
-        Assert.assertNull(session.getAccessToken(GitLabMode.UAT));
-        Assert.assertNull(session.getAccessToken(GitLabMode.PROD));
+        session.putGitLabToken(GitLabMode.UAT, uatToken);
+        session.putGitLabToken(GitLabMode.PROD, prodToken);
+        Assert.assertEquals(uatToken, session.getGitLabToken(GitLabMode.UAT).getToken());
+        Assert.assertEquals(prodToken, session.getGitLabToken(GitLabMode.PROD).getToken());
+        session.clearGitLabTokens();
+        Assert.assertNull(session.getGitLabToken(GitLabMode.UAT));
+        Assert.assertNull(session.getGitLabToken(GitLabMode.PROD));
     }
 
+    @Test
+    protected abstract void testAllSupportedTokenTypes();
+
     protected abstract CommonProfile getProfile();
+
+    protected GitLabSession createSessionWithToken(GitLabMode mode, GitLabToken token)
+    {
+        GitLabSession session = newSession();
+        session.putGitLabToken(mode, token);
+        return session;
+    }
 
     private GitLabSession newSession()
     {
