@@ -14,29 +14,48 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.server.pac4j.gitlab.GitlabUserProfile;
 import org.gitlab4j.api.Constants;
-import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Set;
 
-//public class GitLabUserSession extends BaseCommonProfileSession<GitLabUserProfile> implements GitLabSession
-public class GitLabUserSession extends BaseCommonProfileSession<OidcProfile> implements GitLabSession
+public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfile> implements GitLabSession
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOidcSession.class);
 
     private final GitLabTokenManager tokenManager;
 
-    protected GitLabUserSession(OidcProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
+    protected GitLabUserSession(GitlabUserProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
     {
         super(profile, userId, creationTime);
         this.tokenManager = tokenManager;
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+
+        if (!(other instanceof GitLabUserSession))
+        {
+            return false;
+        }
+
+        GitLabUserSession that = (GitLabUserSession)other;
+        return Objects.equals(this.getUserId(), that.getUserId()) &&
+                Objects.equals(this.getProfile(), that.getProfile()) &&
+                this.getCreationTime().equals(that.getCreationTime()) &&
+                this.tokenManager.equals(that.tokenManager);
     }
 
     @Override
@@ -106,5 +125,27 @@ public class GitLabUserSession extends BaseCommonProfileSession<OidcProfile> imp
     protected void writeToStringInfo(StringBuilder builder)
     {
         this.tokenManager.appendTokenInfo(builder.append(' '));
+    }
+
+    private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, GitlabUserProfile profile)
+    {
+        if ((tokenManager != null) && (profile != null))
+        {
+            LOGGER.debug("initializing with GitlabUserProfile: {}", profile);
+            String token = profile.getToken();
+            if (token != null)
+            {
+                tokenManager.getValidModes()
+                        .stream()
+                        .filter(mode -> tokenManager.getGitLabToken(mode) == null)
+                        .map(tokenManager::getModeInfo)
+                        .forEach(modeInfo ->
+                        {
+                            tokenManager.putOAuthToken(modeInfo.getMode(), token);
+                            LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
+                        });
+            }
+        }
+        return tokenManager;
     }
 }
