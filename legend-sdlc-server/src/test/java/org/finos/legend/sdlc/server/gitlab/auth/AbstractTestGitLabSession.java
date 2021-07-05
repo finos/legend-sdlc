@@ -91,7 +91,7 @@ public abstract class AbstractTestGitLabSession
         return session;
     }
 
-    private GitLabSession newSession()
+    protected GitLabSession newSession()
     {
         return GitLabSessionBuilder.newBuilder(MODE_INFOS).withProfile(getProfile()).build();
     }
