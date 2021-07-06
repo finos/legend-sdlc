@@ -135,8 +135,8 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
     {
         if (userId == null)
         {
-            GitLabMode mode = tokenManager.getValidModes().stream().findFirst().orElse(null);
-            String url = tokenManager.getModeInfo(mode).getServerInfo().getGitLabURLString();
+            // GitlabUserProfile is used with PROD mode only
+            String url = tokenManager.getModeInfo(GitLabMode.PROD).getServerInfo().getGitLabURLString();
 
             try
             {
@@ -161,11 +161,13 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
         {
             LOGGER.debug("initializing with GitlabUserProfile: {}", profile);
             String token = profile.getToken();
-            if (token != null)
+
+            // Private token is attached to PROD mode only
+            if (token != null && tokenManager.isValidMode(GitLabMode.PROD))
             {
                 tokenManager.getValidModes()
                         .stream()
-                        .filter(mode -> tokenManager.getGitLabToken(mode) == null)
+                        .filter(mode -> mode.equals(GitLabMode.PROD) && tokenManager.getGitLabToken(mode) == null)
                         .map(tokenManager::getModeInfo)
                         .forEach(modeInfo ->
                         {

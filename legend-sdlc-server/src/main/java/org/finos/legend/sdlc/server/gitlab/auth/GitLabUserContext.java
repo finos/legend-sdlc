@@ -109,15 +109,6 @@ public class GitLabUserContext extends UserContext
                         {
                             throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                         }
-                    } else
-                    {
-                        if (gitLabSession instanceof GitLabUserSession && !token.getToken().equals(this.httpRequest.getHeader("PRIVATE-TOKEN")))
-                        {
-                            // TODO: session should be recreated as userId will change
-                            gitLabSession.clearGitLabTokens();
-                            gitLabSession.putGitLabToken(mode, this.httpRequest.getHeader("PRIVATE-TOKEN"));
-                            token = gitLabSession.getGitLabToken(mode);
-                        }
                     }
                     api = new GitLabApi(ApiVersion.V4, modeInfo.getServerInfo().getGitLabURLString(), token.getTokenType(), token.getToken());
                     this.apiCache.put(mode, api);
