@@ -113,6 +113,7 @@ public class GitLabUserContext extends UserContext
                     {
                         if (gitLabSession instanceof GitLabUserSession && !token.getToken().equals(this.httpRequest.getHeader("PRIVATE-TOKEN")))
                         {
+                            // TODO: session should be recreated as userId will change
                             gitLabSession.clearGitLabTokens();
                             gitLabSession.putGitLabToken(mode, this.httpRequest.getHeader("PRIVATE-TOKEN"));
                             token = gitLabSession.getGitLabToken(mode);

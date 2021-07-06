@@ -15,10 +15,14 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.Token;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.server.pac4j.gitlab.GitlabUserProfile;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.TokenType;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
+import org.gitlab4j.api.models.AbstractUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +38,8 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
 
     protected GitLabUserSession(GitlabUserProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
     {
-        super(profile, userId, creationTime);
-        this.tokenManager = tokenManager;
+        super(profile, possiblyRetrieveUserId(tokenManager, profile, userId), creationTime);
+        this.tokenManager = possiblyInitializeTokenManager(tokenManager, profile);
     }
 
     @Override
@@ -125,6 +129,30 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
     protected void writeToStringInfo(StringBuilder builder)
     {
         this.tokenManager.appendTokenInfo(builder.append(' '));
+    }
+
+    private static String possiblyRetrieveUserId(GitLabTokenManager tokenManager, GitlabUserProfile profile, String userId)
+    {
+        if (userId == null)
+        {
+            GitLabMode mode = tokenManager.getValidModes().stream().findFirst().orElse(null);
+            String url = tokenManager.getModeInfo(mode).getServerInfo().getGitLabURLString();
+
+            try
+            {
+                GitLabApi api = new GitLabApi(GitLabApi.ApiVersion.V4, url, TokenType.PRIVATE, profile.getToken());
+                AbstractUser user = api.getUserApi().getCurrentUser();
+                return user.getUsername();
+            }
+            catch (GitLabApiException ex)
+            {
+                throw new LegendSDLCServerException("Couldn't get userId for provided token", ex);
+            }
+        }
+        else
+        {
+            return userId;
+        }
     }
 
     private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, GitlabUserProfile profile)
