@@ -110,6 +110,13 @@ public class GitLabUserContext extends UserContext
                             throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                         }
                     }
+                    else
+                    {
+                        if (gitLabSession instanceof GitLabUserSession && !token.getToken().equals(this.httpRequest.getHeader("PRIVATE-TOKEN")))
+                        {
+                            throw new LegendSDLCServerException("{\"message\":\"Private token should not change in one session\"}", Status.FORBIDDEN);
+                        }
+                    }
                     api = new GitLabApi(ApiVersion.V4, modeInfo.getServerInfo().getGitLabURLString(), token.getTokenType(), token.getToken());
                     this.apiCache.put(mode, api);
                 }
