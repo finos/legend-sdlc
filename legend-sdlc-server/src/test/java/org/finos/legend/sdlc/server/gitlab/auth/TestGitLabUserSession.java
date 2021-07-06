@@ -42,17 +42,14 @@ public class TestGitLabUserSession extends AbstractTestGitLabSession
         GitLabSession session = newSession();
 
         //private token
-        GitLabToken privateAccessToken = GitLabToken.newPrivateAccessToken("unknownId");
-        Assert.assertEquals("Private access token should be added to GitLabUser Session",  privateAccessToken, session.getGitLabToken(GitLabMode.UAT));
+        GitLabToken privateAccessToken = GitLabToken.newPrivateAccessToken(PROFILE.getToken());
         Assert.assertEquals("Private access token should be added to GitLabUser Session",  privateAccessToken, session.getGitLabToken(GitLabMode.PROD));
 
         session.clearGitLabTokens();
 
         //oauth toke
-        GitLabMode mode = GitLabMode.UAT;
         GitLabToken oauthToken = GitLabToken.newOAuthToken("6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
-
-        session.putGitLabToken(mode, oauthToken);
-        Assert.assertTrue("OAuth token shouldn't be allowed in GitLabUser Session", session.getGitLabToken(mode) == null);
+        session.putGitLabToken(GitLabMode.PROD, oauthToken);
+        Assert.assertTrue("OAuth token shouldn't be allowed in GitLabUser Session", session.getGitLabToken(GitLabMode.PROD) == null);
     }
 }
