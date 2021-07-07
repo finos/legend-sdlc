@@ -574,6 +574,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), referenceId, null, null, filePath, 1));
             List<Commit> page = pager.next();
+            return ((page == null) || page.isEmpty()) ? null : page.get(0);
         }
 
         @Override
