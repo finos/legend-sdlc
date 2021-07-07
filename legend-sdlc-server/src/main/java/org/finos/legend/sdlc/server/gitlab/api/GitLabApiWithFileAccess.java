@@ -573,18 +573,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         private Commit getCurrentCommit(CommitsApi commitsApi, String referenceId, String filePath) throws GitLabApiException
         {
             Pager<Commit> pager = withRetries(() -> commitsApi.getCommits(this.projectId.getGitLabId(), referenceId, null, null, filePath, 1));
-
-            List<Commit> page;
-            int currentPage = pager.getCurrentPage();
-            if (currentPage == 1)
-            {
-                page = pager.page(currentPage);
-            }
-            else
-            {
-                page = pager.next();
-            }
-            return ((page == null) || page.isEmpty()) ? null : page.get(0);
+            List<Commit> page = pager.next();
         }
 
         @Override
