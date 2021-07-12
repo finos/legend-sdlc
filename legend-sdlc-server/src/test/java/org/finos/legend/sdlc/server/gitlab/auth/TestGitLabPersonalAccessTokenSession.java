@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
+
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.junit.Assert;
 import org.junit.Ignore;
@@ -21,18 +23,18 @@ import org.junit.Test;
 import org.pac4j.core.profile.CommonProfile;
 
 @Ignore
-public class TestGitLabUserSession extends AbstractTestGitLabSession
+public class TestGitLabPersonalAccessTokenSession extends AbstractTestGitLabSession
 {
-    private static final GitlabUserProfile PROFILE = newProfile("unknownId");
+    private static final GitlabPersonalAccessTokenProfile PROFILE = newProfile("unknownId", "unknownUser", "testUser", "test-gitlab.com");
 
     protected CommonProfile getProfile()
     {
         return PROFILE;
     }
 
-    private static GitlabUserProfile newProfile(String id)
+    private static GitlabPersonalAccessTokenProfile newProfile(String token, String userId, String username, String gitlabHost)
     {
-        return new GitlabUserProfile(id);
+        return new GitlabPersonalAccessTokenProfile(token, userId, username, gitlabHost);
     }
 
 
@@ -42,7 +44,7 @@ public class TestGitLabUserSession extends AbstractTestGitLabSession
         GitLabSession session = newSession();
 
         //private token
-        GitLabToken privateAccessToken = GitLabToken.newPrivateAccessToken(PROFILE.getToken());
+        GitLabToken privateAccessToken = GitLabToken.newPrivateAccessToken(PROFILE.getPersonalAccessToken());
         Assert.assertEquals("Private access token should be added to GitLabUser Session",  privateAccessToken, session.getGitLabToken(GitLabMode.PROD));
 
         session.clearGitLabTokens();

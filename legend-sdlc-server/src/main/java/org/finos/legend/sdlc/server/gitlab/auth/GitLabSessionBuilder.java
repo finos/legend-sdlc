@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.server.auth.SessionBuilder;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
 import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
-import org.finos.legend.server.pac4j.gitlab.GitlabUserProfile;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.oidc.profile.OidcProfile;
 
@@ -116,9 +116,9 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         {
             return new GitLabOidcSession((OidcProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
-        if (this.profile instanceof GitlabUserProfile)
+        if (this.profile instanceof GitlabPersonalAccessTokenProfile)
         {
-            return new GitLabUserSession((GitlabUserProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
+            return new GitLabPersonalAccessTokenSession((GitlabPersonalAccessTokenProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
         throw new IllegalStateException("Unsupported profile type: " + profile);
     }
@@ -126,7 +126,7 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
     static boolean isSupportedProfile(CommonProfile profile)
     {
         // TODO add GitLabUserProfile
-        return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabUserProfile);
+        return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }
 
     static GitLabSessionBuilder newBuilder(GitLabModeInfos gitLabModeInfos)
