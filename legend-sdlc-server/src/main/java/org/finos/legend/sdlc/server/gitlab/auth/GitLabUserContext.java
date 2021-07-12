@@ -21,7 +21,6 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.guice.UserContext;
-import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
 
@@ -112,7 +111,7 @@ public class GitLabUserContext extends UserContext
                     }
                     else
                     {
-                        if (gitLabSession instanceof GitLabUserSession && !token.getToken().equals(this.httpRequest.getHeader("PRIVATE-TOKEN")))
+                        if (gitLabSession instanceof GitLabPersonalAccessTokenSession && !token.getToken().equals(this.httpRequest.getHeader("PRIVATE-TOKEN")))
                         {
                             throw new LegendSDLCServerException("{\"message\":\"Private token should not change in one session\"}", Status.FORBIDDEN);
                         }

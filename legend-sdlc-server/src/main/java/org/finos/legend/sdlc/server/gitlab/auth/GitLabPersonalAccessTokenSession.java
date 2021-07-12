@@ -14,15 +14,12 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
+import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.finos.legend.server.pac4j.gitlab.GitlabUserProfile;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
 import org.gitlab4j.api.Constants.TokenType;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.AbstractUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,15 +27,15 @@ import java.time.Instant;
 import java.util.Objects;
 import java.util.Set;
 
-public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfile> implements GitLabSession
+public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<GitlabPersonalAccessTokenProfile> implements GitLabSession
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOidcSession.class);
 
     private final GitLabTokenManager tokenManager;
 
-    protected GitLabUserSession(GitlabUserProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
+    protected GitLabPersonalAccessTokenSession(GitlabPersonalAccessTokenProfile profile, String userId, Instant creationTime, GitLabTokenManager tokenManager)
     {
-        super(profile, possiblyRetrieveUserId(tokenManager, profile, userId), creationTime);
+        super(profile, userId, creationTime);
         this.tokenManager = possiblyInitializeTokenManager(tokenManager, profile);
     }
 
@@ -50,12 +47,12 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
             return true;
         }
 
-        if (!(other instanceof GitLabUserSession))
+        if (!(other instanceof GitLabPersonalAccessTokenSession))
         {
             return false;
         }
 
-        GitLabUserSession that = (GitLabUserSession)other;
+        GitLabPersonalAccessTokenSession that = (GitLabPersonalAccessTokenSession)other;
         return Objects.equals(this.getUserId(), that.getUserId()) &&
                 Objects.equals(this.getProfile(), that.getProfile()) &&
                 this.getCreationTime().equals(that.getCreationTime()) &&
@@ -107,7 +104,7 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
     @Override
     public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        if (token.getTokenType().equals(Constants.TokenType.PRIVATE))
+        if (token.getTokenType().equals(TokenType.PRIVATE))
         {
             this.tokenManager.putGitLabToken(mode, token);
         }
@@ -131,36 +128,12 @@ public class GitLabUserSession extends BaseCommonProfileSession<GitlabUserProfil
         this.tokenManager.appendTokenInfo(builder.append(' '));
     }
 
-    private static String possiblyRetrieveUserId(GitLabTokenManager tokenManager, GitlabUserProfile profile, String userId)
-    {
-        if (userId == null)
-        {
-            // GitlabUserProfile is used with PROD mode only
-            String url = tokenManager.getModeInfo(GitLabMode.PROD).getServerInfo().getGitLabURLString();
-
-            try
-            {
-                GitLabApi api = new GitLabApi(GitLabApi.ApiVersion.V4, url, TokenType.PRIVATE, profile.getToken());
-                AbstractUser user = api.getUserApi().getCurrentUser();
-                return user.getUsername();
-            }
-            catch (GitLabApiException ex)
-            {
-                throw new LegendSDLCServerException("Couldn't get userId for provided token", ex);
-            }
-        }
-        else
-        {
-            return userId;
-        }
-    }
-
-    private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, GitlabUserProfile profile)
+    private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, GitlabPersonalAccessTokenProfile profile)
     {
         if ((tokenManager != null) && (profile != null))
         {
-            LOGGER.debug("initializing with GitlabUserProfile: {}", profile);
-            String token = profile.getToken();
+            LOGGER.debug("initializing with GitlabPersonalAccessTokenProfile: {}", profile);
+            String token = profile.getPersonalAccessToken();
 
             // Private token is attached to PROD mode only
             if (token != null && tokenManager.isValidMode(GitLabMode.PROD))
