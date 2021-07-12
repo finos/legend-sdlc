@@ -73,6 +73,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected Integer projectStructureExtensionVersion;
     protected ProjectStructureExtensionProvider projectStructureExtensionProvider;
 
+    public final List<Integer> UNPUBLISHED_VERSION = Lists.mutable.with(1,2,3,4,5,6,7,8,9,10);
+
     @Before
     public void setUp()
     {
@@ -582,6 +584,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (UNPUBLISHED_VERSION.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();
@@ -645,6 +652,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (UNPUBLISHED_VERSION.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();

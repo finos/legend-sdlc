@@ -41,7 +41,7 @@ public class ProjectStructureFactory
         return this.projectStructureFactories.containsKey(version);
     }
 
-    public ProjectStructure newProjectStructure(ProjectConfiguration projectConfiguration)
+    public ProjectStructure newProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructureExtensions projectStructureExtensions)
     {
         int version = getVersion(projectConfiguration);
         ProjectStructureVersionFactory factory = this.projectStructureFactories.get(version);
@@ -49,7 +49,7 @@ public class ProjectStructureFactory
         {
             throw new IllegalArgumentException("Unknown project structure version: " + version);
         }
-        return factory.newProjectStructure(projectConfiguration);
+        return factory.newProjectStructure(projectConfiguration, projectStructureExtensions);
     }
 
     private int getVersion(ProjectConfiguration projectConfiguration)

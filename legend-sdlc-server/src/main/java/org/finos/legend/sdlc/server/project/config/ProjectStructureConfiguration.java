@@ -23,6 +23,7 @@ import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionP
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 public class ProjectStructureConfiguration
@@ -31,8 +32,9 @@ public class ProjectStructureConfiguration
     private final ProjectStructureExtensionProvider extensionProvider;
     private final List<ProjectStructureExtension> extensions;
     private final ProjectCreationConfiguration projectCreationConfig;
+    private final ProjectStructureExtensionsConfiguration projectExtensionsCollectionConfiguration;
 
-    private ProjectStructureConfiguration(Set<Integer> demisedVersions, ProjectStructureExtensionProvider extensionProvider, List<ProjectStructureExtension> extensions, ProjectCreationConfiguration projectCreationConfig)
+    private ProjectStructureConfiguration(Set<Integer> demisedVersions, ProjectStructureExtensionProvider extensionProvider, List<ProjectStructureExtension> extensions, ProjectCreationConfiguration projectCreationConfig, ProjectStructureExtensionsConfiguration projectExtensionsCollectionConfiguration)
     {
         if ((extensionProvider != null) && (extensions != null) && !extensions.isEmpty())
         {
@@ -43,6 +45,7 @@ public class ProjectStructureConfiguration
         this.extensionProvider = extensionProvider;
         this.extensions = (extensions == null) ? Collections.emptyList() : extensions;
         this.projectCreationConfig = projectCreationConfig;
+        this.projectExtensionsCollectionConfiguration = projectExtensionsCollectionConfiguration;
     }
 
     public Set<Integer> getDemisedVersions()
@@ -65,15 +68,21 @@ public class ProjectStructureConfiguration
         return this.projectCreationConfig;
     }
 
-    @JsonCreator
-    public static ProjectStructureConfiguration newConfiguration(@JsonProperty("demisedVersions") Set<Integer> demisedVersions, @JsonProperty("extensionProvider") ProjectStructureExtensionProvider extensionProvider, @JsonProperty("extensions") List<ProjectStructureExtension> extensions, @JsonProperty("projectCreation") ProjectCreationConfiguration projectCreationConfig)
+    public ProjectStructureExtensionsConfiguration getProjectExtensionsCollectionConfiguration()
     {
-        return new ProjectStructureConfiguration(demisedVersions, extensionProvider, extensions, projectCreationConfig);
+        return this.projectExtensionsCollectionConfiguration;
+    }
+
+    @JsonCreator
+    public static ProjectStructureConfiguration newConfiguration(@JsonProperty("demisedVersions") Set<Integer> demisedVersions, @JsonProperty("extensionProvider") ProjectStructureExtensionProvider extensionProvider, @JsonProperty("extensions") List<ProjectStructureExtension> extensions, @JsonProperty("projectCreation") ProjectCreationConfiguration projectCreationConfig,
+    @JsonProperty("extensionPlatforms") Map<String, ProjectStructureExtensionsConfiguration.ExtensionsPlatformMetadata> platforms, @JsonProperty("extensionCollections") Map<String, ProjectStructureExtensionsConfiguration.ExtensionsCollectionMetadata> collections)
+    {
+        return new ProjectStructureConfiguration(demisedVersions, extensionProvider, extensions, projectCreationConfig, new ProjectStructureExtensionsConfiguration(platforms, collections));
     }
 
     public static ProjectStructureConfiguration emptyConfiguration()
     {
-        return new ProjectStructureConfiguration(Collections.emptySet(), null, Collections.emptyList(), null);
+        return new ProjectStructureConfiguration(Collections.emptySet(), null, Collections.emptyList(), null, null);
     }
 
     public static ObjectMapper configureObjectMapper(ObjectMapper objectMapper)

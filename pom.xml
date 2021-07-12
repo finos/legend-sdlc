@@ -475,6 +475,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server-shared</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -665,6 +670,11 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-executionPlan-execution-store-inMemory</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-extensions-collection-generation</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>

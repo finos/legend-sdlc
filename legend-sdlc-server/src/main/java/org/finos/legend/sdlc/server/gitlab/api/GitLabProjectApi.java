@@ -37,6 +37,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.finos.legend.sdlc.server.project.config.ProjectStructureExtensionsConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
@@ -221,6 +222,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withArtifactId(artifactId)
                     .withProjectStructureVersion(getDefaultProjectStructureVersion())
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectExtensionsOverride(ProjectStructureExtensionsConfiguration.buildProjectExtensionsOverride(this.projectStructureConfig.getProjectExtensionsCollectionConfiguration()))
                     .buildProjectStructure();
 
             return fromGitLabProject(gitLabProject, mode);
@@ -305,7 +307,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withWorkspace(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId)
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider);
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectExtensionsOverride(ProjectStructureExtensionsConfiguration.buildProjectExtensionsOverride(this.projectStructureConfig.getProjectExtensionsCollectionConfiguration()));
             int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
             if (currentConfig == null)
             {
