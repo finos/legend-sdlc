@@ -94,16 +94,6 @@ class GitLabTokenManager implements Serializable
         }
     }
 
-    void putOAuthToken(GitLabMode mode, String token)
-    {
-        putGitLabToken(mode, GitLabToken.newOAuthToken(token));
-    }
-
-    void putPrivateAccessToken(GitLabMode mode, String token)
-    {
-        putGitLabToken(mode, GitLabToken.newPrivateAccessToken(token));
-    }
-
     void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
         if (mode == null)
@@ -118,9 +108,9 @@ class GitLabTokenManager implements Serializable
         {
             throw new IllegalArgumentException("token may not be null");
         }
-        if (!token.getTokenType().equals(TokenType.OAUTH2_ACCESS) && !token.getTokenType().equals(TokenType.PRIVATE))
+        if (token.getTokenType() == null)
         {
-            throw new UnsupportedOperationException(token.getTokenType().toString() + " token is not supported");
+            throw new IllegalArgumentException("token type may not be null");
         }
         synchronized (this.tokens)
         {
@@ -137,7 +127,7 @@ class GitLabTokenManager implements Serializable
         }
         synchronized (this.tokens)
         {
-            GitLabToken token = GitLabToken.newOAuthToken(GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromAuthCode(code));
+            GitLabToken token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromAuthCode(code));
             GitLabToken oldToken = this.tokens.put(mode, token);
             return !token.equals(oldToken);
         }
@@ -214,18 +204,7 @@ class GitLabTokenManager implements Serializable
                     GitLabModeInfo modeInfo = this.modeInfos.getModeInfo(mode);
                     if ((modeInfo != null) && appId.equals(modeInfo.getAppInfo().getAppId()))
                     {
-                        if (type.equals(TokenType.OAUTH2_ACCESS))
-                        {
-                            this.tokens.put(mode, GitLabToken.newOAuthToken(token));
-                        }
-                        else if (type.equals(TokenType.PRIVATE))
-                        {
-                            this.tokens.put(mode, GitLabToken.newPrivateAccessToken(token));
-                        }
-                        else
-                        {
-                            throw new UnsupportedOperationException(typeName + " token is not supported");
-                        }
+                        this.tokens.put(mode, GitLabToken.newGitLabToken(type, token));
                     }
                 }
             }

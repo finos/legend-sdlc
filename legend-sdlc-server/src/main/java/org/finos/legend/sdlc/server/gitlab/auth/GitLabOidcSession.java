@@ -99,19 +99,9 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     }
 
     @Override
-    public void putGitLabToken(GitLabMode mode, String token)
-    {
-        this.tokenManager.putOAuthToken(mode, token);
-    }
-
-    @Override
     public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        // unsupported token type - token will be ignored
-        if (token.getTokenType().equals(Constants.TokenType.OAUTH2_ACCESS))
-        {
-            this.tokenManager.putGitLabToken(mode, token);
-        }
+        this.tokenManager.putGitLabToken(mode, token);
     }
 
     @Override
@@ -154,7 +144,7 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
                                 .filter(modeInfo -> issuer.equals(modeInfo.getServerInfo().getGitLabURLString()))
                                 .forEach(modeInfo ->
                                 {
-                                    tokenManager.putOAuthToken(modeInfo.getMode(), accessToken.getValue());
+                                    tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS, accessToken.getValue()));
                                     LOGGER.debug("Storing access token from profile for mode {}", modeInfo.getMode());
                                 });
                     }

@@ -35,16 +35,4 @@ public class TestGitLabOidcSession extends AbstractTestGitLabSession
         profile.setId(id);
         return profile;
     }
-
-    @Test
-    public void testAllSupportedTokenTypes()
-    {
-        GitLabMode mode = GitLabMode.UAT;
-        GitLabSession session = createSessionWithToken(mode, GitLabToken.newPrivateAccessToken("qQi7UzyxxxTtQbHhSq9"));
-        Assert.assertTrue("Private access token shouldn't be allowed in Oidc Session", session.getGitLabToken(mode) == null);
-
-        GitLabToken oAuthToken = GitLabToken.newOAuthToken("6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
-        session = createSessionWithToken(mode, oAuthToken);
-        Assert.assertEquals("OAuth token should be added to Oidc Session",  oAuthToken, session.getGitLabToken(mode));
-    }
 }

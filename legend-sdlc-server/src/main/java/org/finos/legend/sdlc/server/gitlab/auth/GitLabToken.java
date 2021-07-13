@@ -60,21 +60,16 @@ class GitLabToken
         return this.token;
     }
 
-    static GitLabToken newOAuthToken(String token)
+    static GitLabToken newGitLabToken(TokenType type, String token)
     {
         if (token == null)
         {
-            throw new IllegalArgumentException("Cannot create GitLabToken when token in empty");
+            throw new IllegalArgumentException("Cannot create GitLabToken when token value in empty");
         }
-        return new GitLabToken(TokenType.OAUTH2_ACCESS, token);
-    }
-
-    static GitLabToken newPrivateAccessToken(String token)
-    {
-        if (token == null)
+        if (type == null)
         {
-            throw new IllegalArgumentException("Cannot create GitLabToken when token in empty");
+            throw new IllegalArgumentException("Cannot create GitLabToken when token type in empty");
         }
-        return new GitLabToken(TokenType.PRIVATE, token);
+        return new GitLabToken(type, token);
     }
 }

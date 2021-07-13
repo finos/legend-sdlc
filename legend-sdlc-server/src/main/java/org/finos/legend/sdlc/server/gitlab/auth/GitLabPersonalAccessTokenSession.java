@@ -96,18 +96,9 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public void putGitLabToken(GitLabMode mode, String token)
-    {
-        this.tokenManager.putPrivateAccessToken(mode, token);
-    }
-
-    @Override
     public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        if (token.getTokenType().equals(TokenType.PRIVATE))
-        {
-            this.tokenManager.putGitLabToken(mode, token);
-        }
+        this.tokenManager.putGitLabToken(mode, token);
     }
 
     @Override
@@ -135,17 +126,19 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
             LOGGER.debug("initializing with GitlabPersonalAccessTokenProfile: {}", profile);
             String token = profile.getPersonalAccessToken();
 
-            // Private token is attached to PROD mode only
             if (token != null && tokenManager.isValidMode(GitLabMode.PROD))
             {
                 tokenManager.getValidModes()
                         .stream()
-                        .filter(mode -> mode.equals(GitLabMode.PROD) && tokenManager.getGitLabToken(mode) == null)
+                        .filter(mode -> tokenManager.getGitLabToken(mode) == null)
                         .map(tokenManager::getModeInfo)
                         .forEach(modeInfo ->
                         {
-                            tokenManager.putOAuthToken(modeInfo.getMode(), token);
-                            LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
+                            if (modeInfo.getServerInfo().getHost().equals(profile.getGitlabHost()))
+                            {
+                                tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.PRIVATE, token));
+                                LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
+                            }
                         });
             }
         }

@@ -32,8 +32,6 @@ public interface GitLabSession extends Session
 
     void clearGitLabTokens();
 
-    void putGitLabToken(GitLabMode mode, String token);
-
     void putGitLabToken(GitLabMode mode, GitLabToken token);
 
     GitLabModeInfo getModeInfo(GitLabMode mode);
