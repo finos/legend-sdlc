@@ -35,7 +35,7 @@ public class ProjectStructureV0Factory extends ProjectStructureVersionFactory
     }
 
     @Override
-    protected ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration)
+    protected ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         return new ProjectStructureV0(projectConfiguration);
     }

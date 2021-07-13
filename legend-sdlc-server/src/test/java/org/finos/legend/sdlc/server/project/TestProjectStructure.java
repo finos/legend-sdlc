@@ -72,6 +72,23 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected int projectStructureVersion;
     protected Integer projectStructureExtensionVersion;
     protected ProjectStructureExtensionProvider projectStructureExtensionProvider;
+    protected final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
+
+
+    public final List<Integer> unpublishedVersion;
+
+    public TestProjectStructure(List<Integer> unpublishedVersion, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    {
+        this.unpublishedVersion = unpublishedVersion;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
+    }
+
+
+    public TestProjectStructure()
+    {
+        this(Lists.mutable.with(1,2,3,4,5,6,7,8,9,10), null);
+    }
+
 
     @Before
     public void setUp()
@@ -582,6 +599,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (this.unpublishedVersion.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();
@@ -645,6 +667,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (unpublishedVersion.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();

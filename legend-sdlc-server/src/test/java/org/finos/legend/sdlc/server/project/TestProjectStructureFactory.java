@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,9 +26,9 @@ import java.util.Collections;
 public class TestProjectStructureFactory
 {
     @Test
-    public void testFactoryWithV0()
+    public void testFactoryWithV0_V11()
     {
-        assertFactoryWithV0(ProjectStructureFactory.newFactory(Collections.singletonList(new ProjectStructureV0Factory())));
+        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory())));
     }
 
     @Test
@@ -69,9 +70,9 @@ public class TestProjectStructureFactory
 
     private void assertFactoryWithV0(ProjectStructureFactory factory)
     {
-        assertSupportsVersions(factory, 0);
+        assertSupportsVersions(factory, 0, 11);
 
-        ProjectStructure structure = factory.newProjectStructure(null);
+        ProjectStructure structure = factory.newProjectStructure(null, null);
         Assert.assertEquals(0, structure.getVersion());
         Assert.assertTrue(structure instanceof ProjectStructureV0Factory.ProjectStructureV0);
     }

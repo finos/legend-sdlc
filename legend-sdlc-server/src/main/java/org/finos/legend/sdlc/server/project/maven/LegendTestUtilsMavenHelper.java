@@ -34,11 +34,6 @@ public class LegendTestUtilsMavenHelper
         this.version = version;
     }
 
-    public LegendTestUtilsMavenHelper(String version)
-    {
-        this("org.finos.legend.sdlc", "legend-sdlc-test-utils", version);
-    }
-
     public Dependency getDependency(boolean includeVersion)
     {
         return MavenProjectStructure.newMavenTestDependency(group_id, artifact_id, includeVersion ? this.version : null);
