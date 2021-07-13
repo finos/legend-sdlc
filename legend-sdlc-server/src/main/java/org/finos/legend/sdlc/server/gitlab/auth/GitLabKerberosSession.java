@@ -94,19 +94,9 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     }
 
     @Override
-    public void putGitLabToken(GitLabMode mode, String token)
-    {
-        this.tokenManager.putOAuthToken(mode, token);
-    }
-
-    @Override
     public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        // unsupported token type - token will be ignored
-        if (token.getTokenType().equals(Constants.TokenType.OAUTH2_ACCESS))
-        {
-            this.tokenManager.putGitLabToken(mode, token);
-        }
+        this.tokenManager.putGitLabToken(mode, token);
     }
 
     @Override

@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.guice.UserContext;
+import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
 
@@ -82,7 +83,9 @@ public class GitLabUserContext extends UserContext
                             try
                             {
                                 String oAuthToken = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthToken(((KerberosSession)gitLabSession).getSubject());
-                                gitLabSession.putGitLabToken(mode, GitLabToken.newOAuthToken(oAuthToken));
+                                token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oAuthToken);
+
+                                gitLabSession.putGitLabToken(mode, token);
                                 LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
@@ -141,7 +144,7 @@ public class GitLabUserContext extends UserContext
                             {
                                 String accessToken = GitLabOAuthAuthenticator.newAuthenticator(gitLabSession.getModeInfo(mode)).getOAuthToken(((KerberosSession) gitLabSession).getSubject());
                                 // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                                gitLabSession.putGitLabToken(mode, accessToken);
+                                gitLabSession.putGitLabToken(mode, GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken));
                                 LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
