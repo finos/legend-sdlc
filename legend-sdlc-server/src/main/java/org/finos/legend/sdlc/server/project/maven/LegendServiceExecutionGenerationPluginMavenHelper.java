@@ -22,19 +22,15 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.Collections;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-    public LegendServiceExecutionGenerationPluginMavenHelper(String groupId, String artifactId, String version)
+    public LegendServiceExecutionGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
-        super(groupId, artifactId, version, "generate-sources", "generate-service-executions");
-    }
-
-    public LegendServiceExecutionGenerationPluginMavenHelper(String version)
-    {
-        this("org.finos.legend.sdlc", "legend-sdlc-generation-service-maven-plugin", version);
+        super(groupId, artifactId, version, "generate-sources", "generate-service-executions", Collections.singletonList(generationExtensionsCollection));
     }
 
     public Plugin getBuildHelperPlugin(String version)
@@ -67,10 +63,11 @@ public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractL
     @Override
     protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
     {
+        super.addDependencies(projectStructure, versionFileAccessContextProvider, dependencyConsumer);
         if (projectStructure instanceof MultiModuleMavenProjectStructure)
         {
             MultiModuleMavenProjectStructure multiModuleProjectStructure = (MultiModuleMavenProjectStructure) projectStructure;
-            dependencyConsumer.accept(multiModuleProjectStructure.getModuleWithParentVersionDependency(multiModuleProjectStructure.getEntitiesModuleName()));
+            dependencyConsumer.accept(multiModuleProjectStructure.getModuleWithProjectVersionDependency(multiModuleProjectStructure.getEntitiesModuleName()));
         }
     }
 

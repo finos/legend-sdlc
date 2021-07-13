@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -69,19 +70,28 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     private final Map<String, ArtifactType> otherModules;
     private final Map<String, Map<ModuleConfigType, Method>> moduleConfigMethods;
     private final boolean useDependencyManagement;
+    private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
-    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
+    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement,
+    ProjectStructurePlatformExtensions projectStructurePlatformExtensions
+    )
     {
         super(projectConfiguration, validateEntitySourceDirectories(sourceDirectories, projectConfiguration, entitiesModuleName));
         this.entitiesModuleName = entitiesModuleName;
         this.otherModules = otherModules;
         this.moduleConfigMethods = getModuleConfigMethods();
         this.useDependencyManagement = useDependencyManagement;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
     }
 
     protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
     {
-        this(projectConfiguration, entitiesModuleName, Lists.fixedSize.with(getDefaultEntitySourceDirectory(projectConfiguration, entitiesModuleName)), otherModules, useDependencyManagement);
+        this(projectConfiguration, entitiesModuleName, Lists.fixedSize.with(getDefaultEntitySourceDirectory(projectConfiguration, entitiesModuleName)), otherModules, useDependencyManagement, null);
+    }
+
+    protected MultiModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, String entitiesModuleName, List<EntitySourceDirectory> sourceDirectories, Map<String, ArtifactType> otherModules, boolean useDependencyManagement)
+    {
+        this(projectConfiguration, entitiesModuleName, sourceDirectories, otherModules, useDependencyManagement, null);
     }
 
     protected Stream<String> getGenerationModuleNames(ArtifactType type)
@@ -190,6 +200,26 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     {
         Stream<String> moduleNames = getModuleNamesForType(type);
         return (moduleNames == null) ? Stream.empty() : moduleNames.map(this::getModuleFullName);
+    }
+
+    public ProjectStructurePlatformExtensions getProjectStructureExtensions()
+    {
+        return this.projectStructurePlatformExtensions;
+    }
+
+    public String getPlatformPropertyName(String platform)
+    {
+        return "platform." + platform + ".version";
+    }
+
+    public Map<String, ProjectStructurePlatformExtensions.PlatformCoordinates> getPlatformExtensions()
+    {
+        return this.projectStructurePlatformExtensions != null ? this.projectStructurePlatformExtensions.getPlatformCoordinatesMap() : null;
+    }
+
+    public String getPlatformPropertyReference(String platform)
+    {
+        return getPropertyReference(getPlatformPropertyName(platform));
     }
 
     public abstract Stream<String> getModuleNamesForType(ArtifactType type);
@@ -431,6 +461,11 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     protected Dependency getModuleWithParentVersionDependency(String moduleName)
     {
         return getModuleDependency(moduleName, "${project.parent.version}");
+    }
+
+    protected Dependency getModuleWithProjectVersionDependency(String moduleName)
+    {
+        return getModuleDependency(moduleName, "${project.version}");
     }
 
     public Dependency getModuleWithNoVersionDependency(String moduleName)

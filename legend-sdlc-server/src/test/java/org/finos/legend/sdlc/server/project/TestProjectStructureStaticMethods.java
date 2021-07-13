@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.primitive.IntList;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
@@ -27,6 +28,8 @@ import java.util.stream.Collectors;
 
 public class TestProjectStructureStaticMethods
 {
+    public final List<Integer> UNPUBLISHED_VERSION = Lists.mutable.with(1,2,3,4,5,6,7,8,9,10);
+
     @Test
     public void testIsValidGroupId()
     {
@@ -62,7 +65,7 @@ public class TestProjectStructureStaticMethods
     @Test
     public void testGetLatestProjectStructureVersion()
     {
-        Assert.assertEquals(0, ProjectStructure.getLatestProjectStructureVersion());
+        Assert.assertEquals(11, ProjectStructure.getLatestProjectStructureVersion());
     }
 
     @Test
@@ -72,6 +75,10 @@ public class TestProjectStructureStaticMethods
         List<Integer> badVersions = Lists.mutable.empty();
         for (int i = 0; i <= ProjectStructure.getLatestProjectStructureVersion(); i++)
         {
+            if (UNPUBLISHED_VERSION.contains(i))
+            {
+                continue;
+            }
             ProjectConfiguration projectConfig = new SimpleProjectConfiguration("ProjectId", ProjectType.PROTOTYPE,
                     ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id",
                     Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
