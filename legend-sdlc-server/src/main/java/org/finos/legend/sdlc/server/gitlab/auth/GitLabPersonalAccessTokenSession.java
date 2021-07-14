@@ -126,19 +126,17 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
             LOGGER.debug("initializing with GitlabPersonalAccessTokenProfile: {}", profile);
             String token = profile.getPersonalAccessToken();
 
-            if (token != null && tokenManager.isValidMode(GitLabMode.PROD))
+            if (token != null && profile.getGitlabHost() != null && tokenManager.isValidMode(GitLabMode.PROD))
             {
                 tokenManager.getValidModes()
                         .stream()
                         .filter(mode -> tokenManager.getGitLabToken(mode) == null)
                         .map(tokenManager::getModeInfo)
+                        .filter(gitLabModeInfo -> gitLabModeInfo.getServerInfo().getHost().equals(profile.getGitlabHost()))
                         .forEach(modeInfo ->
                         {
-                            if (modeInfo.getServerInfo().getHost().equals(profile.getGitlabHost()))
-                            {
-                                tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.PRIVATE, token));
-                                LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
-                            }
+                            tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.PRIVATE, token));
+                            LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
                         });
             }
         }

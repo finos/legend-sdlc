@@ -125,7 +125,6 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
 
     static boolean isSupportedProfile(CommonProfile profile)
     {
-        // TODO add GitLabUserProfile
         return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }
 

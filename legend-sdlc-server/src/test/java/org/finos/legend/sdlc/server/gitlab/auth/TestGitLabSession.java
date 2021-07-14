@@ -70,6 +70,11 @@ public class TestGitLabSession implements GitLabSession
         return false;
     }
 
+    public void setGitLabToken(GitLabMode mode, String token, TokenType type)
+    {
+        this.accessToken = GitLabToken.newGitLabToken(type, token);
+    }
+
     @Override
     public GitLabToken getGitLabToken(GitLabMode mode)
     {

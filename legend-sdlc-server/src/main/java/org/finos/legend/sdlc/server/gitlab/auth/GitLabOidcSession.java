@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.TokenType;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -144,7 +144,7 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
                                 .filter(modeInfo -> issuer.equals(modeInfo.getServerInfo().getGitLabURLString()))
                                 .forEach(modeInfo ->
                                 {
-                                    tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS, accessToken.getValue()));
+                                    tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken.getValue()));
                                     LOGGER.debug("Storing access token from profile for mode {}", modeInfo.getMode());
                                 });
                     }
