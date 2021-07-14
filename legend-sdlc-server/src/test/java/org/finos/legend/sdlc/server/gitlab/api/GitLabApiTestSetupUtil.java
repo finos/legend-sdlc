@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Branch;
@@ -84,7 +85,7 @@ public class GitLabApiTestSetupUtil
         GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
         GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
 
-        session.setOAuthToken(oauthToken);
+        session.setGitLabToken(gitLabMode, oauthToken, TokenType.OAUTH2_ACCESS);
         session.setModeInfo(gitLabModeInfo);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 

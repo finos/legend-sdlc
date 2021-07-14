@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.TokenType;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -43,7 +43,7 @@ public class TestGitLabTokenManager
     public void testEncoding_OneOAuthToken()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
-        GitLabToken token = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        GitLabToken token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
         tokenManager.putGitLabToken(GitLabMode.UAT, token);
         assertEncoding(tokenManager);
     }
@@ -52,7 +52,7 @@ public class TestGitLabTokenManager
     public void testEncoding_OnePrivateAccessToken()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
-        GitLabToken token = GitLabToken.newGitLabToken(Constants.TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
+        GitLabToken token = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
         tokenManager.putGitLabToken(GitLabMode.UAT, token);
         assertEncoding(tokenManager);
     }
@@ -62,10 +62,10 @@ public class TestGitLabTokenManager
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
 
-        GitLabToken firstToken = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        GitLabToken firstToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
         tokenManager.putGitLabToken(GitLabMode.UAT, firstToken);
 
-        GitLabToken secondToken = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"fd223a30b565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
+        GitLabToken secondToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"fd223a30b565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
         tokenManager.putGitLabToken(GitLabMode.PROD, secondToken);
         assertEncoding(tokenManager);
     }
@@ -75,10 +75,10 @@ public class TestGitLabTokenManager
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
 
-        GitLabToken firstToken = GitLabToken.newGitLabToken(Constants.TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
+        GitLabToken firstToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
         tokenManager.putGitLabToken(GitLabMode.UAT, firstToken);
 
-        GitLabToken secondToken = GitLabToken.newGitLabToken(Constants.TokenType.PRIVATE,"zCret1-ZHonvSHQsy95s");
+        GitLabToken secondToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"zCret1-ZHonvSHQsy95s");
         tokenManager.putGitLabToken(GitLabMode.PROD, secondToken);
         assertEncoding(tokenManager);
     }
@@ -88,10 +88,10 @@ public class TestGitLabTokenManager
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
 
-        GitLabToken oAuthToken = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        GitLabToken oAuthToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
         tokenManager.putGitLabToken(GitLabMode.UAT, oAuthToken);
 
-        GitLabToken privateToken = GitLabToken.newGitLabToken(Constants.TokenType.PRIVATE,"zCret1-ZHonvxxxy95s");
+        GitLabToken privateToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"zCret1-ZHonvxxxy95s");
         tokenManager.putGitLabToken(GitLabMode.PROD, privateToken);
         assertEncoding(tokenManager);
     }
@@ -100,12 +100,12 @@ public class TestGitLabTokenManager
     public void testClear()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(MODE_INFOS);
-        GitLabToken uatToken = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,"fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ea568cd374b56ddc496a");
+        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ea568cd374b56ddc496a");
         tokenManager.putGitLabToken(GitLabMode.UAT, uatToken);
         tokenManager.putGitLabToken(GitLabMode.PROD, prodToken);
-        Assert.assertEquals(uatToken, tokenManager.getGitLabToken(GitLabMode.UAT).getToken());
-        Assert.assertEquals(prodToken, tokenManager.getGitLabToken(GitLabMode.PROD).getToken());
+        Assert.assertEquals(uatToken, tokenManager.getGitLabToken(GitLabMode.UAT));
+        Assert.assertEquals(prodToken, tokenManager.getGitLabToken(GitLabMode.PROD));
         tokenManager.clearGitLabTokens();
         Assert.assertNull(tokenManager.getGitLabToken(GitLabMode.UAT));
         Assert.assertNull(tokenManager.getGitLabToken(GitLabMode.PROD));

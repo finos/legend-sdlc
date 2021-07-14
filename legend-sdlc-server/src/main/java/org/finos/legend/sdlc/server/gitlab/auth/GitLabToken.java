@@ -64,11 +64,11 @@ class GitLabToken
     {
         if (token == null)
         {
-            throw new IllegalArgumentException("Cannot create GitLabToken when token value in empty");
+            throw new IllegalArgumentException("Cannot create GitLabToken when token value is empty");
         }
         if (type == null)
         {
-            throw new IllegalArgumentException("Cannot create GitLabToken when token type in empty");
+            throw new IllegalArgumentException("Cannot create GitLabToken when token type is empty");
         }
         return new GitLabToken(type, token);
     }

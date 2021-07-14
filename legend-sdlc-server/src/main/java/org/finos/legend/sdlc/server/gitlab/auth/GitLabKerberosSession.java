@@ -19,7 +19,6 @@ import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
-import org.gitlab4j.api.Constants;
 
 import java.time.Instant;
 import java.util.Objects;

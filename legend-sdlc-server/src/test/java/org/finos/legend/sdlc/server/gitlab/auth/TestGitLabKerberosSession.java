@@ -14,10 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
-import org.junit.Assert;
-import org.junit.Test;
 import org.pac4j.core.profile.CommonProfile;
 
 import javax.security.auth.Subject;
