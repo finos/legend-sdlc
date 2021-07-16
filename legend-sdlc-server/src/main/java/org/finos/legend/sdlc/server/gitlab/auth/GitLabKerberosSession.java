@@ -81,21 +81,21 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     }
 
     @Override
-    public String getAccessToken(GitLabMode mode)
+    public GitLabToken getGitLabToken(GitLabMode mode)
     {
-        return this.tokenManager.getAccessToken(mode);
+        return this.tokenManager.getGitLabToken(mode);
     }
 
     @Override
-    public void clearAccessTokens()
+    public void clearGitLabTokens()
     {
-        this.tokenManager.clearAccessTokens();
+        this.tokenManager.clearGitLabTokens();
     }
 
     @Override
-    public void putAccessToken(GitLabMode mode, String token)
+    public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
-        this.tokenManager.putAccessToken(mode, token);
+        this.tokenManager.putGitLabToken(mode, token);
     }
 
     @Override

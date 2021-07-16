@@ -28,11 +28,11 @@ public interface GitLabSession extends Session
 
     boolean gitLabOAuthCallback(GitLabMode mode, String code);
 
-    String getAccessToken(GitLabMode mode);
+    GitLabToken getGitLabToken(GitLabMode mode);
 
-    void clearAccessTokens();
+    void clearGitLabTokens();
 
-    void putAccessToken(GitLabMode mode, String token);
+    void putGitLabToken(GitLabMode mode, GitLabToken token);
 
     GitLabModeInfo getModeInfo(GitLabMode mode);
 }

@@ -75,15 +75,17 @@ public class GitLabUserContext extends UserContext
                 if (api == null)
                 {
                     GitLabModeInfo modeInfo = gitLabSession.getModeInfo(mode);
-                    String accessToken = gitLabSession.getAccessToken(mode);
-                    if (accessToken == null)
+                    GitLabToken token = gitLabSession.getGitLabToken(mode);
+                    if (token == null)
                     {
                         if (gitLabSession instanceof KerberosSession)
                         {
                             try
                             {
-                                accessToken = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthToken(((KerberosSession)gitLabSession).getSubject());
-                                gitLabSession.putAccessToken(mode, accessToken);
+                                String oAuthToken = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthToken(((KerberosSession)gitLabSession).getSubject());
+                                token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oAuthToken);
+
+                                gitLabSession.putGitLabToken(mode, token);
                                 LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
@@ -110,7 +112,7 @@ public class GitLabUserContext extends UserContext
                             throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                         }
                     }
-                    api = new GitLabApi(ApiVersion.V4, modeInfo.getServerInfo().getGitLabURLString(), TokenType.OAUTH2_ACCESS, accessToken);
+                    api = new GitLabApi(ApiVersion.V4, modeInfo.getServerInfo().getGitLabURLString(), token.getTokenType(), token.getToken());
                     this.apiCache.put(mode, api);
                 }
             }
@@ -123,11 +125,11 @@ public class GitLabUserContext extends UserContext
         if (this.apiCache.get(mode) == null)
         {
             GitLabSession gitLabSession = getGitLabSession();
-            if (gitLabSession.getAccessToken(mode) == null)
+            if (gitLabSession.getGitLabToken(mode) == null)
             {
                 synchronized (this.apiCache)
                 {
-                    if (gitLabSession.getAccessToken(mode) == null)
+                    if (gitLabSession.getGitLabToken(mode) == null)
                     {
                         if (gitLabSession instanceof KerberosSession)
                         {
@@ -135,7 +137,7 @@ public class GitLabUserContext extends UserContext
                             {
                                 String accessToken = GitLabOAuthAuthenticator.newAuthenticator(gitLabSession.getModeInfo(mode)).getOAuthToken(((KerberosSession) gitLabSession).getSubject());
                                 // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                                gitLabSession.putAccessToken(mode, accessToken);
+                                gitLabSession.putGitLabToken(mode, GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken));
                                 LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                             }
                             catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
@@ -161,7 +163,7 @@ public class GitLabUserContext extends UserContext
         {
             this.apiCache.clear();
             GitLabSession gitLabSession = getGitLabSession();
-            gitLabSession.clearAccessTokens();
+            gitLabSession.clearGitLabTokens();
             LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
         }
     }

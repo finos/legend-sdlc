@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.gitlab4j.api.Constants.TokenType;
 
 import java.time.Instant;
 import java.util.Collections;
@@ -25,7 +26,7 @@ import java.util.Set;
 public class TestGitLabSession implements GitLabSession
 {
     private final String userId;
-    private String accessToken;
+    private GitLabToken accessToken;
     private GitLabModeInfo gitLabModeInfo;
 
     public TestGitLabSession(String userId)
@@ -69,25 +70,26 @@ public class TestGitLabSession implements GitLabSession
         return false;
     }
 
-    public void setAccessToken(String token)
+    public void setGitLabToken(GitLabMode mode, String token, TokenType type)
     {
-        this.accessToken = token;
+        this.accessToken = GitLabToken.newGitLabToken(type, token);
     }
 
     @Override
-    public String getAccessToken(GitLabMode mode)
+    public GitLabToken getGitLabToken(GitLabMode mode)
     {
         return this.accessToken;
     }
 
     @Override
-    public void clearAccessTokens()
+    public void clearGitLabTokens()
     {
 
     }
 
+
     @Override
-    public void putAccessToken(GitLabMode mode, String token)
+    public void putGitLabToken(GitLabMode mode, GitLabToken token)
     {
 
     }
