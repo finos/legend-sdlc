@@ -82,7 +82,26 @@ public interface WorkspaceApi
      * @param workspaceId new workspace id
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, String workspaceId);
+    Workspace newUserWorkspace(String projectId, String workspaceId);
+
+    /**
+     * Create a new workspace in the given project for the current user.
+     *
+     * @param projectId   project id
+     * @param workspaceId new workspace id
+     * @return new workspace
+     */
+    Workspace newGroupWorkspace(String projectId, String workspaceId);
+
+    /**
+     * Create a new workspace in the given project for the current user.
+     *
+     * @param projectId   project id
+     * @param workspaceId new workspace id
+     * @param isGroup is group workspace
+     * @return new workspace
+     */
+    Workspace newWorkspace(String projectId, String workspaceId, boolean isGroup);
 
     /**
      * Delete the given workspace.

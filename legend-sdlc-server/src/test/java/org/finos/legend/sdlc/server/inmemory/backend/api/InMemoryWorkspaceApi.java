@@ -94,7 +94,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId)
+    public Workspace newUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace newGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace newWorkspace(String projectId, String workspaceId, boolean isGroup)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

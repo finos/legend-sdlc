@@ -38,9 +38,15 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testCreateWorkspace()
+    public void testCreateUserWorkspace()
     {
-        gitLabWorkspaceApiTestResource.runCreateWorkspaceTest();
+        gitLabWorkspaceApiTestResource.runCreateUserWorkspaceTest();
+    }
+
+    @Test
+    public void testCreateGroupWorkspace()
+    {
+        gitLabWorkspaceApiTestResource.runCreateGroupWorkspaceTest();
     }
 
     @Test

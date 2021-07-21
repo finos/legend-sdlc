@@ -65,13 +65,13 @@ public class GitLabWorkspaceApiTestResource
         this.gitLabMemberUserContext = gitLabMemberUserContext;
     }
 
-    public void runCreateWorkspaceTest()
+    public void runCreateUserWorkspaceTest()
     {
-        String projectName = "WorkspaceTestProject";
+        String projectName = "WorkspaceTestProjectOne";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "worktestproj";
+        String artifactId = "worktestprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceId = "testworkspace";
 
@@ -84,11 +84,39 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceId);
+        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceId);
 
         Assert.assertNotNull(createdWorkspace);
         Assert.assertEquals(workspaceId, createdWorkspace.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspace.getProjectId());
+        Assert.assertNotNull(createdWorkspace.getUserId());
+    }
+
+    public void runCreateGroupWorkspaceTest()
+    {
+        String projectName = "WorkspaceTestProjectTwo";
+        String description = "A test project.";
+        ProjectType projectType = ProjectType.PRODUCTION;
+        String groupId = "org.finos.sdlc.test";
+        String artifactId = "worktestprojtwo";
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
+        String workspaceId = "testworkspace";
+
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(projectType, createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+
+        String projectId = createdProject.getProjectId();
+        Workspace createdWorkspace = gitLabWorkspaceApi.newGroupWorkspace(projectId, workspaceId);
+
+        Assert.assertNotNull(createdWorkspace);
+        Assert.assertEquals(workspaceId, createdWorkspace.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspace.getProjectId());
+        Assert.assertNull(createdWorkspace.getUserId());
     }
 
     public void runUpdateWorkspaceWithRebaseNoConflictTest() throws GitLabApiException
@@ -105,7 +133,7 @@ public class GitLabWorkspaceApiTestResource
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceName);
+        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName); //TODO
 
         String workspaceId = createdWorkspace.getWorkspaceId();
         List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
@@ -116,7 +144,7 @@ public class GitLabWorkspaceApiTestResource
 
         // Create another workspace, commit, review, merge to move project HEAD forward -- use workspace two
         String workspaceTwoName = "workspacetwo";
-        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, workspaceTwoName);
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceTwoName); //TODO
         String workspaceTwoId = createdWorkspaceTwo.getWorkspaceId();
         List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
 

@@ -77,7 +77,7 @@ public class GitLabEntityApiTestResource
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, workspaceName);
+        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName); // TODO
 
         String workspaceId = createdWorkspace.getWorkspaceId();
         List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);

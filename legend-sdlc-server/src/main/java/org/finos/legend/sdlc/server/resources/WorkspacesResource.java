@@ -102,13 +102,13 @@ public class WorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}")
-    @ApiOperation("Create a new workspace")
-    public Workspace createWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    @ApiOperation("Create a new user workspace")
+    public Workspace createUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return execute(
-                "creating new workspace " + workspaceId + " for project " + projectId,
-                "create new workspace",
-                this.workspaceApi::newWorkspace,
+                "creating new user workspace " + workspaceId + " for project " + projectId,
+                "create new user workspace",
+                this.workspaceApi::newUserWorkspace,
                 projectId,
                 workspaceId
         );

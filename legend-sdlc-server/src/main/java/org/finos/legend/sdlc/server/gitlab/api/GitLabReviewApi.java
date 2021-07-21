@@ -762,6 +762,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         {
             return null;
         }
+        // TODO: fix
         String workspaceId = getWorkspaceIdFromWorkspaceBranchName(sourceBranchName, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
 
         return newReview(mergeRequest.getIid(), projectId, workspaceId, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl());

@@ -457,7 +457,10 @@ public interface ProjectFileAccessProvider
     {
         WORKSPACE("workspace", "workspaces"),
         CONFLICT_RESOLUTION("workspace with conflict resolution", "workspaces with conflict resolution"),
-        BACKUP("backup workspace", "backup workspaces");
+        BACKUP("backup workspace", "backup workspaces"),
+        GROUP("group workspace", "group workspaces"),
+        GROUP_CONFLICT_RESOLUTION("group workspace with conflict resolution", "group workspaces with conflict resolution"),
+        GROUP_BACKUP("group backup workspace", "group backup workspaces");
 
         private final String label;
         private final String labelPlural;
