@@ -231,15 +231,15 @@ abstract class BaseGitLabApi
         {
             case WORKSPACE:
             {
-                return isGroup? GROUP : WORKSPACE;
+                return isGroup ? GROUP : WORKSPACE;
             }
             case CONFLICT_RESOLUTION:
             {
-                return isGroup? GROUP_CONFLICT_RESOLUTION : CONFLICT_RESOLUTION;
+                return isGroup ? GROUP_CONFLICT_RESOLUTION : CONFLICT_RESOLUTION;
             }
             case BACKUP:
             {
-                return isGroup? GROUP_BACKUP : BACKUP;
+                return isGroup ? GROUP_BACKUP : BACKUP;
             }
             case GROUP:
             case GROUP_CONFLICT_RESOLUTION:
@@ -300,7 +300,7 @@ abstract class BaseGitLabApi
         builder.append(first);
 
         // Skip current user id as part of workspace name construction if workspace is of one of the group access types.
-        int startIndex = GROUP_WORKSPACE_PREFIXES.contains(first)? 1 : 0;
+        int startIndex = GROUP_WORKSPACE_PREFIXES.contains(first) ? 1 : 0;
 
         for (int i = startIndex; i < moreCount; i++)
         {
@@ -312,7 +312,7 @@ abstract class BaseGitLabApi
     protected static String getWorkspaceIdFromWorkspaceBranchName(String workspaceBranchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         // Locate the first branch delimiter if workspace is of one of the group access types since there is no user id segment in branch name.
-        int fullPrefixEndIndex = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType)? workspaceBranchName.indexOf(BRANCH_DELIMITER) : workspaceBranchName.indexOf(BRANCH_DELIMITER, getWorkspaceBranchNamePrefix(workspaceAccessType).length() + 1);
+        int fullPrefixEndIndex = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType) ? workspaceBranchName.indexOf(BRANCH_DELIMITER) : workspaceBranchName.indexOf(BRANCH_DELIMITER, getWorkspaceBranchNamePrefix(workspaceAccessType).length() + 1);
         if (fullPrefixEndIndex == -1)
         {
             throw new IllegalArgumentException("Invalid workspace branch name: " + workspaceBranchName);
@@ -327,7 +327,7 @@ abstract class BaseGitLabApi
 
     protected boolean isUserWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        String extraArgument = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType)? null : getCurrentUser();
+        String[] extraArgument = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType) ? (String[]) null : new String[]{getCurrentUser()};
         return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceAccessType), extraArgument);
     }
 
@@ -650,8 +650,8 @@ abstract class BaseGitLabApi
     protected static Workspace fromWorkspaceBranchName(String projectId, String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         int userIdStartIndex = getWorkspaceBranchNamePrefix(workspaceAccessType).length() + 1;
-        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, GROUP_WORKSPACE_TYPES.contains(workspaceAccessType)? 0 : userIdStartIndex);
-        String userId = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType)? null : branchName.substring(userIdStartIndex, userIdEndIndex);
+        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, GROUP_WORKSPACE_TYPES.contains(workspaceAccessType) ? 0 : userIdStartIndex);
+        String userId = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType) ? null : branchName.substring(userIdStartIndex, userIdEndIndex);
         String workspaceId = branchName.substring(userIdEndIndex + 1);
         return new Workspace()
         {

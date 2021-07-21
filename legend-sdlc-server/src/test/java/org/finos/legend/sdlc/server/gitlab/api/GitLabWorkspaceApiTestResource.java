@@ -65,7 +65,10 @@ public class GitLabWorkspaceApiTestResource
         this.gitLabMemberUserContext = gitLabMemberUserContext;
     }
 
-    public void runCreateUserWorkspaceTest()
+    /**
+     * Tests Create, Get, GetAll, IsInConflictResolutionMode, InOutdated on user and group workspaces.
+     */
+    public void runUserAndGroupWorkspaceNormalWorkflowTest()
     {
         String projectName = "WorkspaceTestProjectOne";
         String description = "A test project.";
@@ -73,7 +76,9 @@ public class GitLabWorkspaceApiTestResource
         String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
-        String workspaceId = "testworkspace";
+        String workspaceOneId = "testworkspaceone";
+        String workspaceTwoId = "testworkspacetwo";
+        String workspaceThreeId = "testworkspacethree";
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
@@ -84,56 +89,80 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceId);
+        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceOneId);
 
-        Assert.assertNotNull(createdWorkspace);
-        Assert.assertEquals(workspaceId, createdWorkspace.getWorkspaceId());
-        Assert.assertEquals(projectId, createdWorkspace.getProjectId());
-        Assert.assertNotNull(createdWorkspace.getUserId());
+        Assert.assertNotNull(createdWorkspaceOne);
+        Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
+        Assert.assertNotNull(createdWorkspaceOne.getUserId());
+
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceTwoId);
+
+        Assert.assertNotNull(createdWorkspaceTwo);
+        Assert.assertEquals(workspaceTwoId, createdWorkspaceTwo.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspaceTwo.getProjectId());
+        Assert.assertNotNull(createdWorkspaceTwo.getUserId());
+
+        Workspace createdWorkspaceThree = gitLabWorkspaceApi.newGroupWorkspace(projectId, workspaceThreeId);
+
+        Assert.assertNotNull(createdWorkspaceThree);
+        Assert.assertEquals(workspaceThreeId, createdWorkspaceThree.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspaceThree.getProjectId());
+        Assert.assertNull(createdWorkspaceThree.getUserId());
+
+        List<Workspace> allWorkspaces = gitLabWorkspaceApi.getAllWorkspaces(projectId);
+        List<Workspace> allUserWorkspaces = gitLabWorkspaceApi.getAllUserWorkspaces(projectId);
+        List<Workspace> allGroupWorkspaces = gitLabWorkspaceApi.getGroupWorkspaces(projectId);
+
+        Assert.assertNotNull(allWorkspaces);
+        Assert.assertNotNull(allUserWorkspaces);
+        Assert.assertNotNull(allGroupWorkspaces);
+        Assert.assertEquals(3, allWorkspaces.size());
+        Assert.assertEquals(2, allUserWorkspaces.size());
+        Assert.assertEquals(1, allGroupWorkspaces.size());
+
+        Workspace retriedUserWorkspace = gitLabWorkspaceApi.getUserWorkspace(projectId, workspaceOneId);
+
+        Assert.assertNotNull(retriedUserWorkspace);
+        Assert.assertEquals(workspaceOneId, retriedUserWorkspace.getWorkspaceId());
+        Assert.assertEquals(projectId, retriedUserWorkspace.getProjectId());
+        Assert.assertNotNull(retriedUserWorkspace.getUserId());
+
+        Workspace retriedGroupWorkspace = gitLabWorkspaceApi.getGroupWorkspace(projectId, workspaceThreeId);
+
+        Assert.assertNotNull(retriedGroupWorkspace);
+        Assert.assertEquals(workspaceThreeId, retriedGroupWorkspace.getWorkspaceId());
+        Assert.assertEquals(projectId, retriedGroupWorkspace.getProjectId());
+        Assert.assertNull(retriedGroupWorkspace.getUserId());
+
+        boolean isUserWorkspaceInConflictResolution = gitLabWorkspaceApi.isUserWorkspaceInConflictResolutionMode(projectId, workspaceOneId);
+        boolean isGroupWorkspaceInConflictResolution = gitLabWorkspaceApi.isGroupWorkspaceInConflictResolutionMode(projectId, workspaceThreeId);
+
+        Assert.assertFalse(isUserWorkspaceInConflictResolution);
+        Assert.assertFalse(isGroupWorkspaceInConflictResolution);
+
+        boolean isUserWorkspaceOutdated = gitLabWorkspaceApi.isUserWorkspaceOutdated(projectId, workspaceOneId);
+        boolean isGroupWorkspaceOutdated = gitLabWorkspaceApi.isGroupWorkspaceOutdated(projectId, workspaceThreeId);
+
+        Assert.assertFalse(isUserWorkspaceOutdated);
+        Assert.assertFalse(isGroupWorkspaceOutdated);
     }
 
-    public void runCreateGroupWorkspaceTest()
-    {
-        String projectName = "WorkspaceTestProjectTwo";
-        String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
-        String groupId = "org.finos.sdlc.test";
-        String artifactId = "worktestprojtwo";
-        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
-        String workspaceId = "testworkspace";
-
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
-
-        Assert.assertNotNull(createdProject);
-        Assert.assertEquals(projectName, createdProject.getName());
-        Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
-        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
-
-        String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newGroupWorkspace(projectId, workspaceId);
-
-        Assert.assertNotNull(createdWorkspace);
-        Assert.assertEquals(workspaceId, createdWorkspace.getWorkspaceId());
-        Assert.assertEquals(projectId, createdWorkspace.getProjectId());
-        Assert.assertNull(createdWorkspace.getUserId());
-    }
-
-    public void runUpdateWorkspaceWithRebaseNoConflictTest() throws GitLabApiException
+    public void runUpdateWorkspaceWithRebaseNoConflictTest() throws GitLabApiException //TODO: test group once done
     {
         // Create new workspace from previous HEAD
-        String projectName = "WorkspaceUpdateTestProject";
+        String projectName = "WorkspaceTestProjectThree";
         String description = "A test project.";
         ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "wupdatetestproj";
+        String artifactId = "testworkprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
-        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName); //TODO
+        Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
         List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
@@ -144,7 +173,7 @@ public class GitLabWorkspaceApiTestResource
 
         // Create another workspace, commit, review, merge to move project HEAD forward -- use workspace two
         String workspaceTwoName = "workspacetwo";
-        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceTwoName); //TODO
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceTwoName);
         String workspaceTwoId = createdWorkspaceTwo.getWorkspaceId();
         List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
 
@@ -245,7 +274,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateUserWorkspace(projectId, workspaceId); // TODO
+        gitLabWorkspaceApi.updateUserWorkspace(projectId, workspaceId);
         List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);

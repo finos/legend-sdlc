@@ -46,7 +46,11 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -82,8 +86,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     {
         return workspaceAccessTypes.stream().map(type -> this.getWorkspacesByAccessType(projectId, type)).reduce(Collections.emptyList(), (a, b) ->
         {
-            a.addAll(b);
-            return a;
+            b.addAll(a);
+            return b;
         });
     }
 
@@ -117,7 +121,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to get user " + workspaceAccessType.getLabelPlural() + " for project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error getting user  " + workspaceAccessType.getLabelPlural() + "  for project " + projectId);
+                    () -> "Error getting user " + workspaceAccessType.getLabelPlural() + " for project " + projectId);
         }
     }
 
@@ -138,8 +142,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     {
         return workspaceAccessTypes.stream().map(type -> this.getAllWorkspacesByAccessType(projectId, type)).reduce(Collections.emptyList(), (a, b) ->
         {
-            a.addAll(b);
-            return a;
+            b.addAll(a);
+            return b;
         });
     }
 
