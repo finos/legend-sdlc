@@ -230,7 +230,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroup)
     {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroup);
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroup));
     }
 
     @Override
