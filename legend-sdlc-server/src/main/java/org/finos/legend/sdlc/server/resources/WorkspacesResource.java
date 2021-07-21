@@ -48,7 +48,7 @@ public class WorkspacesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all workspaces for a project")
+    @ApiOperation("Get all user workspaces for a project")
     public List<Workspace> getUserWorkspaces(@PathParam("projectId") String projectId,
                                              @QueryParam("owned")
                                              @DefaultValue("true")
@@ -56,7 +56,7 @@ public class WorkspacesResource extends BaseResource
     {
         return executeWithLogging(
                 "getting " + (ownedOnly ? "user" : "all") + " workspaces for project " + projectId,
-                ownedOnly ? this.workspaceApi::getWorkspaces : this.workspaceApi::getAllWorkspaces,
+                ownedOnly ? this.workspaceApi::getUserWorkspaces : this.workspaceApi::getAllUserWorkspaces,
                 projectId
         );
     }
@@ -67,8 +67,8 @@ public class WorkspacesResource extends BaseResource
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting workspace " + workspaceId + " for project " + projectId,
-                this.workspaceApi::getWorkspace,
+                "getting user workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -77,11 +77,11 @@ public class WorkspacesResource extends BaseResource
     @GET
     @Path("{workspaceId}/outdated")
     @ApiOperation("Check if a user workspace is outdated")
-    public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    public boolean isUserWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if workspace " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isWorkspaceOutdated,
+                "checking if user workspace " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isUserWorkspaceOutdated,
                 projectId,
                 workspaceId
         );
@@ -90,11 +90,11 @@ public class WorkspacesResource extends BaseResource
     @GET
     @Path("{workspaceId}/inConflictResolutionMode")
     @ApiOperation("Check if a user workspace is in conflict resolution mode")
-    public boolean isWorkspaceInConflictResolutionMode(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    public boolean isUserWorkspaceInConflictResolutionMode(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if workspace " + workspaceId + " of project " + projectId + " is in conflict resolution mode",
-                this.workspaceApi::isWorkspaceInConflictResolutionMode,
+                "checking if user workspace " + workspaceId + " of project " + projectId + " is in conflict resolution mode",
+                this.workspaceApi::isUserWorkspaceInConflictResolutionMode,
                 projectId,
                 workspaceId
         );
@@ -116,12 +116,12 @@ public class WorkspacesResource extends BaseResource
 
     @DELETE
     @Path("{workspaceId}")
-    @ApiOperation("Delete a workspace")
-    public void deleteWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    @ApiOperation("Delete a user workspace")
+    public void deleteUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "deleting workspace " + workspaceId + " for project " + projectId,
-                this.workspaceApi::deleteWorkspace,
+                "deleting user workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::deleteUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -129,12 +129,12 @@ public class WorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}/update")
-    @ApiOperation("Update a workspace")
-    public WorkspaceApi.WorkspaceUpdateReport updateWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    @ApiOperation("Update a user workspace")
+    public WorkspaceApi.WorkspaceUpdateReport updateUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "updating workspace " + workspaceId + " in project " + projectId + " to latest revision",
-                () -> this.workspaceApi.updateWorkspace(projectId, workspaceId)
+                "updating user workspace " + workspaceId + " in project " + projectId + " to latest revision",
+                () -> this.workspaceApi.updateUserWorkspace(projectId, workspaceId)
         );
     }
 }

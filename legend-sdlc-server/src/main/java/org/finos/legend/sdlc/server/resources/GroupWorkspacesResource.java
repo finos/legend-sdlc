@@ -20,8 +20,15 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 
 import javax.inject.Inject;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Path("/projects/{projectId}/groupWorkspaces")
 @Api("Group Workspaces")
@@ -37,6 +44,66 @@ public class GroupWorkspacesResource extends BaseResource
         this.workspaceApi = workspaceApi;
     }
 
+    @GET
+    @ApiOperation("Get all group workspaces for a project")
+    public List<Workspace> getGroupWorkspaces(@PathParam("projectId") String projectId)
+    {
+        return executeWithLogging(
+                "getting all group workspaces for project " + projectId,
+                this.workspaceApi::getGroupWorkspaces,
+                projectId
+        );
+    }
+
+    @GET
+    @ApiOperation("Get all user or group workspaces for a project")
+    public List<Workspace> getAllGroupAndUserWorkspaces(@PathParam("projectId") String projectId)
+    {
+        return executeWithLogging(
+                "getting all user or group workspaces for project " + projectId,
+                () -> this.workspaceApi.getAllWorkspaces(projectId)
+        );
+    }
+
+    @GET
+    @Path("{workspaceId}")
+    @ApiOperation("Get a group workspace for a project by id")
+    public Workspace getGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "getting group workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getGroupWorkspace,
+                projectId,
+                workspaceId
+        );
+    }
+
+    @GET
+    @Path("{workspaceId}/outdated")
+    @ApiOperation("Check if a group workspace is outdated")
+    public boolean isGroupWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "checking if group workspace " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isGroupWorkspaceOutdated,
+                projectId,
+                workspaceId
+        );
+    }
+
+    @GET
+    @Path("{workspaceId}/inConflictResolutionMode")
+    @ApiOperation("Check if a group workspace is in conflict resolution mode")
+    public boolean isGroupWorkspaceInConflictResolutionMode(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "checking if group workspace " + workspaceId + " of project " + projectId + " is in conflict resolution mode",
+                this.workspaceApi::isGroupWorkspaceInConflictResolutionMode,
+                projectId,
+                workspaceId
+        );
+    }
+
     @POST
     @Path("{workspaceId}")
     @ApiOperation("Create a new group workspace")
@@ -48,6 +115,30 @@ public class GroupWorkspacesResource extends BaseResource
                 this.workspaceApi::newGroupWorkspace,
                 projectId,
                 workspaceId
+        );
+    }
+
+    @DELETE
+    @Path("{workspaceId}")
+    @ApiOperation("Delete a group workspace")
+    public void deleteGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        executeWithLogging(
+                "deleting group workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::deleteGroupWorkspace,
+                projectId,
+                workspaceId
+        );
+    }
+
+    @POST
+    @Path("{workspaceId}/update")
+    @ApiOperation("Update a group workspace")
+    public WorkspaceApi.WorkspaceUpdateReport updateGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "updating group workspace " + workspaceId + " in project " + projectId + " to latest revision",
+                () -> this.workspaceApi.updateGroupWorkspace(projectId, workspaceId)
         );
     }
 }

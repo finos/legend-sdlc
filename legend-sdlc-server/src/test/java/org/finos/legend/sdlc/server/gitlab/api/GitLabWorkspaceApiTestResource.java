@@ -245,7 +245,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateWorkspace(projectId, workspaceId);
+        gitLabWorkspaceApi.updateUserWorkspace(projectId, workspaceId); // TODO
         List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);

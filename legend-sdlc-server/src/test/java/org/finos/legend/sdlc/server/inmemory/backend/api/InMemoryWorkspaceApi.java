@@ -16,9 +16,11 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 
 public class InMemoryWorkspaceApi implements WorkspaceApi
 {
@@ -28,7 +30,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId)
+    public List<Workspace> getUserWorkspaces(String projectId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public List<Workspace> getGroupWorkspaces(String projectId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -52,7 +66,31 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace getWorkspace(String projectId, String workspaceId)
+    public List<Workspace> getAllUserWorkspaces(String projectId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroup)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -70,7 +108,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId)
+    public boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroup)
     {
         return false;
     }
@@ -88,7 +138,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
+    public boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroup)
     {
         return false;
     }
@@ -112,13 +174,37 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public void deleteWorkspace(String projectId, String workspaceId)
+    public void deleteUserWorkspace(String projectId, String workspaceId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId)
+    public void deleteGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void deleteWorkspace(String projectId, String workspaceId, boolean isGroup)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroup)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
