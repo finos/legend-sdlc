@@ -32,7 +32,7 @@ public interface RevisionApi
 
     RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId);
 
-    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroup);
+    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId);
 
@@ -42,13 +42,13 @@ public interface RevisionApi
 
     RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath);
 
-    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroup, String entityPath);
+    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace, String entityPath);
 
     RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath);
 
     RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath);
 
-    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroup, String packagePath);
+    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace, String packagePath);
 
     RevisionStatus getRevisionStatus(String projectId, String revisionId);
 }

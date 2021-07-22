@@ -99,10 +99,10 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      * @return user workspace
      */
-    Workspace getWorkspace(String projectId, String workspaceId, boolean isGroup);
+    Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId);
 
@@ -131,10 +131,10 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      * @return flag indicating if a workspace is outdated
      */
-    boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroup);
+    boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId);
 
@@ -163,10 +163,10 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      * @return flag indicating if a workspace is in conflict resolution mode
      */
-    boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroup);
+    boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Create a new user workspace in the given project for the current user.
@@ -191,10 +191,10 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId new workspace id
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, String workspaceId, boolean isGroup);
+    Workspace newWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Delete the given user workspace.
@@ -217,9 +217,9 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId id of workspace to delete
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      */
-    void deleteWorkspace(String projectId, String workspaceId, boolean isGroup);
+    void deleteWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Update the user workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
@@ -244,10 +244,10 @@ public interface WorkspaceApi
      *
      * @param projectId   project id
      * @param workspaceId id of workspace to update
-     * @param isGroup is group workspace
+     * @param isGroupWorkspace is group workspace
      * @return a workspace update report
      */
-    WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroup);
+    WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     interface WorkspaceUpdateReport
     {

@@ -90,7 +90,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroup)
+    public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -120,7 +120,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroup)
+    public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         return false;
     }
@@ -150,7 +150,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroup)
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         return false;
     }
@@ -168,7 +168,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, boolean isGroup)
+    public Workspace newWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -186,7 +186,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public void deleteWorkspace(String projectId, String workspaceId, boolean isGroup)
+    public void deleteWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -204,7 +204,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroup)
+    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
