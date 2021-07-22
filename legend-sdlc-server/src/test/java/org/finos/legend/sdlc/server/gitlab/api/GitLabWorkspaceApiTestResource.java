@@ -165,7 +165,7 @@ public class GitLabWorkspaceApiTestResource
         Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null); //TODO
         List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
@@ -175,7 +175,7 @@ public class GitLabWorkspaceApiTestResource
         String workspaceTwoName = "workspacetwo";
         Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceTwoName);
         String workspaceTwoId = createdWorkspaceTwo.getWorkspaceId();
-        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
+        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null); //TODO
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceTwoEntities);
 
@@ -186,8 +186,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceTwoId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
+        gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceTwoId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity"); //TODO
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null); //TODO
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -263,8 +263,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity"); //TODO
+        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null); //TODO
 
         Assert.assertNotNull(modifiedWorkspaceEntitiesNew);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -275,7 +275,7 @@ public class GitLabWorkspaceApiTestResource
 
         // Update workspace branch and trigger rebase
         gitLabWorkspaceApi.updateUserWorkspace(projectId, workspaceId);
-        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null); //TODO
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());

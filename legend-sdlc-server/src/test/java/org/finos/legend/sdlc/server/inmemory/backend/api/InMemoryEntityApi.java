@@ -58,7 +58,19 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    public EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroup)
     {
         InMemoryProject project = this.backend.getProject(projectId);
         InMemoryWorkspace workspace = project.getWorkspace(workspaceId);
@@ -78,7 +90,19 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    public EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
         InMemoryWorkspace workspace = project.getWorkspace(workspaceId);
@@ -119,7 +143,19 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    public EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

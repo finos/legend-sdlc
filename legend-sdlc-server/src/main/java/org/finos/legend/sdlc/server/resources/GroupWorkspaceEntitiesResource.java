@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,35 +27,27 @@ import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/entities")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/entities")
 @Api("Entities")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceEntitiesResource extends EntityAccessResource
+public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public WorkspaceEntitiesResource(EntityApi entityApi)
+    public GroupWorkspaceEntitiesResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
 
     @GET
-    @ApiOperation("Get entities of the user workspace")
+    @ApiOperation("Get entities of the group workspace")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
@@ -73,9 +65,9 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return execute(
-                "getting entities in user workspace " + workspaceId + " for project " + projectId,
-                "get entities of the user workspace",
-                () -> getEntities(this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in group workspace " + workspaceId + " for project " + projectId,
+                "get entities of the group workspace",
+                () -> getEntities(this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 
@@ -86,12 +78,12 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         List<String> entityPathsToDelete = command.getEntitiesToDelete();
         return (entityPathsToDelete == null) ?
                 executeWithLogging(
-                        "deleting all entities in user workspace " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteAllEntities(command.getMessage())
+                        "deleting all entities in group workspace " + workspaceId + " for project " + projectId,
+                        () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).deleteAllEntities(command.getMessage())
                 ) :
                 executeWithLogging(
-                        "deleting " + entityPathsToDelete.size() + " entities in user workspace " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntities(entityPathsToDelete, command.getMessage())
+                        "deleting " + entityPathsToDelete.size() + " entities in group workspace " + workspaceId + " for project " + projectId,
+                        () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntities(entityPathsToDelete, command.getMessage())
                 );
     }
 
@@ -101,9 +93,9 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
         return execute(
-                "updating entities in user workspace " + workspaceId + " for project " + projectId,
+                "updating entities in group workspace " + workspaceId + " for project " + projectId,
                 "update entities",
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
+                () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
 
@@ -113,8 +105,8 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
-                "getting entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+                "getting entity " + path + " in group workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 
@@ -125,8 +117,8 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
         return executeWithLogging(
-                "Creating or updating entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
+                "Creating or updating entity " + path + " in group workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
         );
     }
 
@@ -137,8 +129,8 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");
         return executeWithLogging(
-                "deleting entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(path, command.getMessage())
+                "deleting entity " + path + " in group workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(path, command.getMessage())
         );
     }
 }

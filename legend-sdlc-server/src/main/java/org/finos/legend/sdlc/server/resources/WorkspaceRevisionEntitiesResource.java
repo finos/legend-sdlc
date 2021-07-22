@@ -47,7 +47,7 @@ public class WorkspaceRevisionEntitiesResource extends EntityAccessResource
     }
 
     @GET
-    @ApiOperation("Get entities of the workspace at the revision")
+    @ApiOperation("Get entities of the user workspace at the revision")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
@@ -66,22 +66,22 @@ public class WorkspaceRevisionEntitiesResource extends EntityAccessResource
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entities in revision " + revisionId + " of workspace " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
+                () -> getEntities(this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the workspace at the revision by its path")
+    @ApiOperation("Get an entity of the user workspace at the revision by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId,
                                   @PathParam("workspaceId") String workspaceId,
                                   @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
                                   @PathParam("path") String path)
     {
         return executeWithLogging(
-                "getting entity " + path + " in revision " + revisionId + " of workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId).getEntity(path)
+                "getting entity " + path + " in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId).getEntity(path)
         );
     }
 }

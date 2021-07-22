@@ -196,9 +196,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     }
 
     @Override
-    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    public EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
     }
 
     @Override
@@ -235,9 +247,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     }
 
     @Override
-    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    public EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, true, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
     }
 
     @Override
@@ -314,9 +338,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     }
 
     @Override
-    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    public EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
     }
 
     @Override

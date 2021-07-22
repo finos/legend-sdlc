@@ -27,13 +27,21 @@ public interface EntityApi
 
     EntityAccessContext getProjectRevisionEntityAccessContext(String projectId, String revisionId);
 
-    EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId);
+    EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId);
+
+    EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId);
+
+    EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId);
 
     EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
 
-    EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+
+    EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+
+    EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId);
 
     EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
 
@@ -61,7 +69,11 @@ public interface EntityApi
 
     // Entity modification
 
-    EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId);
+    EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId);
+
+    EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId);
+
+    EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, String workspaceId);
 }

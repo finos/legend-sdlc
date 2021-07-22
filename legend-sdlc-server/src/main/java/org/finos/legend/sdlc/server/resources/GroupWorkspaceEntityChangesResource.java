@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,16 +29,16 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/entityChanges")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/entityChanges")
 @Api("Entities")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceEntityChangesResource extends BaseResource
+public class GroupWorkspaceEntityChangesResource extends BaseResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public WorkspaceEntityChangesResource(EntityApi entityApi)
+    public GroupWorkspaceEntityChangesResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
@@ -49,8 +49,8 @@ public class WorkspaceEntityChangesResource extends BaseResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to perform entity changes");
         return executeWithLogging(
-                "performing changes in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
+                "performing changes in group workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }
 }
