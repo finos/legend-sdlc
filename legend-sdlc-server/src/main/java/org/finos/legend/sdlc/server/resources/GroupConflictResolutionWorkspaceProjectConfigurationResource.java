@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,27 +27,27 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/configuration")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/conflictResolution/configuration")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ConflictResolutionWorkspaceProjectConfigurationResource extends BaseResource
+public class GroupConflictResolutionWorkspaceProjectConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
 
     @Inject
-    public ConflictResolutionWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public GroupConflictResolutionWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
     {
         this.projectConfigurationApi = projectConfigurationApi;
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a user workspace with conflict resolution")
+    @ApiOperation("Get the configuration of a project in a group workspace with conflict resolution")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId,
-                () -> this.projectConfigurationApi.getUserWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in group workspace with conflict resolution " + workspaceId,
+                () -> this.projectConfigurationApi.getGroupWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId)
         );
     }
 }

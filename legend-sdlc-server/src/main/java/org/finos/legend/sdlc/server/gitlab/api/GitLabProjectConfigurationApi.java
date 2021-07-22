@@ -131,9 +131,21 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getUserWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, false);
+    }
+
+    @Override
+    public ProjectConfiguration getGroupWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, true);
+    }
+
+    @Override
+    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
     }
 
     private ProjectConfiguration getWorkspaceProjectConfigurationByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)

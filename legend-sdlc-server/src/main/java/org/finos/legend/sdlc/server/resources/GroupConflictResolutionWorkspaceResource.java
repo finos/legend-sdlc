@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,42 +32,29 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/conflictResolution")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ConflictResolutionWorkspaceResource extends BaseResource
+public class GroupConflictResolutionWorkspaceResource extends BaseResource
 {
     private final ConflictResolutionApi conflictResolutionApi;
     private final WorkspaceApi workspaceApi;
 
     @Inject
-    public ConflictResolutionWorkspaceResource(ConflictResolutionApi conflictResolutionApi, WorkspaceApi workspaceApi)
+    public GroupConflictResolutionWorkspaceResource(ConflictResolutionApi conflictResolutionApi, WorkspaceApi workspaceApi)
     {
         this.conflictResolutionApi = conflictResolutionApi;
         this.workspaceApi = workspaceApi;
     }
 
     @GET
-    @ApiOperation("Get a user workspace with conflict resolution by id")
-    public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    @ApiOperation("Get a group workspace with conflict resolution by id")
+    public Workspace getGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                this.workspaceApi::getUserWorkspaceWithConflictResolution,
-                projectId,
-                workspaceId
-        );
-    }
-
-    @GET
-    @Path("outdated")
-    @ApiOperation("Check if a workspace with conflict resolution is outdated")
-    public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
-    {
-        return executeWithLogging(
-                "checking if workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isWorkspaceWithConflictResolutionOutdated,
+                "getting group workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getGroupWorkspaceWithConflictResolution,
                 projectId,
                 workspaceId
         );
@@ -78,8 +65,8 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     public void discardConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding conflict resolution for user workspace " + workspaceId + " in project " + projectId,
-                this.conflictResolutionApi::discardConflictResolutionInUserWorkspace,
+                "discarding conflict resolution for group workspace " + workspaceId + " in project " + projectId,
+                this.conflictResolutionApi::discardConflictResolutionInGroupWorkspace,
                 projectId,
                 workspaceId
         );
@@ -91,8 +78,8 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     public void discardChangesConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding all conflict resolution changes for user workspace " + workspaceId + " in project " + projectId,
-                this.conflictResolutionApi::discardChangesConflictResolutionInUserWorkspace,
+                "discarding all conflict resolution changes for group workspace " + workspaceId + " in project " + projectId,
+                this.conflictResolutionApi::discardChangesConflictResolutionInGroupWorkspace,
                 projectId,
                 workspaceId
         );
@@ -105,8 +92,8 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");
         executeWithLogging(
-                "accept conflict resolution for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.conflictResolutionApi.acceptConflictResolutionInUserWorkspace(projectId, workspaceId, command)
+                "accept conflict resolution for group workspace " + workspaceId + " in project " + projectId,
+                () -> this.conflictResolutionApi.acceptConflictResolutionInGroupWorkspace(projectId, workspaceId, command)
         );
     }
 }

@@ -96,7 +96,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    public Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

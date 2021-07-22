@@ -188,9 +188,21 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    public Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return this.getWorkspaceByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, false);
+    }
+
+    @Override
+    public Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, true);
+    }
+
+    @Override
+    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
     }
 
     @Override

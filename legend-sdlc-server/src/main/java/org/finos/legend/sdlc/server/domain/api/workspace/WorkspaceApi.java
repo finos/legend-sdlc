@@ -104,7 +104,11 @@ public interface WorkspaceApi
      */
     Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
-    Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId);
+    Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId);
+
+    Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId);
+
+    Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     Workspace getBackupWorkspace(String projectId, String workspaceId);
 

@@ -27,19 +27,55 @@ public class InMemoryConflictResolutionApi implements ConflictResolutionApi
     }
 
     @Override
-    public void discardConflictResolution(String projectId, String workspaceId)
+    public void discardConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void discardChangesConflictResolution(String projectId, String workspaceId)
+    public void discardConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void acceptConflictResolution(String projectId, String workspaceId, PerformChangesCommand command)
+    public void discardConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void discardChangesConflictResolutionInUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void discardChangesConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void discardChangesConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void acceptConflictResolutionInUserWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void acceptConflictResolutionInGroupWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void acceptConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace, PerformChangesCommand command)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
