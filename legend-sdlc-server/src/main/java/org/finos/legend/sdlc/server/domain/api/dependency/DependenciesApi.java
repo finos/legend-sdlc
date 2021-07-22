@@ -20,8 +20,12 @@ import java.util.Set;
 
 public interface DependenciesApi
 {
+    Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive);
+
+    Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive);
+
     // Upstream projects: projects that the project depends on
-    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive);
+    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId, boolean transitive);
 
     Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String revisionId, boolean transitive);
 

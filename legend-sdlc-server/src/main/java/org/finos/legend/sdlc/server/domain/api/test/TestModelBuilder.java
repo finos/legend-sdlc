@@ -45,7 +45,7 @@ public class TestModelBuilder
 
     public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
     {
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, upstreamRevisionId, false);
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getUserWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, upstreamRevisionId, false);
         Set<String> latestUpstreamLevel1DependencyProjectIds = SetAdapter.adapt(latestUpstreamLevel1Dependencies).collect(ProjectDependency::getProjectId);
 
         Set<ProjectDependency> downstreamLevel1Dependencies = this.dependenciesApi.getProjectRevisionUpstreamProjects(downstreamProjectId, downstreamRevisionId, false);

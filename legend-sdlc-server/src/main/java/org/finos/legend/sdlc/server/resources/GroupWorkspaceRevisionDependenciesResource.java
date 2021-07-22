@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,30 +30,30 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/revisions/{revisionId}/upstreamProjects")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/revisions/{revisionId}/upstreamProjects")
 @Api("Dependencies")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceRevisionDependenciesResource extends BaseResource
+public class GroupWorkspaceRevisionDependenciesResource extends BaseResource
 {
     private final DependenciesApi dependenciesApi;
 
     @Inject
-    public WorkspaceRevisionDependenciesResource(DependenciesApi dependenciesApi)
+    public GroupWorkspaceRevisionDependenciesResource(DependenciesApi dependenciesApi)
     {
         this.dependenciesApi = dependenciesApi;
     }
 
     @GET
-    @ApiOperation("Get projects that the current user workspace revision depends on. Use transitive=true for transitive dependencies.")
+    @ApiOperation("Get projects that the current group workspace revision depends on. Use transitive=true for transitive dependencies.")
     public Set<ProjectDependency> getUpstreamDependencies(@PathParam("projectId") String projectId,
                                                           @PathParam("workspaceId") String workspaceId,
                                                           @PathParam("revisionId") String revisionId,
                                                           @QueryParam("transitive") @DefaultValue("false") boolean transitive)
     {
         return executeWithLogging(
-                "getting upstream dependencies of project " + projectId + ", user workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
-                () -> this.dependenciesApi.getUserWorkspaceRevisionUpstreamProjects(projectId, workspaceId, revisionId, transitive)
+                "getting upstream dependencies of project " + projectId + ", group workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
+                () -> this.dependenciesApi.getGroupWorkspaceRevisionUpstreamProjects(projectId, workspaceId, revisionId, transitive)
         );
     }
 }

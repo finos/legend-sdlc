@@ -43,9 +43,21 @@ public class DependenciesApiImpl implements DependenciesApi
     }
 
     @Override
-    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    public Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getUserWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId); // TODO
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, false, revisionId, transitive);
+    }
+
+    @Override
+    public Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    {
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, true, revisionId, transitive);
+    }
+
+    @Override
+    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId, boolean transitive)
+    {
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, isGroupWorkspace, revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 
