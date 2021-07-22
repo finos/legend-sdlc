@@ -106,11 +106,22 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
     }
 
+    @Override
+    public ProjectConfiguration getUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, false);
+    }
 
     @Override
-    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, true);
+    }
+
+    @Override
+    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
     }
 
     @Override
@@ -259,11 +270,22 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
     }
 
+    @Override
+    public Revision updateProjectConfigurationForUserWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    {
+        return this.updateProjectConfiguration(projectId, workspaceId, false, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
+    }
 
     @Override
-    public Revision updateProjectConfiguration(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    public Revision updateProjectConfigurationForGroupWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
-        return this.updateProjectConfigurationByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
+        return this.updateProjectConfiguration(projectId, workspaceId, false, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
+    }
+
+    @Override
+    public Revision updateProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    {
+        return this.updateProjectConfigurationByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace), message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
     }
 
     @Override
@@ -422,8 +444,20 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
+    public List<ArtifactTypeGenerationConfiguration> getUserWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
     {
-        return ProjectStructure.getProjectStructure(getWorkspaceProjectConfiguration(projectId, workspaceId)).getAvailableGenerationConfigurations();
+        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, false);
+    }
+
+    @Override
+    public List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, true);
+    }
+
+    @Override
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return ProjectStructure.getProjectStructure(getWorkspaceProjectConfiguration(projectId, workspaceId, isGroupWorkspace)).getAvailableGenerationConfigurations();
     }
 }

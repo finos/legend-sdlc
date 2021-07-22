@@ -705,7 +705,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             }
             // Small optimization step to make sure we need squashing.
             // If there are less than 2 commits (not including the base commit), there is no point in squashing
-            List<Revision> latestTwoRevisionsOnWorkspaceBranch = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, null, null, 2);
+            List<Revision> latestTwoRevisionsOnWorkspaceBranch = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, null, null, 2);
             Set<String> latestTwoRevisionOnWorkspaceBranchIds = latestTwoRevisionsOnWorkspaceBranch.stream().map(Revision::getId).collect(Collectors.toSet());
             if (latestTwoRevisionOnWorkspaceBranchIds.contains(workspaceCreationRevisionId))
             {
@@ -722,7 +722,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                     ? rebaseUpdateAttemptReport
                     : this.createConflictResolution(projectId, workspaceId, masterRevisionId);
         }
-        String updatedCurrentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        String updatedCurrentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
         return createWorkspaceUpdateReport(WorkspaceUpdateReportStatus.UPDATED, masterRevisionId, updatedCurrentWorkspaceRevisionId);
     }
 
@@ -1097,7 +1097,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             throw new LegendSDLCServerException("Failed to create " + ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Get the changes of the current workspace
-        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        String currentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
         String workspaceCreationRevisionId;
         try
         {

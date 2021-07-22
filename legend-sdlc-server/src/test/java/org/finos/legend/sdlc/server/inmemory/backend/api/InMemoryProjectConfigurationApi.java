@@ -56,7 +56,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ProjectConfiguration getGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -112,7 +124,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public Revision updateProjectConfiguration(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    public Revision updateProjectConfigurationForUserWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Revision updateProjectConfigurationForGroupWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Revision updateProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -142,7 +166,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
+    public List<ArtifactTypeGenerationConfiguration> getUserWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

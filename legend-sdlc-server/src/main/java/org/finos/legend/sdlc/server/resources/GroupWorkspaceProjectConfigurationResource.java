@@ -37,34 +37,34 @@ import java.util.List;
 @Api("Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceProjectConfigurationResource extends BaseResource
+public class GroupWorkspaceProjectConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
 
     @Inject
-    public WorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public GroupWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
     {
         this.projectConfigurationApi = projectConfigurationApi;
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a user workspace")
+    @ApiOperation("Get the configuration of a project in a group workspace")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getUserWorkspaceProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in group workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getGroupWorkspaceProjectConfiguration(projectId, workspaceId)
         );
     }
 
     @POST
-    @ApiOperation("Update the project configuration of a project in a user workspace")
+    @ApiOperation("Update the project configuration of a project in a group workspace")
     public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
         return executeWithLogging(
-                "updating configuration for project " + projectId + " in user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.updateProjectConfigurationForUserWorkspace(
+                "updating configuration for project " + projectId + " in group workspace " + workspaceId,
+                () -> this.projectConfigurationApi.updateProjectConfigurationForGroupWorkspace(
                         projectId,
                         workspaceId,
                         command.getMessage(),
@@ -81,12 +81,12 @@ public class WorkspaceProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in a user workspace")
+    @ApiOperation("Get the available generation types of a project in a group workspace")
     public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getUserWorkspaceAvailableArtifactGenerations(projectId, workspaceId)
+                "getting project " + projectId + " configuration in group workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getGroupWorkspaceAvailableArtifactGenerations(projectId, workspaceId)
         );
     }
 }
