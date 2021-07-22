@@ -35,7 +35,11 @@ public interface EntityApi
 
     EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId);
 
-    EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
+    EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
+
+    EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
+
+    EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
 

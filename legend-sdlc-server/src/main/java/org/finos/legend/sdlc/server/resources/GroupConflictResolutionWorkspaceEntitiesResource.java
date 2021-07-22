@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,22 +32,22 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/entities")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/conflictResolution/entities")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessResource
+public class GroupConflictResolutionWorkspaceEntitiesResource extends EntityAccessResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public ConflictResolutionWorkspaceEntitiesResource(EntityApi entityApi)
+    public GroupConflictResolutionWorkspaceEntitiesResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
 
     @GET
-    @ApiOperation("Get entities of the user workspace with conflict resolution")
+    @ApiOperation("Get entities of the group workspace with conflict resolution")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
@@ -65,19 +65,19 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in group workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> getEntities(this.entityApi.getGroupWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the user workspace with conflict resolution by its path")
+    @ApiOperation("Get an entity of the group workspace with conflict resolution by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
-                "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
+                "getting entity " + path + " in group workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 }

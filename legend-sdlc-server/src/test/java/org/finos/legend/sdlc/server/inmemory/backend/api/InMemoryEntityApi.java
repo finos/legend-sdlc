@@ -84,7 +84,19 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
+    public EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
