@@ -36,16 +36,16 @@ import java.util.Set;
 
 import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/workflows/{workflowId}/jobs")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/workflows/{workflowId}/jobs")
 @Api("Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceWorkflowJobsResource extends BaseResource
+public class GroupWorkspaceWorkflowJobsResource extends BaseResource
 {
     private final WorkflowJobApi workflowJobApi;
 
     @Inject
-    public WorkspaceWorkflowJobsResource(WorkflowJobApi workflowJobApi)
+    public GroupWorkspaceWorkflowJobsResource(WorkflowJobApi workflowJobApi)
     {
         this.workflowJobApi = workflowJobApi;
     }
@@ -58,8 +58,8 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
-                "getting workflow jobs for project " + projectId + " in user workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
+                "getting workflow jobs for project " + projectId + " in group workspace " + workspaceId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -72,8 +72,8 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
+                "getting workflow job " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -87,10 +87,10 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                        @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
+                "getting workflow job logs " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
