@@ -28,15 +28,27 @@ public interface RevisionApi
 
     RevisionAccessContext getProjectPackageRevisionContext(String projectId, String packagePath);
 
-    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId);
+    RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId);
+
+    RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId);
+
+    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroup);
 
     RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId);
 
     RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId);
 
-    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath);
+    RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath);
 
-    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath);
+    RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath);
+
+    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroup, String entityPath);
+
+    RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath);
+
+    RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath);
+
+    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroup, String packagePath);
 
     RevisionStatus getRevisionStatus(String projectId, String revisionId);
 }

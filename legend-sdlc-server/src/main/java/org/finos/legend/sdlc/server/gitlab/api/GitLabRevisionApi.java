@@ -101,9 +101,21 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceRevisionContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceRevisionContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroup)
+    {
+        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroup));
     }
 
     @Override
@@ -127,9 +139,21 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
+    public RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return this.getWorkspaceEntityRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, entityPath);
+        return this.getWorkspaceEntityRevisionContext(projectId, workspaceId, false, entityPath);
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId,  String entityPath)
+    {
+        return this.getWorkspaceEntityRevisionContext(projectId, workspaceId, true, entityPath);
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroup,String entityPath)
+    {
+        return this.getWorkspaceEntityRevisionContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroup), entityPath);
     }
 
     private RevisionAccessContext getWorkspaceEntityRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, String entityPath)
@@ -155,9 +179,21 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     }
 
     @Override
-    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
+    public RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return this.getWorkspacePackageRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, packagePath);
+        return this.getWorkspacePackageRevisionContext(projectId, workspaceId, false, packagePath);
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
+    {
+        return this.getWorkspacePackageRevisionContext(projectId, workspaceId, true, packagePath);
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroup, String packagePath)
+    {
+        return this.getWorkspacePackageRevisionContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroup), packagePath);
     }
 
     private RevisionAccessContext getWorkspacePackageRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, String packagePath)

@@ -82,7 +82,19 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceRevisionContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceRevisionContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroup)
     {
         InMemoryWorkspace workspace = backend.getProject(projectId).getWorkspace(workspaceId);
         return new RevisionAccessContext()
@@ -126,13 +138,37 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
+    public RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
+    public RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroup, String entityPath)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroup, String packagePath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

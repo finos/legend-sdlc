@@ -33,46 +33,44 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/entities/{path}/revisions")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/revisions")
 @Api("Revisions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class WorkspaceEntityRevisionsResource extends BaseResource
+public class GroupWorkspaceRevisionsResource extends BaseResource
 {
     private final RevisionApi revisionApi;
 
     @Inject
-    public WorkspaceEntityRevisionsResource(RevisionApi revisionApi)
+    public GroupWorkspaceRevisionsResource(RevisionApi revisionApi)
     {
         this.revisionApi = revisionApi;
     }
 
     @GET
-    @ApiOperation("Get all revisions for an entity in a user workspace")
+    @ApiOperation("Get all revisions for a group workspace")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
-                                       @PathParam("path") String path,
                                        @QueryParam("since") StartInstant since,
                                        @QueryParam("until") EndInstant until,
                                        @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
-                "getting revisions for entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getUserWorkspaceEntityRevisionContext(projectId, workspaceId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for group workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getGroupWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of an entity in a user workspace")
+    @ApiOperation("Get a revision of the group workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
-                                @PathParam("path") String path,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getUserWorkspaceEntityRevisionContext(projectId, workspaceId, path).getRevision(revisionId)
+                "getting revision " + revisionId + " for group workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getGroupWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
         );
     }
 }

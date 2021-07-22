@@ -433,7 +433,7 @@ public class TestModelBuilderTest
 
     private String revisionId(String projectId, String workspaceId)
     {
-        return this.backend.getRevisionApi().getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId)

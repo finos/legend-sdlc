@@ -42,7 +42,8 @@ public class GroupWorkspaceWorkflowsResource extends BaseResource
     private final WorkflowApi workflowApi;
 
     @Inject
-    public GroupWorkspaceWorkflowsResource(WorkflowApi workflowApi) {
+    public GroupWorkspaceWorkflowsResource(WorkflowApi workflowApi)
+    {
         this.workflowApi = workflowApi;
     }
 
