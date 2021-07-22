@@ -57,7 +57,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
-        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        String currentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId(); //TODO
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         String workspaceCreationRevisionId;
         try
@@ -86,7 +86,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         String currentProjectRevisionId = this.revisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId();
         ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), MASTER_BRANCH, currentProjectRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        String currentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId(); // TODO
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         return getComparisonResult(gitLabProjectId, repositoryApi, currentProjectRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
     }

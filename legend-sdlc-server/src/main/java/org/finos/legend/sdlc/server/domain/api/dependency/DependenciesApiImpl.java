@@ -45,7 +45,7 @@ public class DependenciesApiImpl implements DependenciesApi
     @Override
     public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getUserWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId); // TODO
         return searchUpstream(projectConfiguration, transitive);
     }
 
