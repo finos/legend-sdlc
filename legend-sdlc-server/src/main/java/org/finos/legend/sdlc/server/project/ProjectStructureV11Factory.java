@@ -268,9 +268,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         protected void addMavenProjectDependencyManagement(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
         {
             super.addMavenProjectDependencyManagement(versionFileAccessContextProvider, dependencyConsumer);
-            dependencyConsumer.accept(this.legendTestUtilsMavenHelper.getDependency(true));
             dependencyConsumer.accept(getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, true, false));
             dependencyConsumer.accept(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, true, false));
+            dependencyConsumer.accept(this.legendTestUtilsMavenHelper.getDependency(true));
         }
 
         @Override
@@ -288,9 +288,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         protected void addEntitiesModuleDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
         {
             super.addEntitiesModuleDependencies(versionFileAccessContextProvider, dependencyConsumer);
-            dependencyConsumer.accept(this.legendTestUtilsMavenHelper.getDependency(false));
             dependencyConsumer.accept(getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, false, true));
             dependencyConsumer.accept(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, false, true));
+            dependencyConsumer.accept(this.legendTestUtilsMavenHelper.getDependency(false));
         }
 
         @Override
