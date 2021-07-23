@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.apache.maven.model.Dependency;
+import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
@@ -44,6 +45,9 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     private static final String V4_ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
     private static final String V4_ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
 
+    private static final String LEGEND_PURE_GROUP_ID = "org.finos.legend.pure";
+    private static final String LEGEND_PURE_CODE_JAVA_COMPILED_CORE = "legend-pure-code-java-compiled-core";
+
     @Override
     protected void collectExpectedFiles(T projectStructure, BiConsumer<String, String> expectedFilePathAndContentConsumer, Consumer<String> unexpectedFilePathConsumer)
     {
@@ -63,7 +67,9 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     protected void collectExpectedProjectModelDependencyManagement(T projectStructure, Consumer<Dependency> dependencyManagementConsumer)
     {
         super.collectExpectedProjectModelDependencyManagement(projectStructure, dependencyManagementConsumer);
-        dependencyManagementConsumer.accept(LEGEND_TEST_UTILS_MAVEN_HELPER.getDependency(true));
+        Dependency dependency =  LEGEND_TEST_UTILS_MAVEN_HELPER.getDependency(true);
+        dependency.addExclusion(MavenProjectStructure.newMavenExclusion(LEGEND_PURE_GROUP_ID, LEGEND_PURE_CODE_JAVA_COMPILED_CORE));
+        dependencyManagementConsumer.accept(dependency);
     }
 
     @Override

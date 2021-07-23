@@ -109,6 +109,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         private final LegendModelGenerationPluginMavenHelper legendModelGenerationPluginMavenHelper;
         private final LegendFileGenerationPluginMavenHelper legendFileGenerationPluginMavenHelper;
 
+        // Test Utils Exclusion
+        private static final String LEGEND_PURE_GROUP_ID = "org.finos.legend.pure";
+        private static final String LEGEND_PURE_CODE_JAVA_COMPILED_CORE = "legend-pure-code-java-compiled-core";
 
         private ProjectStructureV11(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
         {
@@ -264,11 +267,18 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             }
         }
 
+        private Dependency getLegendTestUtilsDependencyWithExclusion()
+        {
+            Dependency dependency = this.legendTestUtilsMavenHelper.getDependency(true);
+            dependency.addExclusion(newMavenExclusion(LEGEND_PURE_GROUP_ID, LEGEND_PURE_CODE_JAVA_COMPILED_CORE));
+            return dependency;
+        }
+
         @Override
         protected void addMavenProjectDependencyManagement(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
         {
             super.addMavenProjectDependencyManagement(versionFileAccessContextProvider, dependencyConsumer);
-            dependencyConsumer.accept(this.legendTestUtilsMavenHelper.getDependency(true));
+            dependencyConsumer.accept(getLegendTestUtilsDependencyWithExclusion());
             dependencyConsumer.accept(getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, true, false));
             dependencyConsumer.accept(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, true, false));
         }
