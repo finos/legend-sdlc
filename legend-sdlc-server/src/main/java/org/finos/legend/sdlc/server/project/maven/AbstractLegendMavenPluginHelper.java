@@ -20,6 +20,7 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -30,21 +31,29 @@ public abstract class AbstractLegendMavenPluginHelper
     private final String version;
     private final String phase;
     private final String goal;
+    private final List<Dependency> extensionsCollections;
 
-    protected AbstractLegendMavenPluginHelper(String groupId, String artifactId, String version, String phase, String goal)
+    protected AbstractLegendMavenPluginHelper(String groupId, String artifactId, String version, String phase, String goal, List<Dependency> extensionsCollections)
     {
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.version = version;
         this.phase = phase;
         this.goal = goal;
+        this.extensionsCollections = extensionsCollections;
     }
 
     public final Plugin getPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
     {
-        Plugin plugin = MavenPluginTools.newPlugin(this.groupId, this.artifactId, this.version);
+        Plugin plugin = MavenPluginTools.newPlugin(this.groupId, this.artifactId, null);
         MavenPluginTools.addPluginExecution(plugin, this.phase, this.goal);
         configurePlugin(projectStructure, versionFileAccessContextProvider, c -> MavenPluginTools.addConfiguration(plugin, c));
+        return plugin;
+    }
+
+    public final Plugin getPluginManagementPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    {
+        Plugin plugin = MavenPluginTools.newPlugin(this.groupId, this.artifactId, this.version);
         addDependencies(projectStructure, versionFileAccessContextProvider, plugin::addDependency);
         return plugin;
     }
@@ -53,6 +62,9 @@ public abstract class AbstractLegendMavenPluginHelper
 
     protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
     {
-        // None by default
+        if (this.extensionsCollections != null && !this.extensionsCollections.isEmpty())
+        {
+            this.extensionsCollections.forEach(dependencyConsumer);
+        }
     }
 }

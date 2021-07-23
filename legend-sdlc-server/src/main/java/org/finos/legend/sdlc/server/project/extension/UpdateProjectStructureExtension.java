@@ -12,17 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc;
+package org.finos.legend.sdlc.server.project.extension;
 
-import junit.framework.TestSuite;
-import org.finos.legend.sdlc.test.junit.LegendSDLCTestSuiteBuilder;
+import java.util.Collections;
+import java.util.List;
 
-import java.nio.file.Paths;
-
-public class EntityTestSuite extends TestSuite
+public interface UpdateProjectStructureExtension
 {
-    public static TestSuite suite()
+    default List<String> getExtraVersionEntityValidationPaths(int version)
     {
-        return LegendSDLCTestSuiteBuilder.buildTestSuite("Entity TestSuite", Paths.get("target", "classes"));
+        return Collections.emptyList();
+    }
+
+    default List<String> getExtraTestSuiteFilePaths(int version)
+    {
+        return Collections.emptyList();
     }
 }

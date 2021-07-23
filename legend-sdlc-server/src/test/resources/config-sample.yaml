@@ -70,6 +70,12 @@ gitLab:
       secret: $APP_SECRET
       redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
 
+projectStructure:
+  projectCreation:
+    groupIdPattern: ^org\.finos\.legend\..+
+  extensionProvider:
+    org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider: {}
+
 logging:
   # Change this to affect library class logging
   level: INFO
