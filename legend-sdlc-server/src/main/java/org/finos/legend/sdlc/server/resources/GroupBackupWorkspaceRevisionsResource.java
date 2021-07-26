@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -33,22 +33,22 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup/revisions")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/revisions")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceRevisionsResource extends BaseResource
+public class GroupBackupWorkspaceRevisionsResource extends BaseResource
 {
     private final RevisionApi revisionApi;
 
     @Inject
-    public BackupWorkspaceRevisionsResource(RevisionApi revisionApi)
+    public GroupBackupWorkspaceRevisionsResource(RevisionApi revisionApi)
     {
         this.revisionApi = revisionApi;
     }
 
     @GET
-    @ApiOperation("Get all revisions for a user backup workspace")
+    @ApiOperation("Get all revisions for a group backup workspace")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("since") StartInstant since,
@@ -56,21 +56,21 @@ public class BackupWorkspaceRevisionsResource extends BaseResource
                                        @QueryParam("limit") Integer limit)
     {
         return executeWithLogging(
-                "getting revision for user backup workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for group backup workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getBackupGroupWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the backup user workspace")
+    @ApiOperation("Get a revision of the backup group workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for backup user workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                "getting revision " + revisionId + " for backup group workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getBackupGroupWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
         );
     }
 }

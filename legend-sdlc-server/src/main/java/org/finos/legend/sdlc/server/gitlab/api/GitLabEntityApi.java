@@ -289,9 +289,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     }
 
     @Override
-    public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    public EntityAccessContext getBackupUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getBackupGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, true, revisionId);
+    }
+
+    @Override
+    public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
     }
 
     @Override

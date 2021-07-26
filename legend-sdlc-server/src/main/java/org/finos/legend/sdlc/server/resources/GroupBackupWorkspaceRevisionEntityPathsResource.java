@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,22 +31,22 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup/revisions/{revisionId}/entityPaths")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/revisions/{revisionId}/entityPaths")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceRevisionEntityPathsResource extends EntityAccessResource
+public class GroupBackupWorkspaceRevisionEntityPathsResource extends EntityAccessResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public BackupWorkspaceRevisionEntityPathsResource(EntityApi entityApi)
+    public GroupBackupWorkspaceRevisionEntityPathsResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
 
     @GET
-    @ApiOperation("Get entity paths of the backup user workspace at the revision")
+    @ApiOperation("Get entity paths of the backup group workspace at the revision")
     public List<String> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
@@ -65,8 +65,8 @@ public class BackupWorkspaceRevisionEntityPathsResource extends EntityAccessReso
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entity paths in revision " + revisionId + " of backup user workspace " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getBackupUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entity paths in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId,
+                () -> getEntityPaths(this.entityApi.getBackupGroupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

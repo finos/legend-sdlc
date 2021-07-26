@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,29 +28,29 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup/revisions/{revisionId}/configuration")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/revisions/{revisionId}/configuration")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceRevisionProjectConfigurationResource extends BaseResource
+public class GroupBackupWorkspaceRevisionProjectConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
 
     @Inject
-    public BackupWorkspaceRevisionProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public GroupBackupWorkspaceRevisionProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
     {
         this.projectConfigurationApi = projectConfigurationApi;
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a backup user workspace at a revision")
+    @ApiOperation("Get the configuration for a revision of a project in a backup group workspace at a revision")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("workspaceId") String workspaceId,
                                                                          @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in backup user workspace " + workspaceId + " at revision " + revisionId,
-                () -> this.projectConfigurationApi.getBackupUserWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
+                "getting project " + projectId + " configuration in backup group workspace " + workspaceId + " at revision " + revisionId,
+                () -> this.projectConfigurationApi.getBackupGroupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
         );
     }
 }

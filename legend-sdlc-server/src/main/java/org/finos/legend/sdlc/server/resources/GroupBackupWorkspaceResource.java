@@ -84,4 +84,17 @@ public class GroupBackupWorkspaceResource extends BaseResource
                 workspaceId
         );
     }
+
+    @POST
+    @Path("recover")
+    @ApiOperation("Recover the group workspace from backup")
+    public void recoverBackup(@PathParam("projectId") String projectId,
+                              @PathParam("workspaceId") String workspaceId,
+                              @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
+    {
+        executeWithLogging(
+                forceRecovery ? "force " : "" + "recovering group workspace " + workspaceId + " from backup in project " + projectId,
+                () -> this.backupApi.recoverBackupGroupWorkspace(projectId, workspaceId, forceRecovery)
+        );
+    }
 }

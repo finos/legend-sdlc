@@ -131,7 +131,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
+    public ProjectConfiguration getBackupUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ProjectConfiguration getBackupGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

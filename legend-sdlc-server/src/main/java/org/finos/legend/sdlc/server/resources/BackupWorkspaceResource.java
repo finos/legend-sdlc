@@ -87,14 +87,14 @@ public class BackupWorkspaceResource extends BaseResource
 
     @POST
     @Path("recover")
-    @ApiOperation("Recover the workspace from backup")
+    @ApiOperation("Recover the user workspace from backup")
     public void recoverBackup(@PathParam("projectId") String projectId,
                               @PathParam("workspaceId") String workspaceId,
                               @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
     {
         executeWithLogging(
-                forceRecovery ? "force " : "" + "recovering workspace " + workspaceId + " from backup in project " + projectId,
-                () -> this.backupApi.recoverBackup(projectId, workspaceId, forceRecovery)
+                forceRecovery ? "force " : "" + "recovering user workspace " + workspaceId + " from backup in project " + projectId,
+                () -> this.backupApi.recoverBackupUserWorkspace(projectId, workspaceId, forceRecovery)
         );
     }
 }

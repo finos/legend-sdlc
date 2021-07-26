@@ -119,9 +119,21 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     }
 
     @Override
-    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getBackupUserWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getBackupWorkspaceRevisionContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public RevisionAccessContext getBackupGroupWorkspaceRevisionContext(String projectId, String workspaceId)
+    {
+        return this.getBackupWorkspaceRevisionContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
     }
 
     @Override

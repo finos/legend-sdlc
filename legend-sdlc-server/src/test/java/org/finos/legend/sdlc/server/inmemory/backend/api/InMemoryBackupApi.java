@@ -44,7 +44,19 @@ public class InMemoryBackupApi implements BackupApi
     }
 
     @Override
-    public void recoverBackup(String projectId, String workspaceId, boolean forceRecovery)
+    public void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void recoverBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace, boolean forceRecovery)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

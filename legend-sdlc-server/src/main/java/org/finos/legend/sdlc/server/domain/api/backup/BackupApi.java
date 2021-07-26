@@ -42,11 +42,30 @@ public interface BackupApi
     void discardBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
-     * Recover the backup workspace
+     * Recover the backup user workspace
      *
      * @param projectId      project id
      * @param workspaceId    workspace id
      * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackup(String projectId, String workspaceId, boolean forceRecovery);
+    void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery);
+
+    /**
+     * Recover the backup group workspace
+     *
+     * @param projectId      project id
+     * @param workspaceId    workspace id
+     * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     */
+    void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery);
+
+    /**
+     * Recover the backup workspace
+     *
+     * @param projectId        project id
+     * @param workspaceId      workspace id
+     * @param isGroupWorkspace is group workspace
+     * @param forceRecovery    flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     */
+    void recoverBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace, boolean forceRecovery);
 }
