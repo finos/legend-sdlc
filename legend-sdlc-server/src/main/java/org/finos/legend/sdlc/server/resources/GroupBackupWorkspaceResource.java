@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,29 +32,29 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceResource extends BaseResource
+public class GroupBackupWorkspaceResource extends BaseResource
 {
     private final BackupApi backupApi;
     private final WorkspaceApi workspaceApi;
 
     @Inject
-    public BackupWorkspaceResource(BackupApi backupApi, WorkspaceApi workspaceApi)
+    public GroupBackupWorkspaceResource(BackupApi backupApi, WorkspaceApi workspaceApi)
     {
         this.backupApi = backupApi;
         this.workspaceApi = workspaceApi;
     }
 
     @GET
-    @ApiOperation("Get a backup user workspace by id")
-    public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    @ApiOperation("Get a backup group workspace by id")
+    public Workspace getGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting backup user workspace " + workspaceId + " for project " + projectId,
-                this.workspaceApi::getBackupUserWorkspace,
+                "getting backup group workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getBackupGroupWorkspace,
                 projectId,
                 workspaceId
         );
@@ -62,39 +62,26 @@ public class BackupWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a backup user workspace is outdated")
+    @ApiOperation("Check if a backup group workspace is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if backup user workspace " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isBackupUserWorkspaceOutdated,
+                "checking if backup group workspace " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isBackupGroupWorkspaceOutdated,
                 projectId,
                 workspaceId
         );
     }
 
     @DELETE
-    @ApiOperation("Discard a backup user workspace")
+    @ApiOperation("Discard a backup group workspace")
     public void discardBackup(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding backup user workspace " + workspaceId + " in project " + projectId,
-                this.backupApi::discardBackupUserWorkspace,
+                "discarding backup group workspace " + workspaceId + " in project " + projectId,
+                this.backupApi::discardBackupGroupWorkspace,
                 projectId,
                 workspaceId
-        );
-    }
-
-    @POST
-    @Path("recover")
-    @ApiOperation("Recover the workspace from backup")
-    public void recoverBackup(@PathParam("projectId") String projectId,
-                              @PathParam("workspaceId") String workspaceId,
-                              @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
-    {
-        executeWithLogging(
-                forceRecovery ? "force " : "" + "recovering workspace " + workspaceId + " from backup in project " + projectId,
-                () -> this.backupApi.recoverBackup(projectId, workspaceId, forceRecovery)
         );
     }
 }

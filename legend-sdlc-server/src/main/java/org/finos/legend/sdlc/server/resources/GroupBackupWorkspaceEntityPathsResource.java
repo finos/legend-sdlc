@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,22 +31,22 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup/entityPaths")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/entityPaths")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceEntityPathsResource extends EntityAccessResource
+public class GroupBackupWorkspaceEntityPathsResource extends EntityAccessResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public BackupWorkspaceEntityPathsResource(EntityApi entityApi)
+    public GroupBackupWorkspaceEntityPathsResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
 
     @GET
-    @ApiOperation("Get entity paths of the backup user workspace")
+    @ApiOperation("Get entity paths of the backup group workspace")
     public List<String> getEntitiesPaths(@PathParam("projectId") String projectId,
                                          @PathParam("workspaceId") String workspaceId,
                                          @QueryParam("classifierPath")
@@ -64,8 +64,8 @@ public class BackupWorkspaceEntityPathsResource extends EntityAccessResource
                                          @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entity paths in user workspace " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entity paths in group workspace " + workspaceId + " for project " + projectId,
+                () -> getEntityPaths(this.entityApi.getBackupGroupWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

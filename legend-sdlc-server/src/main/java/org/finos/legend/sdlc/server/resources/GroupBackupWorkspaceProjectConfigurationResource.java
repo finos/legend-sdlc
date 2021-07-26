@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,27 +27,27 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/backup/configuration")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/configuration")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspaceProjectConfigurationResource extends BaseResource
+public class GroupBackupWorkspaceProjectConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
 
     @Inject
-    public BackupWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public GroupBackupWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
     {
         this.projectConfigurationApi = projectConfigurationApi;
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a backup user workspace")
+    @ApiOperation("Get the configuration of a project in a backup group workspace")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in backup user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getBackupUserWorkspaceProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in backup group workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getBackupGroupWorkspaceProjectConfiguration(projectId, workspaceId)
         );
     }
 }

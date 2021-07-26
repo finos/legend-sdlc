@@ -17,12 +17,29 @@ package org.finos.legend.sdlc.server.domain.api.backup;
 public interface BackupApi
 {
     /**
-     * Discard the backup workspace
+     * Discard the backup user workspace
      *
      * @param projectId    project id
      * @param workspaceId  id of backup workspace
      */
-    void discardBackupWorkspace(String projectId, String workspaceId);
+    void discardBackupUserWorkspace(String projectId, String workspaceId);
+
+    /**
+     * Discard the backup group workspace
+     *
+     * @param projectId    project id
+     * @param workspaceId  id of backup workspace
+     */
+    void discardBackupGroupWorkspace(String projectId, String workspaceId);
+
+    /**
+     * Discard the backup workspace
+     *
+     * @param projectId        project id
+     * @param workspaceId      id of backup workspace
+     * @param isGroupWorkspace is group workspace
+     */
+    void discardBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Recover the backup workspace

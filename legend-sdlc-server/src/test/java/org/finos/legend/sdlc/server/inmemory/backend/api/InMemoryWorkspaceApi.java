@@ -114,7 +114,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId)
+    public Workspace getBackupUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Workspace getBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -156,7 +168,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId)
+    public boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         return false;
     }

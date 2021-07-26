@@ -26,7 +26,19 @@ public class InMemoryBackupApi implements BackupApi
     }
 
     @Override
-    public void discardBackupWorkspace(String projectId, String workspaceId)
+    public void discardBackupUserWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void discardBackupGroupWorkspace(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public void discardBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

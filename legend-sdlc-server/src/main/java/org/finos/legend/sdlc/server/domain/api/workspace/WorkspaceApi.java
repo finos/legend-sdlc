@@ -110,7 +110,11 @@ public interface WorkspaceApi
 
     Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace);
 
-    Workspace getBackupWorkspace(String projectId, String workspaceId);
+    Workspace getBackupUserWorkspace(String projectId, String workspaceId);
+
+    Workspace getBackupGroupWorkspace(String projectId, String workspaceId);
+
+    Workspace getBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Check if a user workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
@@ -146,7 +150,11 @@ public interface WorkspaceApi
 
     boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorksapce);
 
-    boolean isBackupWorkspaceOutdated(String projectId, String workspaceId);
+    boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId);
+
+    boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId);
+
+    boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Check if a user workspace is in conflict resolution mode

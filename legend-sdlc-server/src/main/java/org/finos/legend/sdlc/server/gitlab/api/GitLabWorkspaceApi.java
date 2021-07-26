@@ -206,9 +206,21 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId)
+    public Workspace getBackupUserWorkspace(String projectId, String workspaceId)
     {
-        return this.getWorkspaceByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getBackupWorkspace(projectId, workspaceId, false);
+    }
+
+    @Override
+    public Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
+    {
+        return this.getBackupWorkspace(projectId, workspaceId, true);
+    }
+
+    @Override
+    public Workspace getBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
     }
 
     private Workspace getWorkspaceByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
@@ -268,9 +280,21 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId)
+    public boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.isBackupWorkspaceOutdated(projectId, workspaceId, false);
+    }
+
+    @Override
+    public boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
+    {
+        return this.isBackupWorkspaceOutdated(projectId, workspaceId, true);
+    }
+
+    @Override
+    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
     }
 
     private boolean isWorkspaceOutdatedByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)

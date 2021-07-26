@@ -38,7 +38,11 @@ public interface ProjectConfigurationApi
 
     ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace);
 
-    ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId);
+    ProjectConfiguration getBackupUserWorkspaceProjectConfiguration(String projectId, String workspaceId);
+
+    ProjectConfiguration getBackupGroupWorkspaceProjectConfiguration(String projectId, String workspaceId);
+
+    ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     ProjectConfiguration getUserWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId);
 

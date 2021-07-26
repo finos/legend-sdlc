@@ -125,9 +125,21 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getBackupUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, false);
+    }
+
+    @Override
+    public ProjectConfiguration getBackupGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, true);
+    }
+
+    @Override
+    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
     }
 
     @Override

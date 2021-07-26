@@ -40,28 +40,41 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     }
 
     @Override
-    public void discardBackupWorkspace(String projectId, String workspaceId)
+    public void discardBackupUserWorkspace(String projectId, String workspaceId)
+    {
+        this.discardBackupWorkspace(projectId, workspaceId, false);
+    }
+
+    @Override
+    public void discardBackupGroupWorkspace(String projectId, String workspaceId)
+    {
+        this.discardBackupWorkspace(projectId, workspaceId, true);
+    }
+
+    @Override
+    public void discardBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         boolean backupWorkspaceDeleted;
+        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace);
         try
         {
             backupWorkspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP), 20, 1_000);
+                    getUserWorkspaceBranchName(workspaceId, backupWorkspaceType), 20, 1_000);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete backup workspace " + workspaceId + " in project " + projectId,
-                    () -> "Unknown backup workspace (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error deleting backup workspace " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + backupWorkspaceType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error deleting " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         if (!backupWorkspaceDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
     }
 
