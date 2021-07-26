@@ -51,14 +51,27 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     }
 
     @Override
-    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId)
+    public Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceCreationComparison(projectId, workspaceId, false);
+    }
+
+    @Override
+    public Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceCreationComparison(projectId, workspaceId, true);
+    }
+
+    @Override
+    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
-        String currentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId(); //TODO
-        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, isGroupWorkspace).getCurrentRevision().getId();
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceAccessType);
         String workspaceCreationRevisionId;
         try
         {
@@ -73,21 +86,35 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
                     () -> "Failed to fetch Merged Base Information for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString()
             );
         }
-        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, workspaceCreationRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, workspaceCreationRevisionId, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, workspaceCreationRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
     }
 
     @Override
-    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId)
+    public Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectComparison(projectId, workspaceId, false);
+    }
+
+    @Override
+    public Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectComparison(projectId, workspaceId, true);
+    }
+
+    @Override
+    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         String currentProjectRevisionId = this.revisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId();
-        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), MASTER_BRANCH, currentProjectRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-        String currentWorkspaceRevisionId = this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId(); // TODO
-        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+
+        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), MASTER_BRANCH, currentProjectRevisionId, workspaceAccessType);
+        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, isGroupWorkspace).getCurrentRevision().getId();
+        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, currentProjectRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
     }
 

@@ -19,6 +19,30 @@ import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 public interface ComparisonApi
 {
     /**
+     * Get the comparison between user workspace HEAD and BASE
+     * <p>
+     * Given a user workspace, returns the comparison from the creation of the workspace
+     * to the current revision of the workspace
+     *
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between user workspace HEAD and BASE
+     */
+    Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId);
+
+    /**
+     * Get the comparison between group workspace HEAD and BASE
+     * <p>
+     * Given a group workspace, returns the comparison from the creation of the workspace
+     * to the current revision of the workspace
+     *
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between group workspace HEAD and BASE
+     */
+    Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId);
+
+    /**
      * Get the comparison between workspace HEAD and workspace BASE
      * <p>
      * Given a workspace, returns the comparison from the creation of the workspace
@@ -26,9 +50,34 @@ public interface ComparisonApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
+     * @param isGroupWorkspace is group workspace
      * @return comparison between workspace HEAD and BASE
      */
-    Comparison getWorkspaceCreationComparison(String projectId, String workspaceId);
+    Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, boolean isGroupWorkspace);
+
+    /**
+     * Get the comparison between user workspace HEAD and project HEAD
+     * <p>
+     * Given a user workspace, returns the comparison from the current revision of the
+     * project to the current revision of the workspace
+     *
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between user workspace HEAD and project HEAD
+     */
+    Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId);
+
+    /**
+     * Get the comparison between group workspace HEAD and project HEAD
+     * <p>
+     * Given a group workspace, returns the comparison from the current revision of the
+     * project to the current revision of the workspace
+     *
+     * @param projectId   project id
+     * @param workspaceId workspace id
+     * @return comparison between group workspace HEAD and project HEAD
+     */
+    Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId);
 
     /**
      * Get the comparison between workspace HEAD and project HEAD
@@ -38,9 +87,10 @@ public interface ComparisonApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
+     * @param isGroupWorkspace is group workspace
      * @return comparison between workspace HEAD and project HEAD
      */
-    Comparison getWorkspaceProjectComparison(String projectId, String workspaceId);
+    Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     /**
      * Get the comparison for a given review (between review workspace HEAD and project HEAD)

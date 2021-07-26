@@ -27,13 +27,37 @@ public class InMemoryComparisonApi implements ComparisonApi
     }
 
     @Override
-    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId)
+    public Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId)
+    public Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

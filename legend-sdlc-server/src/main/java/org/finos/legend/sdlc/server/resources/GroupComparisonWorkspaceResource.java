@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,39 +27,39 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/comparison")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/comparison")
 @Api("Comparison")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ComparisonWorkspaceResource extends BaseResource
+public class GroupComparisonWorkspaceResource extends BaseResource
 {
     private final ComparisonApi comparisonApi;
 
     @Inject
-    public ComparisonWorkspaceResource(ComparisonApi comparisonApi)
+    public GroupComparisonWorkspaceResource(ComparisonApi comparisonApi)
     {
         this.comparisonApi = comparisonApi;
     }
 
     @GET
     @Path("workspaceCreation")
-    @ApiOperation("Get comparison between current user workspace revision and workspace creation revision")
+    @ApiOperation("Get comparison between current group workspace revision and workspace creation revision")
     public Comparison getWorkspaceCreationComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting comparison between current user workspace revision and project revision at workspace creation, for user workspace " + workspaceId + " for project " + projectId,
-                () -> this.comparisonApi.getUserWorkspaceCreationComparison(projectId, workspaceId)
+                "getting comparison between current group workspace revision and project revision at workspace creation, for group workspace " + workspaceId + " for project " + projectId,
+                () -> this.comparisonApi.getGroupWorkspaceCreationComparison(projectId, workspaceId)
         );
     }
 
     @GET
     @Path("projectLatest")
-    @ApiOperation("Get comparison between current user workspace revision and current project revision")
+    @ApiOperation("Get comparison between current group workspace revision and current project revision")
     public Comparison getWorkspaceProjectComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting comparison between current user workspace revision and current project revision, for user workspace " + workspaceId + " for project " + projectId,
-                () -> this.comparisonApi.getUserWorkspaceProjectComparison(projectId, workspaceId)
+                "getting comparison between current group workspace revision and current project revision, for group workspace " + workspaceId + " for project " + projectId,
+                () -> this.comparisonApi.getGroupWorkspaceProjectComparison(projectId, workspaceId)
         );
     }
 }
