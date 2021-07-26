@@ -125,9 +125,21 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getUserWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId, false);
+    }
+
+    @Override
+    public RevisionAccessContext getGroupWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId, true);
+    }
+
+    @Override
+    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.getWorkspaceRevisionContextByWorkspaceAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
     }
 
     private RevisionAccessContext getWorkspaceRevisionContextByWorkspaceAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)

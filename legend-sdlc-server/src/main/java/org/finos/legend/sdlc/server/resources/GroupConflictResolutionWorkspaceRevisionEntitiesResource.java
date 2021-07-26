@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 
 import javax.inject.Inject;
@@ -31,23 +32,23 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/revisions/{revisionId}/entityPaths")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/conflictResolution/revisions/{revisionId}/entities")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ConflictResolutionWorkspaceRevisionEntityPathsResource extends EntityAccessResource
+public class GroupConflictResolutionWorkspaceRevisionEntitiesResource extends EntityAccessResource
 {
     private final EntityApi entityApi;
 
     @Inject
-    public ConflictResolutionWorkspaceRevisionEntityPathsResource(EntityApi entityApi)
+    public GroupConflictResolutionWorkspaceRevisionEntitiesResource(EntityApi entityApi)
     {
         this.entityApi = entityApi;
     }
 
     @GET
-    @ApiOperation("Get entity paths of the user workspace with conflict resolution at the revision")
-    public List<String> getAllEntities(@PathParam("projectId") String projectId,
+    @ApiOperation("Get entities of the group workspace with conflict resolution at the revision")
+    public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
                                        @QueryParam("classifierPath")
@@ -65,8 +66,22 @@ public class ConflictResolutionWorkspaceRevisionEntityPathsResource extends Enti
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entity paths in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in revision " + revisionId + " of group workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> getEntities(this.entityApi.getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+        );
+    }
+
+    @GET
+    @Path("{path}")
+    @ApiOperation("Get an entity of the group workspace with conflict resolution at the revision by its path")
+    public Entity getEntityByPath(@PathParam("projectId") String projectId,
+                                  @PathParam("workspaceId") String workspaceId,
+                                  @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                  @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting entity " + path + " in revision " + revisionId + " of group workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId).getEntity(path)
         );
     }
 }

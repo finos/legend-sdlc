@@ -140,7 +140,11 @@ public interface WorkspaceApi
      */
     boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace);
 
-    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId);
+    boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId);
+
+    boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId);
+
+    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorksapce);
 
     boolean isBackupWorkspaceOutdated(String projectId, String workspaceId);
 

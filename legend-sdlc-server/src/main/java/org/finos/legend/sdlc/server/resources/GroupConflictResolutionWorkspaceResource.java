@@ -60,6 +60,19 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
         );
     }
 
+    @GET
+    @Path("outdated")
+    @ApiOperation("Check if a group workspace with conflict resolution is outdated")
+    public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "checking if group workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isGroupWorkspaceWithConflictResolutionOutdated,
+                projectId,
+                workspaceId
+        );
+    }
+
     @DELETE
     @ApiOperation("Discard a conflict resolution")
     public void discardConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)

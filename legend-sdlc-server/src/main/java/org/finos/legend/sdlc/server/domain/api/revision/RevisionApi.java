@@ -36,7 +36,11 @@ public interface RevisionApi
 
     RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId);
 
-    RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId);
+    RevisionAccessContext getUserWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId);
+
+    RevisionAccessContext getGroupWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId);
+
+    RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace);
 
     RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath);
 

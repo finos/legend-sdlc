@@ -138,7 +138,19 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
+    public boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         return false;
     }

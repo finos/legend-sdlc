@@ -250,9 +250,21 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
+    public boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, false);
+    }
+
+    @Override
+    public boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
+    {
+        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, true);
+    }
+
+    @Override
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
+    {
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
     }
 
     @Override

@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/groupWorkspaces")
-@Api("Group Workspaces")
+@Api("Workspaces")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupWorkspacesResource extends BaseResource

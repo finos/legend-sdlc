@@ -62,12 +62,12 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a workspace with conflict resolution is outdated")
+    @ApiOperation("Check if a user workspace with conflict resolution is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isWorkspaceWithConflictResolutionOutdated,
+                "checking if user workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isUserWorkspaceWithConflictResolutionOutdated,
                 projectId,
                 workspaceId
         );
