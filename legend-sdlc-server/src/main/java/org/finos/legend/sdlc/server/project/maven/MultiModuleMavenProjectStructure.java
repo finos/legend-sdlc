@@ -212,9 +212,9 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         return "platform." + platform + ".version";
     }
 
-    public Map<String, ProjectStructurePlatformExtensions.PlatformCoordinates> getPlatformExtensions()
+    public List<ProjectStructurePlatformExtensions.Platform> getPlatforms()
     {
-        return this.projectStructurePlatformExtensions != null ? this.projectStructurePlatformExtensions.getPlatformCoordinatesMap() : null;
+        return this.projectStructurePlatformExtensions != null ? this.projectStructurePlatformExtensions.getPlatforms() : null;
     }
 
     public String getPlatformPropertyReference(String platform)

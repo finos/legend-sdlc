@@ -60,7 +60,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
     @Override
     protected ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
-        return new ProjectStructureV11(projectConfiguration, projectStructurePlatformExtensions);
+        return new ProjectStructureV11(projectConfiguration, projectStructurePlatformExtensions, this.getVersion());
     }
 
     public static class ProjectStructureV11 extends MultiModuleMavenProjectStructure
@@ -113,9 +113,12 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         private static final String LEGEND_PURE_GROUP_ID = "org.finos.legend.pure";
         private static final String LEGEND_PURE_CODE_JAVA_COMPILED_CORE = "legend-pure-code-java-compiled-core";
 
-        private ProjectStructureV11(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+        private final int version;
+
+        private ProjectStructureV11(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions, int version)
         {
             super(projectConfiguration, ENTITIES_MODULE_NAME, getEntitySourceDirectories(projectConfiguration), OTHER_MODULES.castToMap(), false, projectStructurePlatformExtensions);
+            this.version = version;
             Dependency generationExtensionsCollection = getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, true, false);
             Dependency serializerExtensionsCollection = getExtensionsCollectionDependency(SERIALIZER_EXTENSIONS_COLLECTION_KEY, true, false);
             this.legendEntityPluginMavenHelper = new LegendEntityPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-entity-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, Lists.immutable.with(generationExtensionsCollection, serializerExtensionsCollection).toList());
@@ -141,13 +144,13 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private Dependency getOverrideExtensionsCollectionDependency(String extensionName, boolean includeVersion, boolean scopeTest)
         {
-            if (this.getProjectStructureExtensions() != null && this.getProjectStructureExtensions().getExtensionsCollectionCoordinatesMap().containsKey(extensionName))
+            if (this.getProjectStructureExtensions() != null && this.getProjectStructureExtensions().containsExtension(extensionName))
             {
-                ProjectStructurePlatformExtensions.ExtensionsCollectionCoordinates extensionsCollectionCoordinates = this.getProjectStructureExtensions().getExtensionsCollectionCoordinatesMap().get(extensionName);
-                ProjectStructurePlatformExtensions.PlatformCoordinates platformCoordinates = this.getProjectStructureExtensions().getPlatformCoordinates(extensionsCollectionCoordinates.getPlatform());
-                String groupId = platformCoordinates.getGroupId();
-                String artifactId = extensionsCollectionCoordinates.getArtifactId();
-                String versionId = includeVersion ? this.getPlatformPropertyReference(platformCoordinates.getName()) : null;
+                ProjectStructurePlatformExtensions.ExtensionsCollection extensionsCollection = this.getProjectStructureExtensions().getExtensionsCollection(extensionName);
+                ProjectStructurePlatformExtensions.Platform platform = this.getProjectStructureExtensions().getPlatform(extensionsCollection.getPlatform());
+                String groupId = platform.getGroupId();
+                String artifactId = extensionsCollection.getArtifactId();
+                String versionId = includeVersion ? this.getPlatformPropertyReference(platform.getName()) : null;
                 return scopeTest ? newMavenTestDependency(groupId, artifactId, versionId) : newMavenDependency(groupId, artifactId, versionId);
             }
             return null;
@@ -258,11 +261,11 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             super.addMavenProjectProperties(propertySetter);
             propertySetter.accept(LEGEND_SDLC_PROPERTY, LEGEND_SDLC_VERSION);
             propertySetter.accept(LEGEND_ENGINE_PROPERTY, LEGEND_ENGINE_VERSION);
-            if (this.getPlatformExtensions() != null)
+            if (this.getPlatforms() != null)
             {
-                this.getPlatformExtensions().forEach((k, v) ->
+                this.getPlatforms().forEach((platform) ->
                 {
-                    propertySetter.accept(this.getPlatformPropertyName(v.getName()), v.getVersion());
+                    propertySetter.accept(this.getPlatformPropertyName(platform.getName()), platform.getPublicStructureVersion(this.version));
                 });
             }
         }

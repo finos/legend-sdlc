@@ -14,50 +14,91 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.factory.Maps;
+
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ProjectStructurePlatformExtensions
 {
-    private final Map<String, PlatformCoordinates> platformCoordinatesMap;
+    private final Map<String, Platform> platforms;
 
-    private final Map<String, ExtensionsCollectionCoordinates> extensionsCollectionCoordinatesMap;
+    private final Map<String, ExtensionsCollection> extensionsCollections;
 
-    public ProjectStructurePlatformExtensions(Map<String, PlatformCoordinates> platformExtensions, Map<String, ExtensionsCollectionCoordinates> collectionExtensions)
+    private ProjectStructurePlatformExtensions(Map<String, Platform> platformExtensions, Map<String, ExtensionsCollection> collectionExtensions)
     {
-        this.platformCoordinatesMap = platformExtensions;
-        this.extensionsCollectionCoordinatesMap = collectionExtensions;
+        this.platforms = platformExtensions;
+        this.extensionsCollections = collectionExtensions;
     }
 
-    public Map<String, ExtensionsCollectionCoordinates> getExtensionsCollectionCoordinatesMap()
+    public static ProjectStructurePlatformExtensions newPlatformExtensions(Iterable<Platform> platforms, Iterable<ExtensionsCollection> collections)
     {
-        return extensionsCollectionCoordinatesMap;
+        MutableMap<String, Platform> platformsMap = Maps.mutable.empty();
+        platforms.forEach(platform ->
+        {
+            if (platformsMap.containsKey(platform.name))
+            {
+                throw new IllegalArgumentException("Multiple platforms defined for platform '" + platform.name + "'");
+            }
+            platformsMap.put(platform.name, platform);
+        });
+        MutableMap<String, ExtensionsCollection> extensionsCollectionsMap = Maps.mutable.empty();
+        collections.forEach(collection ->
+        {
+            if (!platformsMap.containsKey(collection.platform))
+            {
+                throw new IllegalArgumentException("No platform metadata found for platform '" + collection.platform + "'");
+            }
+            if (extensionsCollectionsMap.containsKey(collection.name))
+            {
+                throw new IllegalArgumentException("Multiple extensions collection defined for extension '" + collection.name + "'");
+            }
+            extensionsCollectionsMap.put(collection.name, collection);
+        });
+        return new ProjectStructurePlatformExtensions(platformsMap, extensionsCollectionsMap);
     }
 
-    public Map<String, PlatformCoordinates> getPlatformCoordinatesMap()
+    public List<Platform> getPlatforms()
     {
-        return platformCoordinatesMap;
+        return this.platforms.values().stream().collect(Collectors.toList());
     }
 
-    public PlatformCoordinates getPlatformCoordinates(String platform)
+    public Platform getPlatform(String platform)
     {
-        if (!this.platformCoordinatesMap.containsKey(platform))
+        if (!this.platforms.containsKey(platform))
         {
             throw new IllegalArgumentException("No platform metadata found for platform '" + platform + "'");
         }
-        return this.platformCoordinatesMap.get(platform);
+        return this.platforms.get(platform);
     }
 
-    public static class PlatformCoordinates
+    public ExtensionsCollection getExtensionsCollection(String extension)
     {
-        String name;
-        String groupId;
-        String version;
+        if (!this.containsExtension(extension))
+        {
+            throw new IllegalArgumentException("No extension collection found for extension name '" + extension + "'");
+        }
+        return this.extensionsCollections.get(extension);
+    }
 
-        public PlatformCoordinates(String name, String groupId, String version)
+    public boolean containsExtension(String extension)
+    {
+        return this.extensionsCollections.containsKey(extension);
+    }
+
+    public static class Platform
+    {
+        private final String name;
+        private final String groupId;
+        private final Map<Integer, String> projectStructureVersions;
+
+        public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap)
         {
             this.name = name;
             this.groupId = groupId;
-            this.version = version;
+            this.projectStructureVersions = projectStructureVersionsMap;
         }
 
         public String getName()
@@ -70,20 +111,29 @@ public class ProjectStructurePlatformExtensions
             return groupId;
         }
 
-        public String getVersion()
+        public Map<Integer, String> getProjectStructureVersions()
         {
-            return version;
+            return projectStructureVersions;
+        }
+
+        public String getPublicStructureVersion(int version)
+        {
+            if (!this.projectStructureVersions.containsKey(version))
+            {
+                throw new IllegalArgumentException("No platform version given for project structure '" + version + "'");
+            }
+            return this.projectStructureVersions.get(version);
         }
 
     }
 
-    public static class ExtensionsCollectionCoordinates
+    public static class ExtensionsCollection
     {
         String name;
         String platform;
         String artifactId;
 
-        public ExtensionsCollectionCoordinates(String name, String platform, String artifactId)
+        public ExtensionsCollection(String name, String platform, String artifactId)
         {
             this.name = name;
             this.platform = platform;
@@ -104,6 +154,7 @@ public class ProjectStructurePlatformExtensions
         {
             return platform;
         }
+
     }
 
 }

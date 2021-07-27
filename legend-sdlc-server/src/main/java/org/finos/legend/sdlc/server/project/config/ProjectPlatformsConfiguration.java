@@ -16,77 +16,51 @@ package org.finos.legend.sdlc.server.project.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.impl.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class ProjectPlatformsConfiguration
 {
 
-    Map<String, PlatformCoordinates> platformCoordinates;
+    private final Map<String, PlatformMetadata> platformMetadata;
 
-    Map<String, ExtensionsCollectionCoordinates> extensionsCollectionCoordinates;
+    private final Map<String, ExtensionsCollectionMetadata> extensionsCollectionMetadata;
 
-    public ProjectPlatformsConfiguration(Map<String, PlatformCoordinates> platformCoordinates, Map<String, ExtensionsCollectionCoordinates> collections)
+    public ProjectPlatformsConfiguration(Map<String, PlatformMetadata> platformMetadata, Map<String, ExtensionsCollectionMetadata> collections)
     {
-        if ((platformCoordinates == null) || platformCoordinates.isEmpty())
-        {
-            this.platformCoordinates = Collections.emptyMap();
-        }
-        else
-        {
-            this.platformCoordinates = platformCoordinates;
-        }
-        if ((collections == null) || collections.isEmpty())
-        {
-            this.extensionsCollectionCoordinates = Collections.emptyMap();
-        }
-        else
-        {
-            this.extensionsCollectionCoordinates = Maps.mutable.empty();
-            collections.forEach((k, v) ->
-            {
-                String platform = v.platform;
-                if (!this.platformCoordinates.containsKey(platform))
-                {
-                    throw new IllegalArgumentException("No platform metadata found for platform '" + platform  + "'");
-                }
-                this.extensionsCollectionCoordinates.put(k, v);
-            });
-        }
+
+        this.platformMetadata = (platformMetadata == null || platformMetadata.isEmpty()) ? Collections.emptyMap() : platformMetadata;
+        this.extensionsCollectionMetadata = (collections == null || collections.isEmpty()) ? Collections.emptyMap() : collections;
     }
 
-
-    public static ProjectStructurePlatformExtensions buildProjectExtensionsOverride(ProjectPlatformsConfiguration configuration)
+    public ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
     {
-        if (configuration == null)
-        {
-            return null;
-        }
-        Map<String, ProjectStructurePlatformExtensions.PlatformCoordinates> platforms = Maps.mutable.empty();
-        Map<String, ProjectStructurePlatformExtensions.ExtensionsCollectionCoordinates> collections = Maps.mutable.empty();
-        configuration.platformCoordinates.forEach((k, v) -> platforms.put(k, new ProjectStructurePlatformExtensions.PlatformCoordinates(k, v.getGroupId(), v.getVersion())));
-        configuration.extensionsCollectionCoordinates.forEach((k, v) -> collections.put(k, new ProjectStructurePlatformExtensions.ExtensionsCollectionCoordinates(k, v.platform, v.artifactId)));
-        return new ProjectStructurePlatformExtensions(platforms, collections);
+        List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
+        List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions())));
+        this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
+        return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
 
-    public static class PlatformCoordinates
+    public static class PlatformMetadata
     {
-        String groupId;
-        String version;
+        private final String groupId;
+        private final Map<Integer, String> projectStructureStartingVersions;
 
-        public PlatformCoordinates(String groupId, String version)
+        public PlatformMetadata(String groupId, Map<Integer, String> startingProjectStructureVersions)
         {
             this.groupId = groupId;
-            this.version = version;
+            this.projectStructureStartingVersions = startingProjectStructureVersions;
         }
 
         @JsonCreator
-        public static PlatformCoordinates newConfig(@JsonProperty("groupId") String groupId, @JsonProperty("version") String version)
+        public static PlatformMetadata newConfig(@JsonProperty("groupId") String groupId, @JsonProperty("version") Map<Integer, String> version)
         {
-            return new PlatformCoordinates(groupId, version);
+            return new PlatformMetadata(groupId, version);
         }
 
         public String getGroupId()
@@ -94,28 +68,28 @@ public class ProjectPlatformsConfiguration
             return groupId;
         }
 
-        public String getVersion()
+        public Map<Integer, String> getProjectStructureStartingVersions()
         {
-            return version;
+            return projectStructureStartingVersions;
         }
     }
 
 
-    public static class ExtensionsCollectionCoordinates
+    public static class ExtensionsCollectionMetadata
     {
-        String platform;
-        String artifactId;
+        private final String platform;
+        private final String artifactId;
 
-        public ExtensionsCollectionCoordinates(String platform, String artifactId)
+        public ExtensionsCollectionMetadata(String platform, String artifactId)
         {
             this.platform = platform;
             this.artifactId = artifactId;
         }
 
         @JsonCreator
-        public static ExtensionsCollectionCoordinates newConfig(@JsonProperty("platform") String platform, @JsonProperty("artifactId") String artifactId)
+        public static ExtensionsCollectionMetadata newConfig(@JsonProperty("platform") String platform, @JsonProperty("artifactId") String artifactId)
         {
-            return new ExtensionsCollectionCoordinates(platform, artifactId);
+            return new ExtensionsCollectionMetadata(platform, artifactId);
         }
     }
 

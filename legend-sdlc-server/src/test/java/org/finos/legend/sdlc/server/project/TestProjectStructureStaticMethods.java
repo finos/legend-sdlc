@@ -15,7 +15,8 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.primitive.IntList;
+import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
@@ -28,7 +29,7 @@ import java.util.stream.Collectors;
 
 public class TestProjectStructureStaticMethods
 {
-    public final List<Integer> UNPUBLISHED_VERSION = Lists.mutable.with(1,2,3,4,5,6,7,8,9,10);
+    private static final ImmutableIntSet UNPUBLISHED_VERSION = IntSets.immutable.with(1,2,3,4,5,6,7,8,9,10);
 
     @Test
     public void testIsValidGroupId()

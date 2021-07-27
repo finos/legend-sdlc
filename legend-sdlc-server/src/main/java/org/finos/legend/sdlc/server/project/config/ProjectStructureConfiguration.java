@@ -75,7 +75,7 @@ public class ProjectStructureConfiguration
 
     @JsonCreator
     public static ProjectStructureConfiguration newConfiguration(@JsonProperty("demisedVersions") Set<Integer> demisedVersions, @JsonProperty("extensionProvider") ProjectStructureExtensionProvider extensionProvider, @JsonProperty("extensions") List<ProjectStructureExtension> extensions, @JsonProperty("projectCreation") ProjectCreationConfiguration projectCreationConfig,
-                                                                 @JsonProperty("platforms") Map<String, ProjectPlatformsConfiguration.PlatformCoordinates> platforms, @JsonProperty("extensionsCollections") Map<String, ProjectPlatformsConfiguration.ExtensionsCollectionCoordinates> collections)
+                                                                 @JsonProperty("platforms") Map<String, ProjectPlatformsConfiguration.PlatformMetadata> platforms, @JsonProperty("extensionsCollections") Map<String, ProjectPlatformsConfiguration.ExtensionsCollectionMetadata> collections)
     {
         return new ProjectStructureConfiguration(demisedVersions, extensionProvider, extensions, projectCreationConfig, new ProjectPlatformsConfiguration(platforms, collections));
     }

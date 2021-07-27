@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
@@ -75,9 +77,9 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
 
-    public final List<Integer> unpublishedVersion;
+    protected final ImmutableIntSet unpublishedVersion;
 
-    public TestProjectStructure(List<Integer> unpublishedVersion, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    public TestProjectStructure(ImmutableIntSet unpublishedVersion, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         this.unpublishedVersion = unpublishedVersion;
         this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
@@ -86,7 +88,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
     public TestProjectStructure()
     {
-        this(Lists.mutable.with(1,2,3,4,5,6,7,8,9,10), null);
+        this(IntSets.immutable.with(1,2,3,4,5,6,7,8,9,10), null);
     }
 
 

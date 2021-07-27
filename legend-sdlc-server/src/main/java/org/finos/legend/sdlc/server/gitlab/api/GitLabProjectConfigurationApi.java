@@ -30,8 +30,8 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
@@ -46,13 +46,15 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 {
     private final ProjectStructureConfiguration projectStructureConfig;
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
+    private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     @Inject
-    public GitLabProjectConfigurationApi(GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabProjectConfigurationApi(GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         super(userContext, backgroundTaskProcessor);
         this.projectStructureConfig = projectStructureConfig;
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
     }
 
     @Override
@@ -315,7 +317,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
                     .withArtifactGenerationsToAdd(artifactGenerationsToAdd)
                     .withArtifactGenerationsToRemove(artifactGenerationsToRemove)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                    .withProjectStructurePlatformExtensions(ProjectPlatformsConfiguration.buildProjectExtensionsOverride(this.projectStructureConfig.getProjectPlatformsConfiguration()))
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
         }
         catch (Exception e)

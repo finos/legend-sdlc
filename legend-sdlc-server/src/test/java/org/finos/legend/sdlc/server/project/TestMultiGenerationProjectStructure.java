@@ -15,10 +15,8 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.apache.maven.model.Dependency;
-import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
-import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -38,13 +36,6 @@ import java.util.stream.Collectors;
 
 public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleMavenProjectStructure> extends TestMultiModuleMavenProjectStructure<T>
 {
-    private static final String V1_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/ValidationTest.java";
-    private static final String V2_ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
-    private static final String V3_ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
-    private static final String V3_ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
-    private static final String V4_ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
-    private static final String V4_ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
-
     private static final String LEGEND_PURE_GROUP_ID = "org.finos.legend.pure";
     private static final String LEGEND_PURE_CODE_JAVA_COMPILED_CORE = "legend-pure-code-java-compiled-core";
 
@@ -52,14 +43,6 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     protected void collectExpectedFiles(T projectStructure, BiConsumer<String, String> expectedFilePathAndContentConsumer, Consumer<String> unexpectedFilePathConsumer)
     {
         super.collectExpectedFiles(projectStructure, expectedFilePathAndContentConsumer, unexpectedFilePathConsumer);
-
-        unexpectedFilePathConsumer.accept(V1_VALIDATION_TEST_FILE_PATH);
-        unexpectedFilePathConsumer.accept(V2_ENTITY_VALIDATION_TEST_FILE_PATH);
-        unexpectedFilePathConsumer.accept(V3_ENTITY_VALIDATION_TEST_FILE_PATH);
-        unexpectedFilePathConsumer.accept(V3_ENTITY_TEST_SUITE_FILE_PATH);
-        unexpectedFilePathConsumer.accept(V4_ENTITY_VALIDATION_TEST_FILE_PATH);
-        unexpectedFilePathConsumer.accept(V4_ENTITY_TEST_SUITE_FILE_PATH);
-
         unexpectedFilePathConsumer.accept("/test-model-java/pom.xml");
     }
 
