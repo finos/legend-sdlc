@@ -1,4 +1,4 @@
-# Copyright 2021 Goldman Sachs
+# Copyright 2020 Goldman Sachs
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -34,28 +34,16 @@ verify_snapshot:
     - 'mvn -B -N versions:update-property -Dproperty=platform.legend-engine.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
     - 'mvn -B -N versions:update-property -Dproperty=platform.legend-sdlc.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
     - 'mvn -B versions:set -DnewVersion=$(echo -n $CI_COMMIT_REF_NAME | tr -c -s "[:alnum:].-" "_")-SNAPSHOT'
-    - 'mvn $MAVEN_CLI_OPTS verify -s ci_settings.xml'
+    - 'mvn -B -e clean deploy -DaltDeploymentRepository=localRepo::default::file:${CI_PROJECT_DIR}/mvn-deploy-dir'
+    - 'mkdir artifacts'
+    - 'find ${CI_PROJECT_DIR}/mvn-deploy-dir \( -name "*.jar" -o -name "*.pom" \) -exec cp {} artifacts/ \;'
+    - 'mkdir -p test-reports/junit'
+    - 'find ${CI_PROJECT_DIR}/**/target/surefire-reports -name "*.xml" -exec cp {} test-reports/junit/ \;'
+  artifacts:
+    paths:
+      - artifacts
+      - test-reports
   rules:
     - if: '$CI_COMMIT_TAG || $CI_COMMIT_REF_NAME == "master" || $CI_COMMIT_REF_NAME =~ /^tmp\/.*$/ || $CI_COMMIT_REF_NAME =~ /^backup\/.*$/'
       when: never
     - when: on_success
-
-deploy_snapshot:
-  stage: deploy
-  script:
-    - 'mvn -B -N versions:update-property -Dproperty=platform.legend-engine.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
-    - 'mvn -B -N versions:update-property -Dproperty=platform.legend-sdlc.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
-    - 'mvn -B versions:set -DnewVersion="master-SNAPSHOT"'
-    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml -DaltDeploymentRepository=gitlab-maven::default::https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/packages/maven'
-  rules:
-    - if: '$CI_COMMIT_REF_NAME == "master"'
-
-deploy_release:
-  stage: deploy
-  script:
-    - 'mvn -B -N versions:update-property -Dproperty=platform.legend-engine.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
-    - 'mvn -B -N versions:update-property -Dproperty=platform.legend-sdlc.version -DgenerateBackupPoms=false -DallowMajorUpdates=false -U'
-    - 'mvn -B versions:set -DnewVersion=$(echo -n ${CI_COMMIT_REF_NAME#release-} | tr -c -s "[:alnum:].-" "_")-SNAPSHOT'
-    - 'mvn $MAVEN_CLI_OPTS deploy -s ci_settings.xml -DaltDeploymentRepository=gitlab-maven::default::https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/packages/maven'
-  rules:
-    - if: '$CI_COMMIT_TAG && $CI_COMMIT_REF_NAME =~ /^release-.*$/'

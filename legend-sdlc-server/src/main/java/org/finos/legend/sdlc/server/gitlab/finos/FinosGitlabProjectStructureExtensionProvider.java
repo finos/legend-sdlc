@@ -27,15 +27,12 @@ import java.util.function.Consumer;
 public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStructureExtensionProvider
 {
     private static final String CI_CONFIG_PATH = "/.gitlab-ci.yml";
-    private static final String SETTING_CONFIG_PATH = "/ci_settings.xml";
 
     private final FinosFileLoader ciFileLoader;
-    private final FinosFileLoader settingsFileLoader;
 
     protected FinosGitlabProjectStructureExtensionProvider()
     {
         this.ciFileLoader = new FinosFileLoader(getClass().getClassLoader(), "gitlab-ci");
-        this.settingsFileLoader = new FinosFileLoader(getClass().getClassLoader(), "ci-settings", "xml");
     }
 
     @Override
@@ -65,11 +62,6 @@ public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStr
         return (this.ciFileLoader == null) ? null : this.ciFileLoader.getCIResource(getGitLabCIFileVersion(projectStructureVersion, projectStructureExtensionVersion));
     }
 
-    private String getSettingsConfigPath(int projectStructureVersion, int projectStructureExtensionVersion)
-    {
-        return (this.settingsFileLoader == null) ? null : this.settingsFileLoader.getCIResource(getGitLabCIFileVersion(projectStructureVersion, projectStructureExtensionVersion));
-    }
-
     protected int getGitLabCIFileVersion(int projectStructureVersion, int projectStructureExtensionVersion)
     {
         if (projectStructureVersion == 11)
@@ -94,7 +86,6 @@ public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStr
         {
             super.collectUpdateProjectConfigurationOperations(oldConfig, newConfig, fileAccessContext, operationConsumer);
             updateFile(CI_CONFIG_PATH, getCiConfigContent(), fileAccessContext, operationConsumer);
-            updateFile(SETTING_CONFIG_PATH, getSettingsConfigContent(), fileAccessContext, operationConsumer);
         }
 
         private String getCiConfigContent()
@@ -102,9 +93,5 @@ public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStr
             return getGitLabCIFile(getProjectStructureVersion(), getVersion());
         }
 
-        private String getSettingsConfigContent()
-        {
-            return getSettingsConfigPath(getProjectStructureVersion(), getVersion());
-        }
     }
 }
