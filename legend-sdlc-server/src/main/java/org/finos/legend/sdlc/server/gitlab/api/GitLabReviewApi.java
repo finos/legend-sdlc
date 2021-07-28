@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Sets;
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
@@ -43,11 +44,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -758,22 +755,23 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
 
         String sourceBranchName = mergeRequest.getSourceBranch();
-        if (!isWorkspaceBranchName(sourceBranchName, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+        if (!isWorkspaceBranchName(sourceBranchName, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, ProjectFileAccessProvider.WorkspaceAccessType.GROUP))))
         {
             return null;
         }
-        // TODO: fix
-        String workspaceId = getWorkspaceIdFromWorkspaceBranchName(sourceBranchName, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
 
-        return newReview(mergeRequest.getIid(), projectId, workspaceId, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl());
+        String workspaceBranchNamePrefix = sourceBranchName.substring(0, sourceBranchName.indexOf(BRANCH_DELIMITER));
+        Workspace workspace = fromWorkspaceBranchName(projectId, sourceBranchName, getWorkspaceAccessTypeFromNamePrefix(workspaceBranchNamePrefix));
+
+        return newReview(mergeRequest.getIid(), projectId, workspace, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl());
     }
 
-    private static Review newReview(Integer reviewId, String projectId, String workspaceId, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL)
+    private static Review newReview(Integer reviewId, String projectId, Workspace workspace, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL)
     {
-        return newReview(toStringIfNotNull(reviewId), projectId, workspaceId, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL);
+        return newReview(toStringIfNotNull(reviewId), projectId, workspace, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL);
     }
 
-    private static Review newReview(String reviewId, String projectId, String workspaceId, String title, String description, Instant createdAt, Instant lastUpdatedAt, Instant closedAt, Instant committedAt, ReviewState reviewState, User author, String commitRevisionId, String webURL)
+    private static Review newReview(String reviewId, String projectId, Workspace workspace, String title, String description, Instant createdAt, Instant lastUpdatedAt, Instant closedAt, Instant committedAt, ReviewState reviewState, User author, String commitRevisionId, String webURL)
     {
         return new Review()
         {
@@ -790,9 +788,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             }
 
             @Override
-            public String getWorkspaceId()
+            public Workspace getWorkspace()
             {
-                return workspaceId;
+                return workspace;
             }
 
             @Override

@@ -41,13 +41,8 @@ import org.gitlab4j.api.models.Tag;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Base64;
+import java.util.*;
 import java.util.Base64.Encoder;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
-import java.util.Random;
 import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
@@ -224,6 +219,41 @@ abstract class BaseGitLabApi
         }
     }
 
+    protected static ProjectFileAccessProvider.WorkspaceAccessType getWorkspaceAccessTypeFromNamePrefix(String workspaceBranchNamePrefix)
+    {
+        switch (workspaceBranchNamePrefix)
+        {
+            case WORKSPACE_BRANCH_PREFIX:
+            {
+                return WORKSPACE;
+            }
+            case CONFLICT_RESOLUTION_BRANCH_PREFIX:
+            {
+                return CONFLICT_RESOLUTION;
+            }
+            case BACKUP_BRANCH_PREFIX:
+            {
+                return BACKUP;
+            }
+            case GROUP_BRANCH_PREFIX:
+            {
+                return GROUP;
+            }
+            case GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX:
+            {
+                return GROUP_CONFLICT_RESOLUTION;
+            }
+            case GROUP_BACKUP_BRANCH_PREFIX:
+            {
+                return GROUP_BACKUP;
+            }
+            default:
+            {
+                throw new RuntimeException("Unknown workspace branch name prefix " + workspaceBranchNamePrefix);
+            }
+        }
+    }
+
     protected static ProjectFileAccessProvider.WorkspaceAccessType getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, boolean isGroup)
     {
         assert workspaceAccessType != null : "Workspace access type has been used but it is null, which should not be the case";
@@ -320,12 +350,17 @@ abstract class BaseGitLabApi
         return workspaceBranchName.substring(fullPrefixEndIndex + 1);
     }
 
+    protected static boolean isWorkspaceBranchName(String branchName, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
+    {
+        return workspaceAccessTypes.stream().anyMatch(type -> isWorkspaceBranchName(branchName, type));
+    }
+
     protected static boolean isWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceAccessType), (String[]) null);
     }
 
-    protected boolean isUserWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected boolean isUserOrGroupWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         String[] extraArgument = GROUP_WORKSPACE_TYPES.contains(workspaceAccessType) ? (String[]) null : new String[]{getCurrentUser()};
         return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceAccessType), extraArgument);

@@ -112,7 +112,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             Pager<Branch> pager = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE);
             return PagerTools.stream(pager)
-                    .filter(branch -> (branch != null) && isUserWorkspaceBranchName(branch.getName(), workspaceAccessType))
+                    .filter(branch -> (branch != null) && isUserOrGroupWorkspaceBranchName(branch.getName(), workspaceAccessType))
                     .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceAccessType))
                     .collect(Collectors.toList());
         }
