@@ -38,9 +38,15 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testEntitiesInNormalWorkflow() throws GitLabApiException
+    public void testEntitiesInNormalUserWorkspaceWorkflow() throws GitLabApiException
     {
-        gitLabEntityApiTestResource.runEntitiesInNormalWorkflowTest();
+        gitLabEntityApiTestResource.runEntitiesInNormalUserWorkspaceWorkflowTest();
+    }
+
+    @Test
+    public void testEntitiesInNormalGroupWorkspaceWorkflow() throws GitLabApiException
+    {
+        gitLabEntityApiTestResource.runEntitiesInNormalGroupWorkspaceWorkflowTest();
     }
 
     /**
