@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.review;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
@@ -58,7 +59,7 @@ public interface ReviewApi
      * @param description review description
      * @return new review
      */
-    Review createReview(String projectId, String workspaceId, String title, String description);
+    Review createReview(String projectId, Workspace workspace, String title, String description);
 
     /**
      * Close a review. This is only valid if the review is open.

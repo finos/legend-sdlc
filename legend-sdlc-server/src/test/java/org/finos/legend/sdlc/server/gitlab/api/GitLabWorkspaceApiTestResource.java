@@ -148,7 +148,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertFalse(isGroupWorkspaceOutdated);
     }
 
-    public void runUpdateWorkspaceWithRebaseNoConflictTest() throws GitLabApiException //TODO: test group once done
+    public void runUpdateWorkspaceWithRebaseNoConflictTest() throws GitLabApiException
     {
         // Create new workspace from previous HEAD
         String projectName = "WorkspaceTestProjectThree";
@@ -196,7 +196,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, "Add Courses.", "add two math courses");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspaceTwo, "Add Courses.", "add two math courses");
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 

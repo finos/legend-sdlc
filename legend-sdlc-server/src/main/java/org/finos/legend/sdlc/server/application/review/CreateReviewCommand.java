@@ -14,20 +14,22 @@
 
 package org.finos.legend.sdlc.server.application.review;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+
 public class CreateReviewCommand
 {
-    private String workspaceId;
+    private Workspace workspace;
     private String title;
     private String description;
 
-    public String getWorkspaceId()
+    public Workspace getWorkspace()
     {
-        return this.workspaceId;
+        return this.workspace;
     }
 
-    public void setWorkspaceId(String workspaceId)
+    public void setWorkspace(Workspace workspace)
     {
-        this.workspaceId = workspaceId;
+        this.workspace = workspace;
     }
 
     public String getTitle()

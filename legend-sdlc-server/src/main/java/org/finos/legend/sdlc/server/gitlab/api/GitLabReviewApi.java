@@ -44,7 +44,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -251,16 +256,18 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, String workspaceId, String title, String description)
+    public Review createReview(String projectId, Workspace workspace, String title, String description)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspace, "workspace may not be null");
         LegendSDLCServerException.validateNonNull(title, "title may not be null");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
+        String workspaceId = workspace.getWorkspaceId();
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = workspace.getUserId() == null ? ProjectFileAccessProvider.WorkspaceAccessType.GROUP : ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            String workspaceBranchName = getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+            String workspaceBranchName = getUserWorkspaceBranchName(workspaceId, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
             MergeRequest mergeRequest = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, MASTER_BRANCH, title, description, null, null, null, null, true);
             return fromGitLabMergeRequest(projectId, mergeRequest);
@@ -268,9 +275,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to submit changes from workspace " + workspaceId + " in project " + projectId + " for review",
-                    () -> "Unknown workspace (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error submitting changes from workspace " + workspaceId + " in project " + projectId + " for review");
+                    () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review",
+                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error submitting changes from " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review");
         }
     }
 
