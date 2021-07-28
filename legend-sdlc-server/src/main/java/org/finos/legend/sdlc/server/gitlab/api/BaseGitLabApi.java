@@ -745,7 +745,7 @@ abstract class BaseGitLabApi
 
     protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
     {
-        return (mergeRequest != null) && isWorkspaceBranchName(mergeRequest.getSourceBranch(), WORKSPACE);
+        return (mergeRequest != null) && (isWorkspaceBranchName(mergeRequest.getSourceBranch(), WORKSPACE) || isWorkspaceBranchName(mergeRequest.getSourceBranch(), GROUP));
     }
 
     protected static boolean isOpen(MergeRequest mergeRequest)

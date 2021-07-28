@@ -54,7 +54,7 @@ public interface ReviewApi
      * Create a review for changes from the given workspace.
      *
      * @param projectId   project id
-     * @param workspaceId workspace id
+     * @param workspace   workspace
      * @param title       review title
      * @param description review description
      * @return new review

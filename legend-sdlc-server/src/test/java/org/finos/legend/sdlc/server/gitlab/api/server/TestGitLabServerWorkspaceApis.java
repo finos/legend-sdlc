@@ -56,9 +56,15 @@ public class TestGitLabServerWorkspaceApis extends AbstractGitLabServerApiTest
     }
 
     @Test
-    public void testUpdateWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
+    public void testUpdateUserWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
     {
-        gitLabWorkspaceApiTestResource.runUpdateWorkspaceWithRebaseNoConflictTest();
+        gitLabWorkspaceApiTestResource.runUpdateUserWorkspaceWithRebaseNoConflictTest();
+    }
+
+    @Test
+    public void testUpdateGroupWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
+    {
+        gitLabWorkspaceApiTestResource.runUpdateGroupWorkspaceWithRebaseNoConflictTest();
     }
 
     /**
