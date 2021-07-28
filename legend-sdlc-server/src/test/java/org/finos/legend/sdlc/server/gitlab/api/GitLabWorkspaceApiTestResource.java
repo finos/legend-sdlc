@@ -65,10 +65,6 @@ public class GitLabWorkspaceApiTestResource
         this.gitLabMemberUserContext = gitLabMemberUserContext;
     }
 
-    /**
-     * Tests Create, Get, GetAll, IsInConflictResolutionMode, InOutdated on user and group workspaces.
-     * Sorted the user and group workspace tests in one to test GetAll.
-     */
     public void runUserAndGroupWorkspaceNormalWorkflowTest()
     {
         String projectName = "WorkspaceTestProjectOne";

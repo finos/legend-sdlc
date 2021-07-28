@@ -105,7 +105,51 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two math courses");
+        Map<String, String> newEntityContentMap = Maps.mutable.with(
+                "package", "test",
+                "name", "entity",
+                "math-128", "numerical-analysis",
+                "math-110", "linear-algebra");
+        gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(updatedWorkspaceEntities);
+        Assert.assertEquals(1, updatedWorkspaceEntities.size());
+        Entity updatedEntity = updatedWorkspaceEntities.get(0);
+        Assert.assertEquals(updatedEntity.getPath(), entityPath);
+        Assert.assertEquals(updatedEntity.getClassifierPath(), classifierPath);
+        Assert.assertEquals(updatedEntity.getContent(), newEntityContentMap);
+
+        String entityPathTwo = "testtwo::entitytwo";
+        String classifierPathTwo = "meta::test::csDepartment";
+        Map<String, String> newEntityContentMapTwo = Maps.mutable.with(
+                "package", "testtwo",
+                "name", "entitytwo",
+                "cs-194", "computational-imaging",
+                "cs-189", "machine-learning");
+        gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(postAddWorkspaceEntities);
+        Assert.assertEquals(2, postAddWorkspaceEntities.size());
+
+        gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(postDeleteWorkspaceEntities);
+        Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
+        Entity remainedEntity = postDeleteWorkspaceEntities.get(0);
+        Assert.assertEquals(remainedEntity.getPath(), entityPathTwo);
+        Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
+        Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
+
+        List<String> paths = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntityPaths(null, null, null);
+
+        Assert.assertNotNull(paths);
+        Assert.assertEquals(1, paths.size());
+        Assert.assertEquals(entityPathTwo, paths.get(0));
+
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two courses");
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
@@ -162,9 +206,9 @@ public class GitLabEntityApiTestResource
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
         Entity projectEntity = postCommitProjectEntities.get(0);
-        Assert.assertEquals(projectEntity.getPath(), entityPath);
-        Assert.assertEquals(projectEntity.getClassifierPath(), classifierPath);
-        Assert.assertEquals(projectEntity.getContent(), entityContentMap);
+        Assert.assertEquals(projectEntity.getPath(), entityPathTwo);
+        Assert.assertEquals(projectEntity.getClassifierPath(), classifierPathTwo);
+        Assert.assertEquals(projectEntity.getContent(), newEntityContentMapTwo);
     }
 
     public void runEntitiesInNormalGroupWorkspaceWorkflowTest() throws GitLabApiException
@@ -208,7 +252,51 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two math courses");
+        Map<String, String> newEntityContentMap = Maps.mutable.with(
+                "package", "test",
+                "name", "entity",
+                "math-128", "numerical-analysis",
+                "math-110", "linear-algebra");
+        gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(updatedWorkspaceEntities);
+        Assert.assertEquals(1, updatedWorkspaceEntities.size());
+        Entity updatedEntity = updatedWorkspaceEntities.get(0);
+        Assert.assertEquals(updatedEntity.getPath(), entityPath);
+        Assert.assertEquals(updatedEntity.getClassifierPath(), classifierPath);
+        Assert.assertEquals(updatedEntity.getContent(), newEntityContentMap);
+
+        String entityPathTwo = "testtwo::entitytwo";
+        String classifierPathTwo = "meta::test::csDepartment";
+        Map<String, String> newEntityContentMapTwo = Maps.mutable.with(
+                "package", "testtwo",
+                "name", "entitytwo",
+                "cs-194", "computational-imaging",
+                "cs-189", "machine-learning");
+        gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(postAddWorkspaceEntities);
+        Assert.assertEquals(2, postAddWorkspaceEntities.size());
+
+        gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+
+        Assert.assertNotNull(postDeleteWorkspaceEntities);
+        Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
+        Entity remainedEntity = postDeleteWorkspaceEntities.get(0);
+        Assert.assertEquals(remainedEntity.getPath(), entityPathTwo);
+        Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
+        Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
+
+        List<String> paths = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntityPaths(null, null, null);
+
+        Assert.assertNotNull(paths);
+        Assert.assertEquals(1, paths.size());
+        Assert.assertEquals(entityPathTwo, paths.get(0));
+
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two courses");
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
@@ -265,9 +353,9 @@ public class GitLabEntityApiTestResource
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
         Entity projectEntity = postCommitProjectEntities.get(0);
-        Assert.assertEquals(projectEntity.getPath(), entityPath);
-        Assert.assertEquals(projectEntity.getClassifierPath(), classifierPath);
-        Assert.assertEquals(projectEntity.getContent(), entityContentMap);
+        Assert.assertEquals(projectEntity.getPath(), entityPathTwo);
+        Assert.assertEquals(projectEntity.getClassifierPath(), classifierPathTwo);
+        Assert.assertEquals(projectEntity.getContent(), newEntityContentMapTwo);
     }
 
     public GitLabProjectApi getGitLabProjectApi()
