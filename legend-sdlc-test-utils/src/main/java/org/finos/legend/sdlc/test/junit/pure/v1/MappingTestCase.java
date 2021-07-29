@@ -68,7 +68,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
             PrintWriter printWriter = new PrintWriter(stringWriter);
             richMappingTestResult.getException().printStackTrace(printWriter);
             String stackTraceString = stringWriter.toString();
-            fail("Errors for mapping test '" + this.entity.getPath() + "' for Mapping '" + this.entity.getPath() + "with error stack trace: \n" + stackTraceString + "\n");
+            fail("Error running mapping test '" + mappingTest.name + "' for Mapping '" + this.entity.getPath() + "' with error stack trace: \n" + stackTraceString + "\n");
         }
     }
 
