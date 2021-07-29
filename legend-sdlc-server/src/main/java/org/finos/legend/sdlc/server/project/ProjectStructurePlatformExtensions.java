@@ -15,11 +15,11 @@
 package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.factory.Lists;
 import org.eclipse.collections.impl.factory.Maps;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 public class ProjectStructurePlatformExtensions
 {
@@ -111,11 +111,6 @@ public class ProjectStructurePlatformExtensions
             return groupId;
         }
 
-        public Map<Integer, String> getProjectStructureVersions()
-        {
-            return projectStructureVersions;
-        }
-
         public String getPublicStructureVersion(int version)
         {
             if (!this.projectStructureVersions.containsKey(version))
@@ -129,9 +124,9 @@ public class ProjectStructurePlatformExtensions
 
     public static class ExtensionsCollection
     {
-        String name;
-        String platform;
-        String artifactId;
+        private final String name;
+        private final String platform;
+        private final String artifactId;
 
         public ExtensionsCollection(String name, String platform, String artifactId)
         {

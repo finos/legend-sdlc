@@ -103,6 +103,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 {
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
+    protected ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
@@ -221,6 +222,15 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     }
 
     private ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions()
+    {
+        if (this.projectStructurePlatformExtensions == null)
+        {
+            this.projectStructurePlatformExtensions = buildProjectStructurePlatformExtensions();
+        }
+        return this.projectStructurePlatformExtensions;
+    }
+
+    private ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
     {
         if (this.getProjectStructureConfiguration().getProjectPlatformsConfiguration() == null)
         {
