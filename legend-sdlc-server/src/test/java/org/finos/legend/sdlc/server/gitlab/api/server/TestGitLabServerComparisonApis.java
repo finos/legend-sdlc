@@ -12,57 +12,66 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.api.docker;
+package org.finos.legend.sdlc.server.gitlab.api.server;
 
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApiTestResource;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
+import org.finos.legend.sdlc.server.gitlab.api.*;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.gitlab4j.api.GitLabApiException;
+import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class IntegrationTestGitLabRevisionApis extends AbstractGitLabApiTest
+public class TestGitLabServerComparisonApis extends AbstractGitLabServerApiTest
 {
-    private static GitLabRevisionApiTestResource gitLabRevisionApiTestResource;
+    private static GitLabComparisonApiTestResource gitLabComparisonApiTestResource;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        setUpRevisionApi();
+        setUpComparisonApi();
+        cleanUpTestProjects(gitLabComparisonApiTestResource.getGitLabProjectApi());
+    }
+
+    @AfterClass
+    public static void teardown() throws LegendSDLCServerException
+    {
+        if (gitLabComparisonApiTestResource != null)
+        {
+            cleanUpTestProjects(gitLabComparisonApiTestResource.getGitLabProjectApi());
+        }
     }
 
     @Test
-    public void testUserWorkspaceRevisions()
+    public void testUserWorkspaceComparisons()
     {
-        gitLabRevisionApiTestResource.runUserWorkspaceRevisionTest();
+        gitLabComparisonApiTestResource.runUserWorkspaceComparisonTest();
     }
 
     @Test
-    public void testGroupWorkspaceRevisions()
+    public void testGroupWorkspaceComparisons()
     {
-        gitLabRevisionApiTestResource.runGroupWorkspaceRevisionTest();
+        gitLabComparisonApiTestResource.runGroupWorkspaceComparisonTest();
     }
 
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
      */
-    private static void setUpRevisionApi()
+    private static void setUpComparisonApi()
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null);
+        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
         GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabComparisonApi gitLabComparisonApi = new GitLabComparisonApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
 
-        gitLabRevisionApiTestResource = new GitLabRevisionApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi,gitLabRevisionApi);
+        gitLabComparisonApiTestResource = new GitLabComparisonApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabRevisionApi, gitLabComparisonApi);
     }
 }

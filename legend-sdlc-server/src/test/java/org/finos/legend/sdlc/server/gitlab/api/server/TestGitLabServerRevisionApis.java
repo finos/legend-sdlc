@@ -35,7 +35,7 @@ public class TestGitLabServerRevisionApis extends AbstractGitLabServerApiTest
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        setUpWorkspaceApi();
+        setUpRevisionApi();
         cleanUpTestProjects(gitLabRevisionApiTestResource.getGitLabProjectApi());
     }
 
@@ -63,7 +63,7 @@ public class TestGitLabServerRevisionApis extends AbstractGitLabServerApiTest
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
      */
-    private static void setUpWorkspaceApi()
+    private static void setUpRevisionApi()
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
