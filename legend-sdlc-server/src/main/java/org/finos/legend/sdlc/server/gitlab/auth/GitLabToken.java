@@ -18,8 +18,8 @@ import org.gitlab4j.api.Constants.TokenType;
 
 class GitLabToken
 {
-    private TokenType tokenType;
-    private String token;
+    private final TokenType tokenType;
+    private final String token;
 
     private GitLabToken(TokenType tokenType, String token)
     {
@@ -45,9 +45,15 @@ class GitLabToken
     }
 
     @Override
+    public int hashCode()
+    {
+        return this.tokenType.hashCode() +  61 * this.token.hashCode();
+    }
+
+    @Override
     public String toString()
     {
-        return new StringBuilder("<GitLabToken ").append(tokenType).append('=').append(token).append('>').toString();
+        return "<GitLabToken " + this.tokenType + '=' + this.token + '>';
     }
 
     public TokenType getTokenType()
