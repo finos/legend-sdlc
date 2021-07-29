@@ -68,7 +68,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             @Override
             protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
             {
-                return projectFileAccessProvider.getFileAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+                return projectFileAccessProvider.getFileAccessContext(projectId, null, null, null);
             }
 
             @Override
@@ -93,7 +93,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 String resolvedRevisionId;
                 try
                 {
-                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, (ProjectFileAccessProvider.WorkspaceAccessType) null));
                 }
                 catch (Exception e)
                 {
@@ -107,7 +107,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
-                return projectFileAccessProvider.getFileAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, resolvedRevisionId);
+                return projectFileAccessProvider.getFileAccessContext(projectId, null, null, resolvedRevisionId);
             }
 
             @Override

@@ -60,7 +60,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
-            return getProjectConfiguration(projectId, null, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+            return getProjectConfiguration(projectId, null, null, null);
         }
         catch (Exception e)
         {
@@ -79,7 +79,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, null, (ProjectFileAccessProvider.WorkspaceAccessType) null));
         }
         catch (Exception e)
         {
