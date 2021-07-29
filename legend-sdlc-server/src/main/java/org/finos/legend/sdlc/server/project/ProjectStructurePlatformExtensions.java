@@ -62,7 +62,7 @@ public class ProjectStructurePlatformExtensions
 
     public List<Platform> getPlatforms()
     {
-        return this.platforms.values().stream().collect(Collectors.toList());
+        return Lists.mutable.withAll(this.platforms.values());
     }
 
     public Platform getPlatform(String platform)
