@@ -15,10 +15,9 @@
 package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectConfigurationApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectConfigurationApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -27,32 +26,26 @@ import org.gitlab4j.api.GitLabApiException;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
+public class IntegrationTestGitLabProjectConfigurationApis extends AbstractGitLabApiTest
 {
-    private static GitLabEntityApiTestResource gitLabEntityApiTestResource;
+    private static GitLabProjectConfigurationApiTestResource gitLabProjectConfigurationApiTestResource;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        setUpEntityApi();
+        setUpProjectConfigurationApi();
     }
 
     @Test
-    public void testEntitiesInNormalUserWorkspaceWorkflow() throws GitLabApiException
+    public void testUserAndGroupWorkspaceProjectConfiguration()
     {
-        gitLabEntityApiTestResource.runEntitiesInNormalUserWorkspaceWorkflowTest();
-    }
-
-    @Test
-    public void testEntitiesInNormalGroupWorkspaceWorkflow() throws GitLabApiException
-    {
-        gitLabEntityApiTestResource.runEntitiesInNormalGroupWorkspaceWorkflowTest();
+        gitLabProjectConfigurationApiTestResource.runUserAndGroupWorkspaceProjectConfigurationTest();
     }
 
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */
-    private static void setUpEntityApi()
+    private static void setUpProjectConfigurationApi()
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
@@ -61,11 +54,8 @@ public class IntegrationTestGitLabEntityApis extends AbstractGitLabApiTest
 
         GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, null, backgroundTaskProcessor);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        GitLabReviewApi gitLabCommitterReviewApi = new GitLabReviewApi(gitLabMemberUserContext);
-        GitLabReviewApi gitLabApproverReviewApi = new GitLabReviewApi(gitLabOwnerUserContext);
+        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor);
 
-        gitLabEntityApiTestResource = new GitLabEntityApiTestResource(gitLabProjectApi, gitLabWorkspaceApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext);
+        gitLabProjectConfigurationApiTestResource = new GitLabProjectConfigurationApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabProjectConfigurationApi);
     }
 }

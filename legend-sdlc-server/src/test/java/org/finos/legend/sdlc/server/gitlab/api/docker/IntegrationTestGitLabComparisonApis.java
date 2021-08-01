@@ -50,7 +50,7 @@ public class IntegrationTestGitLabComparisonApis extends AbstractGitLabApiTest
     }
 
     /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
+     * Authenticates with OAuth2 and instantiate the test resource.
      */
     private static void setUpComparisonApi()
     {

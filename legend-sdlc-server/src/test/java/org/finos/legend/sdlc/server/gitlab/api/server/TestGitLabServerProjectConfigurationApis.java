@@ -16,10 +16,10 @@ package org.finos.legend.sdlc.server.gitlab.api.server;
 
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectConfigurationApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectConfigurationApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -28,42 +28,36 @@ import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-public class TestGitLabServerRevisionApis extends AbstractGitLabServerApiTest
+public class TestGitLabServerProjectConfigurationApis extends AbstractGitLabServerApiTest
 {
-    private static GitLabRevisionApiTestResource gitLabRevisionApiTestResource;
+    private static GitLabProjectConfigurationApiTestResource gitLabProjectConfigurationApiTestResource;
 
     @BeforeClass
     public static void setup() throws GitLabApiException
     {
-        setUpRevisionApi();
-        cleanUpTestProjects(gitLabRevisionApiTestResource.getGitLabProjectApi());
+        setUpProjectConfigurationApi();
+        cleanUpTestProjects(gitLabProjectConfigurationApiTestResource.getGitLabProjectApi());
     }
 
     @AfterClass
     public static void teardown() throws LegendSDLCServerException
     {
-        if (gitLabRevisionApiTestResource != null)
+        if (gitLabProjectConfigurationApiTestResource != null)
         {
-            cleanUpTestProjects(gitLabRevisionApiTestResource.getGitLabProjectApi());
+            cleanUpTestProjects(gitLabProjectConfigurationApiTestResource.getGitLabProjectApi());
         }
     }
 
     @Test
-    public void testUserWorkspaceRevisions()
+    public void testUserAndGroupWorkspaceProjectConfiguration()
     {
-        gitLabRevisionApiTestResource.runUserWorkspaceRevisionTest();
-    }
-
-    @Test
-    public void testGroupWorkspaceRevisions()
-    {
-        gitLabRevisionApiTestResource.runGroupWorkspaceRevisionTest();
+        gitLabProjectConfigurationApiTestResource.runUserAndGroupWorkspaceProjectConfigurationTest();
     }
 
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */
-    private static void setUpRevisionApi()
+    private static void setUpProjectConfigurationApi()
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
@@ -73,8 +67,8 @@ public class TestGitLabServerRevisionApis extends AbstractGitLabServerApiTest
         GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor);
 
-        gitLabRevisionApiTestResource = new GitLabRevisionApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabRevisionApi);
+        gitLabProjectConfigurationApiTestResource = new GitLabProjectConfigurationApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabProjectConfigurationApi);
     }
 }

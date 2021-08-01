@@ -42,7 +42,7 @@ import java.util.stream.StreamSupport;
 public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements WorkflowJobApi
 {
     @Inject
-    protected GitlabWorkflowJobApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitlabWorkflowJobApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(userContext, backgroundTaskProcessor);
     }

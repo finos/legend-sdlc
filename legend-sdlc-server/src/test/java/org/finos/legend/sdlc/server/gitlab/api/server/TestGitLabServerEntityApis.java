@@ -62,7 +62,7 @@ public class TestGitLabServerEntityApis extends AbstractGitLabServerApiTest
     }
 
     /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabEntityApi.
+     * Authenticates with OAuth2 and instantiate the test resource.
      */
     private static void setUpEntityApi()
     {

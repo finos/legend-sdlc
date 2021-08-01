@@ -80,7 +80,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, null, null, null);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
-        String canonicalizedFilePath= ProjectPaths.canonicalizeFile(filePath);
+        String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
         if (canonicalizedFilePath == null)
         {
             throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in project " + projectId, Status.NOT_FOUND);
