@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources;
 
+import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.junit.Assert;
 import org.junit.Test;
@@ -25,7 +26,7 @@ import javax.ws.rs.core.Response;
 public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
 {
     @Test
-    public void testGetAllProjects()
+    public void testGetAllProjects() throws HttpResponseException
     {
         this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
         this.backend.project("B").addVersionedClasses("1.0.0", "b1", "b2");
@@ -33,6 +34,11 @@ public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project("B").addDependency("C:1.0.0");
 
         Response response = this.clientFor("/api/projects").request().get();
+
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
 
         List<Project> projects = response.readEntity(new GenericType<List<Project>>()
         {

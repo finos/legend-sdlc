@@ -33,7 +33,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/configuration")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/configuration")
 @Api("Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

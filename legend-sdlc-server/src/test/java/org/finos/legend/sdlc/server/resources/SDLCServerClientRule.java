@@ -20,6 +20,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
@@ -59,6 +60,7 @@ public class SDLCServerClientRule implements TestRule
         this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         this.objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
+        this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
         this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
         this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
         this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);

@@ -89,6 +89,18 @@ public class InMemoryBackend
             this.backend = backend;
         }
 
+        public void addWorkspace(String workspaceId, boolean isGroupWorkspace)
+        {
+            if (isGroupWorkspace)
+            {
+                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision());
+            }
+            else
+            {
+                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+            }
+        }
+
         public void addVersionedEntities(String versionId, List<Entity> entities)
         {
             InMemoryRevision newRevision = new InMemoryRevision(this.project.getProjectId(), this.project.getCurrentRevision());
@@ -110,7 +122,12 @@ public class InMemoryBackend
 
         private void addEntities(String workspaceId, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addEntities(workspaceId, false, entities);
+        }
+
+        private void addEntities(String workspaceId, boolean isGroupWorkspace, List<Entity> entities)
+        {
+            InMemoryWorkspace workspace = isGroupWorkspace ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
             workspace.getCurrentRevision().addEntities(entities);
         }
 
@@ -126,13 +143,23 @@ public class InMemoryBackend
 
         private void removeEntities(String workspaceId, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.removeEntities(workspaceId, false, entities);
+        }
+
+        private void removeEntities(String workspaceId, boolean isGroupWorkspace, List<Entity> entities)
+        {
+            InMemoryWorkspace workspace = isGroupWorkspace ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
             workspace.getCurrentRevision().removeEntities(entities);
         }
 
         public void addProjectDependency(String workspaceId, String... projectDependencies)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addProjectDependency(workspaceId, false, projectDependencies);
+        }
+
+        public void addProjectDependency(String workspaceId, boolean isGroupWorkspace, String... projectDependencies)
+        {
+            InMemoryWorkspace workspace = isGroupWorkspace ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
             for (String dependencyString : projectDependencies)
@@ -145,7 +172,12 @@ public class InMemoryBackend
 
         public void removeProjectDependency(String workspaceId, String... projectDependencies)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.removeProjectDependency(workspaceId, false, projectDependencies);
+        }
+
+        public void removeProjectDependency(String workspaceId, boolean isGroupWorkspace, String... projectDependencies)
+        {
+            InMemoryWorkspace workspace = isGroupWorkspace ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
             for (String dependencyString : projectDependencies)
@@ -158,7 +190,12 @@ public class InMemoryBackend
 
         public void updateProjectDependency(String workspaceId, String oldDependency, String newDependency)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.updateProjectDependency(workspaceId, false, oldDependency, newDependency);
+        }
+
+        public void updateProjectDependency(String workspaceId, boolean isGroupWorkspace, String oldDependency, String newDependency)
+        {
+            InMemoryWorkspace workspace = isGroupWorkspace ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
 

@@ -112,21 +112,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     @Override
     public ProjectConfiguration getUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        InMemoryRevision revision = backend.getProject(projectId).getWorkspace(workspaceId).getRevision(revisionId);
-        return revision.getConfiguration();
+        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, false, revisionId);
     }
 
     @Override
     public ProjectConfiguration getGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        InMemoryRevision revision = backend.getProject(projectId).getWorkspace(workspaceId).getRevision(revisionId);
-        return revision.getConfiguration();
+        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, true, revisionId);
     }
 
     @Override
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
     {
-        InMemoryRevision revision = backend.getProject(projectId).getWorkspace(workspaceId).getRevision(revisionId);
+        InMemoryRevision revision = isGroupWorkspace ? backend.getProject(projectId).getGroupWorkspace(workspaceId).getRevision(revisionId) : backend.getProject(projectId).getUserWorkspace(workspaceId).getRevision(revisionId);
         return revision.getConfiguration();
     }
 

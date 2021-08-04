@@ -14,37 +14,55 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 public class InMemoryWorkspaceApi implements WorkspaceApi
 {
+    private final InMemoryBackend backend;
+
     @Inject
-    public InMemoryWorkspaceApi()
+    public InMemoryWorkspaceApi(InMemoryBackend inMemoryBackend)
     {
+        this.backend = inMemoryBackend;
     }
 
     @Override
     public List<Workspace> getUserWorkspaces(String projectId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
     }
 
     @Override
     public List<Workspace> getGroupWorkspaces(String projectId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
     }
 
     @Override
     public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        InMemoryProject inMemoryProject = this.backend.getProject(projectId);
+        List<Workspace> result = Lists.mutable.empty();
+        if (workspaceAccessTypes.contains(ProjectFileAccessProvider.WorkspaceAccessType.GROUP))
+        {
+            result.addAll(Lists.mutable.withAll(inMemoryProject.getGroupWorkspaces()));
+        }
+        if (workspaceAccessTypes.contains(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+        {
+            result.addAll(Lists.mutable.withAll(inMemoryProject.getUserWorkspaces()));
+        }
+        return result;
     }
 
     @Override
@@ -62,37 +80,38 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     @Override
     public List<Workspace> getAllWorkspaces(String projectId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
     }
 
     @Override
     public List<Workspace> getAllUserWorkspaces(String projectId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
     }
 
     @Override
     public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspaces(projectId, workspaceAccessTypes);
     }
 
     @Override
     public Workspace getUserWorkspace(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspace(projectId, workspaceId, false);
     }
 
     @Override
     public Workspace getGroupWorkspace(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspace(projectId, workspaceId, true);
     }
 
     @Override
     public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        InMemoryProject inMemoryProject = this.backend.getProject(projectId);
+        return isGroupWorkspace ? inMemoryProject.getGroupWorkspace(workspaceId) : inMemoryProject.getUserWorkspace(workspaceId);
     }
 
     @Override

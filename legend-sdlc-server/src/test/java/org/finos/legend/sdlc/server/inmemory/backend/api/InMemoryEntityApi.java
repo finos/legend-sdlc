@@ -70,10 +70,10 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroup)
+    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = project.getWorkspace(workspaceId);
+        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
         return new InMemoryEntityAccessContext(workspace.getCurrentRevision().getEntities());
     }
 
@@ -129,7 +129,7 @@ public class InMemoryEntityApi implements EntityApi
     public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = project.getWorkspace(workspaceId);
+        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
         InMemoryRevision revision = workspace.getRevision(revisionId);
         return new InMemoryEntityAccessContext(revision.getEntities());
     }

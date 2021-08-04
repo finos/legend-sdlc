@@ -31,7 +31,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/workspaces/{workspaceId}/revisions/{revisionId}/entityPaths")
+@Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/revisions/{revisionId}/entityPaths")
 @Api("Entities")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)

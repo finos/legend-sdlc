@@ -94,9 +94,9 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroup)
+    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
-        InMemoryWorkspace workspace = backend.getProject(projectId).getWorkspace(workspaceId);
+        InMemoryWorkspace workspace = isGroupWorkspace ? backend.getProject(projectId).getGroupWorkspace(workspaceId) : backend.getProject(projectId).getUserWorkspace(workspaceId);
         return new RevisionAccessContext()
         {
             @Override

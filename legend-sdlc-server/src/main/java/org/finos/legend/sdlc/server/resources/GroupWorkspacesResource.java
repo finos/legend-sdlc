@@ -16,17 +16,20 @@ package org.finos.legend.sdlc.server.resources;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
@@ -46,22 +49,14 @@ public class GroupWorkspacesResource extends BaseResource
 
     @GET
     @ApiOperation("Get all group workspaces for a project")
-    public List<Workspace> getGroupWorkspaces(@PathParam("projectId") String projectId)
+    public List<Workspace> getGroupWorkspaces(@PathParam("projectId") String projectId,
+                                              @QueryParam("includeUserWorkspaces")
+                                              @DefaultValue("false")
+                                              @ApiParam("include user workspaces owned by current user") boolean includeUserWorkspaces)
     {
         return executeWithLogging(
-                "getting all group workspaces for project " + projectId,
-                this.workspaceApi::getGroupWorkspaces,
-                projectId
-        );
-    }
-
-    @GET
-    @ApiOperation("Get all user or group workspaces for a project")
-    public List<Workspace> getAllGroupAndUserWorkspaces(@PathParam("projectId") String projectId)
-    {
-        return executeWithLogging(
-                "getting all user or group workspaces for project " + projectId,
-                () -> this.workspaceApi.getAllWorkspaces(projectId)
+                "getting all group" + (includeUserWorkspaces ? " and user" : "") + " workspaces for project " + projectId,
+                () -> includeUserWorkspaces ? this.workspaceApi.getAllWorkspaces(projectId) : this.workspaceApi.getGroupWorkspaces(projectId)
         );
     }
 
