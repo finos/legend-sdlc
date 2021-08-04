@@ -243,19 +243,27 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     @Override
     public void deleteUserWorkspace(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        this.deleteWorkspace(projectId, workspaceId, false);
     }
 
     @Override
     public void deleteGroupWorkspace(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        this.deleteWorkspace(projectId, workspaceId, true);
     }
 
     @Override
     public void deleteWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        InMemoryProject inMemoryProject = this.backend.getProject(projectId);
+        if (isGroupWorkspace)
+        {
+            inMemoryProject.deleteGroupWorkspace(workspaceId);
+        }
+        else
+        {
+            inMemoryProject.deleteUserWorkspace(workspaceId);
+        }
     }
 
     @Override

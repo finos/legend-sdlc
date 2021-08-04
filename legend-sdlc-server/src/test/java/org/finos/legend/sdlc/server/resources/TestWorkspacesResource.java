@@ -41,7 +41,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         if (responseOne.getStatus() != 200)
         {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during http call with status: " + responseOne.getStatus() + " , entity: " + responseOne.readEntity(String.class));
+            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspaces with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
         }
 
         List<Workspace> allUserWorkspaces = responseOne.readEntity(new GenericType<List<Workspace>>()
@@ -59,7 +59,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         if (responseTwo.getStatus() != 200)
         {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during http call with status: " + responseTwo.getStatus() + " , entity: " + responseTwo.readEntity(String.class));
+            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting group workspaces with status: " + responseTwo.getStatus() + " , entity: " + responseTwo.readEntity(String.class));
         }
 
         List<Workspace> allGroupWorkspaces = responseTwo.readEntity(new GenericType<List<Workspace>>()
@@ -75,7 +75,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         if (responseThree.getStatus() != 200)
         {
-            throw new HttpResponseException(responseThree.getStatus(), "Error during http call with status: " + responseThree.getStatus() + " , entity: " + responseThree.readEntity(String.class));
+            throw new HttpResponseException(responseThree.getStatus(), "Error during getting all workspaces with status: " + responseThree.getStatus() + " , entity: " + responseThree.readEntity(String.class));
         }
 
         List<Workspace> allUserAndGroupWorkspaces = responseThree.readEntity(new GenericType<List<Workspace>>()
@@ -93,7 +93,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
     }
 
     @Test
-    public void testGetUserWorkspace() throws HttpResponseException
+    public void testGetAndDeleteUserWorkspace() throws HttpResponseException
     {
         String projectId = "A";
         String workspaceId = "userw1";
@@ -104,7 +104,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         if (response.getStatus() != 200)
         {
-            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+            throw new HttpResponseException(response.getStatus(), "Error during getting user workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
         }
 
         Workspace workspace = response.readEntity(new GenericType<Workspace>()
@@ -114,10 +114,18 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
+
+        Response deletionResponse = this.clientFor("/api/projects/A/workspaces/userw1").request().delete();
+
+        Assert.assertEquals("Error during deleting user workspace with status: " + deletionResponse.getStatus() + ", entity: " + deletionResponse.readEntity(String.class), 204, deletionResponse.getStatus());
+
+        Response finalGetResponse = this.clientFor("/api/projects/A/workspaces/userw1").request().get();
+
+        Assert.assertEquals("Error during getting deleted user workspace with status: " + finalGetResponse.getStatus() + ", entity: " + finalGetResponse.readEntity(String.class), 204, finalGetResponse.getStatus());
     }
 
     @Test
-    public void testGetGroupWorkspace() throws HttpResponseException
+    public void testGetAndDeleteGroupWorkspace() throws HttpResponseException
     {
         String projectId = "A";
         String workspaceId = "groupw1";
@@ -128,7 +136,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         if (response.getStatus() != 200)
         {
-            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+            throw new HttpResponseException(response.getStatus(), "Error during getting group workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
         }
 
         Workspace workspace = response.readEntity(new GenericType<Workspace>()
@@ -138,6 +146,14 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
+
+        Response deletionResponse = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().delete();
+
+        Assert.assertEquals("Error during deleting group workspace with status: " + deletionResponse.getStatus() + ", entity: " + deletionResponse.readEntity(String.class), 204, deletionResponse.getStatus());
+
+        Response finalGetResponse = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().get();
+
+        Assert.assertEquals("Error during getting deleted group workspace with status: " + finalGetResponse.getStatus() + ", entity: " + finalGetResponse.readEntity(String.class), 204, finalGetResponse.getStatus());
     }
 
     private Workspace findWorkspace(List<Workspace> workspaces, String workspaceId)

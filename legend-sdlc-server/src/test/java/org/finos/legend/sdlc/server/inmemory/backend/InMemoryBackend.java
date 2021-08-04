@@ -136,6 +136,11 @@ public class InMemoryBackend
             this.addEntities(workspaceId, Arrays.asList(entityList));
         }
 
+        public void addEntities(String workspaceId, boolean isGroupWorkspace, Entity... entityList)
+        {
+            this.addEntities(workspaceId, isGroupWorkspace, Arrays.asList(entityList));
+        }
+
         public void removeEntities(String workspaceId, Entity... entityList)
         {
             this.removeEntities(workspaceId, Arrays.asList(entityList));

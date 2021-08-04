@@ -15,6 +15,8 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
@@ -193,19 +195,21 @@ public class InMemoryEntityApi implements EntityApi
     @Override
     public EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, false);
     }
 
     @Override
     public EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, true);
     }
 
     @Override
     public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        InMemoryProject project = this.backend.getProject(projectId);
+        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
+        return new InMemoryEntityModificationContext(workspace.getCurrentRevision().getEntities());
     }
 
     @Override
@@ -265,6 +269,37 @@ public class InMemoryEntityApi implements EntityApi
         {
             List<Entity> entities = this.getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate);
             return entities.stream().map(Entity::getPath).collect(Collectors.toList());
+        }
+    }
+
+    static class InMemoryEntityModificationContext implements EntityModificationContext
+    {
+        private final Iterable<Entity> entities;
+
+        public InMemoryEntityModificationContext(Iterable<Entity> entities)
+        {
+            this.entities = entities;
+        }
+
+        @Override
+        public Revision updateEntities(Iterable<? extends Entity> entities, boolean replace, String message)
+        {
+            if (!replace)
+            {
+                throw new UnsupportedOperationException("Non-replace entity update is not supported in inMemory backend.");
+            }
+
+            InMemoryRevision revision = new InMemoryRevision(message + "-" + Math.random());
+            revision.removeEntities(this.entities);
+            revision.addEntities(entities);
+
+            return revision;
+        }
+
+        @Override
+        public Revision performChanges(List<? extends EntityChange> changes, String revisionId, String message)
+        {
+            throw new UnsupportedOperationException("Not implemented");
         }
     }
 }

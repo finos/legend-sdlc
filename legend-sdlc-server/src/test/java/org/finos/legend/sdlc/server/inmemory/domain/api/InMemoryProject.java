@@ -140,6 +140,18 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
+    public void deleteUserWorkspace(String workspaceId)
+    {
+        this.userWorkspaces.remove(workspaceId);
+    }
+
+    @JsonIgnore
+    public void deleteGroupWorkspace(String workspaceId)
+    {
+        this.groupWorkspaces.remove(workspaceId);
+    }
+
+    @JsonIgnore
     public InMemoryVersion getVersion(String versionId)
     {
         return this.versions.get(versionId);
