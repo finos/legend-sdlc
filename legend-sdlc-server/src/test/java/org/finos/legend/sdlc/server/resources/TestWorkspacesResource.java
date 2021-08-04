@@ -28,9 +28,14 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
     @Test
     public void testGetMixedTypeWorkspaces() throws HttpResponseException
     {
-        this.backend.project("A").addWorkspace("w1", false);
-        this.backend.project("A").addWorkspace("w2", false);
-        this.backend.project("A").addWorkspace("w3", true);
+        String projectId = "A";
+        String workspaceOneId = "w1";
+        String workspaceTwoId = "w2";
+        String workspaceThreeId = "w3";
+
+        this.backend.project(projectId).addWorkspace(workspaceOneId, false);
+        this.backend.project(projectId).addWorkspace(workspaceTwoId, false);
+        this.backend.project(projectId).addWorkspace(workspaceThreeId, true);
 
         Response responseOne = this.clientFor("/api/projects/A/workspaces").request().get();
 
@@ -43,11 +48,12 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         {
         });
 
+        Assert.assertNotNull(allUserWorkspaces);
         Assert.assertEquals(2, allUserWorkspaces.size());
-        Assert.assertEquals("w1", findWorkspace(allUserWorkspaces, "w1").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allUserWorkspaces, "w1").getProjectId());
-        Assert.assertEquals("w2", findWorkspace(allUserWorkspaces, "w2").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allUserWorkspaces, "w2").getProjectId());
+        Assert.assertEquals(workspaceOneId, findWorkspace(allUserWorkspaces, workspaceOneId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceOneId).getProjectId());
+        Assert.assertEquals(workspaceTwoId, findWorkspace(allUserWorkspaces, workspaceTwoId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceTwoId).getProjectId());
 
         Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces").request().get();
 
@@ -60,9 +66,10 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         {
         });
 
+        Assert.assertNotNull(allGroupWorkspaces);
         Assert.assertEquals(1, allGroupWorkspaces.size());
-        Assert.assertEquals("w3", findWorkspace(allGroupWorkspaces, "w3").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allGroupWorkspaces, "w3").getProjectId());
+        Assert.assertEquals(workspaceThreeId, findWorkspace(allGroupWorkspaces, workspaceThreeId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allGroupWorkspaces, workspaceThreeId).getProjectId());
 
         Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces").queryParam("includeUserWorkspaces", true).request().get();
 
@@ -75,13 +82,62 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         {
         });
 
+        Assert.assertNotNull(allUserAndGroupWorkspaces);
         Assert.assertEquals(3, allUserAndGroupWorkspaces.size());
-        Assert.assertEquals("w1", findWorkspace(allUserAndGroupWorkspaces, "w1").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allUserAndGroupWorkspaces, "w1").getProjectId());
-        Assert.assertEquals("w2", findWorkspace(allUserAndGroupWorkspaces, "w2").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allUserAndGroupWorkspaces, "w2").getProjectId());
-        Assert.assertEquals("w3", findWorkspace(allUserAndGroupWorkspaces, "w3").getWorkspaceId());
-        Assert.assertEquals("A", findWorkspace(allUserAndGroupWorkspaces, "w3").getProjectId());
+        Assert.assertEquals(workspaceOneId, findWorkspace(allUserAndGroupWorkspaces, workspaceOneId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allUserAndGroupWorkspaces, workspaceOneId).getProjectId());
+        Assert.assertEquals(workspaceTwoId, findWorkspace(allUserAndGroupWorkspaces, workspaceTwoId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allUserAndGroupWorkspaces, workspaceTwoId).getProjectId());
+        Assert.assertEquals(workspaceThreeId, findWorkspace(allUserAndGroupWorkspaces, workspaceThreeId).getWorkspaceId());
+        Assert.assertEquals(projectId, findWorkspace(allUserAndGroupWorkspaces, workspaceThreeId).getProjectId());
+    }
+
+    @Test
+    public void testGetUserWorkspace() throws HttpResponseException
+    {
+        String projectId = "A";
+        String workspaceId = "userw1";
+
+        this.backend.project(projectId).addWorkspace(workspaceId, false);
+
+        Response response = this.clientFor("/api/projects/A/workspaces/userw1").request().get();
+
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+
+        Workspace workspace = response.readEntity(new GenericType<Workspace>()
+        {
+        });
+
+        Assert.assertNotNull(workspace);
+        Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
+        Assert.assertEquals(projectId, workspace.getProjectId());
+    }
+
+    @Test
+    public void testGetGroupWorkspace() throws HttpResponseException
+    {
+        String projectId = "A";
+        String workspaceId = "groupw1";
+
+        this.backend.project(projectId).addWorkspace(workspaceId, true);
+
+        Response response = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().get();
+
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+
+        Workspace workspace = response.readEntity(new GenericType<Workspace>()
+        {
+        });
+
+        Assert.assertNotNull(workspace);
+        Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
+        Assert.assertEquals(projectId, workspace.getProjectId());
     }
 
     private Workspace findWorkspace(List<Workspace> workspaces, String workspaceId)
