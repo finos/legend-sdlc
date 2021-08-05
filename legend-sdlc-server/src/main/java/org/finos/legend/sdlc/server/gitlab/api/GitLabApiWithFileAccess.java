@@ -491,7 +491,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             else
             {
                 MutableList<String> canonicalPathsList = Lists.mutable.withAll(canonicalPaths);
-                if ((canonicalPathsList.size() == 1) && ProjectPaths.ROOT_DIRECTORY.equals(canonicalPathsList.get(0)))
+                if (canonicalPathsList.contains(ProjectPaths.ROOT_DIRECTORY))
                 {
                     this.paths = null;
                 }
