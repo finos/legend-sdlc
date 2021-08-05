@@ -60,6 +60,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         switch (workspaceAccessType)
         {
             case WORKSPACE:
+            case GROUP:
             {
                 return abstractInMemoryFileAccessContext;
             }
