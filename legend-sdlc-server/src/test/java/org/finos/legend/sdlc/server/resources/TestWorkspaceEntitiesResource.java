@@ -228,12 +228,14 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         {
             throw new HttpResponseException(responseThree.getStatus(), "Error during updating entity in group workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
         }
+
         Revision revision = responseThree.readEntity(new GenericType<Revision>()
         {
         });
 
         Assert.assertNotNull(revision);
-        Assert.assertNotNull(revision.getId());    }
+        Assert.assertNotNull(revision.getId());
+    }
 
     private Entity findEntity(List<Entity> entities, String entityName, String entityPackageName)
     {
