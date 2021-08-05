@@ -80,11 +80,11 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, null, null, null);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
-        String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
-        if (canonicalizedFilePath == null)
+        if (filePath == null)
         {
             throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in project " + projectId, Status.NOT_FOUND);
         }
+        String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
         return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, null, null, canonicalizedFilePath), new PackageablePathExceptionProcessor(entityPath, canonicalizedFilePath));
     }
 
@@ -150,11 +150,11 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
-        String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
-        if (canonicalizedFilePath == null)
+        if (filePath == null)
         {
             throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId, Status.NOT_FOUND);
         }
+        String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
         return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, canonicalizedFilePath), new PackageablePathExceptionProcessor(entityPath, canonicalizedFilePath));
     }
 

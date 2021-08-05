@@ -54,11 +54,15 @@ public class ProjectPaths
         {
             case 0:
             {
-                return ProjectPaths.ROOT_DIRECTORY;
+                throw new IllegalArgumentException("Invalid file path: " + path);
             }
             case 1:
             {
-                return ProjectPaths.ROOT_DIRECTORY.equals(path) ? ProjectPaths.ROOT_DIRECTORY : (PATH_SEPARATOR + path + PATH_SEPARATOR);
+                if (ProjectPaths.ROOT_DIRECTORY.equals(path))
+                {
+                    throw new IllegalArgumentException("Invalid file path: " + path);
+                }
+                return PATH_SEPARATOR + path;
             }
             default:
             {
