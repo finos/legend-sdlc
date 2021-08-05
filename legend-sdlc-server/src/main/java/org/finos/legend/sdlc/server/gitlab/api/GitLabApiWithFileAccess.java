@@ -480,23 +480,24 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         protected final GitLabProjectId projectId;
         protected final MutableList<String> paths;
 
-        AbstractGitLabRevisionAccessContext(GitLabProjectId projectId, Iterable<? extends String> paths)
+        // Either file or directory paths should already have been canonicalized at this point.
+        AbstractGitLabRevisionAccessContext(GitLabProjectId projectId, Iterable<? extends String> canonicalPaths)
         {
             this.projectId = projectId;
-            if (paths == null)
+            if (canonicalPaths == null)
             {
                 this.paths = null;
             }
             else
             {
-                MutableList<String> canonicalPaths = ProjectPaths.canonicalizeAndReduceDirectories(paths);
-                if ((canonicalPaths.size() == 1) && ProjectPaths.ROOT_DIRECTORY.equals(canonicalPaths.get(0)))
+                MutableList<String> canonicalPathsList = Lists.mutable.withAll(canonicalPaths);
+                if (canonicalPathsList.contains(ProjectPaths.ROOT_DIRECTORY))
                 {
                     this.paths = null;
                 }
                 else
                 {
-                    this.paths = canonicalPaths.collect(p -> p.substring(1));
+                    this.paths = canonicalPathsList.collect(p -> p.substring(1));
                 }
             }
         }

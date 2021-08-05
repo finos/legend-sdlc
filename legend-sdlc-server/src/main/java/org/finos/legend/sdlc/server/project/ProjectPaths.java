@@ -48,6 +48,29 @@ public class ProjectPaths
         }
     }
 
+    public static String canonicalizeFile(String path)
+    {
+        switch (path.length())
+        {
+            case 0:
+            {
+                throw new IllegalArgumentException("Invalid file path: " + path);
+            }
+            case 1:
+            {
+                if (ProjectPaths.ROOT_DIRECTORY.equals(path))
+                {
+                    throw new IllegalArgumentException("Invalid file path: " + path);
+                }
+                return PATH_SEPARATOR + path;
+            }
+            default:
+            {
+                return path.startsWith(PATH_SEPARATOR) ? path : (PATH_SEPARATOR + path);
+            }
+        }
+    }
+
     /**
      * Canonicalize and reduce a set of directories. In the resulting list, directory names are in a canonical form
      * (starting and ending with /), there are no duplicates, and no directory in the list is a sub-directory of any
