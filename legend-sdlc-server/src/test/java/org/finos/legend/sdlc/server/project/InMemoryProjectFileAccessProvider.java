@@ -45,18 +45,23 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     @Override
     public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
+        AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
+        {
+            @Override
+            protected SimpleInMemoryVCS getContextVCS()
+            {
+                return getVCS(projectId, workspaceId);
+            }
+        };
+        if (workspaceAccessType == null)
+        {
+            return abstractInMemoryFileAccessContext;
+        }
         switch (workspaceAccessType)
         {
             case WORKSPACE:
             {
-                return new AbstractInMemoryFileAccessContext(revisionId)
-                {
-                    @Override
-                    protected SimpleInMemoryVCS getContextVCS()
-                    {
-                        return getVCS(projectId, workspaceId);
-                    }
-                };
+                return abstractInMemoryFileAccessContext;
             }
             default:
             {
