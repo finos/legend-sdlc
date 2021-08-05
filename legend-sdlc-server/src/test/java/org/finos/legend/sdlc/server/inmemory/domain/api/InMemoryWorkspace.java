@@ -69,6 +69,12 @@ public class InMemoryWorkspace implements Workspace
     }
 
     @JsonIgnore
+    public Iterable<InMemoryRevision> getRevisions()
+    {
+        return this.revisions.values();
+    }
+
+    @JsonIgnore
     public InMemoryRevision getRevision(String revisionId)
     {
         return this.revisions.get(revisionId);

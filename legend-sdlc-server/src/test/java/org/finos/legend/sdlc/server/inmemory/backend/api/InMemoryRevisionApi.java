@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
@@ -102,7 +103,7 @@ public class InMemoryRevisionApi implements RevisionApi
             @Override
             public Revision getRevision(String revisionId)
             {
-                throw new UnsupportedOperationException("Not implemented");
+                return workspace.getRevision(revisionId);
             }
 
             @Override
@@ -120,7 +121,7 @@ public class InMemoryRevisionApi implements RevisionApi
             @Override
             public List<Revision> getRevisions(Predicate<? super Revision> predicate, Instant since, Instant until, Integer limit)
             {
-                throw new UnsupportedOperationException("Not implemented");
+                return Lists.mutable.withAll(workspace.getRevisions());
             }
         };
     }

@@ -22,14 +22,20 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.inmemory.backend.RevisionIdGenerator;
 
+import javax.inject.Inject;
 import java.time.Instant;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryRevision implements Revision
 {
-    private final InMemoryProjectConfiguration configuration;
+    private InMemoryProjectConfiguration configuration = null;
     private final MutableMap<String, Entity> entities = Maps.mutable.empty();
-    private final String revisionId;
+    private String revisionId = "";
+
+    @Inject
+    public InMemoryRevision()
+    {
+    }
 
     public InMemoryRevision(String context)
     {

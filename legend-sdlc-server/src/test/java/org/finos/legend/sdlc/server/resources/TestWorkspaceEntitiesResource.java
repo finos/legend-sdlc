@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.junit.Assert;
@@ -165,7 +166,16 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
 
         Response responseThree = this.clientFor("/api/projects/A/workspaces/entityw3/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
-        Assert.assertEquals("Error during updating entity in user workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class), 200, responseThree.getStatus());
+        if (responseThree.getStatus() != 200)
+        {
+            throw new HttpResponseException(responseThree.getStatus(), "Error during updating entity in user workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
+        }
+        Revision revision = responseThree.readEntity(new GenericType<Revision>()
+        {
+        });
+
+        Assert.assertNotNull(revision);
+        Assert.assertNotNull(revision.getId());
     }
 
     @Test
@@ -214,8 +224,16 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
 
         Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces/entityw4/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
-        Assert.assertEquals("Error during updating entity in group workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class), 200, responseThree.getStatus());
-    }
+        if (responseThree.getStatus() != 200)
+        {
+            throw new HttpResponseException(responseThree.getStatus(), "Error during updating entity in group workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
+        }
+        Revision revision = responseThree.readEntity(new GenericType<Revision>()
+        {
+        });
+
+        Assert.assertNotNull(revision);
+        Assert.assertNotNull(revision.getId());    }
 
     private Entity findEntity(List<Entity> entities, String entityName, String entityPackageName)
     {
