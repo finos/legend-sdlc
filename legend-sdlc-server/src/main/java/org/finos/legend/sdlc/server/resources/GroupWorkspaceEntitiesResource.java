@@ -80,7 +80,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @DELETE
-    @ApiOperation(value = "Delete multiple entities", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
+    @ApiOperation(value = "Delete multiple entities in a group workspace", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
     public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
     {
         List<String> entityPathsToDelete = command.getEntitiesToDelete();
@@ -96,7 +96,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @POST
-    @ApiOperation(value = "Update entities", notes = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
+    @ApiOperation(value = "Update entities in a group workspace", notes = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
     public Revision updateEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateEntitiesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
@@ -109,7 +109,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the workspace by its path")
+    @ApiOperation("Get an entity of the group workspace by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
@@ -120,7 +120,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @POST
     @Path("{path}")
-    @ApiOperation("Create a new entity or update an existing entity")
+    @ApiOperation("Create a new entity or update an existing entity in a group workspace")
     public Revision createOrUpdateEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, CreateOrUpdateEntityCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
@@ -132,7 +132,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @DELETE
     @Path("{path}")
-    @ApiOperation("Delete an entity")
+    @ApiOperation("Delete an entity in a group workspace")
     public Revision deleteEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, DeleteEntityCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");

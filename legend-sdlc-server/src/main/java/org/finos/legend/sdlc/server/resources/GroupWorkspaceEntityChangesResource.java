@@ -44,7 +44,7 @@ public class GroupWorkspaceEntityChangesResource extends BaseResource
     }
 
     @POST
-    @ApiOperation("Perform entity changes")
+    @ApiOperation("Perform entity changes in a group workspace")
     public Revision performEntityChanges(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to perform entity changes");

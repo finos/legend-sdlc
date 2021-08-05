@@ -51,7 +51,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get jobs for a workflow", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get jobs for a workflow in a group workspace", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
                                              @PathParam("workspaceId") String workspaceId,
                                              @PathParam("workflowId") String workflowId,
@@ -65,7 +65,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}")
-    @ApiOperation("Get a workflow job")
+    @ApiOperation("Get a workflow job in a group workspace")
     public WorkflowJob getWorkflowJob(@PathParam("projectId") String projectId,
                                       @PathParam("workspaceId") String workspaceId,
                                       @PathParam("workflowId") String workflowId,

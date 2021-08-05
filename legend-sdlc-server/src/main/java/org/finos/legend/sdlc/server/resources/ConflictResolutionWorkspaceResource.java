@@ -74,7 +74,7 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     }
 
     @DELETE
-    @ApiOperation("Discard a conflict resolution")
+    @ApiOperation("Discard a conflict resolution for a user workspace")
     public void discardConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -87,7 +87,7 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("discardChanges")
-    @ApiOperation("Discard all conflict resolution changes")
+    @ApiOperation("Discard all conflict resolution changes for a user workspace")
     public void discardChangesConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -100,7 +100,7 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("accept")
-    @ApiOperation("Accept a conflict resolution")
+    @ApiOperation("Accept a conflict resolution for a user workspace")
     public void acceptConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");
