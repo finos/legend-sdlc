@@ -21,7 +21,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
-import org.finos.legend.engine.language.pure.compiler.toPureGraph.ConnectionBuilder;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.ConnectionFirstPassBuilder;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.HelperValueSpecificationBuilder;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.execution.PlanExecutor;
@@ -87,8 +87,8 @@ public abstract class LegendPureV1TestCase<T extends PackageableElement> extends
     {
         // Initialize runtime
         Runtime newRuntime = new Root_meta_pure_runtime_Runtime_Impl("");
-        ConnectionVisitor<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Connection> connectionVisitor = new ConnectionBuilder(this.pureModel.getContext());
-        setUpTestData(conn -> newRuntime._connectionsAdd(conn.accept(connectionVisitor)));
+        ConnectionVisitor<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Connection> connectionVisitor1 = new ConnectionFirstPassBuilder(this.pureModel.getContext());
+        setUpTestData(conn -> newRuntime._connectionsAdd(conn.accept(connectionVisitor1)));
         this.runtime = newRuntime;
     }
 
