@@ -65,9 +65,9 @@
         <maven.compiler.release>8</maven.compiler.release>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>2.38.0</legend.engine.version>
-        <legend.pure.version>1.32.0</legend.pure.version>
-        <legend.shared.version>0.14.0</legend.shared.version>
+        <legend.engine.version>2.39.0</legend.engine.version>
+        <legend.pure.version>1.33.0</legend.pure.version>
+        <legend.shared.version>0.15.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
