@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -102,6 +103,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 {
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
+    protected ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
@@ -119,6 +121,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
+        binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
 
         bindResources(binder);
         bindFilters(binder);
@@ -216,6 +219,24 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
         return (projectStructureConfiguration == null) ? ProjectStructureConfiguration.emptyConfiguration() : projectStructureConfiguration;
+    }
+
+    private ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions()
+    {
+        if (this.projectStructurePlatformExtensions == null)
+        {
+            this.projectStructurePlatformExtensions = buildProjectStructurePlatformExtensions();
+        }
+        return this.projectStructurePlatformExtensions;
+    }
+
+    private ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
+    {
+        if (this.getProjectStructureConfiguration().getProjectPlatformsConfiguration() == null)
+        {
+            return null;
+        }
+        return this.getProjectStructureConfiguration().getProjectPlatformsConfiguration().buildProjectStructurePlatformExtensions();
     }
 
     private ProjectStructureExtensionProvider getProjectStructureExtensionProvider()

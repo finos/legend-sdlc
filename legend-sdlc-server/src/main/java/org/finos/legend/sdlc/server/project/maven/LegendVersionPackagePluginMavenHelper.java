@@ -20,7 +20,6 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -32,25 +31,12 @@ public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPl
 
     public LegendVersionPackagePluginMavenHelper(String groupId, String artifactId,  String version, List<String> entitySourceDirectories, String outputDirectory)
     {
-        super(groupId, artifactId, version, "compile", "version-qualify-packages");
+        super(groupId, artifactId, version, "compile", "version-qualify-packages", null);
         this.entitySourceDirectories = entitySourceDirectories;
         this.outputDirectory = outputDirectory;
     }
 
-    public LegendVersionPackagePluginMavenHelper(String groupId, String artifactId, String version, String entitySourceDirectory)
-    {
-        this(groupId, artifactId, version, Collections.singletonList(entitySourceDirectory), null);
-    }
 
-    public LegendVersionPackagePluginMavenHelper(String version, List<String> entitySourceDirectories, String outputDirectory)
-    {
-        this("org.finos.legend.sdlc", "legend-sdlc-version-package-maven-plugin", version, entitySourceDirectories, outputDirectory);
-    }
-
-    public LegendVersionPackagePluginMavenHelper(String version, String entitySourceDirectory)
-    {
-        this(version, Collections.singletonList(entitySourceDirectory), null);
-    }
 
     @Override
     protected void configurePlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Xpp3Dom> configConsumer)
@@ -69,6 +55,7 @@ public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPl
     @Override
     protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
     {
+        super.addDependencies(projectStructure, versionFileAccessContextProvider, dependencyConsumer);
         projectStructure.getProjectDependenciesAsMavenDependencies(ArtifactType.versioned_entities, versionFileAccessContextProvider, true).forEach(dependencyConsumer);
     }
 }
