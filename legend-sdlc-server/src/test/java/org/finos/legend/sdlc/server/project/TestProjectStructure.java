@@ -21,6 +21,8 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
@@ -72,6 +74,23 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected int projectStructureVersion;
     protected Integer projectStructureExtensionVersion;
     protected ProjectStructureExtensionProvider projectStructureExtensionProvider;
+    protected final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
+
+
+    protected final ImmutableIntSet unpublishedVersion;
+
+    public TestProjectStructure(ImmutableIntSet unpublishedVersion, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    {
+        this.unpublishedVersion = unpublishedVersion;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
+    }
+
+
+    public TestProjectStructure()
+    {
+        this(IntSets.immutable.with(1,2,3,4,5,6,7,8,9,10), null);
+    }
+
 
     @Before
     public void setUp()
@@ -210,6 +229,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withGroupId(GROUP_ID_2)
                 .withArtifactId(ARTIFACT_ID_2)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, workspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
@@ -317,6 +337,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("Add dependencies")
                 .withProjectDependenciesToAdd(projectDependencies)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addDependenciesWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
@@ -347,6 +368,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("No change to dependencies")
                 .withGroupId("temp.group.id")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         Assert.assertNotNull(newRevision);
         ProjectConfiguration noChangeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, noChangeWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -379,6 +401,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Remove dependencies")
                     .withProjectDependenciesToRemove(Collections.singletonList(projectDependencies.get(i)))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             ProjectConfiguration afterRemovalWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, removeDependencyWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             Assert.assertEquals(PROJECT_ID, afterRemovalWorkspaceConfig.getProjectId());
@@ -467,6 +490,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("Add dependencies")
                 .withMetamodelDependenciesToAdd(metamodelDependencies)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addDependenciesWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
@@ -497,6 +521,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("No change to dependencies")
                 .withGroupId("temp.group.id")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         Assert.assertNotNull(newRevision);
         ProjectConfiguration noChangeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, noChangeWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -529,6 +554,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Remove dependencies")
                     .withMetamodelDependenciesToRemove(Collections.singletonList(metamodelDependencies.get(i)))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             ProjectConfiguration afterRemovalWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, removeDependencyWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             Assert.assertEquals(PROJECT_ID, afterRemovalWorkspaceConfig.getProjectId());
@@ -582,6 +608,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (this.unpublishedVersion.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();
@@ -609,6 +640,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withProjectStructureVersion(this.projectStructureVersion)
                     .withProjectStructureExtensionVersion(this.projectStructureExtensionVersion)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             assertStateValid(PROJECT_ID, workspaceId, null);
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
@@ -645,6 +677,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<Entity> testEntities = getTestEntities();
         for (int i = 0; i < this.projectStructureVersion; i++)
         {
+            if (unpublishedVersion.contains(i))
+            {
+                continue;
+            }
+
             if (i > 0)
             {
                 this.fileAccessProvider = newProjectFileAccessProvider();
@@ -672,6 +709,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withGroupId(GROUP_ID_2)
                     .withArtifactId(ARTIFACT_ID_2)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             assertStateValid(PROJECT_ID, workspaceId, null);
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
@@ -714,6 +752,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withWorkspace(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                 .withMessage("Vacuous update")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         Assert.assertNull(revision2);
         Assert.assertEquals(revision, this.fileAccessProvider.getWorkspaceRevisionAccessContext(PROJECT_ID, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getCurrentRevision());
@@ -727,6 +766,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withGroupId(GROUP_ID)
                 .withArtifactId(ARTIFACT_ID)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         Assert.assertNull(revision3);
         Assert.assertEquals(revision, this.fileAccessProvider.getWorkspaceRevisionAccessContext(PROJECT_ID, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getCurrentRevision());
@@ -948,6 +988,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withGroupId(groupId)
                 .withArtifactId(artifactId)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .buildProjectStructure();
         this.fileAccessProvider.commitWorkspace(projectId, workspaceId);
         return ProjectStructure.getProjectStructure(projectId, null, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1035,6 +1076,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("Add generation")
                 .withArtifactGenerationsToAdd(generations)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
 
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addGenerationsWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1065,6 +1107,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("No change to generation")
                 .withGroupId("temp.group.id")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         Assert.assertNotNull(newRevision);
         ProjectConfiguration noChangeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, noChangeWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1097,6 +1140,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Remove generations")
                     .withArtifactGenerationsToRemove(Collections.singletonList(generations.get(i).getName()))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             ProjectConfiguration afterRemovalWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, removeDependencyWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
             Assert.assertEquals(PROJECT_ID, afterRemovalWorkspaceConfig.getProjectId());
@@ -1204,6 +1248,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("Add generation multiple same types")
                 .withArtifactGenerationsToAdd(generations)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
 
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addGenerationsWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1278,6 +1323,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.entities).withName("invalid"))
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.versioned_entities).withName("invalid2"))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             Assert.fail();
         }
@@ -1299,6 +1345,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Add duplicate generations")
                     .withArtifactGenerationsToAdd(Arrays.asList(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup"), new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup").withParameters(params)))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             Assert.fail();
         }
@@ -1319,6 +1366,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("same"))
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.java).withName("same"))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             Assert.fail();
         }
@@ -1335,6 +1383,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup"))
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup"))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             Assert.fail();
         }
@@ -1348,6 +1397,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withMessage("Add a names generations")
                 .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup"))
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
         try
         {
@@ -1356,6 +1406,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Add a duplicate name")
                     .withArtifactGenerationToAdd(new SimpleArtifactGeneration().withType(ArtifactType.avro).withName("dup").withParameters(params))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
             Assert.fail();
         }
@@ -1429,6 +1480,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                     .withMessage("Add multi generation")
                     .withProjectDependenciesToAdd(projectDependencies)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
 
             ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addGenerationsWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
@@ -1467,6 +1519,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withWorkspace(addGenerationsWorkspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                 .withArtifactGenerationsToAdd(generations)
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
 
         ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, addGenerationsWorkspaceId, null, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);

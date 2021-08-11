@@ -21,7 +21,8 @@ public abstract class ProjectStructureVersionFactory
 {
     public abstract int getVersion();
 
-    public final ProjectStructure newProjectStructure(ProjectConfiguration projectConfiguration)
+
+    public final ProjectStructure newProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         if (projectConfiguration != null)
         {
@@ -39,12 +40,12 @@ public abstract class ProjectStructureVersionFactory
         {
             throw new IllegalArgumentException("ProjectConfiguration is null");
         }
-        ProjectStructure projectStructure = createProjectStructure(projectConfiguration);
+        ProjectStructure projectStructure = createProjectStructure(projectConfiguration, projectStructurePlatformExtensions);
         projectStructure.validate();
         return projectStructure;
     }
 
-    protected abstract ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration);
+    protected abstract ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions);
 
     protected boolean isNullProjectConfigurationAllowed()
     {

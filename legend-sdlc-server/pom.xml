@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.finos.legend.sdlc</groupId>
         <artifactId>legend-sdlc</artifactId>
-        <version>0.44.1-SNAPSHOT</version>
+        <version>0.45.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -89,7 +89,20 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server-shared</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <!-- SDLC -->
+
+        <!-- ENGINE -->
+        <dependency>
+            <groupId>org.finos.legend.engine</groupId>
+            <artifactId>legend-engine-extensions-collection-generation</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- ENGINE -->
 
         <!-- SHARED -->
         <dependency>

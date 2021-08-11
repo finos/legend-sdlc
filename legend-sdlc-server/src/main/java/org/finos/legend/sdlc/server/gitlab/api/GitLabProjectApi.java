@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
@@ -74,15 +75,17 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     private final ProjectStructureConfiguration projectStructureConfig;
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
     private final GitLabConfiguration gitLabConfiguration;
+    private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     @Inject
-    public GitLabProjectApi(GitLabConfiguration gitLabConfig, GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, GitLabConfiguration gitLabConfiguration, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabProjectApi(GitLabConfiguration gitLabConfig, GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, GitLabConfiguration gitLabConfiguration, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         super(userContext, backgroundTaskProcessor);
         this.gitLabConfig = gitLabConfig;
         this.projectStructureConfig = projectStructureConfig;
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
         this.gitLabConfiguration = gitLabConfiguration;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
     }
 
     @Override
@@ -221,6 +224,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withArtifactId(artifactId)
                     .withProjectStructureVersion(getDefaultProjectStructureVersion())
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .buildProjectStructure();
 
             return fromGitLabProject(gitLabProject, mode);
@@ -305,7 +309,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withWorkspace(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId)
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider);
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
             int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
             if (currentConfig == null)
             {

@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.apache.maven.model.Build;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.DependencyManagement;
+import org.apache.maven.model.Exclusion;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginManagement;
@@ -280,6 +281,14 @@ public abstract class MavenProjectStructure extends ProjectStructure
         String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
         Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
         return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
+    }
+
+    public static Exclusion newMavenExclusion(String groupId, String artifactId)
+    {
+        Exclusion exclusion = new Exclusion();
+        exclusion.setGroupId(groupId);
+        exclusion.setArtifactId(artifactId);
+        return exclusion;
     }
 
     public static Dependency newMavenDependency(String groupId, String artifactId, String version)

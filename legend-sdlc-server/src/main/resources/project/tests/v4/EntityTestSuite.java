@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc;
 
-import org.finos.legend.sdlc.test.junit.LegendSDLCTestSuiteBuilder;
 import junit.framework.TestSuite;
+import org.finos.legend.sdlc.test.junit.LegendSDLCTestSuiteBuilder;
 
 import java.nio.file.Paths;
 

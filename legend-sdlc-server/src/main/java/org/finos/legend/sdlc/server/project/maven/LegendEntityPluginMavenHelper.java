@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.project.maven;
 
+import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -28,14 +29,9 @@ import java.util.function.Consumer;
 public class LegendEntityPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
 
-    public LegendEntityPluginMavenHelper(String groupId, String artifactId, String version)
+    public LegendEntityPluginMavenHelper(String groupId, String artifactId, String version, List<Dependency> extensionsCollections)
     {
-        super(groupId, artifactId, version, "compile", "process-entities");
-    }
-
-    public LegendEntityPluginMavenHelper(String version)
-    {
-        this("org.finos.legend.sdlc", "legend-sdlc-entity-maven-plugin", version);
+        super(groupId, artifactId, version, "compile", "process-entities", extensionsCollections);
     }
 
     @Override
