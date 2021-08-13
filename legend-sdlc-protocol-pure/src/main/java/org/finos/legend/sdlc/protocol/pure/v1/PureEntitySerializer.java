@@ -155,7 +155,7 @@ public class PureEntitySerializer implements EntityTextSerializer
 
     private PackageableElement deserializeToElement(String content)
     {
-        PureModelContextData pureModelContextData = this.pureParser.parseModel(content);
+        PureModelContextData pureModelContextData = this.pureParser.parseModel(content, false);
         List<PackageableElement> elements = pureModelContextData.getElements();
         switch (elements.size())
         {

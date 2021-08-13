@@ -139,7 +139,7 @@ public class TestPureEntitySerializer
         assertTextEquivalent(pureCode, this.pureSerializer.serializeToString(fullEntity));
         Assert.assertTrue(this.pureSerializer.canSerialize(reducedEntity));
         assertTextEquivalent(pureCode, this.pureSerializer.serializeToString(reducedEntity));
-        assertEntitiesEqual(fullEntity, this.pureSerializer.deserialize(pureCode));
+        assertEntitiesEqual(reducedEntity, this.pureSerializer.deserialize(pureCode));
     }
 
     private void testPureSyntaxError(String expectedErrorMessage, String... names)

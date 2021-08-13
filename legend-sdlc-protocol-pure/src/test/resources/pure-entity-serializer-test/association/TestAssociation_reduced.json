@@ -1,31 +1,33 @@
 {
-  "classifierPath": "meta::pure::metamodel::relationship::Association",
-  "content": {
-    "_type": "association",
-    "name": "TestAssociation",
-    "package": "model::domain",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 0
-        },
-        "name": "employees",
-        "type": "model::domain::Person"
+  "classifierPath" : "meta::pure::metamodel::relationship::Association",
+  "content" : {
+    "_type" : "association",
+    "name" : "TestAssociation",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain",
+    "properties" : [ {
+      "multiplicity" : {
+        "lowerBound" : 0
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
-        },
-        "name": "employer",
-        "type": "model::domain::Firm"
-      }
-    ],
-    "stereotypes": [
-      {
-        "profile": "model::domain::TestProfile",
-        "value": "stereotype1"
-      }
-    ]
+      "name" : "employees",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "type" : "model::domain::Person"
+    }, {
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "employer",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ],
+      "type" : "model::domain::Firm"
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ {
+      "profile" : "model::domain::TestProfile",
+      "value" : "stereotype1"
+    } ],
+    "taggedValues" : [ ]
   }
 }
