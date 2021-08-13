@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<GitlabPersonalAccessTokenProfile> implements GitLabSession
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOidcSession.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabPersonalAccessTokenSession.class);
 
     private final GitLabTokenManager tokenManager;
 
