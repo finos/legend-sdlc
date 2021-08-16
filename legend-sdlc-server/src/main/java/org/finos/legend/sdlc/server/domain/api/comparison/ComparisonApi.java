@@ -55,9 +55,9 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the creation of the workspace
      * to the current revision of the workspace
      *
-     * @param projectId   project id
-     * @param workspaceId workspace id
-     * @param isGroupWorkspace workspace type
+     * @param projectId     project id
+     * @param workspaceId   workspace id
+     * @param workspaceType workspace type
      * @return comparison between workspace HEAD and BASE
      */
     Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
@@ -98,9 +98,9 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the current revision of the
      * project to the current revision of the workspace
      *
-     * @param projectId   project id
-     * @param workspaceId workspace id
-     * @param isGroupWorkspace workspace type
+     * @param projectId     project id
+     * @param workspaceId   workspace id
+     * @param workspaceType workspace type
      * @return comparison between workspace HEAD and project HEAD
      */
     Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
