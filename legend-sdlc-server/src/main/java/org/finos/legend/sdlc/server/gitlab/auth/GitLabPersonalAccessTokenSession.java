@@ -126,7 +126,7 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
             LOGGER.debug("initializing with GitlabPersonalAccessTokenProfile: {}", profile);
             String token = profile.getPersonalAccessToken();
 
-            if (token != null && profile.getGitlabHost() != null && tokenManager.isValidMode(GitLabMode.PROD))
+            if (token != null && profile.getGitlabHost() != null)
             {
                 tokenManager.getValidModes()
                         .stream()
