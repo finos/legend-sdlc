@@ -45,27 +45,27 @@ public class WorkspaceRevisionProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a workspace at a revision")
+    @ApiOperation("Get the configuration for a revision of a project in a user workspace at a revision")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("workspaceId") String workspaceId,
                                                                          @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in workspace " + workspaceId + " at revision " + revisionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
+                "getting project " + projectId + " configuration in user workspace " + workspaceId + " at revision " + revisionId,
+                () -> this.projectConfigurationApi.getUserWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
         );
     }
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in a workspace at a revision")
+    @ApiOperation("Get the available generation types of a project in a user workspace at a revision")
     public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGeneration(@PathParam("projectId") String projectId,
                                                                                            @PathParam("workspaceId") String workspaceId,
                                                                                            @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " available generations in workspace " + workspaceId + " at revision " + revisionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, revisionId)
+                "getting project " + projectId + " available generations in user workspace " + workspaceId + " at revision " + revisionId,
+                () -> this.projectConfigurationApi.getUserWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, revisionId)
         );
     }
 }

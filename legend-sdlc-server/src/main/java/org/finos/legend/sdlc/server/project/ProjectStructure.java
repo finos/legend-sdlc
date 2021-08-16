@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -307,9 +308,9 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
     }
 
-    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }
 
     public static ProjectStructure getProjectStructure(FileAccessContext fileAccessContext)
@@ -328,9 +329,9 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration, projectStructurePlatformExtensions);
     }
 
-    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId, ProjectFileAccessProvider projectFileAccessProvider)
@@ -386,6 +387,7 @@ public abstract class ProjectStructure
     {
         ProjectFileAccessProvider projectFileAccessProvider = CachingProjectFileAccessProvider.wrap(updateBuilder.getProjectFileAccessProvider());
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = updateBuilder.getWorkspaceAccessType();
+        WorkspaceType workspaceType = updateBuilder.getWorkspaceType();
 
         if (updateBuilder.hasGroupId() && !isValidGroupId(updateBuilder.getGroupId()))
         {
@@ -404,7 +406,7 @@ public abstract class ProjectStructure
         // if revisionId not specified, get the current revision
         if (revisionId == null)
         {
-            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType).getCurrentRevision();
+            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType).getCurrentRevision();
             if (currentRevision != null)
             {
                 revisionId = currentRevision.getId();
@@ -414,7 +416,7 @@ public abstract class ProjectStructure
                 StringBuilder builder = new StringBuilder("Could not find current revision for ");
                 if (workspaceId != null)
                 {
-                    builder.append(workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
+                    builder.append(workspaceType.getLabel() + " " + workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
                 }
                 builder.append("project ").append(projectId).append(": it may be corrupt");
                 throw new LegendSDLCServerException(builder.toString());
@@ -422,7 +424,7 @@ public abstract class ProjectStructure
         }
 
         // find out what we need to update for project structure
-        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId, projectType) : readProjectConfiguration(configFile);
         if (projectType != currentConfig.getProjectType())
@@ -713,7 +715,7 @@ public abstract class ProjectStructure
         }
 
         // Submit changes
-        return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
+        return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
     }
 
 

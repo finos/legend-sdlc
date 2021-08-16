@@ -47,7 +47,7 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @GET
-    @ApiOperation("Get entities of the backup workspace")
+    @ApiOperation("Get entities of the backup user workspace")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
@@ -65,19 +65,19 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entities in backup workspace " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in backup user workspace " + workspaceId + " for project " + projectId,
+                () -> getEntities(this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the backup workspace by its path")
+    @ApiOperation("Get an entity of the backup user workspace by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
-                "getting entity " + path + " in backup workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+                "getting entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 }

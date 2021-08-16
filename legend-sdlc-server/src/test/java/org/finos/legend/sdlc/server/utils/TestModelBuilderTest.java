@@ -118,7 +118,7 @@ public class TestModelBuilderTest
         // entity b1 not found in ws1
         try
         {
-            this.backend.getEntityApi().getWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
+            this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
             Assert.fail("Failed to get entity not found exception");
         }
         catch (IllegalStateException e)
@@ -170,7 +170,7 @@ public class TestModelBuilderTest
         this.backend.project("B")
                 .addEntities("w1", TestTools.newClassEntity("b1", "B", Collections.singletonList(TestTools.newProperty("prop1", "Integer", 1, 100))));
 
-        Entity entityB1InWorkspace = this.backend.getEntityApi().getWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
+        Entity entityB1InWorkspace = this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
 
         Assert.assertNotEquals("Version of the entity B::b1 in 1.0.0 is the same as in workspace ws1", entityB1InVersion1.getContent(), entityB1InWorkspace.getContent());
 
@@ -433,7 +433,7 @@ public class TestModelBuilderTest
 
     private String revisionId(String projectId, String workspaceId)
     {
-        return this.backend.getRevisionApi().getWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId)

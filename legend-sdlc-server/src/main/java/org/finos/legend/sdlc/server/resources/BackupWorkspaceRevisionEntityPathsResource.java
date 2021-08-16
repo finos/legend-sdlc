@@ -46,7 +46,7 @@ public class BackupWorkspaceRevisionEntityPathsResource extends EntityAccessReso
     }
 
     @GET
-    @ApiOperation("Get entity paths of the backup workspace at the revision")
+    @ApiOperation("Get entity paths of the backup user workspace at the revision")
     public List<String> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
@@ -65,8 +65,8 @@ public class BackupWorkspaceRevisionEntityPathsResource extends EntityAccessReso
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entity paths in revision " + revisionId + " of backup workspace " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entity paths in revision " + revisionId + " of backup user workspace " + workspaceId + " for project " + projectId,
+                () -> getEntityPaths(this.entityApi.getBackupUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

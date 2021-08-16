@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.maven.LegendTestUtilsMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
@@ -74,7 +75,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected void assertStateValid(T projectStructure, String projectId, String workspaceId, String revisionId)
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
         Model entitiesMavenModel = projectStructure.getModuleMavenModel(projectStructure.getEntitiesModuleName(), fileAccessContext);
         Assert.assertNotNull(projectStructure.getEntitiesModuleName(), entitiesMavenModel);
         assertMavenEntitiesModelValid(entitiesMavenModel, projectStructure);

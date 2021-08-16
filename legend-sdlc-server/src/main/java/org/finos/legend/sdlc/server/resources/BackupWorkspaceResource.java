@@ -49,12 +49,12 @@ public class BackupWorkspaceResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get a backup workspace by id")
+    @ApiOperation("Get a backup user workspace by id")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting backup workspace " + workspaceId + " for project " + projectId,
-                this.workspaceApi::getBackupWorkspace,
+                "getting backup user workspace " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getBackupUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -62,24 +62,24 @@ public class BackupWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a backup workspace is outdated")
+    @ApiOperation("Check if a backup user workspace is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if backup workspace " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isBackupWorkspaceOutdated,
+                "checking if backup user workspace " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isBackupUserWorkspaceOutdated,
                 projectId,
                 workspaceId
         );
     }
 
     @DELETE
-    @ApiOperation("Discard a backup workspace")
+    @ApiOperation("Discard a backup user workspace")
     public void discardBackup(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding backup workspace " + workspaceId + " in project " + projectId,
-                this.backupApi::discardBackupWorkspace,
+                "discarding backup user workspace " + workspaceId + " in project " + projectId,
+                this.backupApi::discardBackupUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -87,14 +87,14 @@ public class BackupWorkspaceResource extends BaseResource
 
     @POST
     @Path("recover")
-    @ApiOperation("Recover the workspace from backup")
+    @ApiOperation("Recover the user workspace from backup")
     public void recoverBackup(@PathParam("projectId") String projectId,
                               @PathParam("workspaceId") String workspaceId,
                               @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
     {
         executeWithLogging(
-                forceRecovery ? "force " : "" + "recovering workspace " + workspaceId + " from backup in project " + projectId,
-                () -> this.backupApi.recoverBackup(projectId, workspaceId, forceRecovery)
+                forceRecovery ? "force " : "" + "recovering user workspace " + workspaceId + " from backup in project " + projectId,
+                () -> this.backupApi.recoverBackupUserWorkspace(projectId, workspaceId, forceRecovery)
         );
     }
 }

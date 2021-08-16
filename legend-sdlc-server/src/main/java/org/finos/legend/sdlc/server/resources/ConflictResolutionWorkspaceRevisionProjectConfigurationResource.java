@@ -43,14 +43,14 @@ public class ConflictResolutionWorkspaceRevisionProjectConfigurationResource ext
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a workspace with conflict resolution at a revision")
+    @ApiOperation("Get the configuration for a revision of a project in a user workspace with conflict resolution at a revision")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("workspaceId") String workspaceId,
                                                                          @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in workspace with conflict resolution " + workspaceId + " at revision " + revisionId,
-                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, revisionId)
+                "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId + " at revision " + revisionId,
+                () -> this.projectConfigurationApi.getUserWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, revisionId)
         );
     }
 }

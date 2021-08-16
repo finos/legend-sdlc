@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -35,7 +36,7 @@ public class InMemoryBuildApi implements BuildApi
     }
 
     @Override
-    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

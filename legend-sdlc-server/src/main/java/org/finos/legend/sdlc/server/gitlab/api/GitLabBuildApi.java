@@ -18,6 +18,7 @@ import org.finos.legend.sdlc.domain.model.build.Build;
 import org.finos.legend.sdlc.domain.model.build.BuildStatus;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -28,7 +29,6 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.PipelineApi;
-import org.gitlab4j.api.models.Job;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
@@ -79,7 +79,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     }
 
     @Override
-    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -88,7 +88,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceAccessType);
+                return getBranchName(workspaceId, workspaceType, workspaceAccessType);
             }
 
             @Override
@@ -100,7 +100,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceAccessType);
+                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
             }
         };
     }

@@ -56,21 +56,21 @@ public class BackupWorkspaceRevisionsResource extends BaseResource
                                        @QueryParam("limit") Integer limit)
     {
         return executeWithLogging(
-                "getting revision for backup workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for user backup workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the backup workspace")
+    @ApiOperation("Get a revision of the backup user workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for backup workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                "getting revision " + revisionId + " for backup user workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
         );
     }
 }

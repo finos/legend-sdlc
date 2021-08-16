@@ -112,7 +112,7 @@ public class ReviewsResource extends BaseResource
         return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), command.getTitle(), command.getDescription())
+                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), command.getWorkspaceType(), command.getTitle(), command.getDescription())
         );
     }
 

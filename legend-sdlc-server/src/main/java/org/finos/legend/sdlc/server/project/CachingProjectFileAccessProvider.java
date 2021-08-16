@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 import java.util.Map;
 import java.util.Objects;
@@ -33,11 +34,11 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         if (revisionId == null)
         {
-            return this.delegate.getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
+            return this.delegate.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, null);
         }
 
         CacheKey cacheKey = getCacheKey(projectId, workspaceId, revisionId);
@@ -46,7 +47,7 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
             CachingFileAccessContext fileAccessContext = this.cache.get(cacheKey);
             if (fileAccessContext == null)
             {
-                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId));
+                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
                 if (fileAccessContext != null)
                 {
                     this.cache.put(cacheKey, fileAccessContext);
@@ -78,15 +79,15 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String path)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
     {
-        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, path);
+        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, path);
     }
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
     {
-        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, paths);
+        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, paths);
     }
 
     @Override
@@ -104,9 +105,9 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // File Modification Access Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
-        return this.delegate.getFileModificationContext(projectId, workspaceId, workspaceAccessType, revisionId);
+        return this.delegate.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
     public void clearCache()

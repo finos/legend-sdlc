@@ -56,21 +56,21 @@ public class ConflictResolutionWorkspaceRevisionsResource extends BaseResource
                                        @QueryParam("limit") Integer limit)
     {
         return executeWithLogging(
-                "getting revision for workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the workspace with conflict resolution")
+    @ApiOperation("Get a revision of the user workspace with conflict resolution")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                "getting revision " + revisionId + " for user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevision(revisionId)
         );
     }
 }

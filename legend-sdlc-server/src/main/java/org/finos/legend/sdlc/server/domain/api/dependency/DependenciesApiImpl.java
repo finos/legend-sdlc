@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
@@ -43,9 +44,9 @@ public class DependenciesApiImpl implements DependenciesApi
     }
 
     @Override
-    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, workspaceType, revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 

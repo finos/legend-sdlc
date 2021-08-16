@@ -49,8 +49,8 @@ public class WorkspaceEntityChangesResource extends BaseResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to perform entity changes");
         return executeWithLogging(
-                "performing changes in workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
+                "performing changes in user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }
 }

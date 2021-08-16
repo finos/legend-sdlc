@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
@@ -89,6 +90,18 @@ public class InMemoryBackend
             this.backend = backend;
         }
 
+        public void addWorkspace(String workspaceId, WorkspaceType workspaceType)
+        {
+            if (workspaceType == WorkspaceType.GROUP)
+            {
+                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision());
+            }
+            else
+            {
+                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+            }
+        }
+
         public void addVersionedEntities(String versionId, List<Entity> entities)
         {
             InMemoryRevision newRevision = new InMemoryRevision(this.project.getProjectId(), this.project.getCurrentRevision());
@@ -110,13 +123,23 @@ public class InMemoryBackend
 
         private void addEntities(String workspaceId, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addEntities(workspaceId, WorkspaceType.USER, entities);
+        }
+
+        private void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities)
+        {
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
             workspace.getCurrentRevision().addEntities(entities);
         }
 
         public void addEntities(String workspaceId, Entity... entityList)
         {
             this.addEntities(workspaceId, Arrays.asList(entityList));
+        }
+
+        public void addEntities(String workspaceId, WorkspaceType workspaceType, Entity... entityList)
+        {
+            this.addEntities(workspaceId, workspaceType, Arrays.asList(entityList));
         }
 
         public void removeEntities(String workspaceId, Entity... entityList)
@@ -126,13 +149,23 @@ public class InMemoryBackend
 
         private void removeEntities(String workspaceId, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.removeEntities(workspaceId, WorkspaceType.USER, entities);
+        }
+
+        private void removeEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities)
+        {
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
             workspace.getCurrentRevision().removeEntities(entities);
         }
 
         public void addProjectDependency(String workspaceId, String... projectDependencies)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addProjectDependency(workspaceId, WorkspaceType.USER, projectDependencies);
+        }
+
+        public void addProjectDependency(String workspaceId, WorkspaceType workspaceType, String... projectDependencies)
+        {
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
             for (String dependencyString : projectDependencies)
@@ -145,7 +178,12 @@ public class InMemoryBackend
 
         public void removeProjectDependency(String workspaceId, String... projectDependencies)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.removeProjectDependency(workspaceId, WorkspaceType.USER, projectDependencies);
+        }
+
+        public void removeProjectDependency(String workspaceId, WorkspaceType workspaceType, String... projectDependencies)
+        {
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
             for (String dependencyString : projectDependencies)
@@ -158,7 +196,12 @@ public class InMemoryBackend
 
         public void updateProjectDependency(String workspaceId, String oldDependency, String newDependency)
         {
-            InMemoryWorkspace workspace = this.project.addNewWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.updateProjectDependency(workspaceId, WorkspaceType.USER, oldDependency, newDependency);
+        }
+
+        public void updateProjectDependency(String workspaceId, WorkspaceType workspaceType, String oldDependency, String newDependency)
+        {
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
 
             InMemoryRevision newRevision = new InMemoryRevision(workspaceId, workspace.getCurrentRevision());
 

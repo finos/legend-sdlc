@@ -42,12 +42,12 @@ public class BackupWorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a backup workspace")
+    @ApiOperation("Get the configuration of a project in a backup user workspace")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in backup workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in backup user workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getBackupUserWorkspaceProjectConfiguration(projectId, workspaceId)
         );
     }
 }

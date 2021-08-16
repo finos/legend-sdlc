@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -48,7 +49,7 @@ public class WorkspaceWorkflowsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get workflows for a workspace", notes = "Get workflows for a workspace. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get workflows for a user workspace", notes = "Get workflows for a user workspace. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<Workflow> getWorkflows(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("revisionId")
@@ -59,19 +60,19 @@ public class WorkspaceWorkflowsResource extends BaseResource
                                        @ApiParam("Limit the number of workflows returned") Integer limit)
     {
         return executeWithLogging(
-                "getting workflows for workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
+                "getting workflows for user workspace " + workspaceId + " in project " + projectId,
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
     @GET
     @Path("{workflowId}")
-    @ApiOperation("Get a workflow for a workspace")
+    @ApiOperation("Get a workflow for a user workspace")
     public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("workflowId") String workflowId)
     {
         return executeWithLogging(
-                "getting workflow " + workflowId + " for workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
+                "getting workflow " + workflowId + " for user workspace " + workspaceId + " in project " + projectId,
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
         );
     }
 }

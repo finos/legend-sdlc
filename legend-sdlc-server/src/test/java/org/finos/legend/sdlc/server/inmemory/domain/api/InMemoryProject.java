@@ -28,7 +28,8 @@ import java.util.List;
 public class InMemoryProject implements Project
 {
     private String projectId;
-    private final MutableMap<String, InMemoryWorkspace> workspaces = Maps.mutable.empty();
+    private final MutableMap<String, InMemoryWorkspace> userWorkspaces = Maps.mutable.empty();
+    private final MutableMap<String, InMemoryWorkspace> groupWorkspaces = Maps.mutable.empty();
     private final MutableMap<String, InMemoryRevision> revisions = Maps.mutable.empty();
     private final MutableMap<String, InMemoryVersion> versions = Maps.mutable.empty();
     private String currentRevisionId;
@@ -75,29 +76,79 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public boolean containsWorkspace(String workspaceId)
+    public boolean containsUserWorkspace(String workspaceId)
     {
-        return this.workspaces.containsKey(workspaceId);
+        return this.userWorkspaces.containsKey(workspaceId);
     }
 
     @JsonIgnore
-    public InMemoryWorkspace getWorkspace(String workspaceId)
+    public boolean containsGroupWorkspace(String workspaceId)
     {
-        return this.workspaces.get(workspaceId);
+        return this.groupWorkspaces.containsKey(workspaceId);
     }
 
     @JsonIgnore
-    public InMemoryWorkspace addNewWorkspace(String workspaceId)
+    public Iterable<InMemoryWorkspace> getUserWorkspaces()
     {
-        return this.addNewWorkspace(workspaceId, null);
+        return this.userWorkspaces.valuesView();
     }
 
     @JsonIgnore
-    public InMemoryWorkspace addNewWorkspace(String workspaceId, InMemoryRevision baseRevision)
+    public Iterable<InMemoryWorkspace> getGroupWorkspaces()
+    {
+        return this.groupWorkspaces.valuesView();
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace getUserWorkspace(String workspaceId)
+    {
+        return this.userWorkspaces.get(workspaceId);
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace getGroupWorkspace(String workspaceId)
+    {
+        return this.groupWorkspaces.get(workspaceId);
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace addNewUserWorkspace(String workspaceId)
+    {
+        return this.addNewUserWorkspace(workspaceId, null);
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace addNewGroupWorkspace(String workspaceId)
+    {
+        return this.addNewGroupWorkspace(workspaceId, null);
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace addNewUserWorkspace(String workspaceId, InMemoryRevision baseRevision)
     {
         InMemoryWorkspace workspace = new InMemoryWorkspace(projectId, workspaceId, baseRevision);
-        this.workspaces.put(workspaceId, workspace);
-        return this.workspaces.get(workspaceId);
+        this.userWorkspaces.put(workspaceId, workspace);
+        return this.userWorkspaces.get(workspaceId);
+    }
+
+    @JsonIgnore
+    public InMemoryWorkspace addNewGroupWorkspace(String workspaceId, InMemoryRevision baseRevision)
+    {
+        InMemoryWorkspace workspace = new InMemoryWorkspace(projectId, workspaceId, baseRevision);
+        this.groupWorkspaces.put(workspaceId, workspace);
+        return this.groupWorkspaces.get(workspaceId);
+    }
+
+    @JsonIgnore
+    public void deleteUserWorkspace(String workspaceId)
+    {
+        this.userWorkspaces.remove(workspaceId);
+    }
+
+    @JsonIgnore
+    public void deleteGroupWorkspace(String workspaceId)
+    {
+        this.groupWorkspaces.remove(workspaceId);
     }
 
     @JsonIgnore

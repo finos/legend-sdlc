@@ -38,19 +38,25 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
     }
 
     @Test
-    public void testCreateWorkspace()
+    public void testUserAndGroupWorkspaceNormalWorkflow()
     {
-        gitLabWorkspaceApiTestResource.runCreateWorkspaceTest();
+        gitLabWorkspaceApiTestResource.runUserAndGroupWorkspaceNormalWorkflowTest();
     }
 
     @Test
-    public void testUpdateWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
+    public void testUpdateUserWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
     {
-        gitLabWorkspaceApiTestResource.runUpdateWorkspaceWithRebaseNoConflictTest();
+        gitLabWorkspaceApiTestResource.runUpdateUserWorkspaceWithRebaseNoConflictTest();
+    }
+
+    @Test
+    public void testUpdateGroupWorkspaceWithRebaseNoConflictFlow() throws GitLabApiException
+    {
+        gitLabWorkspaceApiTestResource.runUpdateGroupWorkspaceWithRebaseNoConflictTest();
     }
 
     /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabWorkspaceApi.
+     * Authenticates with OAuth2 and instantiate the test resource.
      */
     private static void setUpWorkspaceApi()
     {

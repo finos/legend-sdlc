@@ -47,7 +47,7 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
     }
 
     @GET
-    @ApiOperation("Get entities of the workspace with conflict resolution")
+    @ApiOperation("Get entities of the user workspace with conflict resolution")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
@@ -65,19 +65,19 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entities in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> getEntities(this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the workspace with conflict resolution by its path")
+    @ApiOperation("Get an entity of the user workspace with conflict resolution by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
-                "getting entity " + path + " in workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
+                "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 }

@@ -49,12 +49,12 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get a workspace with conflict resolution by id")
+    @ApiOperation("Get a user workspace with conflict resolution by id")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                this.workspaceApi::getWorkspaceWithConflictResolution,
+                "getting user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                this.workspaceApi::getUserWorkspaceWithConflictResolution,
                 projectId,
                 workspaceId
         );
@@ -62,24 +62,24 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a workspace with conflict resolution is outdated")
+    @ApiOperation("Check if a user workspace with conflict resolution is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "checking if workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
-                this.workspaceApi::isWorkspaceWithConflictResolutionOutdated,
+                "checking if user workspace with conflict resolution " + workspaceId + " of project " + projectId + " is outdated",
+                this.workspaceApi::isUserWorkspaceWithConflictResolutionOutdated,
                 projectId,
                 workspaceId
         );
     }
 
     @DELETE
-    @ApiOperation("Discard a conflict resolution")
+    @ApiOperation("Discard a conflict resolution for a user workspace")
     public void discardConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding conflict resolution for workspace " + workspaceId + " in project " + projectId,
-                this.conflictResolutionApi::discardConflictResolution,
+                "discarding conflict resolution for user workspace " + workspaceId + " in project " + projectId,
+                this.conflictResolutionApi::discardConflictResolutionInUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -87,12 +87,12 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("discardChanges")
-    @ApiOperation("Discard all conflict resolution changes")
+    @ApiOperation("Discard all conflict resolution changes for a user workspace")
     public void discardChangesConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
-                "discarding all conflict resolution changes for workspace " + workspaceId + " in project " + projectId,
-                this.conflictResolutionApi::discardChangesConflictResolution,
+                "discarding all conflict resolution changes for user workspace " + workspaceId + " in project " + projectId,
+                this.conflictResolutionApi::discardChangesConflictResolutionInUserWorkspace,
                 projectId,
                 workspaceId
         );
@@ -100,13 +100,13 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("accept")
-    @ApiOperation("Accept a conflict resolution")
+    @ApiOperation("Accept a conflict resolution for a user workspace")
     public void acceptConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");
         executeWithLogging(
-                "accept conflict resolution for workspace " + workspaceId + " in project " + projectId,
-                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, workspaceId, command)
+                "accept conflict resolution for user workspace " + workspaceId + " in project " + projectId,
+                () -> this.conflictResolutionApi.acceptConflictResolutionInUserWorkspace(projectId, workspaceId, command)
         );
     }
 }

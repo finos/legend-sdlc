@@ -45,15 +45,15 @@ public class WorkspaceRevisionDependenciesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get projects that the current workspace revision depends on. Use transitive=true for transitive dependencies.")
+    @ApiOperation("Get projects that the current user workspace revision depends on. Use transitive=true for transitive dependencies.")
     public Set<ProjectDependency> getUpstreamDependencies(@PathParam("projectId") String projectId,
                                                           @PathParam("workspaceId") String workspaceId,
                                                           @PathParam("revisionId") String revisionId,
                                                           @QueryParam("transitive") @DefaultValue("false") boolean transitive)
     {
         return executeWithLogging(
-                "getting upstream dependencies of project " + projectId + ", workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
-                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, revisionId, transitive)
+                "getting upstream dependencies of project " + projectId + ", user workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
+                () -> this.dependenciesApi.getUserWorkspaceRevisionUpstreamProjects(projectId, workspaceId, revisionId, transitive)
         );
     }
 }

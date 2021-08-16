@@ -56,21 +56,21 @@ public class WorkspaceRevisionsResource extends BaseResource
                                        @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
-                "getting revision for workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for user workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the workspace")
+    @ApiOperation("Get a revision of the user workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                "getting revision " + revisionId + " for user workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
         );
     }
 }

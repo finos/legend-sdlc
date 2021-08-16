@@ -14,12 +14,15 @@
 
 package org.finos.legend.sdlc.server.inmemory.domain.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 
 import javax.inject.Inject;
 import java.util.Map;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryWorkspace implements Workspace
 {
     private final Map<String, InMemoryRevision> revisions = Maps.mutable.empty();
@@ -65,16 +68,25 @@ public class InMemoryWorkspace implements Workspace
         return this.workspaceId;
     }
 
+    @JsonIgnore
+    public Iterable<InMemoryRevision> getRevisions()
+    {
+        return this.revisions.values();
+    }
+
+    @JsonIgnore
     public InMemoryRevision getRevision(String revisionId)
     {
         return this.revisions.get(revisionId);
     }
 
+    @JsonIgnore
     public InMemoryRevision getCurrentRevision()
     {
         return this.revisions.get(this.currentRevisionId);
     }
 
+    @JsonIgnore
     public void addNewRevision(InMemoryRevision revision)
     {
         this.revisions.put(revision.getId(), revision);

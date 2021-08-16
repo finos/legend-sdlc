@@ -43,14 +43,14 @@ public class BackupWorkspaceRevisionProjectConfigurationResource extends BaseRes
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a backup workspace at a revision")
+    @ApiOperation("Get the configuration for a revision of a project in a backup user workspace at a revision")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("workspaceId") String workspaceId,
                                                                          @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in backup workspace " + workspaceId + " at revision " + revisionId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
+                "getting project " + projectId + " configuration in backup user workspace " + workspaceId + " at revision " + revisionId,
+                () -> this.projectConfigurationApi.getBackupUserWorkspaceRevisionProjectConfiguration(projectId, workspaceId, revisionId)
         );
     }
 }

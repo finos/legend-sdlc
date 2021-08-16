@@ -46,7 +46,7 @@ public class ConflictResolutionWorkspaceRevisionEntityPathsResource extends Enti
     }
 
     @GET
-    @ApiOperation("Get entity paths of the workspace with conflict resolution at the revision")
+    @ApiOperation("Get entity paths of the user workspace with conflict resolution at the revision")
     public List<String> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
@@ -65,8 +65,8 @@ public class ConflictResolutionWorkspaceRevisionEntityPathsResource extends Enti
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
     {
         return executeWithLogging(
-                "getting entity paths in revision " + revisionId + " of workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                "getting entity paths in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId,
+                () -> getEntityPaths(this.entityApi.getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

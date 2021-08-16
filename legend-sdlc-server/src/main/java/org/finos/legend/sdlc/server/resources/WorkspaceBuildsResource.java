@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.build.Build;
 import org.finos.legend.sdlc.domain.model.build.BuildStatus;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -64,7 +65,7 @@ public class WorkspaceBuildsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting builds for workspace " + workspaceId + " in project " + projectId,
-                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuilds(revisionIds, statuses, limit)
+                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuilds(revisionIds, statuses, limit)
         );
     }
 
@@ -79,7 +80,7 @@ public class WorkspaceBuildsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting build " + buildId + " for workspace " + workspaceId + " in project " + projectId,
-                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuild(buildId)
+                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuild(buildId)
         );
     }
 }

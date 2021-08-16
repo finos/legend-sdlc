@@ -98,7 +98,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
 
         this.backend.project("B").addEntities("w1", TestTools.newClassEntity("b3", "B"));
 
-        String workspace1CurrentRevision = this.backend.getRevisionApi().getWorkspaceRevisionContext("B", "w1").getCurrentRevision().getId();
+        String workspace1CurrentRevision = this.backend.getRevisionApi().getUserWorkspaceRevisionContext("B", "w1").getCurrentRevision().getId();
 
         // B directly depends on A
         String url = String.format("/api/projects/B/workspaces/w1/revisions/%s/upstreamProjects", workspace1CurrentRevision);

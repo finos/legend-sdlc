@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -40,28 +41,29 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     }
 
     @Override
-    public void discardBackupWorkspace(String projectId, String workspaceId)
+    public void discardBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         boolean backupWorkspaceDeleted;
+        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
         try
         {
             backupWorkspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP), 20, 1_000);
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete backup workspace " + workspaceId + " in project " + projectId,
-                    () -> "Unknown backup workspace (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error deleting backup workspace " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error deleting " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         if (!backupWorkspaceDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
     }
 
@@ -72,16 +74,17 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
      * 3. Create
      */
     @Override
-    public void recoverBackup(String projectId, String workspaceId, boolean forceRecovery)
+    public void recoverBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType, boolean forceRecovery)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
+        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
         // Verify the backup exists
         try
         {
-            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP)));
+            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
         }
         catch (Exception e)
         {
@@ -90,22 +93,23 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
                 LOGGER.error("No backup for workspace {} in project {}, so recovery is not possible", workspaceId, projectId);
             }
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get backup workspace " + workspaceId + " in project " + projectId,
-                    () -> "Unknown backup workspace with (" + workspaceId + ") or project (" + projectId + "). " +
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " with (" + workspaceId + ") or project (" + projectId + "). " +
                             "This implies that a backup does not exist for the specified workspace, hence recovery is not possible",
-                    () -> "Error getting backup workspace " + workspaceId + " in project " + projectId);
+                    () -> "Error getting " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         Branch existingBranch = null;
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         // Check if branch exists
         try
         {
-            existingBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
+            existingBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
         }
         catch (Exception e)
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error getting workspace {} in project {}", workspaceId, projectId, e);
+                LOGGER.error("Error getting {} {} in project {}", workspaceType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId, e);
             }
         }
         if (existingBranch != null)
@@ -119,18 +123,18 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
             try
             {
                 workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 20, 1_000);
+                        getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "Error while attempting to recover backup for workspace " + workspaceId + " in project " + projectId + ": User " + getCurrentUser() + " is not allowed to delete workspace",
-                        () -> "Error while attempting to recover backup for workspace " + workspaceId + " in project " + projectId + ": Unknown project: " + projectId,
-                        () -> "Error while attempting to recover backup for workspace " + workspaceId + " in project " + projectId + ": Error deleting workspace");
+                        () -> "Error while attempting to recover backup for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": User " + getCurrentUser() + " is not allowed to delete workspace",
+                        () -> "Error while attempting to recover backup for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": Unknown project: " + projectId,
+                        () -> "Error while attempting to recover backup for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": Error deleting workspace");
             }
             if (!workspaceDeleted)
             {
-                throw new LegendSDLCServerException("Failed to delete " + ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE.getLabel() + " " + workspaceId + " in project " + projectId);
+                throw new LegendSDLCServerException("Failed to delete " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
             }
         }
         // Create new workspace branch off the backup branch head
@@ -138,36 +142,36 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         try
         {
             workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
-                    getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP),
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType),
                     30, 1_000
             );
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to create workspace " + workspaceId + " in project " + projectId,
+                    () -> "User " + getCurrentUser() + " is not allowed to create " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error creating workspace " + workspaceId + " in project " + projectId);
+                    () -> "Error creating " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         if (workspaceBranch == null)
         {
-            throw new LegendSDLCServerException("Failed to create workspace " + workspaceId + " in project " + projectId + " from " + ProjectFileAccessProvider.WorkspaceAccessType.BACKUP.getLabel() + " " + workspaceId);
+            throw new LegendSDLCServerException("Failed to create " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " from " + workspaceType.getLabel() + " " + backupWorkspaceType.getLabel() + " " + workspaceId);
         }
         // Delete backup branch
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP), 20, 1_000);
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete backup workspace {} in project {}", workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
             }
         }
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting backup workspace {} in project {} after recovery is completed", workspaceId, projectId, e);
+            LOGGER.error("Error deleting {} {} in project {} after recovery is completed", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId, e);
         }
     }
 }

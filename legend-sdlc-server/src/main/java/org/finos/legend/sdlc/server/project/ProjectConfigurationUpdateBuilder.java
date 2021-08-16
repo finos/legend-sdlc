@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGenerati
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 
 import java.util.Collections;
@@ -34,6 +35,7 @@ public class ProjectConfigurationUpdateBuilder
     private final ProjectType projectType;
     private final String projectId;
     private String workspaceId;
+    private WorkspaceType workspaceType;
     private ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
     private String revisionId;
     private Integer projectStructureVersion;
@@ -290,10 +292,19 @@ public class ProjectConfigurationUpdateBuilder
         this.message = message;
     }
 
+    public WorkspaceType getWorkspaceType()
+    {
+        return this.workspaceType;
+    }
 
     public ProjectFileAccessProvider.WorkspaceAccessType getWorkspaceAccessType()
     {
         return this.workspaceAccessType;
+    }
+
+    public void setWorkspaceType(WorkspaceType workspaceType)
+    {
+        this.workspaceType = workspaceType;
     }
 
     public void setWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
@@ -301,13 +312,14 @@ public class ProjectConfigurationUpdateBuilder
         this.workspaceAccessType = workspaceAccessType;
     }
 
-    public ProjectConfigurationUpdateBuilder withWorkspace(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public ProjectConfigurationUpdateBuilder withWorkspace(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         if (workspaceId != null && workspaceAccessType == null)
         {
             throw new RuntimeException("workspace access type is required when workspace ID is specified");
         }
         setWorkspaceId(workspaceId);
+        setWorkspaceType(workspaceType);
         setWorkspaceAccessType(workspaceAccessType);
         return this;
     }

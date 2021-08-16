@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -21,6 +23,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthException;
@@ -41,9 +44,11 @@ import org.gitlab4j.api.models.Tag;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.Date;
+import java.util.List;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
@@ -52,6 +57,12 @@ import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response.Status;
+
+import static org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
+import static org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
+import static org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
+import static org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType.GROUP;
+import static org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType.USER;
 
 abstract class BaseGitLabApi
 {
@@ -68,6 +79,11 @@ abstract class BaseGitLabApi
     private static final String CONFLICT_RESOLUTION_BRANCH_PREFIX = "resolution";
     private static final String BACKUP_BRANCH_PREFIX = "backup";
     private static final String TEMPORARY_BRANCH_PREFIX = "tmp";
+    private static final String GROUP_BRANCH_PREFIX = "group";
+    private static final String GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX = "group-resolution";
+    private static final String GROUP_BACKUP_BRANCH_PREFIX = "group-backup";
+
+    private static final List<String> GROUP_WORKSPACE_PREFIXES = Arrays.asList(GROUP_BRANCH_PREFIX, GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX, GROUP_BACKUP_BRANCH_PREFIX);
 
     private static final String MR_STATE_OPENED = "opened";
     private static final String MR_STATE_CLOSED = "closed";
@@ -173,38 +189,106 @@ abstract class BaseGitLabApi
         return (string != null) && PACKAGEABLE_ELEMENT_PATH_PATTERN.matcher(string).matches();
     }
 
-    protected static String getWorkspaceBranchNamePrefix(ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected static String getWorkspaceBranchNamePrefix(WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         assert workspaceAccessType != null : "Workspace access type has been used but it is null, which should not be the case";
-        switch (workspaceAccessType)
+
+        switch (workspaceType)
         {
-            case WORKSPACE:
+            case GROUP:
             {
-                return WORKSPACE_BRANCH_PREFIX;
+                switch (workspaceAccessType)
+                {
+                    case WORKSPACE:
+                    {
+                        return GROUP_BRANCH_PREFIX;
+                    }
+                    case CONFLICT_RESOLUTION:
+                    {
+                        return GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX;
+                    }
+                    case BACKUP:
+                    {
+                        return GROUP_BACKUP_BRANCH_PREFIX;
+                    }
+                    default:
+                    {
+                        throw new RuntimeException("Unknown workspace access type " + workspaceAccessType);
+                    }
+                }
             }
-            case CONFLICT_RESOLUTION:
+            case USER:
             {
-                return CONFLICT_RESOLUTION_BRANCH_PREFIX;
-            }
-            case BACKUP:
-            {
-                return BACKUP_BRANCH_PREFIX;
+                switch (workspaceAccessType)
+                {
+                    case WORKSPACE:
+                    {
+                        return WORKSPACE_BRANCH_PREFIX;
+                    }
+                    case CONFLICT_RESOLUTION:
+                    {
+                        return CONFLICT_RESOLUTION_BRANCH_PREFIX;
+                    }
+                    case BACKUP:
+                    {
+                        return BACKUP_BRANCH_PREFIX;
+                    }
+                    default:
+                    {
+                        throw new RuntimeException("Unknown workspace access type " + workspaceAccessType);
+                    }
+                }
             }
             default:
             {
-                throw new RuntimeException("Unknown workspace access type " + workspaceAccessType);
+                throw new RuntimeException("Unknown workspace type " + workspaceType);
             }
         }
     }
 
-    protected String getBranchName(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected static Pair<WorkspaceType, ProjectFileAccessProvider.WorkspaceAccessType> getWorkspaceTypesFromNamePrefix(String workspaceBranchNamePrefix)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : createUserBranchName(getWorkspaceBranchNamePrefix(workspaceAccessType), getCurrentUser(), workspaceId);
+        switch (workspaceBranchNamePrefix)
+        {
+            case WORKSPACE_BRANCH_PREFIX:
+            {
+                return Tuples.pair(USER, WORKSPACE);
+            }
+            case CONFLICT_RESOLUTION_BRANCH_PREFIX:
+            {
+                return Tuples.pair(USER, CONFLICT_RESOLUTION);
+            }
+            case BACKUP_BRANCH_PREFIX:
+            {
+                return Tuples.pair(USER, BACKUP);
+            }
+            case GROUP_BRANCH_PREFIX:
+            {
+                return Tuples.pair(GROUP, WORKSPACE);
+            }
+            case GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX:
+            {
+                return Tuples.pair(GROUP, CONFLICT_RESOLUTION);
+            }
+            case GROUP_BACKUP_BRANCH_PREFIX:
+            {
+                return Tuples.pair(GROUP, BACKUP);
+            }
+            default:
+            {
+                throw new RuntimeException("Unknown workspace branch name prefix " + workspaceBranchNamePrefix);
+            }
+        }
     }
 
-    protected String getUserWorkspaceBranchName(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return createUserBranchName(getWorkspaceBranchNamePrefix(workspaceAccessType), getCurrentUser(), workspaceId);
+        return (workspaceId == null) ? MASTER_BRANCH : createUserBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
+    }
+
+    protected String getUserWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    {
+        return createUserBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
     }
 
     protected String newUserTemporaryBranchName()
@@ -241,32 +325,42 @@ abstract class BaseGitLabApi
 
         StringBuilder builder = new StringBuilder(first.length() + (moreCount * 16));
         builder.append(first);
-        for (int i = 0; i < moreCount; i++)
+
+        // Skip current user id as part of workspace name construction if workspace is of one of the group access types.
+        int startIndex = GROUP_WORKSPACE_PREFIXES.contains(first) ? 1 : 0;
+
+        for (int i = startIndex; i < moreCount; i++)
         {
             builder.append(BRANCH_DELIMITER).append(more[i]);
         }
         return builder.toString();
     }
 
-    protected static String getWorkspaceIdFromWorkspaceBranchName(String workspaceBranchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected static String getWorkspaceIdFromWorkspaceBranchName(String workspaceBranchName, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        int userIdEndIndex = workspaceBranchName.indexOf(BRANCH_DELIMITER, getWorkspaceBranchNamePrefix(workspaceAccessType).length() + 1);
-        if (userIdEndIndex == -1)
+        // Locate the first branch delimiter if workspace is of one of the group access types since there is no user id segment in branch name.
+        int fullPrefixEndIndex = workspaceType == WorkspaceType.GROUP ? workspaceBranchName.indexOf(BRANCH_DELIMITER) : workspaceBranchName.indexOf(BRANCH_DELIMITER, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1);
+        if (fullPrefixEndIndex == -1)
         {
             throw new IllegalArgumentException("Invalid workspace branch name: " + workspaceBranchName);
         }
-        return workspaceBranchName.substring(userIdEndIndex + 1);
+        return workspaceBranchName.substring(fullPrefixEndIndex + 1);
     }
-
 
     protected static boolean isWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceAccessType), (String[]) null);
+        return isWorkspaceBranchName(branchName, USER, workspaceAccessType) || isWorkspaceBranchName(branchName, GROUP, workspaceAccessType);
     }
 
-    protected boolean isUserWorkspaceBranchName(String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected static boolean isWorkspaceBranchName(String branchName, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceAccessType), getCurrentUser());
+        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), (String[]) null);
+    }
+
+    protected boolean isUserOrGroupWorkspaceBranchName(String branchName, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    {
+        String[] extraArgument = workspaceType == WorkspaceType.GROUP ? (String[]) null : new String[]{getCurrentUser()};
+        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), extraArgument);
     }
 
     protected static boolean branchNameStartsWith(String branchName, String first, String... more)
@@ -585,11 +679,11 @@ abstract class BaseGitLabApi
         };
     }
 
-    protected static Workspace fromWorkspaceBranchName(String projectId, String branchName, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    protected static Workspace fromWorkspaceBranchName(String projectId, String branchName, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        int userIdStartIndex = getWorkspaceBranchNamePrefix(workspaceAccessType).length() + 1;
-        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, userIdStartIndex);
-        String userId = branchName.substring(userIdStartIndex, userIdEndIndex);
+        int userIdStartIndex = getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1;
+        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, workspaceType == WorkspaceType.GROUP ? 0 : userIdStartIndex);
+        String userId = workspaceType == WorkspaceType.GROUP ? null : branchName.substring(userIdStartIndex, userIdEndIndex);
         String workspaceId = branchName.substring(userIdEndIndex + 1);
         return new Workspace()
         {
@@ -642,7 +736,7 @@ abstract class BaseGitLabApi
 
     protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
     {
-        return (mergeRequest != null) && isWorkspaceBranchName(mergeRequest.getSourceBranch(), ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return (mergeRequest != null) && (isWorkspaceBranchName(mergeRequest.getSourceBranch(), USER, WORKSPACE) || isWorkspaceBranchName(mergeRequest.getSourceBranch(), GROUP, WORKSPACE));
     }
 
     protected static boolean isOpen(MergeRequest mergeRequest)

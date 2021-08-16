@@ -14,19 +14,28 @@
 
 package org.finos.legend.sdlc.server.inmemory.domain.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.inmemory.backend.RevisionIdGenerator;
 
+import javax.inject.Inject;
 import java.time.Instant;
 
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryRevision implements Revision
 {
-    private final InMemoryProjectConfiguration configuration;
+    private InMemoryProjectConfiguration configuration = null;
     private final MutableMap<String, Entity> entities = Maps.mutable.empty();
-    private final String revisionId;
+    private String revisionId = "";
+
+    @Inject
+    public InMemoryRevision()
+    {
+    }
 
     public InMemoryRevision(String context)
     {
@@ -83,36 +92,43 @@ public class InMemoryRevision implements Revision
         return null;
     }
 
+    @JsonIgnore
     public boolean containsEntity(Entity entity)
     {
         return this.entities.containsKey(entity.getPath());
     }
 
+    @JsonIgnore
     public void addEntity(Entity entity)
     {
         this.entities.put(entity.getPath(), entity);
     }
 
+    @JsonIgnore
     public void addEntities(Iterable<? extends Entity> newEntities)
     {
         newEntities.forEach(this::addEntity);
     }
 
+    @JsonIgnore
     public void removeEntity(Entity entity)
     {
         this.entities.remove(entity.getPath());
     }
 
+    @JsonIgnore
     public void removeEntities(Iterable<? extends Entity> entitiesToRemove)
     {
         entitiesToRemove.forEach(this::removeEntity);
     }
 
+    @JsonIgnore
     public Iterable<Entity> getEntities()
     {
         return this.entities.valuesView();
     }
 
+    @JsonIgnore
     public InMemoryProjectConfiguration getConfiguration()
     {
         return this.configuration;

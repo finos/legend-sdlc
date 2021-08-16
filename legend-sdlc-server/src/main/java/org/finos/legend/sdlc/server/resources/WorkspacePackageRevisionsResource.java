@@ -57,22 +57,22 @@ public class WorkspacePackageRevisionsResource extends BaseResource
                                        @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
-                "getting revisions for package " + path + " in workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revisions for package " + path + " in user workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of a package in a workspace")
+    @ApiOperation("Get a revision of a package in a user workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("path") String path,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
-                "getting revision " + revisionId + " for package " + path + " in workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevision(revisionId)
+                "getting revision " + revisionId + " for package " + path + " in user workspace " + workspaceId + " for project " + projectId,
+                () -> this.revisionApi.getUserWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevision(revisionId)
         );
     }
 }

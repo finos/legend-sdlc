@@ -48,23 +48,23 @@ public class WorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a workspace")
+    @ApiOperation("Get the configuration of a project in a user workspace")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in user workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getUserWorkspaceProjectConfiguration(projectId, workspaceId)
         );
     }
 
     @POST
-    @ApiOperation("Update the project configuration of a project in a workspace")
+    @ApiOperation("Update the project configuration of a project in a user workspace")
     public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
         return executeWithLogging(
-                "updating configuration for project " + projectId + " in workspace " + workspaceId,
-                () -> this.projectConfigurationApi.updateProjectConfiguration(
+                "updating configuration for project " + projectId + " in user workspace " + workspaceId,
+                () -> this.projectConfigurationApi.updateProjectConfigurationForUserWorkspace(
                         projectId,
                         workspaceId,
                         command.getMessage(),
@@ -81,12 +81,12 @@ public class WorkspaceProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in a workspace")
+    @ApiOperation("Get the available generation types of a project in a user workspace")
     public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId)
+                "getting project " + projectId + " configuration in user workspace " + workspaceId,
+                () -> this.projectConfigurationApi.getUserWorkspaceAvailableArtifactGenerations(projectId, workspaceId)
         );
     }
 }

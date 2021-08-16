@@ -43,23 +43,23 @@ public class ComparisonWorkspaceResource extends BaseResource
 
     @GET
     @Path("workspaceCreation")
-    @ApiOperation("Get comparison between current workspace revision and workspace creation revision")
+    @ApiOperation("Get comparison between current user workspace revision and workspace creation revision")
     public Comparison getWorkspaceCreationComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting comparison between current workspace revision and project revision at workspace creation, for workspace " + workspaceId + " for project " + projectId,
-                () -> this.comparisonApi.getWorkspaceCreationComparison(projectId, workspaceId)
+                "getting comparison between current user workspace revision and project revision at workspace creation, for user workspace " + workspaceId + " for project " + projectId,
+                () -> this.comparisonApi.getUserWorkspaceCreationComparison(projectId, workspaceId)
         );
     }
 
     @GET
     @Path("projectLatest")
-    @ApiOperation("Get comparison between current workspace revision and current project revision")
+    @ApiOperation("Get comparison between current user workspace revision and current project revision")
     public Comparison getWorkspaceProjectComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting comparison between current workspace revision and current project revision, for workspace " + workspaceId + " for project " + projectId,
-                () -> this.comparisonApi.getWorkspaceProjectComparison(projectId, workspaceId)
+                "getting comparison between current user workspace revision and current project revision, for user workspace " + workspaceId + " for project " + projectId,
+                () -> this.comparisonApi.getUserWorkspaceProjectComparison(projectId, workspaceId)
         );
     }
 }

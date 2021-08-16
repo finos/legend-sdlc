@@ -42,12 +42,12 @@ public class ConflictResolutionWorkspaceProjectConfigurationResource extends Bas
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a workspace with conflict resolution")
+    @ApiOperation("Get the configuration of a project in a user workspace with conflict resolution")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
-                "getting project " + projectId + " configuration in workspace with conflict resolution " + workspaceId,
-                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId)
+                "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId,
+                () -> this.projectConfigurationApi.getUserWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId)
         );
     }
 }
