@@ -15,17 +15,24 @@
 package org.finos.legend.sdlc.server.domain.api.dependency;
 
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import java.util.Set;
 
 public interface DependenciesApi
 {
-    Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive);
+    default Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    {
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId, transitive);
+    }
 
-    Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive);
+    default Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    {
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId, transitive);
+    }
 
     // Upstream projects: projects that the project depends on
-    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId, boolean transitive);
+    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId, boolean transitive);
 
     Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String revisionId, boolean transitive);
 

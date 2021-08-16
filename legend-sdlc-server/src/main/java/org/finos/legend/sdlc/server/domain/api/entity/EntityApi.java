@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.entity;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.ws.rs.core.Response.Status;
 
@@ -27,41 +28,77 @@ public interface EntityApi
 
     EntityAccessContext getProjectRevisionEntityAccessContext(String projectId, String revisionId);
 
-    EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
-    EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
-    EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace);
+    EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
-    EntityAccessContext getBackupUserWorkspaceEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getBackupUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getBackupWorkspaceEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
-    EntityAccessContext getBackupGroupWorkspaceEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getBackupGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getBackupWorkspaceEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
-    EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace);
+    EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
-    EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
-    EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId);
+    default EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
-    EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace);
+    EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
-    EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+    }
 
-    EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+    }
 
-    EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId);
+    EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId);
 
-    EntityAccessContext getBackupUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getBackupUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+    }
 
-    EntityAccessContext getBackupGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getBackupGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+    }
 
-    EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId);
+    EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId);
 
-    EntityAccessContext getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+    }
 
-    EntityAccessContext getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId);
+    default EntityAccessContext getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+    }
 
-    EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId);
+    EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId);
 
     default EntityAccessContext getVersionEntityAccessContext(String projectId, String versionIdString)
     {
@@ -85,11 +122,17 @@ public interface EntityApi
 
     // Entity modification
 
-    EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId);
+    default EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
-    EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId);
+    default EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
-    EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace);
+    EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
     EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, String workspaceId);
 }

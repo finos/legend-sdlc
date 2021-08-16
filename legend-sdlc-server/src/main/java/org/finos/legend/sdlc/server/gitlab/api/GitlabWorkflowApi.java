@@ -78,7 +78,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -87,7 +87,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceAccessType);
+                return getBranchName(workspaceId, workspaceType, workspaceAccessType);
             }
 
             @Override
@@ -99,7 +99,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceAccessType);
+                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
             }
         };
     }

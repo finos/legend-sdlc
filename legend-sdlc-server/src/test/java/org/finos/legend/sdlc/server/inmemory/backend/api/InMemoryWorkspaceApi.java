@@ -40,25 +40,25 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     @Override
     public List<Workspace> getUserWorkspaces(String projectId)
     {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.USER)));
     }
 
     @Override
     public List<Workspace> getGroupWorkspaces(String projectId)
     {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.GROUP)));
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
+    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
         List<Workspace> result = Lists.mutable.empty();
-        if (workspaceAccessTypes.contains(ProjectFileAccessProvider.WorkspaceAccessType.GROUP))
+        if (workspaceTypes.contains(ProjectFileAccessProvider.WorkspaceType.GROUP))
         {
             result.addAll(Lists.mutable.withAll(inMemoryProject.getGroupWorkspaces()));
         }
-        if (workspaceAccessTypes.contains(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+        if (workspaceTypes.contains(ProjectFileAccessProvider.WorkspaceType.USER))
         {
             result.addAll(Lists.mutable.withAll(inMemoryProject.getUserWorkspaces()));
         }
@@ -78,185 +78,65 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
     {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
+        return this.getWorkspaces(projectId, workspaceTypes);
     }
 
     @Override
-    public List<Workspace> getAllUserWorkspaces(String projectId)
-    {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
-    }
-
-    @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
-    {
-        return this.getWorkspaces(projectId, workspaceAccessTypes);
-    }
-
-    @Override
-    public Workspace getUserWorkspace(String projectId, String workspaceId)
-    {
-        return this.getWorkspace(projectId, workspaceId, false);
-    }
-
-    @Override
-    public Workspace getGroupWorkspace(String projectId, String workspaceId)
-    {
-        return this.getWorkspace(projectId, workspaceId, true);
-    }
-
-    @Override
-    public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public Workspace getWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        return isGroupWorkspace ? inMemoryProject.getGroupWorkspace(workspaceId) : inMemoryProject.getUserWorkspace(workspaceId);
+        return workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? inMemoryProject.getGroupWorkspace(workspaceId) : inMemoryProject.getUserWorkspace(workspaceId);
     }
 
     @Override
-    public Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
+    public Workspace getBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public boolean isWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    {
+        return false;
+    }
+
+    @Override
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    {
+        return false;
+    }
+
+    @Override
+    public Workspace newWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Workspace getBackupUserWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
-    {
-        return false;
-    }
-
-    @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return false;
-    }
-
-    @Override
-    public Workspace newUserWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Workspace newGroupWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public void deleteUserWorkspace(String projectId, String workspaceId)
-    {
-        this.deleteWorkspace(projectId, workspaceId, false);
-    }
-
-    @Override
-    public void deleteGroupWorkspace(String projectId, String workspaceId)
-    {
-        this.deleteWorkspace(projectId, workspaceId, true);
-    }
-
-    @Override
-    public void deleteWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public void deleteWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        if (isGroupWorkspace)
+        if (workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP)
         {
             inMemoryProject.deleteGroupWorkspace(workspaceId);
         }
@@ -267,19 +147,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

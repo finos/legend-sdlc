@@ -75,7 +75,7 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
 
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
 
         // Check validity of the main pom.xml
         Model mavenModel = MavenProjectStructure.getProjectMavenModel(fileAccessContext);

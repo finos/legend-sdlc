@@ -64,7 +64,7 @@ public class WorkspaceBuildsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting builds for workspace " + workspaceId + " in project " + projectId,
-                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuilds(revisionIds, statuses, limit)
+                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuilds(revisionIds, statuses, limit)
         );
     }
 
@@ -79,7 +79,7 @@ public class WorkspaceBuildsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting build " + buildId + " for workspace " + workspaceId + " in project " + projectId,
-                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuild(buildId)
+                () -> this.buildApi.getWorkspaceBuildAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getBuild(buildId)
         );
     }
 }

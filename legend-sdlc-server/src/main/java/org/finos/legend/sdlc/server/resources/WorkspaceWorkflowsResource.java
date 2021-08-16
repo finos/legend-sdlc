@@ -60,7 +60,7 @@ public class WorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflows for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -71,7 +71,7 @@ public class WorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow " + workflowId + " for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
         );
     }
 }

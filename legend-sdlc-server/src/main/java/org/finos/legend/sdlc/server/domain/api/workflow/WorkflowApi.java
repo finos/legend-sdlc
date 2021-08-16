@@ -24,7 +24,7 @@ public interface WorkflowApi
 {
     WorkflowAccessContext getProjectWorkflowAccessContext(String projectId);
 
-    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
 
     default WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, String versionIdString)
     {

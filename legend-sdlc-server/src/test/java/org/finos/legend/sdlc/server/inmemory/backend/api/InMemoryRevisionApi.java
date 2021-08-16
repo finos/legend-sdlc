@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -83,21 +84,9 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.getWorkspaceRevisionContext(projectId, workspaceId, false);
-    }
-
-    @Override
-    public RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceRevisionContext(projectId, workspaceId, true);
-    }
-
-    @Override
-    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        InMemoryWorkspace workspace = isGroupWorkspace ? backend.getProject(projectId).getGroupWorkspace(workspaceId) : backend.getProject(projectId).getUserWorkspace(workspaceId);
+        InMemoryWorkspace workspace = workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? backend.getProject(projectId).getGroupWorkspace(workspaceId) : backend.getProject(projectId).getUserWorkspace(workspaceId);
         return new RevisionAccessContext()
         {
             @Override
@@ -127,73 +116,25 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getBackupUserWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getBackupGroupWorkspaceRevisionContext(String projectId, String workspaceId)
+    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String entityPath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getUserWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getGroupWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, boolean isGroup, String entityPath)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, boolean isGroup, String packagePath)
+    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String packagePath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

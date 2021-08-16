@@ -59,7 +59,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow jobs for project " + projectId + " in group workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJobs(workflowId, statuses)
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -73,7 +73,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow job " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -90,7 +90,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                 "getting workflow job logs " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();

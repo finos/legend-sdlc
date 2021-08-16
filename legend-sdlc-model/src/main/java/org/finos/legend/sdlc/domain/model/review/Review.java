@@ -25,7 +25,7 @@ public interface Review
 
     String getProjectId();
 
-    Workspace getWorkspace();
+    String getWorkspaceId();
 
     String getTitle();
 

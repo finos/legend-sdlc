@@ -68,7 +68,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
     }
 
     @Override
-    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -77,7 +77,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceAccessType);
+                return getBranchName(workspaceId, workspaceType, workspaceAccessType);
             }
 
             @Override

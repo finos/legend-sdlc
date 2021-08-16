@@ -35,7 +35,7 @@ public class InMemoryBuildApi implements BuildApi
     }
 
     @Override
-    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

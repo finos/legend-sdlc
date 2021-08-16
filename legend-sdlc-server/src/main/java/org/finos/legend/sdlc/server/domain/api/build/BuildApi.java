@@ -24,7 +24,7 @@ public interface BuildApi
 {
     BuildAccessContext getProjectBuildAccessContext(String projectId);
 
-    BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
 
     default BuildAccessContext getVersionBuildAccessContext(String projectId, String versionIdString)
     {

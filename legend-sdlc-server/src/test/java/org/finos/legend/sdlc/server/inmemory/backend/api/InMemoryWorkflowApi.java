@@ -35,7 +35,7 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

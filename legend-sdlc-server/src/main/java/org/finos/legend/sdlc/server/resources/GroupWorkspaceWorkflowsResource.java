@@ -60,7 +60,7 @@ public class GroupWorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflows for group workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -71,7 +71,7 @@ public class GroupWorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow " + workflowId + " for group workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.GROUP).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
         );
     }
 }

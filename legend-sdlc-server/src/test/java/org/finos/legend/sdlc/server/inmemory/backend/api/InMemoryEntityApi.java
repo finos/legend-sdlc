@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -60,114 +61,42 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, false);
-    }
-
-    @Override
-    public EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceEntityAccessContext(projectId, workspaceId, true);
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
+        InMemoryWorkspace workspace = workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
         return new InMemoryEntityAccessContext(workspace.getCurrentRevision().getEntities());
     }
 
     @Override
-    public EntityAccessContext getBackupUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    public EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public EntityAccessContext getBackupGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
-    {
-        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
-    }
-
-    @Override
-    public EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
-    {
-        return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, false, revisionId);
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
+        InMemoryWorkspace workspace = workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
         InMemoryRevision revision = workspace.getRevision(revisionId);
         return new InMemoryEntityAccessContext(revision.getEntities());
     }
 
     @Override
-    public EntityAccessContext getBackupUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public EntityAccessContext getBackupGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    public EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -193,22 +122,10 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, false);
-    }
-
-    @Override
-    public EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceEntityModificationContext(projectId, workspaceId, true);
-    }
-
-    @Override
-    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = isGroupWorkspace ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
+        InMemoryWorkspace workspace = workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceId) : project.getUserWorkspace(workspaceId);
         return new InMemoryEntityModificationContext(workspace.getCurrentRevision().getEntities());
     }
 

@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,9 +34,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String workspaceTwoId = "w2";
         String workspaceThreeId = "w3";
 
-        this.backend.project(projectId).addWorkspace(workspaceOneId, false);
-        this.backend.project(projectId).addWorkspace(workspaceTwoId, false);
-        this.backend.project(projectId).addWorkspace(workspaceThreeId, true);
+        this.backend.project(projectId).addWorkspace(workspaceOneId, ProjectFileAccessProvider.WorkspaceType.USER);
+        this.backend.project(projectId).addWorkspace(workspaceTwoId, ProjectFileAccessProvider.WorkspaceType.USER);
+        this.backend.project(projectId).addWorkspace(workspaceThreeId, ProjectFileAccessProvider.WorkspaceType.GROUP);
 
         Response responseOne = this.clientFor("/api/projects/A/workspaces").request().get();
 
@@ -98,7 +99,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String projectId = "A";
         String workspaceId = "userw1";
 
-        this.backend.project(projectId).addWorkspace(workspaceId, false);
+        this.backend.project(projectId).addWorkspace(workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
 
         Response response = this.clientFor("/api/projects/A/workspaces/userw1").request().get();
 
@@ -130,7 +131,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String projectId = "A";
         String workspaceId = "groupw1";
 
-        this.backend.project(projectId).addWorkspace(workspaceId, true);
+        this.backend.project(projectId).addWorkspace(workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
 
         Response response = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().get();
 

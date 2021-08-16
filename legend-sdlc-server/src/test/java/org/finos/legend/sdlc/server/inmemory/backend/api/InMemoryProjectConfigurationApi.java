@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -56,75 +57,27 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getBackupUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
+    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getBackupGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getUserWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getGroupWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
-    {
-        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, false, revisionId);
-    }
-
-    @Override
-    public ProjectConfiguration getGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
-    {
-        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, true, revisionId);
-    }
-
-    @Override
-    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
-    {
-        InMemoryRevision revision = isGroupWorkspace ? backend.getProject(projectId).getGroupWorkspace(workspaceId).getRevision(revisionId) : backend.getProject(projectId).getUserWorkspace(workspaceId).getRevision(revisionId);
+        InMemoryRevision revision = workspaceType == ProjectFileAccessProvider.WorkspaceType.GROUP ? backend.getProject(projectId).getGroupWorkspace(workspaceId).getRevision(revisionId) : backend.getProject(projectId).getUserWorkspace(workspaceId).getRevision(revisionId);
         return revision.getConfiguration();
     }
 
@@ -141,25 +94,13 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getUserWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getGroupWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -184,19 +125,7 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public Revision updateProjectConfigurationForUserWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Revision updateProjectConfigurationForGroupWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Revision updateProjectConfiguration(String projectId, String workspaceId, boolean isGroupWorkspace, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
+    public Revision updateProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -220,37 +149,13 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getUserWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, String revisionId)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<ArtifactTypeGenerationConfiguration> getUserWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

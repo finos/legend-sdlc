@@ -64,10 +64,10 @@ public class TestGitLabServerProjectConfigurationApis extends AbstractGitLabServ
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor, null);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor);
+        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor, null);
 
         gitLabProjectConfigurationApiTestResource = new GitLabProjectConfigurationApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabProjectConfigurationApi);
     }

@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.comparison;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 public interface ComparisonApi
 {
@@ -28,7 +29,10 @@ public interface ComparisonApi
      * @param workspaceId workspace id
      * @return comparison between user workspace HEAD and BASE
      */
-    Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId);
+    default Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceCreationComparison(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
     /**
      * Get the comparison between group workspace HEAD and BASE
@@ -40,7 +44,10 @@ public interface ComparisonApi
      * @param workspaceId workspace id
      * @return comparison between group workspace HEAD and BASE
      */
-    Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId);
+    default Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceCreationComparison(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
     /**
      * Get the comparison between workspace HEAD and workspace BASE
@@ -50,10 +57,10 @@ public interface ComparisonApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
-     * @param isGroupWorkspace is group workspace
+     * @param isGroupWorkspace workspace type
      * @return comparison between workspace HEAD and BASE
      */
-    Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, boolean isGroupWorkspace);
+    Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
     /**
      * Get the comparison between user workspace HEAD and project HEAD
@@ -65,7 +72,10 @@ public interface ComparisonApi
      * @param workspaceId workspace id
      * @return comparison between user workspace HEAD and project HEAD
      */
-    Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId);
+    default Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectComparison(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
     /**
      * Get the comparison between group workspace HEAD and project HEAD
@@ -77,7 +87,10 @@ public interface ComparisonApi
      * @param workspaceId workspace id
      * @return comparison between group workspace HEAD and project HEAD
      */
-    Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId);
+    default Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId)
+    {
+        return this.getWorkspaceProjectComparison(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
     /**
      * Get the comparison between workspace HEAD and project HEAD
@@ -87,10 +100,10 @@ public interface ComparisonApi
      *
      * @param projectId   project id
      * @param workspaceId workspace id
-     * @param isGroupWorkspace is group workspace
+     * @param isGroupWorkspace workspace type
      * @return comparison between workspace HEAD and project HEAD
      */
-    Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, boolean isGroupWorkspace);
+    Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
     /**
      * Get the comparison for a given review (between review workspace HEAD and project HEAD)

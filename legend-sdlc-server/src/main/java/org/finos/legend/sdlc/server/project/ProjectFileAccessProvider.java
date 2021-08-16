@@ -36,28 +36,29 @@ public interface ProjectFileAccessProvider
 
     default FileAccessContext getProjectFileAccessContext(String projectId)
     {
-        return getFileAccessContext(projectId, null, WorkspaceAccessType.WORKSPACE, null);
+        return getFileAccessContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, null);
     }
 
     default FileAccessContext getProjectRevisionFileAccessContext(String projectId, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        return getFileAccessContext(projectId, null, WorkspaceAccessType.WORKSPACE, revisionId);
+        return getFileAccessContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, revisionId);
     }
 
-    default FileAccessContext getWorkspaceFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
+    default FileAccessContext getWorkspaceFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getFileAccessContext(projectId, workspaceId, workspaceAccessType, null);
+        return getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, null);
     }
 
-    default FileAccessContext getWorkspaceRevisionFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    default FileAccessContext getWorkspaceRevisionFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        return getFileAccessContext(projectId, workspaceId, workspaceAccessType, revisionId);
+        return getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
     /**
@@ -75,11 +76,12 @@ public interface ProjectFileAccessProvider
      *
      * @param projectId           project id
      * @param workspaceId         workspace id (optional)
+     * @param workspaceType       type for the workspace (e.g. user, group) (optional)
      * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup) (optional)
      * @param revisionId          revision id (optional)
      * @return access context
      */
-    FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId);
+    FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId);
 
     /**
      * Get a file access context for a version of a project. Both the project and
@@ -237,36 +239,38 @@ public interface ProjectFileAccessProvider
 
     default RevisionAccessContext getProjectRevisionAccessContext(String projectId)
     {
-        return getRevisionAccessContext(projectId, null, WorkspaceAccessType.WORKSPACE, (String) null);
+        return getRevisionAccessContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, (String) null);
     }
 
     default RevisionAccessContext getProjectPathRevisionAccessContext(String projectId, String path)
     {
         LegendSDLCServerException.validateNonNull(path, "path may not be null");
-        return getRevisionAccessContext(projectId, null, WorkspaceAccessType.WORKSPACE, path);
+        return getRevisionAccessContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, path);
     }
 
-    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
+    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, (String) null);
+        return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, (String) null);
     }
 
-    default RevisionAccessContext getWorkspacePathRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String path)
+    default RevisionAccessContext getWorkspacePathRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(path, "path may not be null");
-        return getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, path);
+        return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, path);
     }
 
-    default RevisionAccessContext getWorkspacePathsRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
+    default RevisionAccessContext getWorkspacePathsRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(paths, "paths may not be null");
-        return getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, paths);
+        return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, paths);
     }
 
     default RevisionAccessContext getVersionRevisionAccessContext(String projectId, VersionId versionId)
@@ -341,12 +345,13 @@ public interface ProjectFileAccessProvider
      *
      * @param projectId           project id
      * @param workspaceId         workspace id (optional)
+     * @param workspaceType       type for the workspace (e.g. user, group)
      * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup)
      * @return revision access context
      */
-    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
+    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        return getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, (Iterable<String>) null);
+        return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, (Iterable<String>) null);
     }
 
     /**
@@ -362,13 +367,14 @@ public interface ProjectFileAccessProvider
      *
      * @param projectId           project id
      * @param workspaceId         workspace id (optional)
+     * @param workspaceType       type for the workspace (e.g. user, group)
      * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup)
      * @param path                file or directory path (optional)
      * @return revision access context
      */
-    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String path)
+    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
     {
-        return getRevisionAccessContext(projectId, workspaceId, workspaceAccessType, (path == null) ? null : Collections.singleton(path));
+        return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, (path == null) ? null : Collections.singleton(path));
     }
 
     /**
@@ -384,11 +390,12 @@ public interface ProjectFileAccessProvider
      *
      * @param projectId           project id
      * @param workspaceId         workspace id (optional)
+     * @param workspaceType       type for the workspace (e.g. user, group)
      * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup)
      * @param paths               file or directory paths (optional)
      * @return revision access context
      */
-    RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths);
+    RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths);
 
     interface RevisionAccessContext
     {
@@ -405,28 +412,30 @@ public interface ProjectFileAccessProvider
 
     default FileModificationContext getProjectFileModificationContext(String projectId)
     {
-        return getFileModificationContext(projectId, null, WorkspaceAccessType.WORKSPACE, null);
+        return getFileModificationContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, null);
     }
 
     default FileModificationContext getProjectFileModificationContext(String projectId, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        return getFileModificationContext(projectId, null, WorkspaceAccessType.WORKSPACE, revisionId);
+        return getFileModificationContext(projectId, null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, revisionId);
     }
 
-    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType)
+    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getFileModificationContext(projectId, workspaceId, workspaceAccessType, null);
+        return getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, null);
     }
 
-    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        return getFileModificationContext(projectId, workspaceId, workspaceAccessType, revisionId);
+        return getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
     /**
@@ -442,25 +451,41 @@ public interface ProjectFileAccessProvider
      *
      * @param projectId           project id
      * @param workspaceId         workspace id (optional)
+     * @param workspaceType       type for the workspace (e.g. user, group)
      * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup)
      * @param revisionId          revision id (optional, for validation)
      * @return modification context
      */
-    FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId);
+    FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId);
 
     interface FileModificationContext
     {
         Revision submit(String message, List<? extends ProjectFileOperation> operations);
     }
 
+    enum WorkspaceType
+    {
+        USER("user"),
+        GROUP("group");
+
+        private final String label;
+
+        WorkspaceType(final String label)
+        {
+            this.label = label;
+        }
+
+        public String getLabel()
+        {
+            return this.label;
+        }
+    }
+
     enum WorkspaceAccessType
     {
         WORKSPACE("workspace", "workspaces"),
         CONFLICT_RESOLUTION("workspace with conflict resolution", "workspaces with conflict resolution"),
-        BACKUP("backup workspace", "backup workspaces"),
-        GROUP("group workspace", "group workspaces"),
-        GROUP_CONFLICT_RESOLUTION("group workspace with conflict resolution", "group workspaces with conflict resolution"),
-        GROUP_BACKUP("group backup workspace", "group backup workspaces");
+        BACKUP("backup workspace", "backup workspaces");
 
         private final String label;
         private final String labelPlural;

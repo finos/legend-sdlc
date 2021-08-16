@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 
@@ -27,37 +28,13 @@ public class InMemoryComparisonApi implements ComparisonApi
     }
 
     @Override
-    public Comparison getUserWorkspaceCreationComparison(String projectId, String workspaceId)
+    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Comparison getGroupWorkspaceCreationComparison(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Comparison getUserWorkspaceProjectComparison(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Comparison getGroupWorkspaceProjectComparison(String projectId, String workspaceId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

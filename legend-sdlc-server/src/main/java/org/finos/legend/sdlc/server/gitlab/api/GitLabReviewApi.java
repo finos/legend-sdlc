@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.tuple.Pair;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -47,7 +48,6 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -256,18 +256,17 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, Workspace workspace, String title, String description)
+    public Review createReview(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String title, String description)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspace, "workspace may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         LegendSDLCServerException.validateNonNull(title, "title may not be null");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
-        String workspaceId = workspace.getWorkspaceId();
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = workspace.getUserId() == null ? ProjectFileAccessProvider.WorkspaceAccessType.GROUP : ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            String workspaceBranchName = getUserWorkspaceBranchName(workspaceId, workspaceAccessType);
+            String workspaceBranchName = getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
             MergeRequest mergeRequest = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, MASTER_BRANCH, title, description, null, null, null, null, true);
             return fromGitLabMergeRequest(projectId, mergeRequest);
@@ -275,9 +274,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review",
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error submitting changes from " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review");
+                    () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review",
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error submitting changes from " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review");
         }
     }
 
@@ -762,23 +761,26 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
 
         String sourceBranchName = mergeRequest.getSourceBranch();
-        if (!isWorkspaceBranchName(sourceBranchName, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, ProjectFileAccessProvider.WorkspaceAccessType.GROUP))))
+        if (!isWorkspaceBranchName(sourceBranchName, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
         {
             return null;
         }
 
         String workspaceBranchNamePrefix = sourceBranchName.substring(0, sourceBranchName.indexOf(BRANCH_DELIMITER));
-        Workspace workspace = fromWorkspaceBranchName(projectId, sourceBranchName, getWorkspaceAccessTypeFromNamePrefix(workspaceBranchNamePrefix));
+        Pair<ProjectFileAccessProvider.WorkspaceType, ProjectFileAccessProvider.WorkspaceAccessType> workspaceTypes = getWorkspaceTypesFromNamePrefix(workspaceBranchNamePrefix);
+        ProjectFileAccessProvider.WorkspaceType workspaceType = workspaceTypes.getOne();
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = workspaceTypes.getTwo();
+        String workspaceId = getWorkspaceIdFromWorkspaceBranchName(sourceBranchName, workspaceType, workspaceAccessType);
 
-        return newReview(mergeRequest.getIid(), projectId, workspace, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl());
+        return newReview(mergeRequest.getIid(), projectId, workspaceId, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl());
     }
 
-    private static Review newReview(Integer reviewId, String projectId, Workspace workspace, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL)
+    private static Review newReview(Integer reviewId, String projectId, String workspaceId, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL)
     {
-        return newReview(toStringIfNotNull(reviewId), projectId, workspace, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL);
+        return newReview(toStringIfNotNull(reviewId), projectId, workspaceId, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL);
     }
 
-    private static Review newReview(String reviewId, String projectId, Workspace workspace, String title, String description, Instant createdAt, Instant lastUpdatedAt, Instant closedAt, Instant committedAt, ReviewState reviewState, User author, String commitRevisionId, String webURL)
+    private static Review newReview(String reviewId, String projectId, String workspaceId, String title, String description, Instant createdAt, Instant lastUpdatedAt, Instant closedAt, Instant committedAt, ReviewState reviewState, User author, String commitRevisionId, String webURL)
     {
         return new Review()
         {
@@ -795,9 +797,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             }
 
             @Override
-            public Workspace getWorkspace()
+            public String getWorkspaceId()
             {
-                return workspace;
+                return workspaceId;
             }
 
             @Override

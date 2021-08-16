@@ -34,6 +34,7 @@ public class ProjectConfigurationUpdateBuilder
     private final ProjectType projectType;
     private final String projectId;
     private String workspaceId;
+    private ProjectFileAccessProvider.WorkspaceType workspaceType;
     private ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
     private String revisionId;
     private Integer projectStructureVersion;
@@ -290,10 +291,19 @@ public class ProjectConfigurationUpdateBuilder
         this.message = message;
     }
 
+    public ProjectFileAccessProvider.WorkspaceType getWorkspaceType()
+    {
+        return this.workspaceType;
+    }
 
     public ProjectFileAccessProvider.WorkspaceAccessType getWorkspaceAccessType()
     {
         return this.workspaceAccessType;
+    }
+
+    public void setWorkspaceType(ProjectFileAccessProvider.WorkspaceType workspaceType)
+    {
+        this.workspaceType = workspaceType;
     }
 
     public void setWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
@@ -301,13 +311,14 @@ public class ProjectConfigurationUpdateBuilder
         this.workspaceAccessType = workspaceAccessType;
     }
 
-    public ProjectConfigurationUpdateBuilder withWorkspace(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public ProjectConfigurationUpdateBuilder withWorkspace(String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         if (workspaceId != null && workspaceAccessType == null)
         {
             throw new RuntimeException("workspace access type is required when workspace ID is specified");
         }
         setWorkspaceId(workspaceId);
+        setWorkspaceType(workspaceType);
         setWorkspaceAccessType(workspaceAccessType);
         return this;
     }

@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -79,7 +80,7 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
         String entityTwoName = "testentitytwo";
         String entityPackageName = "testpkg";
 
-        this.backend.project(projectId).addEntities(workspaceOneId, true, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
+        this.backend.project(projectId).addEntities(workspaceOneId, ProjectFileAccessProvider.WorkspaceType.GROUP, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
         Response responseOne = this.clientFor("/api/projects/A/groupWorkspaces/revisionw2").request().get();
 

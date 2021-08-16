@@ -23,6 +23,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -43,21 +44,9 @@ public class DependenciesApiImpl implements DependenciesApi
     }
 
     @Override
-    public Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
+    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, false, revisionId, transitive);
-    }
-
-    @Override
-    public Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
-    {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, true, revisionId, transitive);
-    }
-
-    @Override
-    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, boolean isGroupWorkspace, String revisionId, boolean transitive)
-    {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, isGroupWorkspace, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, workspaceType, revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 

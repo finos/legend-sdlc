@@ -48,7 +48,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -70,21 +69,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public List<Workspace> getUserWorkspaces(String projectId)
+    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
     {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
-    }
-
-    @Override
-    public List<Workspace> getGroupWorkspaces(String projectId)
-    {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
-    }
-
-    @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
-    {
-        return workspaceAccessTypes.stream().map(type -> this.getWorkspacesByAccessType(projectId, type)).reduce(Collections.emptyList(), (a, b) ->
+        return workspaceTypes.stream().map(type -> this.getWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)).reduce(Collections.emptyList(), (a, b) ->
         {
             b.addAll(a);
             return b;
@@ -94,16 +81,16 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public List<Workspace> getWorkspacesWithConflictResolution(String projectId)
     {
-        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
     public List<Workspace> getBackupWorkspaces(String projectId)
     {
-        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    private List<Workspace> getWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private List<Workspace> getWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(projectId, "workspaceAccessType may not be null");
@@ -112,118 +99,71 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             Pager<Branch> pager = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE);
             return PagerTools.stream(pager)
-                    .filter(branch -> (branch != null) && isUserOrGroupWorkspaceBranchName(branch.getName(), workspaceAccessType))
-                    .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceAccessType))
+                    .filter(branch -> (branch != null) && isUserOrGroupWorkspaceBranchName(branch.getName(), workspaceType, workspaceAccessType))
+                    .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType))
                     .collect(Collectors.toList());
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get user " + workspaceAccessType.getLabelPlural() + " for project " + projectId,
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + " for project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error getting user " + workspaceAccessType.getLabelPlural() + " for project " + projectId);
+                    () -> "Error getting " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + " for project " + projectId);
         }
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
     {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, ProjectFileAccessProvider.WorkspaceAccessType.GROUP)));
-    }
-
-    @Override
-    public List<Workspace> getAllUserWorkspaces(String projectId)
-    {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)));
-    }
-
-    @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceAccessType> workspaceAccessTypes)
-    {
-        return workspaceAccessTypes.stream().map(type -> this.getAllWorkspacesByAccessType(projectId, type)).reduce(Collections.emptyList(), (a, b) ->
+        return workspaceTypes.stream().map(type -> this.getAllWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)).reduce(Collections.emptyList(), (a, b) ->
         {
             b.addAll(a);
             return b;
         });
     }
 
-    private List<Workspace> getAllWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private List<Workspace> getAllWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(projectId, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             Pager<Branch> pager = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE);
             return PagerTools.stream(pager)
                     .filter(branch -> (branch != null) && isWorkspaceBranchName(branch.getName(), workspaceAccessType))
-                    .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceAccessType))
+                    .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType))
                     .collect(Collectors.toList());
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get  " + workspaceAccessType.getLabelPlural() + "  for project " + projectId,
+                    () -> "User " + getCurrentUser() + " is not allowed to get  " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + "  for project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error getting  " + workspaceAccessType.getLabelPlural() + "  for project " + projectId);
+                    () -> "Error getting  " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + "  for project " + projectId);
         }
     }
 
     @Override
-    public Workspace getUserWorkspace(String projectId, String workspaceId)
+    public Workspace getWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.getWorkspace(projectId, workspaceId, false);
+        return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
-    public Workspace getGroupWorkspace(String projectId, String workspaceId)
+    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.getWorkspace(projectId, workspaceId, true);
+        return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
-    public Workspace getWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public Workspace getBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.getWorkspaceByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
+        return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    @Override
-    public Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, false);
-    }
-
-    @Override
-    public Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
-    {
-        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, true);
-    }
-
-    @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return this.getWorkspaceByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
-    }
-
-    @Override
-    public Workspace getBackupUserWorkspace(String projectId, String workspaceId)
-    {
-        return this.getBackupWorkspace(projectId, workspaceId, false);
-    }
-
-    @Override
-    public Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
-    {
-        return this.getBackupWorkspace(projectId, workspaceId, true);
-    }
-
-    @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return this.getWorkspaceByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
-    }
-
-    private Workspace getWorkspaceByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private Workspace getWorkspaceByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -231,80 +171,45 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            Branch branch = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceAccessType));
-            return workspaceBranchToWorkspace(projectId, branch, workspaceAccessType);
+            Branch branch = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType));
+            return workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceAccessType.getLabel() + "  " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error getting " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + "  " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error getting " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
     }
 
     @Override
-    public boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
+    public boolean isWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.isWorkspaceOutdated(projectId, workspaceId, false);
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
-    public boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.isWorkspaceOutdated(projectId, workspaceId, true);
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace));
+        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    @Override
-    public boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
-    {
-        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, false);
-    }
-
-    @Override
-    public boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
-    {
-        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, true);
-    }
-
-    @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace));
-    }
-
-    @Override
-    public boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return this.isBackupWorkspaceOutdated(projectId, workspaceId, false);
-    }
-
-    @Override
-    public boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
-    {
-        return this.isBackupWorkspaceOutdated(projectId, workspaceId, true);
-    }
-
-    @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, boolean isGroupWorkspace)
-    {
-        return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace));
-    }
-
-    private boolean isWorkspaceOutdatedByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private boolean isWorkspaceOutdatedByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        String workspaceBranchName = getBranchName(workspaceId, workspaceAccessType);
+        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
 
@@ -317,9 +222,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " in project " + projectId + ": " + workspaceId,
-                    () -> "Error accessing " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to access " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " in project " + projectId + ": " + workspaceId,
+                    () -> "Error accessing " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         String workspaceRevisionId = workspaceBranch.getCommit().getId();
 
@@ -354,48 +259,36 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to check if " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " is outdated",
-                    () -> "Unknown revision (" + masterRevisionId + "), or " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error checking if " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId + " is outdated");
+                    () -> "User " + getCurrentUser() + " is not allowed to check if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " is outdated",
+                    () -> "Unknown revision (" + masterRevisionId + "), or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error checking if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId + " is outdated");
         }
     }
 
     @Override
-    public boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
-    {
-        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, false);
-    }
-
-    @Override
-    public boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
-    {
-        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, true);
-    }
-
-    @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceAccessType)));
+            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error getting " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error getting " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceId + " in project " + projectId);
         }
         Branch conflictBranch;
-        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            conflictBranch = repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType));
+            conflictBranch = repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType));
             return conflictBranch != null;
         }
         catch (Exception e)
@@ -405,29 +298,17 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 return false;
             }
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to check if " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error checking if " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to check if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error checking if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " is in conflict resolution mode for " + workspaceId + " in project " + projectId);
         }
-    }
-
-    @Override
-    public Workspace newUserWorkspace(String projectId, String workspaceId)
-    {
-        return this.newWorkspace(projectId, workspaceId, false);
-    }
-
-    @Override
-    public Workspace newGroupWorkspace(String projectId, String workspaceId)
-    {
-        return this.newWorkspace(projectId, workspaceId, true);
     }
 
     /**
      * When we create a new workspace, we also should clean left-over backup and conflict resolution workspaces with the same name
      */
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public Workspace newWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -437,75 +318,75 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         // Delete backup workspace with the same name if exists
         Branch backupBranch = null;
-        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
         try
         {
-            backupBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, backupWorkspaceType)));
+            backupBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
         }
         catch (Exception e)
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error accessing {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId, e);
+                LOGGER.error("Error accessing {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId, e);
             }
         }
         if (backupBranch != null)
         {
-            LOGGER.debug("Cleaning up left-over {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId);
+            LOGGER.debug("Cleaning up left-over {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, backupWorkspaceType), 20, 1_000);
+                        getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
                 if (!deleted)
                 {
-                    LOGGER.error("Failed to delete {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId);
+                    LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
                 }
             }
             catch (Exception e)
             {
                 // unfortunate, but this should not throw error
-                LOGGER.error("Error deleting {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId, e);
+                LOGGER.error("Error deleting {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId, e);
             }
         }
         // Delete workspace with conflict resolution with the same name if exists
         Branch conflictResolutionBranch = null;
-        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            conflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType)));
+            conflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
         }
         catch (Exception e)
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error accessing workspace with {} {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
+                LOGGER.error("Error accessing {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
             }
         }
         if (conflictResolutionBranch != null)
         {
-            LOGGER.debug("Cleaning up left-over {} {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
+            LOGGER.debug("Cleaning up left-over {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType), 20, 1_000);
+                        getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
                 if (!deleted)
                 {
-                    LOGGER.error("Failed to delete {} with conflict resolution {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
+                    LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
                 }
             }
             catch (Exception e)
             {
                 // unfortunate, but this should not throw error
-                LOGGER.error("Error deleting {} {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
+                LOGGER.error("Error deleting {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
             }
         }
         // Create new workspace
         Branch branch;
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
             branch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceAccessType),
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                     MASTER_BRANCH, 30, 1_000);
         }
         catch (Exception e)
@@ -513,33 +394,20 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to create workspace " + workspaceId + " in project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error creating " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    () -> "Error creating " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         if (branch == null)
         {
-            throw new LegendSDLCServerException("Failed to create " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
-        return workspaceBranchToWorkspace(projectId, branch, workspaceAccessType);
-    }
-
-    @Override
-    public void deleteUserWorkspace(String projectId, String workspaceId)
-    {
-        this.deleteWorkspace(projectId, workspaceId, false);
-    }
-
-
-    @Override
-    public void deleteGroupWorkspace(String projectId, String workspaceId)
-    {
-        this.deleteWorkspace(projectId, workspaceId, true);
+        return workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType);
     }
 
     /**
      * When we delete a workspace, we also need to remember to delete the conflict resolution and backup workspaces
      */
     @Override
-    public void deleteWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public void deleteWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -548,66 +416,54 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         // Delete workspace
         boolean workspaceDeleted;
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceAccessType), 20, 1_000);
+            workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Error deleting " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Error deleting " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         if (!workspaceDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Delete conflict resolution workspace
-        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType), 20, 1_000);
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete {} {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
             }
         }
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting {} {} in project {}", conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
+            LOGGER.error("Error deleting {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId, e);
         }
         // Delete backup workspace
-        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, backupWorkspaceType), 20, 1_000);
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
             }
         }
         catch (Exception e)
         {
             // unfortunate, but this should not throw error
-            LOGGER.error("Error deleting {} {} in project {}", backupWorkspaceType.getLabel(), workspaceId, projectId, e);
+            LOGGER.error("Error deleting {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId, e);
         }
-    }
-
-    @Override
-    public WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
-    {
-        return this.updateWorkspace(projectId, workspaceId, false);
-    }
-
-    @Override
-    public WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
-    {
-        return this.updateWorkspace(projectId, workspaceId, true);
     }
 
     /**
@@ -629,15 +485,15 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * it means the workspace in overall truly has merge conflicts while updating, so entering conflict resolution mode
      */
     @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace)
+    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
 
         LOGGER.info("Updating workspace {} in project {} to latest revision", workspaceId, projectId);
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
-        String workspaceBranchName = getBranchName(workspaceId, workspaceAccessType);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
+        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
 
@@ -650,12 +506,12 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceAccessType.getLabel() + " in project " + projectId + ": " + workspaceId,
-                    () -> "Error accessing " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to access " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " in project " + projectId + ": " + workspaceId,
+                    () -> "Error accessing " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         String currentWorkspaceRevisionId = workspaceBranch.getCommit().getId();
-        LOGGER.info("Found latest revision of {} {} in project {}: {}", workspaceAccessType.getLabel(), workspaceId, projectId, currentWorkspaceRevisionId);
+        LOGGER.info("Found latest revision of {} {} in project {}: {}", workspaceType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId, currentWorkspaceRevisionId);
 
         // Determine the revision to update to
         Branch masterBranch;
@@ -729,7 +585,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
 
         // Attempt to rebase the temporary branch on top of master
-        boolean rebaseSucceeded = this.attemptToRebaseWorkspaceUsingTemporaryBranch(projectId, workspaceId, isGroupWorkspace, tempBranchName, masterRevisionId);
+        boolean rebaseSucceeded = this.attemptToRebaseWorkspaceUsingTemporaryBranch(projectId, workspaceId, workspaceType, tempBranchName, masterRevisionId);
         // If fail to rebase, there could be 2 possible reasons:
         // 1. At least one of the intermediate commits on the workspace branch causes rebase to fail
         //      -> we need to squash the workspace branch and try rebase again
@@ -753,24 +609,24 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             }
             // Small optimization step to make sure we need squashing.
             // If there are less than 2 commits (not including the base commit), there is no point in squashing
-            List<Revision> latestTwoRevisionsOnWorkspaceBranch = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, isGroupWorkspace).getRevisions(null, null, null, 2);
+            List<Revision> latestTwoRevisionsOnWorkspaceBranch = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getRevisions(null, null, null, 2);
             Set<String> latestTwoRevisionOnWorkspaceBranchIds = latestTwoRevisionsOnWorkspaceBranch.stream().map(Revision::getId).collect(Collectors.toSet());
             if (latestTwoRevisionOnWorkspaceBranchIds.contains(workspaceCreationRevisionId))
             {
                 LOGGER.debug("Failed to rebase branch {}, but the branch does not have enough commits to perform squashing. Proceeding to conflict resolution...", workspaceBranchName);
-                return this.createConflictResolution(projectId, workspaceId, isGroupWorkspace, masterRevisionId);
+                return this.createConflictResolution(projectId, workspaceId, workspaceType, masterRevisionId);
             }
             else
             {
                 LOGGER.debug("Failed to rebase branch {}. Performing squashing commits and re-attempting rebase...", workspaceBranchName);
             }
 
-            WorkspaceUpdateReport rebaseUpdateAttemptReport = this.attemptToSquashAndRebaseWorkspace(projectId, workspaceId, isGroupWorkspace, masterRevisionId, currentWorkspaceRevisionId, workspaceCreationRevisionId);
+            WorkspaceUpdateReport rebaseUpdateAttemptReport = this.attemptToSquashAndRebaseWorkspace(projectId, workspaceId, workspaceType, masterRevisionId, currentWorkspaceRevisionId, workspaceCreationRevisionId);
             return WorkspaceUpdateReportStatus.UPDATED.equals(rebaseUpdateAttemptReport.getStatus())
                     ? rebaseUpdateAttemptReport
-                    : this.createConflictResolution(projectId, workspaceId, isGroupWorkspace, masterRevisionId);
+                    : this.createConflictResolution(projectId, workspaceId, workspaceType, masterRevisionId);
         }
-        String updatedCurrentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, isGroupWorkspace).getCurrentRevision().getId();
+        String updatedCurrentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         return createWorkspaceUpdateReport(WorkspaceUpdateReportStatus.UPDATED, masterRevisionId, updatedCurrentWorkspaceRevisionId);
     }
 
@@ -793,7 +649,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      *
      * @return a workspace update report that might have status as UPDATED or CONFLICT.
      */
-    private WorkspaceUpdateReport attemptToSquashAndRebaseWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace, String masterRevisionId, String currentWorkspaceRevisionId, String workspaceCreationRevisionId)
+    private WorkspaceUpdateReport attemptToSquashAndRebaseWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String masterRevisionId, String currentWorkspaceRevisionId, String workspaceCreationRevisionId)
     {
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
@@ -832,8 +688,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         // Create a new commit on temp branch that squashes all changes on the concerned workspace branch
         CommitsApi commitsApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getCommitsApi();
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessTypeForFileAccessContext = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
-        ProjectFileAccessProvider.FileAccessContext workspaceFileAccessContext = getProjectFileAccessProvider().getWorkspaceFileAccessContext(projectId, workspaceId, workspaceAccessTypeForFileAccessContext);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
+        ProjectFileAccessProvider.FileAccessContext workspaceFileAccessContext = getProjectFileAccessProvider().getWorkspaceFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
         Commit squashedCommit;
         try
         {
@@ -912,7 +768,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             );
         }
         // Attempt to rebase the temporary branch on top of master
-        boolean attemptRebaseResult = this.attemptToRebaseWorkspaceUsingTemporaryBranch(projectId, workspaceId, isGroupWorkspace, tempBranchName, masterRevisionId);
+        boolean attemptRebaseResult = this.attemptToRebaseWorkspaceUsingTemporaryBranch(projectId, workspaceId, workspaceType, tempBranchName, masterRevisionId);
         // If rebasing failed, this implies there are conflicts, otherwise, the workspace should be updated
         if (!attemptRebaseResult)
         {
@@ -934,7 +790,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      *
      * @return a boolean flag indicating if the attempted rebase succeeded.
      */
-    private boolean attemptToRebaseWorkspaceUsingTemporaryBranch(String projectId, String workspaceId, boolean isGroupWorkspace, String tempBranchName, String masterRevisionId)
+    private boolean attemptToRebaseWorkspaceUsingTemporaryBranch(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String tempBranchName, String masterRevisionId)
     {
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
@@ -982,32 +838,32 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             {
                 // Create backup branch
                 Branch backupBranch;
-                ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, isGroupWorkspace);
-                ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
+                ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
+                ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
                 try
                 {
                     backupBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, backupWorkspaceAccessType),
-                            getUserWorkspaceBranchName(workspaceId, workspaceAccessType),
+                            getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType),
+                            getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                             30, 1_000);
                 }
                 catch (Exception e)
                 {
                     throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to create " + backupWorkspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                            () -> "User " + getCurrentUser() + " is not allowed to create " + workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
                             () -> "Unknown project: " + projectId,
-                            () -> "Error creating " + backupWorkspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                            () -> "Error creating " + workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
                 }
                 if (backupBranch == null)
                 {
-                    throw new LegendSDLCServerException("Failed to create " + backupWorkspaceAccessType.getLabel() + " " + workspaceId +
-                            " from " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    throw new LegendSDLCServerException("Failed to create " + workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId +
+                            " from " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
                 }
                 // Delete original branch
                 boolean originalBranchDeleted;
                 try
                 {
-                    originalBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceAccessType), 20, 1_000);
+                    originalBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
                 }
                 catch (Exception e)
                 {
@@ -1018,14 +874,14 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (!originalBranchDeleted)
                 {
-                    throw new LegendSDLCServerException("Failed to delete " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
+                    throw new LegendSDLCServerException("Failed to delete " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId);
                 }
                 // Create new workspace branch off the temp branch head
                 Branch newWorkspaceBranch;
                 try
                 {
                     newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, workspaceAccessType),
+                            getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                             tempBranchName,
                             30, 1_000);
                 }
@@ -1038,23 +894,23 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (newWorkspaceBranch == null)
                 {
-                    throw new LegendSDLCServerException("Failed to create " + workspaceAccessType.getLabel() + " " + workspaceId +
+                    throw new LegendSDLCServerException("Failed to create " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId +
                             " from temporary workspace " + tempBranchName + " in project " + projectId);
                 }
                 // Delete backup branch
                 try
                 {
                     boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, backupWorkspaceAccessType), 20, 1_000);
+                            getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType), 20, 1_000);
                     if (!deleted)
                     {
-                        LOGGER.error("Failed to delete {} {} in project {}", backupWorkspaceAccessType.getLabel(), workspaceId, projectId);
+                        LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId);
                     }
                 }
                 catch (Exception e)
                 {
                     // unfortunate, but this should not throw error
-                    LOGGER.error("Error deleting {} {} in project {}", backupWorkspaceAccessType.getLabel(), workspaceId, projectId);
+                    LOGGER.error("Error deleting {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId);
                 }
             }
         }
@@ -1089,23 +945,23 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * 2. Get all the changes of workspace branch `w1`
      * 3. Copy and replace those changes to resolution branch `w1` and create a new commit out of that.
      */
-    private WorkspaceUpdateReport createConflictResolution(String projectId, String workspaceId, boolean isGroupWorkspace, String masterRevisionId)
+    private WorkspaceUpdateReport createConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String masterRevisionId)
     {
         // Check if conflict resolution is happening, if it is, it means conflict resolution branch already existed, so we will
         // scrap that branch and create a new one.
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         Branch previousConflictResolutionBranch = null;
-        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, isGroupWorkspace);
+        ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            previousConflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType)));
+            previousConflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
         }
         catch (Exception e)
         {
             if (!GitLabApiTools.isNotFoundGitLabApiException(e))
             {
-                LOGGER.error("Error updating {} {} in project {}", conflictResolutionWorkspaceType, workspaceId, projectId);
+                LOGGER.error("Error updating {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
             }
         }
         // Delete conflict resolution workspace
@@ -1115,18 +971,18 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             boolean conflictResolutionBranchDeleted;
             try
             {
-                conflictResolutionBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType), 20, 1_000);
+                conflictResolutionBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to delete " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId,
-                        () -> "Unknown " + conflictResolutionWorkspaceType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                        () -> "Error deleting " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
+                        () -> "User " + getCurrentUser() + " is not allowed to delete " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId,
+                        () -> "Unknown " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                        () -> "Error deleting " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
             }
             if (!conflictResolutionBranchDeleted)
             {
-                throw new LegendSDLCServerException("Failed to delete " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
+                throw new LegendSDLCServerException("Failed to delete " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
             }
         }
         // Create conflict resolution workspace
@@ -1134,7 +990,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType),
+                    getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
                     MASTER_BRANCH, 30, 1_000);
         }
         catch (Exception e)
@@ -1146,10 +1002,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (conflictResolutionBranch == null)
         {
-            throw new LegendSDLCServerException("Failed to create " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId + " in project " + projectId);
         }
         // Get the changes of the current workspace
-        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, isGroupWorkspace).getCurrentRevision().getId();
+        String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         String workspaceCreationRevisionId;
         try
         {
@@ -1181,8 +1037,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         // Create a new commit on conflict resolution branch
         CommitsApi commitsApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getCommitsApi();
         ProjectFileAccessProvider.FileAccessContext projectFileAccessContext = getProjectFileAccessProvider().getProjectFileAccessContext(projectId);
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = getAdjustedWorkspaceAccessType(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, isGroupWorkspace);
-        ProjectFileAccessProvider.FileAccessContext workspaceFileAccessContext = getProjectFileAccessProvider().getWorkspaceFileAccessContext(projectId, workspaceId, workspaceAccessType);
+        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
+        ProjectFileAccessProvider.FileAccessContext workspaceFileAccessContext = getProjectFileAccessProvider().getWorkspaceFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
         try
         {
             List<CommitAction> commitActions = Lists.mutable.empty();
@@ -1252,15 +1108,15 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
                 }
             });
-            commitsApi.createCommit(gitLabProjectId.getGitLabId(), this.getUserWorkspaceBranchName(workspaceId, conflictResolutionWorkspaceType),
+            commitsApi.createCommit(gitLabProjectId.getGitLabId(), this.getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
                     "aggregated changes for conflict resolution", null, null, getCurrentUser(), commitActions);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to create commit on " + conflictResolutionWorkspaceType.getLabel() + workspaceId + " of project " + projectId,
-                    () -> "Unknown project: " + projectId + " or " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId,
-                    () -> "Failed to create commit in " + conflictResolutionWorkspaceType.getLabel() + workspaceId + " of project" + projectId
+                    () -> "User " + getCurrentUser() + " is not allowed to create commit on " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + workspaceId + " of project " + projectId,
+                    () -> "Unknown project: " + projectId + " or " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + " " + workspaceId,
+                    () -> "Failed to create commit in " + workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel() + workspaceId + " of project" + projectId
             );
         }
 
@@ -1291,9 +1147,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         };
     }
 
-    private static Workspace workspaceBranchToWorkspace(String projectId, Branch branch, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private static Workspace workspaceBranchToWorkspace(String projectId, Branch branch, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return (branch == null) ? null : fromWorkspaceBranchName(projectId, branch.getName(), workspaceAccessType);
+        return (branch == null) ? null : fromWorkspaceBranchName(projectId, branch.getName(), workspaceType, workspaceAccessType);
     }
 
     private static void validateWorkspaceId(String idString)

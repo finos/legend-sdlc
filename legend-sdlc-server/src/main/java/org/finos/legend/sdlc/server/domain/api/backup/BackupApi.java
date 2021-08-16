@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.domain.api.backup;
 
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+
 public interface BackupApi
 {
     /**
@@ -22,7 +24,10 @@ public interface BackupApi
      * @param projectId    project id
      * @param workspaceId  id of backup workspace
      */
-    void discardBackupUserWorkspace(String projectId, String workspaceId);
+    default void discardBackupUserWorkspace(String projectId, String workspaceId)
+    {
+        this.discardBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+    }
 
     /**
      * Discard the backup group workspace
@@ -30,16 +35,19 @@ public interface BackupApi
      * @param projectId    project id
      * @param workspaceId  id of backup workspace
      */
-    void discardBackupGroupWorkspace(String projectId, String workspaceId);
+    default void discardBackupGroupWorkspace(String projectId, String workspaceId)
+    {
+        this.discardBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+    }
 
     /**
      * Discard the backup workspace
      *
      * @param projectId        project id
      * @param workspaceId      id of backup workspace
-     * @param isGroupWorkspace is group workspace
+     * @param workspaceType workspace type
      */
-    void discardBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace);
+    void discardBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
 
     /**
      * Recover the backup user workspace
@@ -48,7 +56,10 @@ public interface BackupApi
      * @param workspaceId    workspace id
      * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery);
+    default void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
+    {
+        this.recoverBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, forceRecovery);
+    }
 
     /**
      * Recover the backup group workspace
@@ -57,15 +68,18 @@ public interface BackupApi
      * @param workspaceId    workspace id
      * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery);
+    default void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
+    {
+        this.recoverBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, forceRecovery);
+    }
 
     /**
      * Recover the backup workspace
      *
      * @param projectId        project id
      * @param workspaceId      workspace id
-     * @param isGroupWorkspace is group workspace
+     * @param workspaceType workspace type
      * @param forceRecovery    flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupWorkspace(String projectId, String workspaceId, boolean isGroupWorkspace, boolean forceRecovery);
+    void recoverBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, boolean forceRecovery);
 }

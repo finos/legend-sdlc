@@ -25,6 +25,7 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
@@ -149,7 +150,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(1, paths.size());
         Assert.assertEquals(entityPathTwo, paths.get(0));
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two courses");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, "Add Courses.", "add two courses");
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
@@ -296,7 +297,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(1, paths.size());
         Assert.assertEquals(entityPathTwo, paths.get(0));
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, createdWorkspace, "Add Courses.", "add two courses");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP,"Add Courses.", "add two courses");
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 

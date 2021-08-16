@@ -74,7 +74,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected void assertStateValid(T projectStructure, String projectId, String workspaceId, String revisionId)
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
         Model entitiesMavenModel = projectStructure.getModuleMavenModel(projectStructure.getEntitiesModuleName(), fileAccessContext);
         Assert.assertNotNull(projectStructure.getEntitiesModuleName(), entitiesMavenModel);
         assertMavenEntitiesModelValid(entitiesMavenModel, projectStructure);
