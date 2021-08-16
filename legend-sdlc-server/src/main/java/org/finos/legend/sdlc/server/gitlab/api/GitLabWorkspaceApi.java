@@ -132,16 +132,16 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             Pager<Branch> pager = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE);
             return PagerTools.stream(pager)
-                    .filter(branch -> (branch != null) && isWorkspaceBranchName(branch.getName(), workspaceAccessType))
+                    .filter(branch -> (branch != null) && isWorkspaceBranchName(branch.getName(), workspaceType, workspaceAccessType))
                     .map(branch -> workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType))
                     .collect(Collectors.toList());
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get  " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + "  for project " + projectId,
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + " for project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error getting  " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + "  for project " + projectId);
+                    () -> "Error getting " + workspaceType.getLabel() + " " + workspaceAccessType.getLabelPlural() + " for project " + projectId);
         }
     }
 

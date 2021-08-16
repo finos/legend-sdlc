@@ -326,7 +326,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
     {
-        return this.updateWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.updateWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
     }
 
     /**
