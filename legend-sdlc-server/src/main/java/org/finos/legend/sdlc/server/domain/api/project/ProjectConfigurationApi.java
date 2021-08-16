@@ -21,8 +21,8 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.ws.rs.core.Response;
 import java.util.List;
@@ -35,75 +35,75 @@ public interface ProjectConfigurationApi
 
     default ProjectConfiguration getUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default ProjectConfiguration getGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default ProjectConfiguration getBackupUserWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default ProjectConfiguration getBackupGroupWorkspaceProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspaceProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default ProjectConfiguration getUserWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default ProjectConfiguration getGroupWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default ProjectConfiguration getUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.USER, revisionId);
     }
 
     default ProjectConfiguration getGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+        return this.getWorkspaceRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP, revisionId);
     }
 
-    ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId); // support revision ID alias
+    ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId); // support revision ID alias
 
     default ProjectConfiguration getBackupUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.USER, revisionId);
     }
 
     default ProjectConfiguration getBackupGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP, revisionId);
     }
 
-    ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId); // support revision ID alias
+    ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId); // support revision ID alias
 
     default ProjectConfiguration getUserWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+        return this.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.USER, revisionId);
     }
 
     default ProjectConfiguration getGroupWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId) // support revision ID alias
     {
-        return this.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+        return this.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP, revisionId);
     }
 
-    ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId); // support revision ID alias
+    ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId); // support revision ID alias
 
     default ProjectConfiguration getVersionProjectConfiguration(String projectId, String versionIdString)
     {
@@ -127,15 +127,15 @@ public interface ProjectConfigurationApi
 
     default Revision updateProjectConfigurationForUserWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
-        return this.updateProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
+        return this.updateProjectConfiguration(projectId, workspaceId, WorkspaceType.USER, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
     }
 
     default Revision updateProjectConfigurationForGroupWorkspace(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove)
     {
-        return this.updateProjectConfiguration(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
+        return this.updateProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP, message, projectStructureVersion, projectStructureExtensionVersion, groupId, artifactId, projectDependenciesToAdd, projectDependenciesToRemove, artifactGenerationsToAdd, artifactGenerationsToRemove);
     }
 
-    Revision updateProjectConfiguration(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove);
+    Revision updateProjectConfiguration(String projectId, String workspaceId, WorkspaceType workspaceType, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove);
 
     Revision updateProjectConfigurationForWorkspaceWithConflictResolution(String projectId, String workspaceId, String message, Integer projectStructureVersion, Integer projectStructureExtensionVersion, String groupId, String artifactId, Iterable<? extends ProjectDependency> projectDependenciesToAdd, Iterable<? extends ProjectDependency> projectDependenciesToRemove, List<? extends ArtifactGeneration> artifactGenerationsToAdd, List<String> artifactGenerationsToRemove);
 
@@ -145,27 +145,27 @@ public interface ProjectConfigurationApi
 
     default List<ArtifactTypeGenerationConfiguration> getUserWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, revisionId);
+        return this.getWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, WorkspaceType.USER, revisionId);
     }
 
     default List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, revisionId);
+        return this.getWorkspaceRevisionAvailableArtifactGenerations(projectId, workspaceId, WorkspaceType.GROUP, revisionId);
     }
 
-    List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String revisionId);
+    List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId);
 
     default List<ArtifactTypeGenerationConfiguration> getUserWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
     {
-        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default List<ArtifactTypeGenerationConfiguration> getGroupWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId)
     {
-        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspaceAvailableArtifactGenerations(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     List<ArtifactTypeGenerationConfiguration> getVersionAvailableArtifactGenerations(String projectId, String versionId);
 

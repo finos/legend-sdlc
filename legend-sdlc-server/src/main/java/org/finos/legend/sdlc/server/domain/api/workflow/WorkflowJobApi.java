@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.workflow;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -24,7 +25,7 @@ public interface WorkflowJobApi
 {
     WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId);
 
-    WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
 
     default WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, String versionIdString)
     {

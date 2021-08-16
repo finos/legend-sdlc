@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -46,10 +47,7 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -69,28 +67,24 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
+    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
     {
-        return workspaceTypes.stream().map(type -> this.getWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)).reduce(Collections.emptyList(), (a, b) ->
-        {
-            b.addAll(a);
-            return b;
-        });
+        return workspaceTypes.stream().flatMap(type -> this.getWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).stream()).collect(Collectors.toList());
     }
 
     @Override
     public List<Workspace> getWorkspacesWithConflictResolution(String projectId)
     {
-        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspacesByAccessType(projectId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
     public List<Workspace> getBackupWorkspaces(String projectId)
     {
-        return this.getWorkspacesByAccessType(projectId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getWorkspacesByAccessType(projectId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    private List<Workspace> getWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private List<Workspace> getWorkspacesByAccessType(String projectId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(projectId, "workspaceAccessType may not be null");
@@ -113,16 +107,12 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
     {
-        return workspaceTypes.stream().map(type -> this.getAllWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)).reduce(Collections.emptyList(), (a, b) ->
-        {
-            b.addAll(a);
-            return b;
-        });
+        return workspaceTypes.stream().flatMap(type -> this.getAllWorkspacesByAccessType(projectId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).stream()).collect(Collectors.toList());
     }
 
-    private List<Workspace> getAllWorkspacesByAccessType(String projectId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private List<Workspace> getAllWorkspacesByAccessType(String projectId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
@@ -146,24 +136,24 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public Workspace getWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public Workspace getWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public Workspace getBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.getWorkspaceByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    private Workspace getWorkspaceByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private Workspace getWorkspaceByAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -184,24 +174,24 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public boolean isWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         return this.isWorkspaceOutdatedByAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
     }
 
-    private boolean isWorkspaceOutdatedByAccessType(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private boolean isWorkspaceOutdatedByAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -266,7 +256,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -308,7 +298,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * When we create a new workspace, we also should clean left-over backup and conflict resolution workspaces with the same name
      */
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -407,7 +397,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * When we delete a workspace, we also need to remember to delete the conflict resolution and backup workspaces
      */
     @Override
-    public void deleteWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public void deleteWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -485,7 +475,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * it means the workspace in overall truly has merge conflicts while updating, so entering conflict resolution mode
      */
     @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -649,7 +639,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      *
      * @return a workspace update report that might have status as UPDATED or CONFLICT.
      */
-    private WorkspaceUpdateReport attemptToSquashAndRebaseWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String masterRevisionId, String currentWorkspaceRevisionId, String workspaceCreationRevisionId)
+    private WorkspaceUpdateReport attemptToSquashAndRebaseWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType, String masterRevisionId, String currentWorkspaceRevisionId, String workspaceCreationRevisionId)
     {
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
@@ -790,7 +780,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      *
      * @return a boolean flag indicating if the attempted rebase succeeded.
      */
-    private boolean attemptToRebaseWorkspaceUsingTemporaryBranch(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String tempBranchName, String masterRevisionId)
+    private boolean attemptToRebaseWorkspaceUsingTemporaryBranch(String projectId, String workspaceId, WorkspaceType workspaceType, String tempBranchName, String masterRevisionId)
     {
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
@@ -945,7 +935,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
      * 2. Get all the changes of workspace branch `w1`
      * 3. Copy and replace those changes to resolution branch `w1` and create a new commit out of that.
      */
-    private WorkspaceUpdateReport createConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String masterRevisionId)
+    private WorkspaceUpdateReport createConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType, String masterRevisionId)
     {
         // Check if conflict resolution is happening, if it is, it means conflict resolution branch already existed, so we will
         // scrap that branch and create a new one.
@@ -1147,7 +1137,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         };
     }
 
-    private static Workspace workspaceBranchToWorkspace(String projectId, Branch branch, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private static Workspace workspaceBranchToWorkspace(String projectId, Branch branch, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         return (branch == null) ? null : fromWorkspaceBranchName(projectId, branch.getName(), workspaceType, workspaceAccessType);
     }

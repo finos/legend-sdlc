@@ -14,11 +14,10 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -44,7 +43,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, String title, String description)
+    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

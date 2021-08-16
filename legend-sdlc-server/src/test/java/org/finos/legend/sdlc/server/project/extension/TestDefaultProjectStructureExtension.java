@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.project.extension;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.InMemoryProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
@@ -55,7 +56,7 @@ public class TestDefaultProjectStructureExtension
 
         InMemoryProjectFileAccessProvider fileAccessProvider = new InMemoryProjectFileAccessProvider(AUTHOR, COMMITTER);
         fileAccessProvider.createWorkspace(PROJECT_ID, WORKSPACE_ID);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         Assert.assertEquals(0L, fileAccessContext.getFiles().count());
 
         List<ProjectFileOperation> operations = Lists.mutable.empty();
@@ -75,14 +76,14 @@ public class TestDefaultProjectStructureExtension
 
         InMemoryProjectFileAccessProvider fileAccessProvider = new InMemoryProjectFileAccessProvider(AUTHOR, COMMITTER);
         fileAccessProvider.createWorkspace(PROJECT_ID, WORKSPACE_ID);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         Assert.assertEquals(0L, fileAccessContext.getFiles().count());
 
         List<ProjectFileOperation> operations = Lists.mutable.empty();
         extension.collectUpdateProjectConfigurationOperations(null, null, fileAccessContext, operations::add);
         Assert.assertEquals(2, operations.size());
 
-        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         modificationContext.submit("message", operations);
 
         Assert.assertEquals(2L, fileAccessContext.getFiles().count());
@@ -109,10 +110,10 @@ public class TestDefaultProjectStructureExtension
 
         InMemoryProjectFileAccessProvider fileAccessProvider = new InMemoryProjectFileAccessProvider(AUTHOR, COMMITTER);
         fileAccessProvider.createWorkspace(PROJECT_ID, WORKSPACE_ID);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         Assert.assertEquals(0L, fileAccessContext.getFiles().count());
 
-        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         modificationContext.submit("initial state", Collections.singletonList(ProjectFileOperation.addFile(file1Path, file1ContentBefore)));
         Assert.assertEquals(1L, fileAccessContext.getFiles().count());
 
@@ -145,7 +146,7 @@ public class TestDefaultProjectStructureExtension
 
         InMemoryProjectFileAccessProvider fileAccessProvider = new InMemoryProjectFileAccessProvider(AUTHOR, COMMITTER);
         fileAccessProvider.createWorkspace(PROJECT_ID, WORKSPACE_ID);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         Assert.assertEquals(0L, fileAccessContext.getFiles().count());
 
         DefaultProjectStructureExtension extension = newProjectStructureExtension(0, 0, filePath, fileContent);
@@ -153,7 +154,7 @@ public class TestDefaultProjectStructureExtension
         extension.collectUpdateProjectConfigurationOperations(null, null, fileAccessContext, operations::add);
         Assert.assertEquals(1, operations.size());
 
-        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileModificationContext modificationContext = fileAccessProvider.getFileModificationContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         modificationContext.submit("update", operations);
 
         Assert.assertNull(filePath, fileAccessContext.getFile(filePath));
@@ -170,7 +171,7 @@ public class TestDefaultProjectStructureExtension
 
         InMemoryProjectFileAccessProvider fileAccessProvider = new InMemoryProjectFileAccessProvider(AUTHOR, COMMITTER);
         fileAccessProvider.createWorkspace(PROJECT_ID, WORKSPACE_ID);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(PROJECT_ID, WORKSPACE_ID, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, null);
         Assert.assertEquals(0L, fileAccessContext.getFiles().count());
 
         RuntimeException e = Assert.assertThrows(RuntimeException.class, () -> newProjectStructureExtension(0, 0, filePath, fileContent, canonicalFilePath, "other content"));

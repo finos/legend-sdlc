@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.workspace;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -32,7 +32,7 @@ public interface WorkspaceApi
      */
     default List<Workspace> getUserWorkspaces(String projectId)
     {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.USER)));
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.USER)));
     }
 
     /**
@@ -43,7 +43,7 @@ public interface WorkspaceApi
      */
     default List<Workspace> getGroupWorkspaces(String projectId)
     {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.GROUP)));
+        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.GROUP)));
     }
 
     /**
@@ -53,7 +53,7 @@ public interface WorkspaceApi
      * @param workspaceTypes set of workspace types in scope
      * @return all workspaces of desired type(s) in the current project for the current user
      */
-    List<Workspace> getWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes);
+    List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes);
 
     List<Workspace> getWorkspacesWithConflictResolution(String projectId);
 
@@ -67,7 +67,7 @@ public interface WorkspaceApi
      */
     default List<Workspace> getAllUserWorkspaces(String projectId)
     {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.USER)));
+        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.USER)));
     }
 
     /**
@@ -78,7 +78,7 @@ public interface WorkspaceApi
      */
     default List<Workspace> getAllWorkspaces(String projectId)
     {
-        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceType.GROUP)));
+        return this.getAllWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.USER, WorkspaceType.GROUP)));
     }
 
     /**
@@ -88,7 +88,7 @@ public interface WorkspaceApi
      * @param workspaceTypes set of workspace types in scope
      * @return all workspaces of desired type(s) in the current project
      */
-    List<Workspace> getAllWorkspaces(String projectId, Set<ProjectFileAccessProvider.WorkspaceType> workspaceTypes);
+    List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes);
 
     /**
      * Get a workspace in the given project for the current user.
@@ -99,7 +99,7 @@ public interface WorkspaceApi
      */
     default Workspace getUserWorkspace(String projectId, String workspaceId)
     {
-        return this.getWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspace(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -111,7 +111,7 @@ public interface WorkspaceApi
      */
     default Workspace getGroupWorkspace(String projectId, String workspaceId)
     {
-        return this.getWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -122,31 +122,31 @@ public interface WorkspaceApi
      * @param workspaceType workspace type
      * @return user workspace
      */
-    Workspace getWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    Workspace getWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getWorkspaceWithConflictResolution(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default Workspace getBackupUserWorkspace(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.getBackupWorkspace(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.getBackupWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    Workspace getBackupWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    Workspace getBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Check if a user workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
@@ -157,7 +157,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.isWorkspaceOutdated(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -169,7 +169,7 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.isWorkspaceOutdated(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -180,31 +180,31 @@ public interface WorkspaceApi
      * @param workspaceType workspace type
      * @return flag indicating if a workspace is outdated
      */
-    boolean isWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    boolean isWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.isWorkspaceWithConflictResolutionOutdated(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return this.isBackupWorkspaceOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.isBackupWorkspaceOutdated(projectId, workspaceId, WorkspaceType.USER);
     }
 
     default boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return this.isBackupWorkspaceOutdated(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.isBackupWorkspaceOutdated(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
-    boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Check if a user workspace is in conflict resolution mode
@@ -215,7 +215,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -227,7 +227,7 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.isWorkspaceInConflictResolutionMode(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -238,7 +238,7 @@ public interface WorkspaceApi
      * @param workspaceType workspace type
      * @return flag indicating if a workspace is in conflict resolution mode
      */
-    boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Create a new user workspace in the given project for the current user.
@@ -249,7 +249,7 @@ public interface WorkspaceApi
      */
     default Workspace newUserWorkspace(String projectId, String workspaceId)
     {
-        return this.newWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.newWorkspace(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -261,7 +261,7 @@ public interface WorkspaceApi
      */
     default Workspace newGroupWorkspace(String projectId, String workspaceId)
     {
-        return this.newWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.newWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -272,7 +272,7 @@ public interface WorkspaceApi
      * @param workspaceType workspace type
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Delete the given user workspace.
@@ -282,7 +282,7 @@ public interface WorkspaceApi
      */
     default void deleteUserWorkspace(String projectId, String workspaceId)
     {
-        this.deleteWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        this.deleteWorkspace(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -293,7 +293,7 @@ public interface WorkspaceApi
      */
     default void deleteGroupWorkspace(String projectId, String workspaceId)
     {
-        this.deleteWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        this.deleteWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -303,7 +303,7 @@ public interface WorkspaceApi
      * @param workspaceId id of workspace to delete
      * @param workspaceType workspace type
      */
-    void deleteWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    void deleteWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Update the user workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
@@ -314,7 +314,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
     {
-        return this.updateWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        return this.updateWorkspace(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -326,7 +326,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
     {
-        return this.updateWorkspace(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        return this.updateWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -337,7 +337,7 @@ public interface WorkspaceApi
      * @param workspaceType workspace type
      * @return a workspace update report
      */
-    WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     interface WorkspaceUpdateReport
     {

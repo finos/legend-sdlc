@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
@@ -45,7 +46,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
     }
 
     @Override
-    public void discardConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public void discardConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -79,7 +80,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
      * 5. Remove backup branch for `w1`
      */
     @Override
-    public void discardChangesConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public void discardChangesConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -228,7 +229,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
      * 7. Remove backup branch `w1`
      */
     @Override
-    public void acceptConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, PerformChangesCommand command)
+    public void acceptConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");

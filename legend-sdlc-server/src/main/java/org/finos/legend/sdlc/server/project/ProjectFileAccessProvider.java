@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.project;
 
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.IOTools;
 
@@ -461,24 +462,6 @@ public interface ProjectFileAccessProvider
     interface FileModificationContext
     {
         Revision submit(String message, List<? extends ProjectFileOperation> operations);
-    }
-
-    enum WorkspaceType
-    {
-        USER("user"),
-        GROUP("group");
-
-        private final String label;
-
-        WorkspaceType(final String label)
-        {
-            this.label = label;
-        }
-
-        public String getLabel()
-        {
-            return this.label;
-        }
     }
 
     enum WorkspaceAccessType

@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -59,7 +60,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow jobs for project " + projectId + " in user workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -73,7 +74,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow job " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -90,7 +91,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                 "getting workflow job logs " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();

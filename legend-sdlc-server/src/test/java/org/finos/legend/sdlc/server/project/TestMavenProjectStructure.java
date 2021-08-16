@@ -25,6 +25,7 @@ import org.apache.maven.model.PluginExecution;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.junit.Assert;
 
@@ -75,7 +76,7 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
 
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
 
         // Check validity of the main pom.xml
         Model mavenModel = MavenProjectStructure.getProjectMavenModel(fileAccessContext);

@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.domain.api.conflictResolution;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 public interface ConflictResolutionApi
 {
@@ -28,7 +28,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        this.discardConflictResolution(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -40,7 +40,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        this.discardConflictResolution(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -51,7 +51,7 @@ public interface ConflictResolutionApi
      * @param workspaceId   id of workspace with conflict resolution to delete
      * @param workspaceType workspace type
      */
-    void discardConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    void discardConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Discard all conflict resolution changes in a user workspace, effectively delete the workspace with conflict resolution and the original
@@ -62,7 +62,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER);
+        this.discardConflictResolution(projectId, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -74,7 +74,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP);
+        this.discardConflictResolution(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
@@ -85,7 +85,7 @@ public interface ConflictResolutionApi
      * @param workspaceId   workspace id
      * @param workspaceType workspace type
      */
-    void discardChangesConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType);
+    void discardChangesConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Accept the conflict resolution in a user workspace. This will apply the entity changes (to resolve conflicts) and
@@ -97,7 +97,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInUserWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, command);
+        this.acceptConflictResolution(projectId, workspaceId, WorkspaceType.USER, command);
     }
 
     /**
@@ -110,7 +110,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInGroupWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.GROUP, command);
+        this.acceptConflictResolution(projectId, workspaceId, WorkspaceType.GROUP, command);
     }
 
     /**
@@ -122,5 +122,5 @@ public interface ConflictResolutionApi
      * @param workspaceType workspace type
      * @param command       entity changes to resolve any conflicts
      */
-    void acceptConflictResolution(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceType workspaceType, PerformChangesCommand command);
+    void acceptConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType, PerformChangesCommand command);
 }

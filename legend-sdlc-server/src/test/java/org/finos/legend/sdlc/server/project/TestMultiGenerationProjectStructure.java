@@ -20,6 +20,7 @@ import org.apache.maven.model.Plugin;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
@@ -72,7 +73,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     @Override
     protected void assertMultiformatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType artifactType)
     {
-        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, workspaceId, revisionId, this.fileAccessProvider, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, workspaceId, revisionId, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertNotNull(configuration);
 
         T projectStructure = (T) ProjectStructure.getProjectStructure(configuration);
@@ -81,7 +82,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
         Assert.assertFalse(artifactType.name() + " module does not exists", generationModuleName.isEmpty());
         Assert.assertTrue(generationModuleName.stream().allMatch(name -> projectStructure.getOtherModulesNames().contains(name)));
 
-        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
+        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
         Assert.assertNotNull(mavenModel);
         List<String> moduleNames = mavenModel.getModules();
         Assert.assertFalse(moduleNames.isEmpty());
@@ -92,7 +93,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
 
         for (String otherModuleName : projectStructure.getModuleNamesForType(artifactType).collect(Collectors.toList()))
         {
-            Model otherModuleMavenModel = projectStructure.getModuleMavenModel(otherModuleName, this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
+            Model otherModuleMavenModel = projectStructure.getModuleMavenModel(otherModuleName, this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
             Assert.assertNotNull(otherModuleName, otherModuleMavenModel);
             assertMavenOtherModuleModelValid(otherModuleName, otherModuleMavenModel, projectStructure,
                     expectedConfigMethods.getOrDefault(MultiModuleMavenProjectStructure.getModuleConfigName(projectStructure.getOtherModuleArtifactType(otherModuleName)), Collections.emptyMap()));

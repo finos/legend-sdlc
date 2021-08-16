@@ -14,12 +14,12 @@
 
 package org.finos.legend.sdlc.server.application.review;
 
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 public class CreateReviewCommand
 {
     private String workspaceId;
-    private ProjectFileAccessProvider.WorkspaceType workspaceType;
+    private WorkspaceType workspaceType;
     private String title;
     private String description;
 
@@ -33,12 +33,12 @@ public class CreateReviewCommand
         this.workspaceId = workspaceId;
     }
 
-    public ProjectFileAccessProvider.WorkspaceType getWorkspaceType()
+    public WorkspaceType getWorkspaceType()
     {
         return this.workspaceType;
     }
 
-    public void setWorkspaceType(ProjectFileAccessProvider.WorkspaceType workspaceType)
+    public void setWorkspaceType(WorkspaceType workspaceType)
     {
         this.workspaceType = workspaceType;
     }

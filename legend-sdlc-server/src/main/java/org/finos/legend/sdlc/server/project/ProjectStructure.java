@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -307,7 +308,7 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
     }
 
-    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }
@@ -328,7 +329,7 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration, projectStructurePlatformExtensions);
     }
 
-    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, ProjectFileAccessProvider.WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }
@@ -386,7 +387,7 @@ public abstract class ProjectStructure
     {
         ProjectFileAccessProvider projectFileAccessProvider = CachingProjectFileAccessProvider.wrap(updateBuilder.getProjectFileAccessProvider());
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = updateBuilder.getWorkspaceAccessType();
-        ProjectFileAccessProvider.WorkspaceType workspaceType = updateBuilder.getWorkspaceType();
+        WorkspaceType workspaceType = updateBuilder.getWorkspaceType();
 
         if (updateBuilder.hasGroupId() && !isValidGroupId(updateBuilder.getGroupId()))
         {

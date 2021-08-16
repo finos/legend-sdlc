@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -60,7 +61,7 @@ public class WorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflows for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -71,7 +72,7 @@ public class WorkspaceWorkflowsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting workflow " + workflowId + " for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, ProjectFileAccessProvider.WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflow(workflowId)
         );
     }
 }
