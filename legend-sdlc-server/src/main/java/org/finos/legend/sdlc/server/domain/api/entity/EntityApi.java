@@ -38,6 +38,13 @@ public interface EntityApi
         return this.getWorkspaceEntityAccessContext(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
+    // for backward compatibility
+    @Deprecated
+    default EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId)
+    {
+        return getWorkspaceEntityAccessContext(projectId, workspaceId, WorkspaceType.USER);
+    }
+
     EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default EntityAccessContext getBackupUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
@@ -72,6 +79,13 @@ public interface EntityApi
     default EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
         return this.getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, WorkspaceType.GROUP, revisionId);
+    }
+
+    // for backward compatibility
+    @Deprecated
+    default EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
+    {
+        return getWorkspaceRevisionEntityAccessContext(projectId, workspaceId, WorkspaceType.USER, revisionId);
     }
 
     EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId);

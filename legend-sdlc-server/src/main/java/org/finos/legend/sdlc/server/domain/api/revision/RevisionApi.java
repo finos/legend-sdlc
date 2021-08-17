@@ -39,6 +39,13 @@ public interface RevisionApi
         return this.getWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.GROUP);
     }
 
+    // for backward compatibility
+    @Deprecated
+    default RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId)
+    {
+        return getWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.USER);
+    }
+
     RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType);
 
     default RevisionAccessContext getBackupUserWorkspaceRevisionContext(String projectId, String workspaceId)
