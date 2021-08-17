@@ -20,11 +20,9 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
+import org.junit.Assert;
 
 import java.util.List;
-
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 /**
  * Substantial test resource class for project API tests shared by the docker-based and server-based GitLab tests.
@@ -49,11 +47,11 @@ public class GitLabProjectApiTestResource
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
-        assertNotNull(createdProject);
-        assertEquals(projectName, createdProject.getName());
-        assertEquals(description, createdProject.getDescription());
-        assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(projectType, createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
     }
 
     public void runGetProjectTest() throws LegendSDLCServerException
@@ -67,19 +65,19 @@ public class GitLabProjectApiTestResource
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
-        assertNotNull(createdProject);
-        assertEquals(projectName, createdProject.getName());
-        assertEquals(description, createdProject.getDescription());
-        assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(projectType, createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         Project retrievedProject = gitLabProjectApi.getProject(createdProject.getProjectId());
 
-        assertNotNull(retrievedProject);
-        assertEquals(projectName, retrievedProject.getName());
-        assertEquals(description, retrievedProject.getDescription());
-        assertEquals(projectType, retrievedProject.getProjectType());
-        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(retrievedProject.getTags()));
+        Assert.assertNotNull(retrievedProject);
+        Assert.assertEquals(projectName, retrievedProject.getName());
+        Assert.assertEquals(description, retrievedProject.getDescription());
+        Assert.assertEquals(projectType, retrievedProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(retrievedProject.getTags()));
     }
 
     public void runUpdateProjectTest()
@@ -93,11 +91,11 @@ public class GitLabProjectApiTestResource
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
 
-        assertNotNull(createdProject);
-        assertEquals(projectName, createdProject.getName());
-        assertEquals(description, createdProject.getDescription());
-        assertEquals(projectType, createdProject.getProjectType());
-        assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(projectType, createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
         String newProjectName = "TestProjectThreeMod";
@@ -114,9 +112,9 @@ public class GitLabProjectApiTestResource
 
         Project reRetrievedProject = gitLabProjectApi.getProject(projectId);
 
-        assertEquals(newProjectName, reRetrievedProject.getName());
-        assertEquals(newProjectDescription, reRetrievedProject.getDescription());
-        assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
+        Assert.assertEquals(newProjectName, reRetrievedProject.getName());
+        Assert.assertEquals(newProjectDescription, reRetrievedProject.getDescription());
+        Assert.assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
     }
 
     public GitLabProjectApi getGitLabProjectApi()

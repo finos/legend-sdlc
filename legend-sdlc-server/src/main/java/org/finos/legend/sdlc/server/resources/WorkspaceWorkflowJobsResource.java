@@ -17,12 +17,14 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -30,12 +32,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
-import java.util.Set;
-
-import static javax.ws.rs.core.HttpHeaders.CONTENT_DISPOSITION;
 
 @Path("/projects/{projectId}/workspaces/{workspaceId}/workflows/{workflowId}/jobs")
 @Api("Workflows")
@@ -93,7 +92,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                 {
                     String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
-                            .header(CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
+                            .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
                 }
         );

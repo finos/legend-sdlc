@@ -57,8 +57,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 public class TestFileGenerationMojo
 {
     private static final Pattern LINE_BREAK = Pattern.compile("\\R");
@@ -243,7 +241,7 @@ public class TestFileGenerationMojo
     {
         Model mavenModel = new Model();
         mavenModel.setModelVersion("4.0.0");
-        mavenModel.setModelEncoding(UTF_8.name());
+        mavenModel.setModelEncoding(StandardCharsets.UTF_8.name());
         mavenModel.setGroupId(groupId);
         mavenModel.setArtifactId(artifactId);
         mavenModel.setVersion(version);
@@ -348,7 +346,7 @@ public class TestFileGenerationMojo
     private void serializeMavenModel(Path projectDir, Model mavenModel) throws IOException
     {
         Files.createDirectories(projectDir);
-        try (Writer writer = Files.newBufferedWriter(projectDir.resolve("pom.xml"), UTF_8))
+        try (Writer writer = Files.newBufferedWriter(projectDir.resolve("pom.xml"), StandardCharsets.UTF_8))
         {
             new MavenXpp3Writer().write(writer, mavenModel);
         }
@@ -453,7 +451,7 @@ public class TestFileGenerationMojo
         try
         {
             Files.createDirectories(entityFilePath.getParent());
-            try (BufferedWriter writer = Files.newBufferedWriter(entityFilePath, UTF_8))
+            try (BufferedWriter writer = Files.newBufferedWriter(entityFilePath, StandardCharsets.UTF_8))
             {
                 EntitySerializers.getDefaultJsonSerializer().serialize(entity, writer);
             }
