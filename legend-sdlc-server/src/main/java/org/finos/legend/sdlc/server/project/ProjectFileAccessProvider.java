@@ -62,6 +62,13 @@ public interface ProjectFileAccessProvider
         return getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
+    // for backward compatibility
+    @Deprecated
+    default FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    {
+        return getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, workspaceAccessType, revisionId);
+    }
+
     /**
      * Get a file access context. The project id must always be supplied, but workspace
      * and revision ids are optional. If workspace is specified, workspace access type is also required
@@ -437,6 +444,13 @@ public interface ProjectFileAccessProvider
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         return getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
+    }
+
+    // for backward compatibility
+    @Deprecated
+    default FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
+    {
+        return getFileModificationContext(projectId, workspaceId, WorkspaceType.USER, workspaceAccessType, revisionId);
     }
 
     /**
