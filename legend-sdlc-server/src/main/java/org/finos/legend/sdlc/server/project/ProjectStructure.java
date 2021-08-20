@@ -446,6 +446,19 @@ public abstract class ProjectStructure
         // find out which dependencies we need to update
         boolean updateProjectDependencies = false;
         Set<ProjectDependency> projectDependencies = Sets.mutable.withAll(currentConfig.getProjectDependencies());
+        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> !dep.getProjectId().contains(":")).collect(Collectors.toSet());
+
+        if (toUpdateProjectDependencies.size() > 0)
+        {
+            for (ProjectDependency projectDependency : toUpdateProjectDependencies)
+            {
+                updateProjectDependencies = true;
+                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(),projectDependency.getVersionId()));
+                projectDependencies.remove(projectDependency);
+                projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(),projectDependency.getVersionId()));
+            }
+        }
+
         if (updateBuilder.hasProjectDependenciesToRemove())
         {
             updateProjectDependencies |= projectDependencies.removeAll(updateBuilder.getProjectDependenciesToRemove());
@@ -459,25 +472,26 @@ public abstract class ProjectStructure
             SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
             for (ProjectDependency projectDependency : updateBuilder.getProjectDependenciesToAdd())
             {
-                if (projectDependencies.add(projectDependency))
+                updateProjectDependencies = true;
+                try
                 {
-                    updateProjectDependencies = true;
-                    try
+                    ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
+                    if (dependencyConfig == null)
                     {
-                        ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
-                        if (dependencyConfig == null)
-                        {
-                            unknownDependencies.add(projectDependency);
-                        }
-                        else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
-                        {
-                            nonProdDependencies.add(projectDependency);
-                        }
+                        unknownDependencies.add(projectDependency);
                     }
-                    catch (Exception e)
+                    else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
                     {
-                        accessExceptions.put(projectDependency, e);
+                        nonProdDependencies.add(projectDependency);
                     }
+                    else
+                    {
+                        projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(), projectDependency.getVersionId()));
+                    }
+                }
+                catch (Exception e)
+                {
+                    accessExceptions.put(projectDependency, e);
                 }
             }
             if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())
