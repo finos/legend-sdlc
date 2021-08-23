@@ -98,8 +98,8 @@ public abstract class ProjectDependency extends Dependency implements Comparable
             throw new IllegalArgumentException("Invalid project dependency string: null");
         }
 
-        int delimiterIndex = string.lastIndexOf(delimiter);
-        if ((delimiterIndex == -1) || (delimiterIndex >= end))
+        int delimiterIndex = string.lastIndexOf(delimiter, end - 1);
+        if ((delimiterIndex == -1) || (delimiterIndex < start))
         {
             throw new IllegalArgumentException(new StringBuilder("Invalid project dependency string: \"").append(string, start, end).append('"').toString());
         }
