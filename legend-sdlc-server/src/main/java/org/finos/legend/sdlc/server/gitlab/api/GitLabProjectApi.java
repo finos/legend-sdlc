@@ -285,7 +285,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         try
         {
             workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
+                    getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
                     MASTER_BRANCH, 30, 1_000);
         }
         catch (Exception e)
@@ -341,7 +341,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
+                        getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
                 if (!deleted)
                 {
                     LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
@@ -366,7 +366,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
+                        getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
                 if (!deleted)
                 {
                     LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
@@ -384,7 +384,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             try
             {
                 mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
+                        getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE),
                         MASTER_BRANCH, "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
@@ -393,7 +393,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 try
                 {
                     boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
+                            getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
                     if (!deleted)
                     {
                         LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);

@@ -163,7 +163,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            Branch branch = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType));
+            Branch branch = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType));
             return workspaceBranchToWorkspace(projectId, branch, workspaceType, workspaceAccessType);
         }
         catch (Exception e)
@@ -267,7 +267,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
+            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
         }
         catch (Exception e)
         {
@@ -280,7 +280,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            conflictBranch = repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType));
+            conflictBranch = repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType));
             return conflictBranch != null;
         }
         catch (Exception e)
@@ -313,7 +313,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType backupWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.BACKUP;
         try
         {
-            backupBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
+            backupBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
         }
         catch (Exception e)
         {
@@ -328,7 +328,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
+                        getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
                 if (!deleted)
                 {
                     LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
@@ -345,7 +345,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            conflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
+            conflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
         }
         catch (Exception e)
         {
@@ -360,7 +360,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             try
             {
                 boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
+                        getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
                 if (!deleted)
                 {
                     LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
@@ -378,7 +378,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             branch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
+                    getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                     MASTER_BRANCH, 30, 1_000);
         }
         catch (Exception e)
@@ -411,7 +411,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
+            workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
         }
         catch (Exception e)
         {
@@ -429,7 +429,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
+                    getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
             if (!deleted)
             {
                 LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + conflictResolutionWorkspaceType.getLabel(), workspaceId, projectId);
@@ -445,7 +445,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
+                    getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
             if (!deleted)
             {
                 LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
@@ -835,8 +835,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 try
                 {
                     backupBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType),
-                            getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
+                            getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType),
+                            getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                             30, 1_000);
                 }
                 catch (Exception e)
@@ -855,7 +855,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 boolean originalBranchDeleted;
                 try
                 {
-                    originalBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
+                    originalBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
                 }
                 catch (Exception e)
                 {
@@ -873,7 +873,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 try
                 {
                     newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
+                            getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
                             tempBranchName,
                             30, 1_000);
                 }
@@ -893,7 +893,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 try
                 {
                     boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                            getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType), 20, 1_000);
+                            getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceAccessType), 20, 1_000);
                     if (!deleted)
                     {
                         LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceAccessType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId);
@@ -947,7 +947,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType conflictResolutionWorkspaceType = ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION;
         try
         {
-            previousConflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
+            previousConflictResolutionBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType)));
         }
         catch (Exception e)
         {
@@ -963,7 +963,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             boolean conflictResolutionBranchDeleted;
             try
             {
-                conflictResolutionBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
+                conflictResolutionBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), 20, 1_000);
             }
             catch (Exception e)
             {
@@ -982,7 +982,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         try
         {
             conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
+                    getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
                     MASTER_BRANCH, 30, 1_000);
         }
         catch (Exception e)
@@ -1100,7 +1100,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
                 }
             });
-            commitsApi.createCommit(gitLabProjectId.getGitLabId(), this.getUserWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
+            commitsApi.createCommit(gitLabProjectId.getGitLabId(), this.getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType),
                     "aggregated changes for conflict resolution", null, null, getCurrentUser(), commitActions);
         }
         catch (Exception e)
