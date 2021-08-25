@@ -38,6 +38,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 
 public class GitLabComparisonApi extends GitLabApiWithFileAccess implements ComparisonApi
 {
@@ -104,19 +105,23 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
 
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceInfo == null)
+        {
+            throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
+        }
+
         DiffRef diffRef = mergeRequest.getDiffRefs();
-        if (diffRef != null && diffRef.getStartSha() != null && diffRef.getHeadSha() != null)
+        if ((diffRef == null) || (diffRef.getStartSha() == null) || (diffRef.getHeadSha() == null))
         {
-            String sourceBranch = mergeRequest.getSourceBranch().equals(MASTER_BRANCH) ? MASTER_BRANCH : fromWorkspaceBranchName(projectId, mergeRequest.getSourceBranch(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkspaceId();
-            String targetBranch = mergeRequest.getTargetBranch().equals(MASTER_BRANCH) ? MASTER_BRANCH : fromWorkspaceBranchName(projectId, mergeRequest.getTargetBranch(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkspaceId();
-            ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), sourceBranch, diffRef.getStartSha(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-            ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), targetBranch, diffRef.getHeadSha(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-            return getComparisonResult(gitLabProjectId, repositoryApi, diffRef.getStartSha(), diffRef.getHeadSha(), fromProjectStructure, toProjectStructure);
+            throw new LegendSDLCServerException("Unable to get revision info for review " + reviewId + " in project " + projectId);
         }
-        else
-        {
-            throw new LegendSDLCServerException("Unable to get revision info in project " + projectId + ": " + reviewId);
-        }
+
+        String fromRevisionId = diffRef.getStartSha();
+        String toRevisionId = diffRef.getHeadSha();
+        ProjectStructure fromProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), fromRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), null, toRevisionId, null, null);
+        return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 
     @Override
@@ -128,17 +133,23 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
 
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceInfo == null)
+        {
+            throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
+        }
+
         DiffRef diffRef = mergeRequest.getDiffRefs();
-        if (diffRef != null && diffRef.getStartSha() != null && diffRef.getHeadSha() != null)
+        if ((diffRef == null) || (diffRef.getStartSha() == null) || (diffRef.getHeadSha() == null))
         {
-            String branch = mergeRequest.getSourceBranch().equals(MASTER_BRANCH) ? MASTER_BRANCH : fromWorkspaceBranchName(projectId, mergeRequest.getSourceBranch(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkspaceId();
-            ProjectStructure projectStructure = getProjectStructure(gitLabProjectId.toString(), branch, diffRef.getStartSha(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-            return getComparisonResult(gitLabProjectId, repositoryApi, diffRef.getBaseSha(), diffRef.getHeadSha(), projectStructure, projectStructure);
+            throw new LegendSDLCServerException("Unable to get revision info for review " + reviewId + " in project " + projectId);
         }
-        else
-        {
-            throw new LegendSDLCServerException("Unable to get revision info in project " + projectId + ": " + reviewId);
-        }
+
+        String fromRevisionId = diffRef.getBaseSha();
+        String toRevisionId = diffRef.getHeadSha();
+        ProjectStructure fromProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), fromRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        ProjectStructure toProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), toRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 
     /**
