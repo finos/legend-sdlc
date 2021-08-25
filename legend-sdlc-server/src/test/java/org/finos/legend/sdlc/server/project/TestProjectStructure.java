@@ -282,6 +282,21 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     }
 
     @Test
+    public void testParseProjectDependency()
+    {
+        ProjectDependency projectDependency = ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1");
+        String[] mavenCoordinate = projectDependency.getProjectId().split(":");
+        Assert.assertEquals(GROUP_ID, mavenCoordinate[0]);
+        Assert.assertEquals("testproject0", mavenCoordinate[1]);
+        Assert.assertEquals("0.0.1", projectDependency.getVersionId().toVersionIdString());
+
+        //backward compatibility
+        ProjectDependency oldProjectDependency = ProjectDependency.parseProjectDependency("testproject:0.0.1");
+        Assert.assertEquals("testproject", oldProjectDependency.getProjectId());
+        Assert.assertEquals("0.0.1", oldProjectDependency.getVersionId().toVersionIdString());
+    }
+
+    @Test
     public void testUpdateProjectDependencies_Production()
     {
         testUpdateProjectDependencies(ProjectType.PRODUCTION);
@@ -302,7 +317,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         projectDependencies.sort(Comparator.naturalOrder());
         for (ProjectDependency projectDependency : projectDependencies)
         {
-            createProjectWithVersions(projectDependency.getProjectId(), null, projectDependency.getProjectId().split(":")[1], projectDependency.getVersionId());
+            createProjectWithVersions(projectDependency.getProjectId(), projectDependency.getProjectId().split(":")[0], projectDependency.getProjectId().split(":")[1], projectDependency.getVersionId());
         }
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);

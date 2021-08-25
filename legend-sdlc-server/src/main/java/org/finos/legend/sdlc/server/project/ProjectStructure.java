@@ -450,13 +450,8 @@ public abstract class ProjectStructure
 
         if (toUpdateProjectDependencies.size() > 0)
         {
-            for (ProjectDependency projectDependency : toUpdateProjectDependencies)
-            {
-                updateProjectDependencies = true;
-                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(),projectDependency.getVersionId()));
-                projectDependencies.remove(projectDependency);
-                projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(),projectDependency.getVersionId()));
-            }
+            updateProjectDependencies = true;
+            updateDependencies(toUpdateProjectDependencies, projectFileAccessProvider, projectDependencies, true);
         }
 
         if (updateBuilder.hasProjectDependenciesToRemove())
@@ -467,56 +462,8 @@ public abstract class ProjectStructure
         // add new dependencies to the list of dependencies while also validate that there are no unknown/non-prod dependencies
         if (updateBuilder.hasProjectDependenciesToAdd())
         {
-            List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
-            List<ProjectDependency> nonProdDependencies = Lists.mutable.empty();
-            SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
-            for (ProjectDependency projectDependency : updateBuilder.getProjectDependenciesToAdd())
-            {
-                updateProjectDependencies = true;
-                try
-                {
-                    ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
-                    if (dependencyConfig == null)
-                    {
-                        unknownDependencies.add(projectDependency);
-                    }
-                    else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
-                    {
-                        nonProdDependencies.add(projectDependency);
-                    }
-                    else
-                    {
-                        projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(), projectDependency.getVersionId()));
-                    }
-                }
-                catch (Exception e)
-                {
-                    accessExceptions.put(projectDependency, e);
-                }
-            }
-            if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())
-            {
-                StringBuilder builder = new StringBuilder("There were issues with one or more added project dependencies");
-                if (!unknownDependencies.isEmpty())
-                {
-                    builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                    unknownDependencies.sort(Comparator.naturalOrder());
-                    unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
-                }
-                if (!nonProdDependencies.isEmpty())
-                {
-                    builder.append("; non-production ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                    nonProdDependencies.sort(Comparator.naturalOrder());
-                    nonProdDependencies.forEach(d -> d.appendDependencyString((d == nonProdDependencies.get(0)) ? builder : builder.append(", ")));
-                }
-                if (!accessExceptions.isEmpty())
-                {
-                    builder.append("; access ").append((accessExceptions.size() == 1) ? "exception" : "exceptions").append(": ");
-                    ProjectDependency first = accessExceptions.firstKey();
-                    accessExceptions.forEach((d, e) -> d.appendDependencyString((d == first) ? builder : builder.append(", ")).append(" (").append(e.getMessage()).append(')'));
-                }
-                throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
-            }
+            updateProjectDependencies = true;
+            updateDependencies(updateBuilder.getProjectDependenciesToAdd(), projectFileAccessProvider, projectDependencies, false);
         }
 
         // validate if there are any conflicts between the dependencies
@@ -737,6 +684,63 @@ public abstract class ProjectStructure
 
         // Submit changes
         return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
+    }
+
+    private static void updateDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
+    {
+        List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
+        List<ProjectDependency> nonProdDependencies = Lists.mutable.empty();
+        SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
+        for (ProjectDependency projectDependency : toUpdateProjectDependencies)
+        {
+            try
+            {
+                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
+                if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
+                {
+                    unknownDependencies.add(projectDependency);
+                }
+                else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
+                {
+                    nonProdDependencies.add(projectDependency);
+                }
+                else
+                {
+                    if (purgeOldDependency)
+                    {
+                        projectDependencies.remove(projectDependency);
+                    }
+                    projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(), projectDependency.getVersionId()));
+                }
+            }
+            catch (Exception e)
+            {
+                accessExceptions.put(projectDependency, e);
+            }
+        }
+        if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())
+        {
+            StringBuilder builder = new StringBuilder("There were issues with one or more added project dependencies");
+            if (!unknownDependencies.isEmpty())
+            {
+                builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
+                unknownDependencies.sort(Comparator.naturalOrder());
+                unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
+            }
+            if (!nonProdDependencies.isEmpty())
+            {
+                builder.append("; non-production ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
+                nonProdDependencies.sort(Comparator.naturalOrder());
+                nonProdDependencies.forEach(d -> d.appendDependencyString((d == nonProdDependencies.get(0)) ? builder : builder.append(", ")));
+            }
+            if (!accessExceptions.isEmpty())
+            {
+                builder.append("; access ").append((accessExceptions.size() == 1) ? "exception" : "exceptions").append(": ");
+                ProjectDependency first = accessExceptions.firstKey();
+                accessExceptions.forEach((d, e) -> d.appendDependencyString((d == first) ? builder : builder.append(", ")).append(" (").append(e.getMessage()).append(')'));
+            }
+            throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
+        }
     }
 
 
