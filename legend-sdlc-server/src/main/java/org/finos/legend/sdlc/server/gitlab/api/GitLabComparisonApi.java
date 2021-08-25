@@ -117,9 +117,11 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
             throw new LegendSDLCServerException("Unable to get revision info for review " + reviewId + " in project " + projectId);
         }
 
-        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceInfo.getWorkspaceId(), diffRef.getStartSha(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
-        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), null, diffRef.getHeadSha(), null, null);
-        return getComparisonResult(gitLabProjectId, repositoryApi, diffRef.getStartSha(), diffRef.getHeadSha(), fromProjectStructure, toProjectStructure);
+        String fromRevisionId = diffRef.getStartSha();
+        String toRevisionId = diffRef.getHeadSha();
+        ProjectStructure fromProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), fromRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), null, toRevisionId, null, null);
+        return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 
     @Override
@@ -143,8 +145,11 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
             throw new LegendSDLCServerException("Unable to get revision info for review " + reviewId + " in project " + projectId);
         }
 
-        ProjectStructure projectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceInfo.getWorkspaceId(), diffRef.getStartSha(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
-        return getComparisonResult(gitLabProjectId, repositoryApi, diffRef.getBaseSha(), diffRef.getHeadSha(), projectStructure, projectStructure);
+        String fromRevisionId = diffRef.getBaseSha();
+        String toRevisionId = diffRef.getHeadSha();
+        ProjectStructure fromProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), fromRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        ProjectStructure toProjectStructure = getProjectStructure(projectId, workspaceInfo.getWorkspaceId(), toRevisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+        return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 
     /**
