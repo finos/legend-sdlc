@@ -60,9 +60,15 @@ public class TestProjectDependency
     @Test
     public void testParseProjectDependency()
     {
+        //backward compatibility
         Assert.assertEquals(ProjectDependency.newProjectDependency("test-project", VersionId.newVersionId(1, 2, 3)), ProjectDependency.parseProjectDependency("test-project:1.2.3"));
         Assert.assertEquals(ProjectDependency.newProjectDependency("test-project", VersionId.newVersionId(1, 2, 3)), ProjectDependency.parseProjectDependency("test-project:1.2.3", ':'));
         Assert.assertEquals(ProjectDependency.newProjectDependency("test-project", VersionId.newVersionId(1, 2, 3)), ProjectDependency.parseProjectDependency("test-project/1.2.3", '/'));
         Assert.assertEquals(ProjectDependency.newProjectDependency("other-project", VersionId.newVersionId(0, 0, 1)), ProjectDependency.parseProjectDependency("other-project_0.0.1", '_'));
+
+        //new way to store dependency
+        Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", VersionId.newVersionId(0, 0, 1)), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1"));
+        Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", VersionId.newVersionId(0, 0, 1)), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0_0.0.1", '_'));
+        Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", VersionId.newVersionId(0, 0, 1)), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0/0.0.1", '/'));
     }
 }
