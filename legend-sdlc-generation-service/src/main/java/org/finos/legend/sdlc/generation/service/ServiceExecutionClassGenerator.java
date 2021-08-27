@@ -17,6 +17,9 @@ package org.finos.legend.sdlc.generation.service;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
+import org.finos.legend.engine.plan.execution.PlanExecutorInfo;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 
@@ -28,6 +31,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variabl
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 
+import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -38,6 +42,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionClassGenerator
@@ -54,6 +59,7 @@ public class ServiceExecutionClassGenerator
     private String constructor;
     private String executeMethod;
     private String executeMethodWithStreamProvider;
+    private List<String> serviceRunnerMethods;
 
     private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName)
     {
@@ -63,6 +69,7 @@ public class ServiceExecutionClassGenerator
 
         // add base imports
         addImport(AbstractServicePlanExecutor.class);
+        addImport(ServiceRunner.class);
         addImport(Result.class);
     }
 
@@ -71,6 +78,7 @@ public class ServiceExecutionClassGenerator
         generatePackageName();
         generateConstructor();
         generateExecuteMethods();
+        generateServiceRunnerMethods();
 
         StringBuilder builder = new StringBuilder(8192);
         builder.append("package ").append(this.packageName).append(";\n");
@@ -85,13 +93,19 @@ public class ServiceExecutionClassGenerator
             this.javaImports.stream().sorted().map(i -> "import " + i + ";\n").forEach(builder::append);
         }
         builder.append('\n');
-        builder.append("public class ").append(this.service.name).append(" extends ").append(AbstractServicePlanExecutor.class.getSimpleName()).append('\n');
+        builder.append("public class ").append(this.service.name).append(" extends ").append(AbstractServicePlanExecutor.class.getSimpleName()).append(" implements ").append(ServiceRunner.class.getSimpleName()).append('\n');
         builder.append("{\n");
         builder.append(this.constructor);
         builder.append('\n');
         builder.append(this.executeMethod);
         builder.append('\n');
         builder.append(this.executeMethodWithStreamProvider);
+        builder.append('\n');
+        this.serviceRunnerMethods.forEach(m ->
+        {
+            builder.append(m);
+            builder.append('\n');
+        });
         builder.append("}\n");
         return new GeneratedJavaClass(this.packageName + "." + this.service.name, builder.toString());
     }
@@ -253,6 +267,70 @@ public class ServiceExecutionClassGenerator
         }
     }
 
+    private void generateServiceRunnerMethods()
+    {
+        String servicePathMethod = "    public String getServicePath()\n" +
+                        "    {\n" +
+                        "        return super.getServicePath();\n" +
+                        "    }\n";
+
+        addImport(PlanExecutorInfo.class);
+        String planExecutorInfoMethod = "    public PlanExecutorInfo getPlanExecutorInfo()\n" +
+                        "    {\n" +
+                        "        return super.getPlanExecutorInfo();\n" +
+                        "    }\n";
+
+        List<ExecutionParameter> parameters = getExecutionParameters();
+        addImport(ServiceRunnerInput.class);
+        addImport(OutputStream.class);
+        addImport(List.class);
+        String runMethod = "    public void run(" +  ServiceRunnerInput.class.getSimpleName() + " serviceRunnerInput, " +  OutputStream.class.getSimpleName() + " outputStream)\n" +
+                "    {\n" +
+                "        List<Object> args = serviceRunnerInput.getArgs();\n" +
+                "        if (args.size() != " + parameters.size() + ")\n" +
+                "        {\n" +
+                "            throw new IllegalArgumentException(\"Unexpected number of parameters. Expected parameter size: " + parameters.size() + ", Passed parameter size: \" + args.size());\n" +
+                "        }\n" +
+                (parameters.size() > 0 ?
+                        IntStream.range(0, parameters.size())
+                                .mapToObj(i ->
+                                {
+                                    ExecutionParameter p = parameters.get(i);
+                                    String type = p.getTypeString();
+                                    String valueExtractor =
+                                            "long".equals(type) || "Long".equals(type) ?
+                                                    "(args.get(" + i + ") instanceof Number ? ((Number) args.get(" + i + ")).longValue() : args.get(" + i + "))" :
+                                                    "double".equals(type) || "Double".equals(type) ?
+                                                            "(args.get(" + i + ") instanceof Number ? ((Number) args.get(" + i + ")).doubleValue() : args.get(" + i + "))" :
+                                                            "args.get(" + i + ")";
+
+
+                                    return "        " + type + " param" + i + ";\n" +
+                                            "        try\n" +
+                                            "        {\n" +
+                                            "            param" + i + " = args.get(" + i + ") == null ? null : (" + type + ") " + valueExtractor + ";\n" +
+                                            "        }\n" +
+                                            "        catch (ClassCastException e)\n" +
+                                            "        {\n" +
+                                            "            throw new IllegalArgumentException(\"Unexpected parameter type. '" + p.legendParamName + "' parameter (index: " + i + ") should be of type '" + type + "'\");\n" +
+                                            "        }\n" +
+                                            "        catch (NullPointerException e)\n" +
+                                            "        {\n" +
+                                            "            throw new IllegalArgumentException(\"Unexpected parameter value. '" + p.legendParamName + "' parameter (index: " + i + ") should not be null\");\n" +
+                                            "        }\n";
+                                })
+                                .collect(Collectors.joining("\n", "\n", "\n")) :
+                        "\n"
+                ) +
+                "        newExecutionBuilder(" + parameters.size() + ")\n" +
+                IntStream.range(0, parameters.size()).mapToObj(i -> "            .withParameter(\"" + parameters.get(i).legendParamName + "\", param" + i + ")").collect(Collectors.joining("\n", "", parameters.size() > 0 ? "\n" : "")) +
+                "            .withServiceRunnerInput(serviceRunnerInput)\n" +
+                "            .executeToStream(outputStream);\n" +
+                "    }\n";
+
+        this.serviceRunnerMethods = Arrays.asList(servicePathMethod, planExecutorInfoMethod, runMethod);
+    }
+
     private static Class<?> getVariableJavaClass(Variable variable)
     {
         switch (variable._class)
@@ -385,17 +463,14 @@ public class ServiceExecutionClassGenerator
 
         StringBuilder appendParameter(StringBuilder builder)
         {
-            if (this.isToMany)
-            {
-                builder.append("List<? extends ");
-            }
-            builder.append(this.type.getSimpleName());
-            if (this.isToMany)
-            {
-                builder.append('>');
-            }
+            builder.append(this.getTypeString());
             builder.append(' ').append(this.javaParamName);
             return builder;
+        }
+
+        String getTypeString()
+        {
+            return (this.isToMany ? "List<? extends " : "") + this.type.getSimpleName() +  (this.isToMany ? ">" : "");
         }
     }
 }

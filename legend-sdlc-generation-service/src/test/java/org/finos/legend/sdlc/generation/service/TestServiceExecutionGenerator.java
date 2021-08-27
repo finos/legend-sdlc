@@ -17,10 +17,10 @@ package org.finos.legend.sdlc.generation.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
@@ -42,8 +42,10 @@ import org.junit.Before;
 import org.junit.Assert;
 import org.junit.rules.TemporaryFolder;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.lang.reflect.Method;
 import java.net.URL;
 import java.net.URLClassLoader;
@@ -243,6 +245,7 @@ public class TestServiceExecutionGenerator
 
         // Check execution plan resources generated
         Set<String> expectedResources = services.stream().map(s -> "plans" + separator + getPackagePrefix(packagePrefix, separator) + s.getPath().replace("::", separator) + ".json").collect(Collectors.toSet());
+        expectedResources.add("META-INF" + separator + "services" + separator +  ServiceRunner.class.getCanonicalName());
         Set<String> actualResources = Files.walk(this.classesDirectory, Integer.MAX_VALUE).filter(Files::isRegularFile).map(this.classesDirectory::relativize).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(expectedResources, actualResources);
 
@@ -295,6 +298,17 @@ public class TestServiceExecutionGenerator
                 .sorted()
                 .collect(Collectors.toList());
         Assert.assertEquals(Collections.emptyList(), missingServiceExecutionClasses);
+
+        // Check ServiceRunner provider configuration file
+        InputStream serviceRunnerResourceStream = classLoader.getResourceAsStream("META-INF" + separator + "services" + separator + ServiceRunner.class.getCanonicalName());
+        Assert.assertNotNull("ServiceRunner provider configuration file missing", serviceRunnerResourceStream);
+        List<String> serviceRunnerProviders = new BufferedReader(new InputStreamReader(serviceRunnerResourceStream)).lines().collect(Collectors.toList());
+        List<String> missingServiceProviders = services.stream()
+                .map(PackageableElement::getPath)
+                .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace("::", ".")))
+                .sorted()
+                .collect(Collectors.toList());
+        Assert.assertTrue("ServiceRunner providers for these services are missing: " + String.join(", ", missingServiceProviders), missingServiceProviders.isEmpty());
         return classLoader;
     }
 
@@ -330,11 +344,11 @@ public class TestServiceExecutionGenerator
         throw new IllegalArgumentException("Could not get Json from result: " + result);
     }
 
-    private static class SourceFile extends SimpleJavaFileObject
+    static class SourceFile extends SimpleJavaFileObject
     {
         private final Path path;
 
-        private SourceFile(Path path)
+        SourceFile(Path path)
         {
             super(path.toUri(), Kind.SOURCE);
             this.path = path;
