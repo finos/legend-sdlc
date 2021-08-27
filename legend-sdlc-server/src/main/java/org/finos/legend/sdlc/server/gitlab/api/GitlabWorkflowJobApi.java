@@ -246,9 +246,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
 
             Job job = getJob(workflowId, workflowJobId);
             WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
-            if (status != WorkflowJobStatus.FAILED)
+            if ((status != WorkflowJobStatus.FAILED) && (status != WorkflowJobStatus.CANCELED) && (status != WorkflowJobStatus.SUCCEEDED))
             {
-                throw new LegendSDLCServerException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only failed jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+                throw new LegendSDLCServerException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only succeeded, failed, or canceled jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
             }
             JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
             Job result;
