@@ -26,4 +26,10 @@ public interface WorkflowJobAccessContext
     List<WorkflowJob> getWorkflowJobs(String workflowId, Iterable<WorkflowJobStatus> statuses);
 
     String getWorkflowJobLog(String workflowId, String workflowJobId);
+
+    WorkflowJob runWorkflowJob(String workflowId, String workflowJobId);
+
+    WorkflowJob retryWorkflowJob(String workflowId, String workflowJobId);
+
+    WorkflowJob cancelWorkflowJob(String workflowId, String workflowJobId);
 }
