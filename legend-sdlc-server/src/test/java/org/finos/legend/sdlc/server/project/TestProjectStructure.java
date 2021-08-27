@@ -307,7 +307,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         projectDependencies.sort(Comparator.naturalOrder());
         for (ProjectDependency projectDependency : projectDependencies)
         {
-            createProjectWithVersions(projectDependency.getProjectId(), projectDependency.getProjectId().split(":")[0], projectDependency.getProjectId().split(":")[1], projectDependency.getVersionId());
+            String[] mavenCoordinate = projectDependency.getProjectId().split(":");
+            createProjectWithVersions(mavenCoordinate[1], mavenCoordinate[0], mavenCoordinate[1], projectDependency.getVersionId());
         }
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);
@@ -460,12 +461,9 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     {
         ProjectDependency oldProjectDependency = ProjectDependency.parseProjectDependency("TestProject3:2.0.1");
         ProjectDependency updatedProjectDependency = ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1");
-        ArrayList<ProjectDependency> projectDependencies = new ArrayList<>(Arrays.asList(oldProjectDependency));
-        projectDependencies.sort(Comparator.naturalOrder());
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);
         createProjectWithVersions(oldProjectDependency.getProjectId(), GROUP_ID, "testproject3", oldProjectDependency.getVersionId());
-        createProjectWithVersions(updatedProjectDependency.getProjectId(), GROUP_ID, "testproject3", updatedProjectDependency.getVersionId());
 
         ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
@@ -478,11 +476,20 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         assertStateValid(PROJECT_ID, null, null);
 
         SimpleProjectConfiguration newConfig = new SimpleProjectConfiguration(beforeProjectConfig);
-        newConfig.setProjectDependencies(projectDependencies);
+        newConfig.setProjectDependencies(Collections.singletonList(oldProjectDependency));
         String serializedConfig = serializeConfig(newConfig);
         List<ProjectFileOperation> operations = Lists.mutable.empty();
         operations.add(ProjectFileOperation.modifyFile(PROJECT_CONFIG_PATH, serializedConfig));
         this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("set dependencies", operations);
+
+        ProjectConfiguration afterUpdateProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, afterUpdateProjectConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, afterUpdateProjectConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, afterUpdateProjectConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, afterUpdateProjectConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateProjectConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(Collections.emptyList(), afterUpdateProjectConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.singletonList(oldProjectDependency), afterUpdateProjectConfig.getProjectDependencies());
 
         String updateOldDependenciesId = "UpdateOldDependencies";
         this.fileAccessProvider.createWorkspace(PROJECT_ID, updateOldDependenciesId);
@@ -492,19 +499,15 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
-        ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, updateOldDependenciesId, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-        Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
-        Assert.assertEquals(GROUP_ID, afterWorkspaceConfig.getGroupId());
-        Assert.assertEquals(ARTIFACT_ID, afterWorkspaceConfig.getArtifactId());
-        Assert.assertEquals(this.projectStructureVersion, afterWorkspaceConfig.getProjectStructureVersion().getVersion());
-        Assert.assertEquals(this.projectStructureExtensionVersion, afterWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
-        Assert.assertEquals(Collections.emptyList(), afterWorkspaceConfig.getMetamodelDependencies());
+        ProjectConfiguration afterUpdateWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, updateOldDependenciesId, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, afterUpdateWorkspaceConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, afterUpdateWorkspaceConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, afterUpdateWorkspaceConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, afterUpdateWorkspaceConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(Collections.emptyList(), afterUpdateWorkspaceConfig.getMetamodelDependencies());
 
-        //adding the updated dependency to the projectDependencies
-        projectDependencies.remove(oldProjectDependency);
-        projectDependencies.add(updatedProjectDependency);
-
-        Assert.assertEquals(projectDependencies, afterWorkspaceConfig.getProjectDependencies());
+        Assert.assertEquals(Collections.singletonList(updatedProjectDependency), afterUpdateWorkspaceConfig.getProjectDependencies());
         assertStateValid(PROJECT_ID, updateOldDependenciesId, null);
     }
 

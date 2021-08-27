@@ -451,7 +451,7 @@ public abstract class ProjectStructure
         if (toUpdateProjectDependencies.size() > 0)
         {
             updateProjectDependencies = true;
-            updateDependencies(toUpdateProjectDependencies, projectFileAccessProvider, projectDependencies, true);
+            updateOrAddDependencies(toUpdateProjectDependencies, projectFileAccessProvider, projectDependencies, true);
         }
 
         if (updateBuilder.hasProjectDependenciesToRemove())
@@ -463,7 +463,7 @@ public abstract class ProjectStructure
         if (updateBuilder.hasProjectDependenciesToAdd())
         {
             updateProjectDependencies = true;
-            updateDependencies(updateBuilder.getProjectDependenciesToAdd(), projectFileAccessProvider, projectDependencies, false);
+            updateOrAddDependencies(updateBuilder.getProjectDependenciesToAdd(), projectFileAccessProvider, projectDependencies, false);
         }
 
         // validate if there are any conflicts between the dependencies
@@ -686,7 +686,7 @@ public abstract class ProjectStructure
         return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
     }
 
-    private static void updateDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
+    private static void updateOrAddDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
     {
         List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
         List<ProjectDependency> nonProdDependencies = Lists.mutable.empty();
