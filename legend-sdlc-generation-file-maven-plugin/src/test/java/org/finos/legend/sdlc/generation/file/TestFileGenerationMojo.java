@@ -110,7 +110,7 @@ public class TestFileGenerationMojo
                     .filter(p -> !GENERATION_SPECIFICATION_CLASSIFIER_PATH.equals(p.getClassifierPath()))
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(11, entities.size());
+        Assert.assertEquals(13, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -130,7 +130,7 @@ public class TestFileGenerationMojo
         {
             entities = testEntities.getAllEntities().collect(Collectors.toList());
         }
-        Assert.assertEquals(12, entities.size());
+        Assert.assertEquals(14, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -139,7 +139,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(9, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(22, actualGeneratedSourceFiles.size());
         verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
 
@@ -173,7 +173,7 @@ public class TestFileGenerationMojo
 
         String getErrorMessage()
         {
-            return "\nExpected:\n" + this.getExpected() + "\n Actual:\n" + this.getActual() + " for file " + this.getFileName();
+            return "\nExpected:\n" + this.getExpected() + "\n Actual:\n" + this.getActual() + "\n for file " + this.getFileName();
         }
     }
 
@@ -194,9 +194,9 @@ public class TestFileGenerationMojo
                 String expectedContent = new String(Files.readAllBytes(fileInOther), StandardCharsets.UTF_8);
                 String actualContent = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
                 // FIXME: order is not preserved for cdm so we do not assert on the file content
-                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(actualContent, expectedContent))
+                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(expectedContent, actualContent))
                 {
-                    fileDiffs.add(new FileDiff(file.getFileName().toString(), actualContent, expectedContent));
+                    fileDiffs.add(new FileDiff(file.getFileName().toString(), expectedContent, actualContent));
                 }
                 return result;
             }
@@ -224,7 +224,7 @@ public class TestFileGenerationMojo
             entities = testEntities.getAllEntities()
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(12, entities.size());
+        Assert.assertEquals(14, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
         entities.forEach(e -> writeEntityToDirectory(includedDirectory.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", includedDirectory);
@@ -234,7 +234,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(9, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(22, actualGeneratedSourceFiles.size());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)

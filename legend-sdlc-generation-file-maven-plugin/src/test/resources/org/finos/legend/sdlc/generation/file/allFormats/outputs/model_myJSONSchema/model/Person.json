@@ -1,0 +1,55 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "title" : "model::Person",
+  "type" : "object",
+  "properties" : {
+    "lastName" : {
+      "type" : "string"
+    },
+    "firstName" : {
+      "type" : "string"
+    },
+    "dateOfBirth" : {
+      "type" : "string",
+      "format" : "date-time"
+    },
+    "middleName" : {
+      "type" : "string"
+    },
+    "address" : {
+      "$ref" : "#/definitions/model::Address"
+    }
+  },
+  "required" : [ "lastName", "firstName", "dateOfBirth", "middleName", "address" ],
+  "definitions" : {
+    "model::Address" : {
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "model::Address",
+      "type" : "object",
+      "properties" : {
+        "Street" : {
+          "type" : "string"
+        },
+        "City" : {
+          "$ref" : "#/definitions/model::City"
+        },
+        "Country" : {
+          "$ref" : "#/definitions/model::Country"
+        }
+      },
+      "required" : [ "Street", "City", "Country" ]
+    },
+    "model::City" : {
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "model::City",
+      "enum" : [ "London", "NY" ],
+      "type" : "string"
+    },
+    "model::Country" : {
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "model::Country",
+      "enum" : [ "UK", "USA" ],
+      "type" : "string"
+    }
+  }
+}
