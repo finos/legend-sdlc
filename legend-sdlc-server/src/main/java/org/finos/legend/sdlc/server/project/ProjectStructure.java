@@ -294,7 +294,8 @@ public abstract class ProjectStructure
 
     protected static ProjectStructure getProjectStructureForProjectDependency(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider)
     {
-        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectDependency.getProjectId(), projectDependency.getVersionId());
+        String projectId = projectDependency.getProjectId().contains(":") ? projectDependency.getProjectId().split(":")[1] : projectDependency.getProjectId();
+        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectId, projectDependency.getVersionId());
         ProjectConfiguration versionConfig = ProjectStructure.getProjectConfiguration(versionFileAccessContext);
         if (versionConfig == null)
         {

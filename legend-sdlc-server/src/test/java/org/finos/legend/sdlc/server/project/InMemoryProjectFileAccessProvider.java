@@ -218,8 +218,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
 
     private SimpleInMemoryVCS getVCS(String projectId, VersionId versionId)
     {
-        String finalProjectId = projectId.contains(":") ? projectId.split(":")[1] : projectId;
-        SimpleInMemoryVCS vcs = getVCS(finalProjectId).getVersionTag(versionId);
+        SimpleInMemoryVCS vcs = getVCS(projectId).getVersionTag(versionId);
         if (vcs == null)
         {
             throw new RuntimeException("Unknown version in project " + projectId + ": " + versionId.toVersionIdString());
