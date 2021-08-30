@@ -47,6 +47,7 @@ import java.util.ServiceLoader;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
@@ -345,33 +346,37 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         @ModuleConfig(artifactType = ArtifactType.versioned_entities, type = ModuleConfigType.DEPENDENCIES)
         public void addVersionPackageModuleDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
         {
-            if (getProjectDependencies().stream().anyMatch(pd -> !getProjectStructureForProjectDependency(pd, versionFileAccessContextProvider).isSupportedArtifactType(ArtifactType.versioned_entities)))
+            List<ProjectDependency> legacyProjectDependencyList = getProjectDependencies().stream().filter(pd -> ProjectDependency.isLegacyProjectDependency(pd)).collect(Collectors.toList());
+            if (legacyProjectDependencyList.size() > 0)
             {
-                StringBuilder builder = new StringBuilder(128);
-                for (ProjectDependency projectDependency : getProjectDependencies())
+                if (legacyProjectDependencyList.stream().anyMatch(pd -> !getProjectStructureForProjectDependency(pd, versionFileAccessContextProvider).isSupportedArtifactType(ArtifactType.versioned_entities)))
                 {
-                    ProjectStructure dependencyStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
-                    if (!dependencyStructure.isSupportedArtifactType(ArtifactType.versioned_entities))
+                    StringBuilder builder = new StringBuilder(128);
+                    for (ProjectDependency projectDependency : legacyProjectDependencyList)
                     {
-                        if (builder.length() == 0)
+                        ProjectStructure dependencyStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
+                        if (!dependencyStructure.isSupportedArtifactType(ArtifactType.versioned_entities))
                         {
-                            builder.append("The following dependencies do not support versioned entities: ");
-                        }
-                        else
-                        {
-                            builder.append(", ");
-                        }
-                        projectDependency.appendDependencyString(builder);
-                        ProjectConfiguration dependencyConfig = dependencyStructure.getProjectConfiguration();
-                        if (dependencyConfig != null)
-                        {
-                            builder.append(" (").append(dependencyConfig.getGroupId()).append(':').append(dependencyConfig.getArtifactId()).append(':');
-                            projectDependency.getVersionId().appendVersionIdString(builder);
-                            builder.append(')');
+                            if (builder.length() == 0)
+                            {
+                                builder.append("The following dependencies do not support versioned entities: ");
+                            }
+                            else
+                            {
+                                builder.append(", ");
+                            }
+                            projectDependency.appendDependencyString(builder);
+                            ProjectConfiguration dependencyConfig = dependencyStructure.getProjectConfiguration();
+                            if (dependencyConfig != null)
+                            {
+                                builder.append(" (").append(dependencyConfig.getGroupId()).append(':').append(dependencyConfig.getArtifactId()).append(':');
+                                projectDependency.getVersionId().appendVersionIdString(builder);
+                                builder.append(')');
+                            }
                         }
                     }
+                    throw new LegendSDLCServerException(builder.toString());
                 }
-                throw new LegendSDLCServerException(builder.toString());
             }
             getProjectDependenciesAsMavenDependencies(ArtifactType.versioned_entities, versionFileAccessContextProvider, true).forEach(dependencyConsumer);
         }

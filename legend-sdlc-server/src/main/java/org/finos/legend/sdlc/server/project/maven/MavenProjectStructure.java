@@ -275,10 +275,15 @@ public abstract class MavenProjectStructure extends ProjectStructure
 
     public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
     {
+        String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
+        if (!ProjectDependency.isLegacyProjectDependency(projectDependency))
+        {
+            String[] mavenCoordinates = projectDependency.getProjectId().split(":");
+            return artifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates[0], mavenCoordinates[1] + "-" + artifactType, versionString));
+        }
         ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
         ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
         String groupId = versionConfig.getGroupId();
-        String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
         Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
         return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
     }

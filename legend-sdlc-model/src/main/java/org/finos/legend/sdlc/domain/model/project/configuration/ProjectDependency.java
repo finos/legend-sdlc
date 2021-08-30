@@ -72,6 +72,11 @@ public abstract class ProjectDependency extends Dependency implements Comparable
         return (versionId == null) ? builder.append("null") : versionId.appendVersionIdString(builder);
     }
 
+    public static boolean isLegacyProjectDependency(ProjectDependency projectDependency)
+    {
+        return !projectDependency.getProjectId().contains(":");
+    }
+
     public static ProjectDependency parseProjectDependency(String string)
     {
         return parseProjectDependency(string, DEFAULT_DELIMITER);

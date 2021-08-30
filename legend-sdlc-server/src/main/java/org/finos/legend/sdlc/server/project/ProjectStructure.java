@@ -446,7 +446,7 @@ public abstract class ProjectStructure
         // find out which dependencies we need to update
         boolean updateProjectDependencies = false;
         Set<ProjectDependency> projectDependencies = Sets.mutable.withAll(currentConfig.getProjectDependencies());
-        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> !dep.getProjectId().contains(":")).collect(Collectors.toSet());
+        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> ProjectDependency.isLegacyProjectDependency(dep)).collect(Collectors.toSet());
 
         if (toUpdateProjectDependencies.size() > 0)
         {
