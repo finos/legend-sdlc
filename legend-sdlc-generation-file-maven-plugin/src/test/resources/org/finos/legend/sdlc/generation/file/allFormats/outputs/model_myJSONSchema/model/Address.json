@@ -1,0 +1,31 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "title" : "model::Address",
+  "type" : "object",
+  "properties" : {
+    "Street" : {
+      "type" : "string"
+    },
+    "City" : {
+      "$ref" : "#/definitions/model::City"
+    },
+    "Country" : {
+      "$ref" : "#/definitions/model::Country"
+    }
+  },
+  "required" : [ "Street", "City", "Country" ],
+  "definitions" : {
+    "model::City" : {
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "model::City",
+      "enum" : [ "London", "NY" ],
+      "type" : "string"
+    },
+    "model::Country" : {
+      "$schema" : "http://json-schema.org/draft-07/schema#",
+      "title" : "model::Country",
+      "enum" : [ "UK", "USA" ],
+      "type" : "string"
+    }
+  }
+}

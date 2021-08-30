@@ -70,6 +70,10 @@ public class GenerationOutput
                     .readTree(this.content)
                     .toPrettyString();
         }
+        else if ("yaml".equals(this.format))
+        {
+            return this.content;
+        }
         return StringEscapeUtils.unescapeJava(this.content);
     }
 

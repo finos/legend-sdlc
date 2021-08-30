@@ -1,0 +1,20 @@
+title: "model::Person"
+type: "object"
+properties: 
+  lastName: 
+    type: "string"
+  firstName: 
+    type: "string"
+  dateOfBirth: 
+    type: "string"
+    format: "date-time"
+  middleName: 
+    type: "string"
+  address: 
+    $ref: "Address.yaml"
+required: 
+  - "lastName"
+  - "firstName"
+  - "dateOfBirth"
+  - "middleName"
+  - "address"

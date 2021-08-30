@@ -1,0 +1,13 @@
+title: "model::Address"
+type: "object"
+properties: 
+  Street: 
+    type: "string"
+  City: 
+    $ref: "City.yaml"
+  Country: 
+    $ref: "Country.yaml"
+required: 
+  - "Street"
+  - "City"
+  - "Country"

@@ -1,0 +1,5 @@
+title: "model::City"
+enum: 
+  - "London"
+  - "NY"
+type: "string"

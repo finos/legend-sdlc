@@ -1,0 +1,13 @@
+title: "model::Firm"
+type: "object"
+properties: 
+  employees: 
+    $ref: "Person.yaml"
+  legalName: 
+    type: "string"
+  incType: 
+    $ref: "IncType.yaml"
+required: 
+  - "employees"
+  - "legalName"
+  - "incType"

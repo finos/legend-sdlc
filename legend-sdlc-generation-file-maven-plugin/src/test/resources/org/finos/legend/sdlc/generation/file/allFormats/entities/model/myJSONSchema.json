@@ -1,0 +1,18 @@
+{
+  "classifierPath": "meta::pure::generation::metamodel::GenerationConfiguration",
+  "content": {
+    "_type": "fileGeneration",
+    "configurationProperties": [
+      {
+        "name": "schemaSpecification",
+        "value": "meta::json::schema::generation::JSONSchemaSpecification.JSON_SCHEMA_DRAFT_07"}
+    ],
+    "name": "myJSONSchema",
+    "package": "model",
+    "scopeElements": [
+      "model",
+      "complex"
+    ],
+    "type": "jsonSchema"
+  }
+}
