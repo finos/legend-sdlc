@@ -26,13 +26,12 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvider
 {
-    private final Map<String, SimpleInMemoryVCS> projects = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    private final Map<String, SimpleInMemoryVCS> projects = Maps.mutable.empty();
     private final String defaultAuthor;
     private final String defaultCommitter;
 
@@ -218,8 +217,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
 
     private SimpleInMemoryVCS getVCS(String projectId, VersionId versionId)
     {
-        String finalProjectId = projectId.contains(":") ? projectId.split(":")[1] : projectId;
-        SimpleInMemoryVCS vcs = getVCS(finalProjectId).getVersionTag(versionId);
+        SimpleInMemoryVCS vcs = getVCS(projectId).getVersionTag(versionId);
         if (vcs == null)
         {
             throw new RuntimeException("Unknown version in project " + projectId + ": " + versionId.toVersionIdString());
