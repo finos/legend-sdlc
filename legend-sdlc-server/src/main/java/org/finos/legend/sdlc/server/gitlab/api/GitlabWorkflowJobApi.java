@@ -14,10 +14,13 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.ListIterate;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -25,20 +28,20 @@ import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.JobApi;
+import org.gitlab4j.api.PipelineApi;
 import org.gitlab4j.api.models.Job;
 import org.gitlab4j.api.models.JobStatus;
+import org.gitlab4j.api.models.Pipeline;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements WorkflowJobApi
 {
@@ -127,93 +130,75 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
         @Override
         public WorkflowJob getWorkflowJob(String workflowId, String workflowJobId)
         {
-            int jobId = parseIntegerIdIfNotNull(workflowJobId);
-            Job job;
-            try
-            {
-                job = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getJob(this.projectId.getGitLabId(), jobId));
-            }
-            catch (Exception e)
-            {
-                throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflow job " + workflowJobId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error getting workflow job " + workflowJobId + " in " + getRefInfoForException());
-            }
-
-            if (!getRef().equals(job.getRef()))
-            {
-                throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId, Response.Status.NOT_FOUND);
-            }
-
-            if (!workflowId.equals(toStringIfNotNull(job.getPipeline().getId())))
-            {
-                throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ", workflow " + workflowId + ": " + workflowJobId, Response.Status.NOT_FOUND);
-            }
-
-            return fromGitLabJob(this.projectId.toString(), job);
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            Job job = getJob(workflowId, workflowJobId);
+            return fromGitLabJob(job);
         }
 
         @Override
         public List<WorkflowJob> getWorkflowJobs(String workflowId, Iterable<WorkflowJobStatus> statuses)
         {
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+
+            Set<WorkflowJobStatus> statusSet = (statuses == null) ? Collections.emptySet() : ((statuses instanceof Set) ? (Set<WorkflowJobStatus>) statuses : Iterate.addAllTo(statuses, EnumSet.noneOf(WorkflowJobStatus.class)));
+
+            int pipelineId = parseIntegerIdIfNotNull(workflowId);
+            GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
+            PipelineApi pipelineApi = gitLabApi.getPipelineApi();
+
+            // Validate the pipeline
+            Pipeline pipeline;
             try
             {
-                int pipelineId = parseIntegerIdIfNotNull(workflowId);
-                JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
-                List<Job> jobs = withRetries(() -> jobApi.getJobsForPipeline(this.projectId.getGitLabId(), pipelineId));
-                Stream<Job> jobStream = jobs.stream();
-
-                Set<WorkflowJobStatus> statusSet = (statuses == null) ? Collections.emptySet() : ((statuses instanceof Set) ? (Set<WorkflowJobStatus>) statuses : StreamSupport.stream(statuses.spliterator(), false).collect(Collectors.toCollection(() -> EnumSet.noneOf(WorkflowJobStatus.class))));
-                if (!statusSet.isEmpty())
-                {
-                    jobStream = jobStream.filter(job -> statusSet.contains(fromGitLabJobStatus(job.getStatus())));
-                }
-
-                return jobStream
-                        .map(p -> fromGitLabJob(this.projectId.toString(), p))
-                        .collect(Collectors.toList());
+                pipeline = withRetries(() -> pipelineApi.getPipeline(this.projectId.getGitLabId(), pipelineId));
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflow job for " + getRefInfoForException(),
-                        () -> "Unknown " + getRefInfoForException(),
-                        () -> "Error getting workflow job for " + getRefInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
             }
+
+            if (!getRef().equals(pipeline.getRef()))
+            {
+                throw new LegendSDLCServerException("Unknown workflow " + workflowId + " in " + getRefInfoForException(), Status.NOT_FOUND);
+            }
+
+            // Get the jobs
+            JobApi jobApi = gitLabApi.getJobApi();
+            List<Job> jobs;
+            try
+            {
+                jobs = withRetries(() -> jobApi.getJobsForPipeline(this.projectId.getGitLabId(), pipelineId));
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
+            }
+            MutableList<WorkflowJob> workflowJobs = ListIterate.collect(jobs, this::fromGitLabJob);
+            if (!statusSet.isEmpty())
+            {
+                workflowJobs.removeIf(job -> statusSet.contains(job.getStatus()));
+            }
+            return workflowJobs;
         }
 
         @Override
         public String getWorkflowJobLog(String workflowId, String workflowJobId)
         {
-            int jobId = parseIntegerIdIfNotNull(workflowJobId);
-            Job job;
-            String jobTrace;
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+
+            Job job = getJob(workflowId, workflowJobId);
+            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
             try
             {
-                job = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getJob(this.projectId.getGitLabId(), jobId));
-
-                if (!getRef().equals(job.getRef()))
-                {
-                    throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId, Response.Status.NOT_FOUND);
-                }
-
-                if (!workflowId.equals(toStringIfNotNull(job.getPipeline().getId())))
-                {
-                    throw new LegendSDLCServerException("Unknown workflow job in " + getRefInfoForException() + ", workflow " + workflowId + ": " + workflowJobId, Response.Status.NOT_FOUND);
-                }
-            }
-            catch (Exception e)
-            {
-                throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflow job " + workflowJobId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow job in " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error getting workflow job " + workflowJobId + " in " + getRefInfoForException());
-            }
-
-            try
-            {
-                jobTrace = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getJobApi().getTrace(this.projectId.getGitLabId(), job.getId()));
+                return withRetries(() -> jobApi.getTrace(this.projectId.getGitLabId(), job.getId()));
             }
             catch (Exception e)
             {
@@ -222,8 +207,126 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                         () -> "Unknown workflow job log in " + getRefInfoForException() + ": " + workflowJobId,
                         () -> "Error getting workflow job log for workflow job" + workflowJobId + " in " + getRefInfoForException());
             }
+        }
 
-            return jobTrace;
+        @Override
+        public WorkflowJob runWorkflowJob(String workflowId, String workflowJobId)
+        {
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+
+            Job job = getJob(workflowId, workflowJobId);
+            WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
+            if (status != WorkflowJobStatus.WAITING_MANUAL)
+            {
+                throw new LegendSDLCServerException("Cannot run job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only waiting manual jobs can be run, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+            }
+
+            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            Job result;
+            try
+            {
+                result = withRetries(() -> jobApi.playJob(this.projectId.getGitLabId(), job.getId()));
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to run job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                        () -> "Error running job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+            }
+            return fromGitLabJob(result);
+        }
+
+        @Override
+        public WorkflowJob retryWorkflowJob(String workflowId, String workflowJobId)
+        {
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+
+            Job job = getJob(workflowId, workflowJobId);
+            WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
+            if ((status != WorkflowJobStatus.FAILED) && (status != WorkflowJobStatus.CANCELED) && (status != WorkflowJobStatus.SUCCEEDED))
+            {
+                throw new LegendSDLCServerException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only succeeded, failed, or canceled jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+            }
+            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            Job result;
+            try
+            {
+                result = withRetries(() -> jobApi.retryJob(this.projectId.getGitLabId(), job.getId()));
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to retry job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                        () -> "Error retrying job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+            }
+            return fromGitLabJob(result);
+        }
+
+        @Override
+        public WorkflowJob cancelWorkflowJob(String workflowId, String workflowJobId)
+        {
+            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+
+            Job job = getJob(workflowId, workflowJobId);
+            WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
+            if (status != WorkflowJobStatus.IN_PROGRESS)
+            {
+                throw new LegendSDLCServerException("Cannot cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only jobs in progress can be cancelled, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+            }
+
+            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            Job result;
+            try
+            {
+                result = withRetries(() -> jobApi.cancelJob(this.projectId.getGitLabId(), job.getId()));
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException(),
+                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                        () -> "Error canceling job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+            }
+            return fromGitLabJob(result);
+        }
+
+        protected Job getJob(String workflowId, String workflowJobId)
+        {
+            return getJob(parseIntegerId(workflowId), parseIntegerId(workflowJobId));
+        }
+
+        protected Job getJob(int pipelineId, int jobId)
+        {
+            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            Job job;
+            try
+            {
+                job = withRetries(() -> jobApi.getJob(this.projectId.getGitLabId(), jobId));
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException(),
+                        () -> "Unknown job in workflow " + pipelineId + " of " + getRefInfoForException() + ": " + jobId,
+                        () -> "Error getting workflow job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException());
+            }
+
+            if (!getRef().equals(job.getRef()) || (job.getPipeline() == null) || (job.getPipeline().getId() == null) || (pipelineId != job.getPipeline().getId()))
+            {
+                throw new LegendSDLCServerException("Unknown job in workflow " + pipelineId + " of " + getRefInfoForException() + ": " + jobId, Status.NOT_FOUND);
+            }
+
+            return job;
+        }
+
+        protected WorkflowJob fromGitLabJob(Job job)
+        {
+            return GitlabWorkflowJobApi.fromGitLabJob(this.projectId.toString(), job);
         }
 
         protected abstract String getRef();
