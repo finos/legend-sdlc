@@ -14,10 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.set.ImmutableSet;
-import org.eclipse.collections.api.tuple.Pair;
-import org.eclipse.collections.impl.tuple.Tuples;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -77,8 +73,6 @@ abstract class BaseGitLabApi
     private static final String GROUP_BRANCH_PREFIX = "group";
     private static final String GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX = "group-resolution";
     private static final String GROUP_BACKUP_BRANCH_PREFIX = "group-backup";
-
-    private static final ImmutableSet<String> GROUP_WORKSPACE_PREFIXES = Sets.immutable.with(GROUP_BRANCH_PREFIX, GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX, GROUP_BACKUP_BRANCH_PREFIX);
 
     private static final String MR_STATE_OPENED = "opened";
     private static final String MR_STATE_CLOSED = "closed";
@@ -241,59 +235,121 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected static Pair<WorkspaceType, WorkspaceAccessType> getWorkspaceTypesFromNamePrefix(String workspaceBranchNamePrefix)
+    protected static WorkspaceInfo parseWorkspaceBranchName(String branchName)
     {
-        switch (workspaceBranchNamePrefix)
+        int firstDelimiter = branchName.indexOf(BRANCH_DELIMITER);
+        if (firstDelimiter == -1)
+        {
+            return null;
+        }
+
+        WorkspaceType type;
+        WorkspaceAccessType accessType;
+
+        switch (branchName.substring(0, firstDelimiter))
         {
             case WORKSPACE_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
+                type = WorkspaceType.USER;
+                accessType = WorkspaceAccessType.WORKSPACE;
+                break;
             }
             case CONFLICT_RESOLUTION_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION);
+                type = WorkspaceType.USER;
+                accessType = WorkspaceAccessType.CONFLICT_RESOLUTION;
+                break;
             }
             case BACKUP_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.USER, WorkspaceAccessType.BACKUP);
+                type = WorkspaceType.USER;
+                accessType = WorkspaceAccessType.BACKUP;
+                break;
             }
             case GROUP_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.GROUP, WorkspaceAccessType.WORKSPACE);
+                type = WorkspaceType.GROUP;
+                accessType = WorkspaceAccessType.WORKSPACE;
+                break;
             }
             case GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.GROUP, WorkspaceAccessType.CONFLICT_RESOLUTION);
+                type = WorkspaceType.GROUP;
+                accessType = WorkspaceAccessType.CONFLICT_RESOLUTION;
+                break;
             }
             case GROUP_BACKUP_BRANCH_PREFIX:
             {
-                return Tuples.pair(WorkspaceType.GROUP, WorkspaceAccessType.BACKUP);
+                type = WorkspaceType.GROUP;
+                accessType = WorkspaceAccessType.BACKUP;
+                break;
             }
             default:
             {
-                throw new RuntimeException("Unknown workspace branch name prefix " + workspaceBranchNamePrefix);
+                return null;
+            }
+        }
+
+        switch (type)
+        {
+            case USER:
+            {
+                // <prefix>/<userId>/<workspaceId>
+                int nextDelimiter = branchName.indexOf(BRANCH_DELIMITER, firstDelimiter + 1);
+                if (nextDelimiter == -1)
+                {
+                    return null;
+                }
+                String workspaceId = branchName.substring(nextDelimiter + 1);
+                String userId = branchName.substring(firstDelimiter + 1, nextDelimiter);
+                return new WorkspaceInfo(workspaceId, type, accessType, userId);
+            }
+            case GROUP:
+            {
+                // <prefix>/<workspaceId>
+                String workspaceId = branchName.substring(firstDelimiter + 1);
+                return new WorkspaceInfo(workspaceId, type, accessType, null);
+            }
+            default:
+            {
+                throw new IllegalStateException("Unknown workspace type: " + type);
             }
         }
     }
 
     protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : createUserBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
+        return (workspaceId == null) ? MASTER_BRANCH : createBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
     }
 
-    protected String getUserWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        return createUserBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
+        String prefix = getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType);
+        switch (workspaceType)
+        {
+            case USER:
+            {
+                return createBranchName(prefix, getCurrentUser(), workspaceId);
+            }
+            case GROUP:
+            {
+                return createBranchName(prefix, workspaceId);
+            }
+            default:
+            {
+                throw new IllegalStateException("Unknown workspace type: " + workspaceType);
+            }
+        }
     }
 
     protected String newUserTemporaryBranchName()
     {
-        return createUserBranchName(TEMPORARY_BRANCH_PREFIX, getCurrentUser(), newTemporaryBranchId());
+        return createBranchName(TEMPORARY_BRANCH_PREFIX, getCurrentUser(), newTemporaryBranchId());
     }
 
     protected String newUserTemporaryBranchName(String workspaceId)
     {
-        return createUserBranchName(TEMPORARY_BRANCH_PREFIX, getCurrentUser(), workspaceId, newTemporaryBranchId());
+        return createBranchName(TEMPORARY_BRANCH_PREFIX, getCurrentUser(), workspaceId, newTemporaryBranchId());
     }
 
     protected static String getRandomIdString()
@@ -310,36 +366,19 @@ abstract class BaseGitLabApi
         return getRandomIdString();
     }
 
-    private static String createUserBranchName(String first, String... more)
+    private static String createBranchName(String first, String second)
     {
-        int moreCount = (more == null) ? 0 : more.length;
-        if (moreCount == 0)
-        {
-            return first;
-        }
-
-        StringBuilder builder = new StringBuilder(first.length() + (moreCount * 16));
-        builder.append(first);
-
-        // Skip current user id as part of workspace name construction if workspace is of one of the group access types.
-        int startIndex = GROUP_WORKSPACE_PREFIXES.contains(first) ? 1 : 0;
-
-        for (int i = startIndex; i < moreCount; i++)
-        {
-            builder.append(BRANCH_DELIMITER).append(more[i]);
-        }
-        return builder.toString();
+        return first + BRANCH_DELIMITER + second;
     }
 
-    protected static String getWorkspaceIdFromWorkspaceBranchName(String workspaceBranchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    private static String createBranchName(String first, String second, String third)
     {
-        // Locate the first branch delimiter if workspace is of one of the group access types since there is no user id segment in branch name.
-        int fullPrefixEndIndex = workspaceType == WorkspaceType.GROUP ? workspaceBranchName.indexOf(BRANCH_DELIMITER) : workspaceBranchName.indexOf(BRANCH_DELIMITER, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1);
-        if (fullPrefixEndIndex == -1)
-        {
-            throw new IllegalArgumentException("Invalid workspace branch name: " + workspaceBranchName);
-        }
-        return workspaceBranchName.substring(fullPrefixEndIndex + 1);
+        return first + BRANCH_DELIMITER + second + BRANCH_DELIMITER + third;
+    }
+
+    private static String createBranchName(String first, String second, String third, String fourth)
+    {
+        return first + BRANCH_DELIMITER + second + BRANCH_DELIMITER + third + BRANCH_DELIMITER + fourth;
     }
 
     protected static boolean isWorkspaceBranchName(String branchName, WorkspaceAccessType workspaceAccessType)
@@ -731,7 +770,12 @@ abstract class BaseGitLabApi
 
     protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
     {
-        return (mergeRequest != null) && (isWorkspaceBranchName(mergeRequest.getSourceBranch(), WorkspaceType.USER, WorkspaceAccessType.WORKSPACE) || isWorkspaceBranchName(mergeRequest.getSourceBranch(), WorkspaceType.GROUP, WorkspaceAccessType.WORKSPACE));
+        if ((mergeRequest == null) || !MASTER_BRANCH.equals(mergeRequest.getTargetBranch()))
+        {
+            return false;
+        }
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        return (workspaceInfo != null) && (workspaceInfo.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE);
     }
 
     protected static boolean isOpen(MergeRequest mergeRequest)
@@ -847,5 +891,41 @@ abstract class BaseGitLabApi
             return RevisionAlias.REVISION_ID;
         }
         return null;
+    }
+
+    protected static final class WorkspaceInfo
+    {
+        private final String workspaceId;
+        private final WorkspaceType workspaceType;
+        private final WorkspaceAccessType workspaceAccessType;
+        private final String userId;
+
+        private WorkspaceInfo(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String userId)
+        {
+            this.workspaceId = workspaceId;
+            this.workspaceType = workspaceType;
+            this.workspaceAccessType = workspaceAccessType;
+            this.userId = userId;
+        }
+
+        public String getWorkspaceId()
+        {
+            return this.workspaceId;
+        }
+
+        public WorkspaceType getWorkspaceType()
+        {
+            return this.workspaceType;
+        }
+
+        public WorkspaceAccessType getWorkspaceAccessType()
+        {
+            return this.workspaceAccessType;
+        }
+
+        public String getUserId()
+        {
+            return this.userId;
+        }
     }
 }

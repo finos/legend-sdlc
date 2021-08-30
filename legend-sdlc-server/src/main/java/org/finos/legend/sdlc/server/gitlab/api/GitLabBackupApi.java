@@ -52,7 +52,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         try
         {
             backupWorkspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
+                    getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
         }
         catch (Exception e)
         {
@@ -84,7 +84,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         // Verify the backup exists
         try
         {
-            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
+            withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType)));
         }
         catch (Exception e)
         {
@@ -103,7 +103,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         // Check if branch exists
         try
         {
-            existingBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
+            existingBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType)));
         }
         catch (Exception e)
         {
@@ -123,7 +123,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
             try
             {
                 workspaceDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                        getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
+                        getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 20, 1_000);
             }
             catch (Exception e)
             {
@@ -142,8 +142,8 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         try
         {
             workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType),
+                    getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType),
+                    getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType),
                     30, 1_000
             );
         }
@@ -162,7 +162,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         try
         {
             boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(),
-                    getUserWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
+                    getWorkspaceBranchName(workspaceId, workspaceType, backupWorkspaceType), 20, 1_000);
             if (!deleted)
             {
                 LOGGER.error("Failed to delete {} {} in project {}", workspaceType.getLabel() + " " + backupWorkspaceType.getLabel(), workspaceId, projectId);
