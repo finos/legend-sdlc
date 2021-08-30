@@ -301,15 +301,18 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected void testUpdateProjectDependencies(ProjectType projectType)
     {
         List<ProjectDependency> projectDependencies = Arrays.asList(
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1"),
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject1:1.0.0"),
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject3:2.0.1"));
+                ProjectDependency.parseProjectDependency("TestProject0:0.0.1"),
+                ProjectDependency.parseProjectDependency("TestProject1:1.0.0"),
+                ProjectDependency.parseProjectDependency("TestProject3:2.0.1"));
         projectDependencies.sort(Comparator.naturalOrder());
         for (ProjectDependency projectDependency : projectDependencies)
         {
-            String[] mavenCoordinate = projectDependency.getProjectId().split(":");
-            createProjectWithVersions(mavenCoordinate[1], mavenCoordinate[0], mavenCoordinate[1], projectDependency.getVersionId());
+            createProjectWithVersions(projectDependency.getProjectId(), GROUP_ID, projectDependency.getProjectId().toLowerCase(), projectDependency.getVersionId());
         }
+        List<ProjectDependency> updatedProjectDependencies =  Arrays.asList(
+                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1"),
+                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject1:1.0.0"),
+                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject3:2.0.1"));;
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);
         List<Entity> testEntities = getTestEntities();
@@ -353,7 +356,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureVersion, afterWorkspaceConfig.getProjectStructureVersion().getVersion());
         Assert.assertEquals(this.projectStructureExtensionVersion, afterWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), afterWorkspaceConfig.getMetamodelDependencies());
-        Assert.assertEquals(projectDependencies, afterWorkspaceConfig.getProjectDependencies());
+        Assert.assertEquals(updatedProjectDependencies, afterWorkspaceConfig.getProjectDependencies());
         assertStateValid(PROJECT_ID, addDependenciesWorkspaceId, null);
 
         this.fileAccessProvider.commitWorkspace(PROJECT_ID, addDependenciesWorkspaceId);
@@ -365,7 +368,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureVersion, afterProjectConfig.getProjectStructureVersion().getVersion());
         Assert.assertEquals(this.projectStructureExtensionVersion, afterProjectConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), afterProjectConfig.getMetamodelDependencies());
-        Assert.assertEquals(projectDependencies, afterProjectConfig.getProjectDependencies());
+        Assert.assertEquals(updatedProjectDependencies, afterProjectConfig.getProjectDependencies());
         assertStateValid(PROJECT_ID, null, null);
 
         String noChangeWorkspaceId = "NoChangeToDependencies";
@@ -385,11 +388,11 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureVersion, noChangeWorkspaceConfig.getProjectStructureVersion().getVersion());
         Assert.assertEquals(this.projectStructureExtensionVersion, noChangeWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), noChangeWorkspaceConfig.getMetamodelDependencies());
-        Assert.assertEquals(projectDependencies, noChangeWorkspaceConfig.getProjectDependencies());
+        Assert.assertEquals(updatedProjectDependencies, noChangeWorkspaceConfig.getProjectDependencies());
         assertStateValid(PROJECT_ID, noChangeWorkspaceId, null);
         this.fileAccessProvider.deleteWorkspace(PROJECT_ID, noChangeWorkspaceId);
 
-        for (int i = 0; i < projectDependencies.size(); i++)
+        for (int i = 0; i < updatedProjectDependencies.size(); i++)
         {
             String removeDependencyWorkspaceId = "RemoveDependency" + 0;
             this.fileAccessProvider.createWorkspace(PROJECT_ID, removeDependencyWorkspaceId);
@@ -400,13 +403,13 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             Assert.assertEquals(this.projectStructureVersion, beforeRemovalConfig.getProjectStructureVersion().getVersion());
             Assert.assertEquals(this.projectStructureExtensionVersion, beforeRemovalConfig.getProjectStructureVersion().getExtensionVersion());
             Assert.assertEquals(Collections.emptyList(), beforeRemovalConfig.getMetamodelDependencies());
-            Assert.assertEquals(projectDependencies.subList(i, projectDependencies.size()), beforeRemovalConfig.getProjectDependencies());
+            Assert.assertEquals(updatedProjectDependencies.subList(i, updatedProjectDependencies.size()), beforeRemovalConfig.getProjectDependencies());
             assertStateValid(PROJECT_ID, removeDependencyWorkspaceId, null);
 
             ProjectConfigurationUpdateBuilder.newBuilder(this.fileAccessProvider, projectType, PROJECT_ID)
                     .withWorkspace(removeDependencyWorkspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                     .withMessage("Remove dependencies")
-                    .withProjectDependenciesToRemove(Collections.singletonList(projectDependencies.get(i)))
+                    .withProjectDependenciesToRemove(Collections.singletonList(updatedProjectDependencies.get(i)))
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                     .updateProjectConfiguration();
@@ -417,7 +420,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             Assert.assertEquals(this.projectStructureVersion, afterRemovalWorkspaceConfig.getProjectStructureVersion().getVersion());
             Assert.assertEquals(this.projectStructureExtensionVersion, afterRemovalWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
             Assert.assertEquals(Collections.emptyList(), afterRemovalWorkspaceConfig.getMetamodelDependencies());
-            Assert.assertEquals(projectDependencies.subList(i + 1, projectDependencies.size()), afterRemovalWorkspaceConfig.getProjectDependencies());
+            Assert.assertEquals(updatedProjectDependencies.subList(i + 1, updatedProjectDependencies.size()), afterRemovalWorkspaceConfig.getProjectDependencies());
             assertStateValid(PROJECT_ID, removeDependencyWorkspaceId, null);
 
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, removeDependencyWorkspaceId);
@@ -429,7 +432,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             Assert.assertEquals(this.projectStructureVersion, afterRemovalProjectConfig.getProjectStructureVersion().getVersion());
             Assert.assertEquals(this.projectStructureExtensionVersion, afterRemovalProjectConfig.getProjectStructureVersion().getExtensionVersion());
             Assert.assertEquals(Collections.emptyList(), afterRemovalProjectConfig.getMetamodelDependencies());
-            Assert.assertEquals(projectDependencies.subList(i + 1, projectDependencies.size()), afterRemovalProjectConfig.getProjectDependencies());
+            Assert.assertEquals(updatedProjectDependencies.subList(i + 1, updatedProjectDependencies.size()), afterRemovalProjectConfig.getProjectDependencies());
             assertStateValid(PROJECT_ID, null, null);
         }
 
