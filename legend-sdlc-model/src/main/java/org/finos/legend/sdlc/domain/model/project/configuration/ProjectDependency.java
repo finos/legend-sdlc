@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.domain.model.project.configuration;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class ProjectDependency extends Dependency implements Comparable<ProjectDependency>
@@ -74,7 +76,28 @@ public abstract class ProjectDependency extends Dependency implements Comparable
 
     public static boolean isLegacyProjectDependency(ProjectDependency projectDependency)
     {
+        if (projectDependency.getProjectId() == null)
+        {
+            throw new IllegalArgumentException("Invalid poject id string (null) for project dependency");
+        }
         return !projectDependency.getProjectId().contains(":");
+    }
+
+    public static List<String> getMavenCoordinatesFromProjectDependency(String projectId)
+    {
+        try
+        {
+            String[] mavenCoordinates = projectId.split(":");
+            if (mavenCoordinates[0].isEmpty())
+            {
+                throw new IllegalArgumentException();
+            }
+            return Arrays.asList(mavenCoordinates[0],mavenCoordinates[1]);
+        }
+        catch (Exception e)
+        {
+            throw new IllegalArgumentException("Invalid project id for dependency: " + projectId + ", could not find groupId or artifactId");
+        }
     }
 
     public static ProjectDependency parseProjectDependency(String string)

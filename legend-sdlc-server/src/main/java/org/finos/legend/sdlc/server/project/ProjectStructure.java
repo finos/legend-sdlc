@@ -693,29 +693,37 @@ public abstract class ProjectStructure
         SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
         for (ProjectDependency projectDependency : toUpdateProjectDependencies)
         {
-            try
+            if (ProjectDependency.isLegacyProjectDependency(projectDependency))
             {
-                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
-                if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
+                try
                 {
-                    unknownDependencies.add(projectDependency);
-                }
-                else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
-                {
-                    nonProdDependencies.add(projectDependency);
-                }
-                else
-                {
-                    if (purgeOldDependency)
+                    ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
+                    if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
                     {
-                        projectDependencies.remove(projectDependency);
+                        unknownDependencies.add(projectDependency);
                     }
-                    projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(), projectDependency.getVersionId()));
+                    else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
+                    {
+                        nonProdDependencies.add(projectDependency);
+                    }
+                    else
+                    {
+                        if (purgeOldDependency)
+                        {
+                            projectDependencies.remove(projectDependency);
+                        }
+                        projectDependencies.add(ProjectDependency.newProjectDependency(dependencyConfig.getGroupId() + ":" + dependencyConfig.getArtifactId(), projectDependency.getVersionId()));
+                    }
+                }
+                catch (Exception e)
+                {
+                    accessExceptions.put(projectDependency, e);
                 }
             }
-            catch (Exception e)
+            else
             {
-                accessExceptions.put(projectDependency, e);
+                List<String> mavenCoordinates = ProjectDependency.getMavenCoordinatesFromProjectDependency(projectDependency.getProjectId());
+                projectDependencies.add(ProjectDependency.newProjectDependency(mavenCoordinates.get(0) + ":" + mavenCoordinates.get(1), projectDependency.getVersionId()));
             }
         }
         if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())

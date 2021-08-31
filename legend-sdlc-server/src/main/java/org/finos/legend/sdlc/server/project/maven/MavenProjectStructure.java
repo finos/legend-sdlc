@@ -52,6 +52,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class MavenProjectStructure extends ProjectStructure
@@ -278,8 +279,9 @@ public abstract class MavenProjectStructure extends ProjectStructure
         String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
         if (!ProjectDependency.isLegacyProjectDependency(projectDependency))
         {
-            String[] mavenCoordinates = projectDependency.getProjectId().split(":");
-            return artifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates[0], mavenCoordinates[1] + "-" + artifactType, versionString));
+            List<String> mavenCoordinates = ProjectDependency.getMavenCoordinatesFromProjectDependency(projectDependency.getProjectId());
+            List<ArtifactType> artifactTypeList = ((artifactTypes == null) || artifactTypes.isEmpty()) ? Arrays.asList(ArtifactType.entities,ArtifactType.versioned_entities) : artifactTypes.stream().collect(Collectors.toList());
+            return artifactTypeList.stream().map(artifactType -> newMavenDependency(mavenCoordinates.get(0), mavenCoordinates.get(1) + "-" + artifactType, versionString));
         }
         ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
         ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
