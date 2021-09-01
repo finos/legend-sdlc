@@ -41,7 +41,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionClassGenerator
@@ -264,53 +263,76 @@ public class ServiceExecutionClassGenerator
 
     private void generateRunMethod()
     {
-        List<ExecutionParameter> parameters = getExecutionParameters();
         addImport(ServiceRunnerInput.class);
         addImport(OutputStream.class);
         addImport(List.class);
-        this.runMethod = "    public void run(" +  ServiceRunnerInput.class.getSimpleName() + " serviceRunnerInput, " +  OutputStream.class.getSimpleName() + " outputStream)\n" +
-                "    {\n" +
-                "        List<Object> args = serviceRunnerInput.getArgs();\n" +
-                "        if (args.size() != " + parameters.size() + ")\n" +
-                "        {\n" +
-                "            throw new IllegalArgumentException(\"Unexpected number of parameters. Expected parameter size: " + parameters.size() + ", Passed parameter size: \" + args.size());\n" +
-                "        }\n" +
-                (parameters.size() > 0 ?
-                        IntStream.range(0, parameters.size())
-                                .mapToObj(i ->
-                                {
-                                    ExecutionParameter p = parameters.get(i);
-                                    String type = p.getTypeString();
-                                    String valueExtractor =
-                                            "long".equals(type) || "Long".equals(type) ?
-                                                    "(args.get(" + i + ") instanceof Number ? ((Number) args.get(" + i + ")).longValue() : args.get(" + i + "))" :
-                                                    "double".equals(type) || "Double".equals(type) ?
-                                                            "(args.get(" + i + ") instanceof Number ? ((Number) args.get(" + i + ")).doubleValue() : args.get(" + i + "))" :
-                                                            "args.get(" + i + ")";
 
+        List<ExecutionParameter> parameters = getExecutionParameters();
+        int parametersSize = parameters.size();
+        String serviceRunnerInputParam = "serviceRunnerInput";
+        String outputStreamParam = "outputStream";
 
-                                    return "        " + type + " param" + i + ";\n" +
-                                            "        try\n" +
-                                            "        {\n" +
-                                            "            param" + i + " = args.get(" + i + ") == null ? null : (" + type + ") " + valueExtractor + ";\n" +
-                                            "        }\n" +
-                                            "        catch (ClassCastException e)\n" +
-                                            "        {\n" +
-                                            "            throw new IllegalArgumentException(\"Unexpected parameter type. '" + p.legendParamName + "' parameter (index: " + i + ") should be of type '" + type + "'\");\n" +
-                                            "        }\n" +
-                                            "        catch (NullPointerException e)\n" +
-                                            "        {\n" +
-                                            "            throw new IllegalArgumentException(\"Unexpected parameter value. '" + p.legendParamName + "' parameter (index: " + i + ") should not be null\");\n" +
-                                            "        }\n";
-                                })
-                                .collect(Collectors.joining("\n", "\n", "\n")) :
-                        "\n"
-                ) +
-                "        newExecutionBuilder(" + parameters.size() + ")\n" +
-                IntStream.range(0, parameters.size()).mapToObj(i -> "            .withParameter(\"" + parameters.get(i).legendParamName + "\", param" + i + ")").collect(Collectors.joining("\n", "", parameters.size() > 0 ? "\n" : "")) +
-                "            .withServiceRunnerInput(serviceRunnerInput)\n" +
-                "            .executeToStream(outputStream);\n" +
-                "    }\n";
+        StringBuilder builder = new StringBuilder(512);
+        builder.append("    public void run(");
+        builder.append(ServiceRunnerInput.class.getSimpleName()).append(' ').append(serviceRunnerInputParam);
+        builder.append(", ");
+        builder.append(OutputStream.class.getSimpleName()).append(' ').append(outputStreamParam);
+        builder.append(")\n");
+        builder.append("    {\n");
+        builder.append("        List<Object> args = ").append(serviceRunnerInputParam).append(".getArgs();\n");
+        builder.append("        if (args.size() != ").append(parametersSize).append(")\n");
+        builder.append("        {\n");
+        builder.append("            throw new IllegalArgumentException(\"Unexpected number of parameters. Expected parameter size: ").append(parametersSize).append(", Passed parameter size: \" + args.size());\n");
+        builder.append("        }\n");
+
+        for (int i = 0; i < parametersSize; i++)
+        {
+            ExecutionParameter p = parameters.get(i);
+            String type = p.appendTypeString(new StringBuilder()).toString();
+            String argI = "args.get(" + i + ")";
+            String paramI = "param" + i;
+
+            StringBuilder valueExtractorBuilder = new StringBuilder(32);
+            if ("long".equals(type) || "Long".equals(type))
+            {
+                valueExtractorBuilder.append('(').append(argI).append(" instanceof Number ? ((Number) ").append(argI).append(").longValue() : ").append(argI).append(')');
+            }
+            else if ("double".equals(type) || "Double".equals(type))
+            {
+                valueExtractorBuilder.append('(').append(argI).append(" instanceof Number ? ((Number) ").append(argI).append(").doubleValue() : ").append(argI).append(')');
+            }
+            else
+            {
+                valueExtractorBuilder.append(argI);
+            }
+
+            builder.append('\n');
+            builder.append("        ").append(type).append(' ').append(paramI).append(";\n");
+            builder.append("        try\n");
+            builder.append("        {\n");
+            builder.append("            ").append(paramI).append(" = ").append(argI).append(" == null ? null : (").append(type).append(") ").append(valueExtractorBuilder).append(";\n");
+            builder.append("        }\n");
+            builder.append("        catch (ClassCastException e)\n");
+            builder.append("        {\n");
+            builder.append("            throw new IllegalArgumentException(\"Unexpected parameter type. '").append(p.legendParamName).append("' parameter (index: ").append(i).append(") should be of type '").append(type).append("'\");\n");
+            builder.append("        }\n");
+            builder.append("        catch (NullPointerException e)\n");
+            builder.append("        {\n");
+            builder.append("            throw new IllegalArgumentException(\"Unexpected parameter value. '").append(p.legendParamName).append("' parameter (index: ").append(i).append(") should not be null\");\n");
+            builder.append("        }\n");
+        }
+
+        builder.append('\n');
+        builder.append("        newExecutionBuilder(").append(parametersSize).append(")\n");
+        for (int i = 0; i < parametersSize; i++)
+        {
+            builder.append("            .withParameter(\"").append(parameters.get(i).legendParamName).append("\", param").append(i).append(")\n");
+        }
+        builder.append("            .withServiceRunnerInput(").append(serviceRunnerInputParam).append(")\n");
+        builder.append("            .executeToStream(").append(outputStreamParam).append(");\n");
+        builder.append("    }\n");
+
+        this.runMethod = builder.toString();
     }
 
     private static Class<?> getVariableJavaClass(Variable variable)
@@ -445,14 +467,23 @@ public class ServiceExecutionClassGenerator
 
         StringBuilder appendParameter(StringBuilder builder)
         {
-            builder.append(this.getTypeString());
+            this.appendTypeString(builder);
             builder.append(' ').append(this.javaParamName);
             return builder;
         }
 
-        String getTypeString()
+        StringBuilder appendTypeString(StringBuilder builder)
         {
-            return (this.isToMany ? "List<? extends " : "") + this.type.getSimpleName() +  (this.isToMany ? ">" : "");
+            if (this.isToMany)
+            {
+                builder.append("List<? extends ");
+            }
+            builder.append(this.type.getSimpleName());
+            if (this.isToMany)
+            {
+                builder.append('>');
+            }
+            return builder;
         }
     }
 }
