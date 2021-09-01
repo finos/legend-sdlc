@@ -308,7 +308,7 @@ public class TestServiceExecutionGenerator
                 .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace("::", ".")))
                 .sorted()
                 .collect(Collectors.toList());
-        Assert.assertTrue("ServiceRunner providers for these services are missing: " + String.join(", ", missingServiceProviders), missingServiceProviders.isEmpty());
+        Assert.assertEquals(Collections.emptyList(), missingServiceProviders);
         return classLoader;
     }
 
