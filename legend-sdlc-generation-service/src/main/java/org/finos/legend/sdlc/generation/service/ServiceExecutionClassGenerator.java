@@ -19,7 +19,6 @@ import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
-import org.finos.legend.engine.plan.execution.PlanExecutorInfo;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 
@@ -59,7 +58,7 @@ public class ServiceExecutionClassGenerator
     private String constructor;
     private String executeMethod;
     private String executeMethodWithStreamProvider;
-    private List<String> serviceRunnerMethods;
+    private String runMethod;
 
     private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName)
     {
@@ -78,7 +77,7 @@ public class ServiceExecutionClassGenerator
         generatePackageName();
         generateConstructor();
         generateExecuteMethods();
-        generateServiceRunnerMethods();
+        generateRunMethod();
 
         StringBuilder builder = new StringBuilder(8192);
         builder.append("package ").append(this.packageName).append(";\n");
@@ -101,11 +100,7 @@ public class ServiceExecutionClassGenerator
         builder.append('\n');
         builder.append(this.executeMethodWithStreamProvider);
         builder.append('\n');
-        this.serviceRunnerMethods.forEach(m ->
-        {
-            builder.append(m);
-            builder.append('\n');
-        });
+        builder.append(this.runMethod);
         builder.append("}\n");
         return new GeneratedJavaClass(this.packageName + "." + this.service.name, builder.toString());
     }
@@ -267,24 +262,13 @@ public class ServiceExecutionClassGenerator
         }
     }
 
-    private void generateServiceRunnerMethods()
+    private void generateRunMethod()
     {
-        String servicePathMethod = "    public String getServicePath()\n" +
-                        "    {\n" +
-                        "        return super.getServicePath();\n" +
-                        "    }\n";
-
-        addImport(PlanExecutorInfo.class);
-        String planExecutorInfoMethod = "    public PlanExecutorInfo getPlanExecutorInfo()\n" +
-                        "    {\n" +
-                        "        return super.getPlanExecutorInfo();\n" +
-                        "    }\n";
-
         List<ExecutionParameter> parameters = getExecutionParameters();
         addImport(ServiceRunnerInput.class);
         addImport(OutputStream.class);
         addImport(List.class);
-        String runMethod = "    public void run(" +  ServiceRunnerInput.class.getSimpleName() + " serviceRunnerInput, " +  OutputStream.class.getSimpleName() + " outputStream)\n" +
+        this.runMethod = "    public void run(" +  ServiceRunnerInput.class.getSimpleName() + " serviceRunnerInput, " +  OutputStream.class.getSimpleName() + " outputStream)\n" +
                 "    {\n" +
                 "        List<Object> args = serviceRunnerInput.getArgs();\n" +
                 "        if (args.size() != " + parameters.size() + ")\n" +
@@ -327,8 +311,6 @@ public class ServiceExecutionClassGenerator
                 "            .withServiceRunnerInput(serviceRunnerInput)\n" +
                 "            .executeToStream(outputStream);\n" +
                 "    }\n";
-
-        this.serviceRunnerMethods = Arrays.asList(servicePathMethod, planExecutorInfoMethod, runMethod);
     }
 
     private static Class<?> getVariableJavaClass(Variable variable)
