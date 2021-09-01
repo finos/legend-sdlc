@@ -1,95 +1,113 @@
 {
-  "classifierPath" : "meta::pure::metamodel::type::Class",
-  "content" : {
-    "_type" : "class",
-    "constraints" : [ ],
-    "name" : "TestClass",
-    "originalMilestonedProperties" : [ ],
-    "package" : "model::domain",
-    "properties" : [ {
-      "multiplicity" : {
-        "lowerBound" : 1,
-        "upperBound" : 1
-      },
-      "name" : "oneName",
-      "stereotypes" : [ {
-        "profile" : "model::domain::TestProfile",
-        "value" : "identifier"
-      } ],
-      "taggedValues" : [ {
-        "tag" : {
-          "profile" : "model::domain::TestProfile",
-          "value" : "tag1"
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "name": "TestClass",
+    "package": "model::domain",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
         },
-        "value" : "some value"
-      }, {
-        "tag" : {
-          "profile" : "model::domain::TestProfile",
-          "value" : "tag2"
+        "name": "oneName",
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "profileSourceInformation": {
+              "endColumn": 30,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "sourceInformation": {
+              "endColumn": 41,
+              "endLine": 3,
+              "sourceId": "",
+              "startColumn": 5,
+              "startLine": 3
+            },
+            "value": "identifier"
+          }
+        ],
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some value"
+          },
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag2"
+            },
+            "value": "some other value"
+          }
+        ],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
         },
-        "value" : "some other value"
-      } ],
-      "type" : "String"
-    }, {
-      "multiplicity" : {
-        "lowerBound" : 0,
-        "upperBound" : 1
+        "name": "anotherName",
+        "type": "String"
       },
-      "name" : "anotherName",
-      "stereotypes" : [ ],
-      "taggedValues" : [ ],
-      "type" : "String"
-    }, {
-      "multiplicity" : {
-        "lowerBound" : 0,
-        "upperBound" : 1
-      },
-      "name" : "oneDate",
-      "stereotypes" : [ ],
-      "taggedValues" : [ {
-        "tag" : {
-          "profile" : "model::domain::TestProfile",
-          "value" : "tag1"
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
         },
-        "value" : "some kind of date"
-      } ],
-      "type" : "StrictDate"
-    }, {
-      "multiplicity" : {
-        "lowerBound" : 0,
-        "upperBound" : 1
+        "name": "oneDate",
+        "taggedValues": [
+          {
+            "tag": {
+              "profile": "model::domain::TestProfile",
+              "value": "tag1"
+            },
+            "value": "some kind of date"
+          }
+        ],
+        "type": "StrictDate"
       },
-      "name" : "anotherDate",
-      "stereotypes" : [ ],
-      "taggedValues" : [ ],
-      "type" : "DateTime"
-    }, {
-      "multiplicity" : {
-        "lowerBound" : 1,
-        "upperBound" : 1
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "anotherDate",
+        "type": "DateTime"
       },
-      "name" : "oneNumber",
-      "stereotypes" : [ {
-        "profile" : "model::domain::TestProfile",
-        "value" : "stereotype1"
-      }, {
-        "profile" : "model::domain::TestProfile",
-        "value" : "stereotype2"
-      } ],
-      "taggedValues" : [ ],
-      "type" : "Integer"
-    }, {
-      "multiplicity" : {
-        "lowerBound" : 0
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "oneNumber",
+        "stereotypes": [
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype1"
+          },
+          {
+            "profile": "model::domain::TestProfile",
+            "value": "stereotype2"
+          }
+        ],
+        "taggedValues": [],
+        "type": "Integer"
       },
-      "name" : "moreNumbers",
-      "stereotypes" : [ ],
-      "taggedValues" : [ ],
-      "type" : "Float"
-    } ],
-    "qualifiedProperties" : [ ],
-    "stereotypes" : [ ],
-    "superTypes" : [ ],
-    "taggedValues" : [ ]
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "moreNumbers",
+        "type": "Float"
+      }
+    ]
   }
 }
