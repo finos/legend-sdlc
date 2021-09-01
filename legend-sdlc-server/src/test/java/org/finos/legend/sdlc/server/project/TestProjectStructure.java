@@ -298,14 +298,14 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected void testUpdateProjectDependencies(ProjectType projectType)
     {
         List<ProjectDependency> projectDependencies = Arrays.asList(
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1"),
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject1:1.0.0"),
-                ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject3:2.0.1"));
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
         projectDependencies.sort(Comparator.naturalOrder());
         for (ProjectDependency projectDependency : projectDependencies)
         {
-            List<String> mavenCoordinates = ProjectDependency.getMavenCoordinatesFromProjectDependency(projectDependency.getProjectId());
-            createProjectWithVersions(mavenCoordinates.get(1), GROUP_ID, mavenCoordinates.get(1), projectDependency.getVersionId());
+            String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);
+            createProjectWithVersions(artifactId, GROUP_ID, artifactId, projectDependency.getVersionId());
         }
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);

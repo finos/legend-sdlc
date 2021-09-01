@@ -722,8 +722,7 @@ public abstract class ProjectStructure
             }
             else
             {
-                List<String> mavenCoordinates = ProjectDependency.getMavenCoordinatesFromProjectDependency(projectDependency.getProjectId());
-                projectDependencies.add(ProjectDependency.newProjectDependency(mavenCoordinates.get(0) + ":" + mavenCoordinates.get(1), projectDependency.getVersionId()));
+                projectDependencies.add(ProjectDependency.newProjectDependency(projectDependency.getProjectId(), projectDependency.getVersionId()));
             }
         }
         if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())

@@ -24,6 +24,10 @@ import org.apache.maven.model.PluginManagement;
 import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.tuple.Pair;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -52,7 +56,6 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class MavenProjectStructure extends ProjectStructure
@@ -60,6 +63,7 @@ public abstract class MavenProjectStructure extends ProjectStructure
     public static final String MAVEN_MODEL_PATH = "/pom.xml";
     public static final String JAR_PACKAGING = "jar";
     public static final String POM_PACKAGING = "pom";
+    private static final ImmutableList<ArtifactType> DEFAULT_ARTIFACT_TYPES = Lists.immutable.with(ArtifactType.entities, ArtifactType.versioned_entities);
 
     protected MavenProjectStructure(ProjectConfiguration projectConfiguration, List<EntitySourceDirectory> entitySourceDirectories)
     {
@@ -279,15 +283,26 @@ public abstract class MavenProjectStructure extends ProjectStructure
         String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
         if (!ProjectDependency.isLegacyProjectDependency(projectDependency))
         {
-            List<String> mavenCoordinates = ProjectDependency.getMavenCoordinatesFromProjectDependency(projectDependency.getProjectId());
-            List<ArtifactType> artifactTypeList = ((artifactTypes == null) || artifactTypes.isEmpty()) ? Arrays.asList(ArtifactType.entities,ArtifactType.versioned_entities) : artifactTypes.stream().collect(Collectors.toList());
-            return artifactTypeList.stream().map(artifactType -> newMavenDependency(mavenCoordinates.get(0), mavenCoordinates.get(1) + "-" + artifactType, versionString));
+            Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
+            Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? (Collection<? extends ArtifactType>) DEFAULT_ARTIFACT_TYPES : artifactTypes;
+            return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType, versionString));
         }
         ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
         ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
         String groupId = versionConfig.getGroupId();
         Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
         return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
+    }
+
+    private static Pair<String, String> getGroupAndArtifactIdFromProjectDependency(ProjectDependency projectDependency)
+    {
+        String projectId = projectDependency.getProjectId();
+        int index = (projectId == null) ? -1 : projectId.indexOf(':');
+        if ((index == -1) || (index == (projectId.length() - 1)) || (index == 0))
+        {
+            throw new IllegalArgumentException("Could not get group and artifact id from \"" + projectId + "\"");
+        }
+        return Tuples.pair(projectId.substring(0, index), projectId.substring(index + 1));
     }
 
     public static Exclusion newMavenExclusion(String groupId, String artifactId)

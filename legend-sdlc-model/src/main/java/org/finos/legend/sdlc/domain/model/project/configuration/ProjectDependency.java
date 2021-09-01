@@ -83,23 +83,6 @@ public abstract class ProjectDependency extends Dependency implements Comparable
         return !projectDependency.getProjectId().contains(":");
     }
 
-    public static List<String> getMavenCoordinatesFromProjectDependency(String projectId)
-    {
-        try
-        {
-            String[] mavenCoordinates = projectId.split(":");
-            if (mavenCoordinates[0].isEmpty())
-            {
-                throw new IllegalArgumentException();
-            }
-            return Arrays.asList(mavenCoordinates[0],mavenCoordinates[1]);
-        }
-        catch (Exception e)
-        {
-            throw new IllegalArgumentException("Invalid project id for dependency: " + projectId + ", could not find groupId or artifactId");
-        }
-    }
-
     public static ProjectDependency parseProjectDependency(String string)
     {
         return parseProjectDependency(string, DEFAULT_DELIMITER);
