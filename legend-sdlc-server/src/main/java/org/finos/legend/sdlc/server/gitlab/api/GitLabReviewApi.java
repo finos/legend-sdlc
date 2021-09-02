@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Sets;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -23,6 +24,7 @@ import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.CallUntil;
@@ -44,6 +46,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -70,6 +73,36 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        return getReviews(gitLabProjectId, projectId,  state, revisionIds, since, until, limit, gitLabProjectId.getGitLabMode(), false);
+    }
+
+    @Override
+    public List<Review> getReviews(Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit, ProjectType projectType)
+    {
+        List<Review> reviews = new ArrayList<>();
+        List<GitLabMode> modes = new ArrayList<>();
+        assignedToMe = (assignedToMe == null) || assignedToMe;
+
+        if (projectType == null)
+        {
+            getValidGitLabModes().forEach(modes::add);
+        }
+        else
+        {
+            modes.add(getGitLabModeFromProjectType(projectType));
+        }
+
+        for (GitLabMode mode: modes)
+        {
+            reviews.addAll(getReviews(null, null, state, null, since, until, limit, mode, assignedToMe));
+        }
+
+        return reviews;
+    }
+
+    public List<Review> getReviews(GitLabProjectId gitLabProjectId, String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, GitLabMode gitLabMode, Boolean assignedToMe)
+    {
         Set<String> revisionIdSet;
         if (revisionIds == null)
         {
@@ -87,14 +120,15 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         Stream<MergeRequest> mergeRequestStream;
         try
         {
-            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            if (!revisionIdSet.isEmpty())
+
+            //Can revisionId only be used with projectId
+            if (!revisionIdSet.isEmpty() && (gitLabProjectId != null))
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
                 // we can have a threshold for which we change our strategy to  to make a single call for
                 // merge requests by the other criteria and then filter by revisionIds.
                 Set<Integer> mergeRequestIds = Sets.mutable.empty();
-                CommitsApi commitsApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getCommitsApi();
+                CommitsApi commitsApi = getGitLabApi(gitLabMode).getCommitsApi();
                 // Combine all MRs associated with each revision
                 mergeRequestStream = revisionIdSet.stream()
                         .flatMap(revisionId ->
@@ -122,8 +156,25 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             {
                 // if no revision ID is specified we will use the default merge request API from Gitlab to take advantage of the filter
                 MergeRequestFilter mergeRequestFilter = new MergeRequestFilter()
-                        .withProjectId(gitLabProjectId.getGitLabId())
                         .withState(mergeRequestState);
+
+                if (gitLabProjectId != null)
+                {
+                    mergeRequestFilter.setProjectId(gitLabProjectId.getGitLabId());
+                }
+
+                if (assignedToMe != null && assignedToMe)
+                {
+                   try
+                   {
+                       mergeRequestFilter.setAuthorId(Integer.parseInt(getCurrentUser()));
+                   }
+                   catch(NumberFormatException e)
+                   {
+                       LOGGER.debug("Cant format User to string "+getCurrentUser());
+                   }
+                }
+
                 if ((since != null) && (state != null))
                 {
                     switch (state)
@@ -145,13 +196,15 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                         }
                     }
                 }
+
                 if (until != null)
                 {
                     mergeRequestFilter.setCreatedBefore(Date.from(until));
                 }
-                mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
+                mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi(gitLabMode).getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(projectId, mr));
+            //Changed the projectId to GitLabProjectId.newProjectId even if the projectId is null a new one would be created per the mergeRequest
+            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(gitLabMode, mr.getProjectId()).toString(), mr));
             Predicate<Review> timePredicate = getTimePredicate(state, since, until);
             if (timePredicate != null)
             {

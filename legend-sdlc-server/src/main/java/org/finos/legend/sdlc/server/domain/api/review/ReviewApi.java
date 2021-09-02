@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.review;
 
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -49,6 +50,23 @@ public interface ReviewApi
      * @return reviews
      */
     List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
+
+    /**
+     * Get all reviews with the given state.
+     * If state is null, all reviews are returned. Results are undefined for state {@link ReviewState#UNKNOWN}.
+     * remove duplicates to form a single list of reviews to return (with other constraints applied on top of that).
+     * Time filter range (since/until) is inclusive.
+     * If the limit equals to 0, effectively no limit is applied.
+     * if no projectType is provided the default mode of the system would be selected
+     * @param assignedToMe Boolean true / false the default is true is nothing is selected
+     * @param state       review state
+     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
+     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
+     * @param limit       maximum number of reviews to get
+     * @param projectType the project type for which the reviews would be returned
+     * @return reviews
+     */
+    List<Review> getReviews(Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit, ProjectType projectType);
 
     /**
      * Create a review for changes from the given workspace.
