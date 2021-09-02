@@ -21,6 +21,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
@@ -47,20 +48,29 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Method;
+import java.math.BigDecimal;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -204,6 +214,60 @@ public class TestServiceExecutionGenerator
         assertExecuteMethods(classLoader, "io.biz.service.ModelToModelServiceMulti", String.class);
     }
 
+    @Test
+    public void testServiceExecutionUsingServiceRunnerAPI() throws Exception
+    {
+        ClassLoader classLoader = generateAndCompile("org.finos", getAllServices());
+
+        try (JavaHelper.ThreadContextClassLoaderScope ignored = JavaHelper.withCurrentThreadContextClassLoader(classLoader))
+        {
+            // No Param Model To Model Service
+            ServiceRunner noParamServiceRunner = findServiceRunnerByPath("service::ModelToModelService");
+
+            IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> noParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Collections.singletonList("a"))));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 0, Passed parameter size: 1", e.getMessage());
+
+            String expectedOutput = "{\"builder\":{\"_type\":\"json\"},\"values\":{\"defects\":[],\"source\":{\"defects\":[],\"source\":{\"number\":1,\"record\":\"{\\\"firstName\\\":\\\"firstName 73\\\",\\\"lastName\\\":\\\"lastName 79\\\",\\\"age\\\":27}\"}," +
+                    "\"value\":{\"age\":27,\"firstName\":\"firstName 73\",\"lastName\":\"lastName 79\"}},\"value\":{\"age\":27,\"fullName\":\"firstName 73 lastName 79\"}}}";
+            Assert.assertEquals(OBJECT_MAPPER.readTree(expectedOutput), OBJECT_MAPPER.readTree(noParamServiceRunner.run(ServiceRunnerInput.newInstance())));
+
+
+            // Multi Param Model To Model Service
+            ServiceRunner multiParamServiceRunner = findServiceRunnerByPath("service::ModelToModelServiceWithMultipleParams");
+
+            IllegalArgumentException e1 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance()));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 10, Passed parameter size: 0", e1.getMessage());
+
+            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2, 3.0))));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 10, Passed parameter size: 3", e2.getMessage());
+
+            List<Object> args1 = Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            IllegalArgumentException e3 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args1)));
+            Assert.assertEquals("Unexpected parameter type. 'i_s' parameter (index: 0) should be of type 'String'", e3.getMessage());
+
+            List<Object> args2 = Arrays.asList(null, null, 1, 1, 1, 1, 1, 1, 1, 1);
+            IllegalArgumentException e4 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args2)));
+            Assert.assertEquals("Unexpected parameter value. 'i_i' parameter (index: 1) should not be null", e4.getMessage());
+
+            JsonNode expected = OBJECT_MAPPER.readTree("[{\"age\":22,\"fullName\":\"Peter Smith\"},{\"age\":23,\"fullName\":\"John Johnson\"}]");
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2, 3.0, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), 5, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2L, 3.0D, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2L, 3.0f, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            int x = 2;
+            float y = 2.0f;
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, y, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, x, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, x, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, null)).withSerializationFormat(SerializationFormat.PURE))));
+        }
+    }
+
+    private ServiceRunner findServiceRunnerByPath(String servicePath)
+    {
+        return StreamSupport.stream(Spliterators.spliteratorUnknownSize(ServiceLoader.load(ServiceRunner.class).iterator(), Spliterator.ORDERED), false)
+                .filter(x -> servicePath.equals(x.getServicePath()))
+                .findFirst().orElse(null);
+    }
+
     private void assertExecuteMethods(ClassLoader classLoader, String className, Class<?>... parameterTypes)
     {
         try
@@ -344,11 +408,11 @@ public class TestServiceExecutionGenerator
         throw new IllegalArgumentException("Could not get Json from result: " + result);
     }
 
-    static class SourceFile extends SimpleJavaFileObject
+    private static class SourceFile extends SimpleJavaFileObject
     {
         private final Path path;
 
-        SourceFile(Path path)
+        private SourceFile(Path path)
         {
             super(path.toUri(), Kind.SOURCE);
             this.path = path;

@@ -17,7 +17,6 @@ package org.finos.legend.sdlc.generation.service;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
-import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
@@ -67,7 +66,6 @@ public class ServiceExecutionClassGenerator
 
         // add base imports
         addImport(AbstractServicePlanExecutor.class);
-        addImport(ServiceRunner.class);
         addImport(Result.class);
     }
 
@@ -91,7 +89,7 @@ public class ServiceExecutionClassGenerator
             this.javaImports.stream().sorted().map(i -> "import " + i + ";\n").forEach(builder::append);
         }
         builder.append('\n');
-        builder.append("public class ").append(this.service.name).append(" extends ").append(AbstractServicePlanExecutor.class.getSimpleName()).append(" implements ").append(ServiceRunner.class.getSimpleName()).append('\n');
+        builder.append("public class ").append(this.service.name).append(" extends ").append(AbstractServicePlanExecutor.class.getSimpleName()).append('\n');
         builder.append("{\n");
         builder.append(this.constructor);
         builder.append('\n');
