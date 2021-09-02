@@ -271,6 +271,7 @@ public class ServiceExecutionClassGenerator
         String outputStreamParam = "outputStream";
 
         StringBuilder builder = new StringBuilder(512);
+        builder.append("    @Override\n");
         builder.append("    public void run(");
         builder.append(ServiceRunnerInput.class.getSimpleName()).append(' ').append(serviceRunnerInputParam);
         builder.append(", ");
