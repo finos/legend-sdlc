@@ -169,9 +169,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                    {
                        mergeRequestFilter.setAuthorId(Integer.parseInt(getCurrentUser()));
                    }
-                   catch(NumberFormatException e)
+                   catch (NumberFormatException e)
                    {
-                       LOGGER.debug("Cant format User to string "+getCurrentUser());
+                       LOGGER.debug("Cant format User to string " + getCurrentUser());
                    }
                 }
 
