@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -46,10 +47,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -74,34 +75,34 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return getReviews(gitLabProjectId, projectId,  state, revisionIds, since, until, limit, gitLabProjectId.getGitLabMode(), false);
+        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(),  state, revisionIds, since, until, limit, false);
     }
 
     @Override
-    public List<Review> getReviews(Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit, ProjectType projectType)
+    public List<Review> getReviews(Set<ProjectType> projectTypes, Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit)
     {
-        List<Review> reviews = new ArrayList<>();
-        List<GitLabMode> modes = new ArrayList<>();
+        List<Review> reviews = Lists.mutable.empty();
+        Set<GitLabMode> modes = EnumSet.noneOf(GitLabMode.class);
         assignedToMe = (assignedToMe == null) || assignedToMe;
 
-        if (projectType == null)
+        if (projectTypes == null || projectTypes.isEmpty())
         {
             getValidGitLabModes().forEach(modes::add);
         }
         else
         {
-            modes.add(getGitLabModeFromProjectType(projectType));
+            projectTypes.forEach(a -> modes.add(getGitLabModeFromProjectType(a)));
         }
 
         for (GitLabMode mode: modes)
         {
-            reviews.addAll(getReviews(null, null, state, null, since, until, limit, mode, assignedToMe));
+             reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe));
         }
 
         return reviews;
     }
 
-    public List<Review> getReviews(GitLabProjectId gitLabProjectId, String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, GitLabMode gitLabMode, Boolean assignedToMe)
+    private List<Review> getReviews(Integer projectId, GitLabMode gitLabMode, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, Boolean assignedToMe)
     {
         Set<String> revisionIdSet;
         if (revisionIds == null)
@@ -122,7 +123,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         {
 
             //Can revisionId only be used with projectId
-            if (!revisionIdSet.isEmpty() && (gitLabProjectId != null))
+            if (!revisionIdSet.isEmpty() && (projectId != null))
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
                 // we can have a threshold for which we change our strategy to  to make a single call for
@@ -135,7 +136,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                         {
                             try
                             {
-                                return PagerTools.stream(withRetries(() -> commitsApi.getMergeRequests(gitLabProjectId.getGitLabId(), revisionId, ITEMS_PER_PAGE)));
+                                return PagerTools.stream(withRetries(() -> commitsApi.getMergeRequests(projectId, revisionId, ITEMS_PER_PAGE)));
                             }
                             catch (Exception e)
                             {
@@ -158,9 +159,9 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 MergeRequestFilter mergeRequestFilter = new MergeRequestFilter()
                         .withState(mergeRequestState);
 
-                if (gitLabProjectId != null)
+                if (projectId != null)
                 {
-                    mergeRequestFilter.setProjectId(gitLabProjectId.getGitLabId());
+                    mergeRequestFilter.setProjectId(projectId);
                 }
 
                 if (assignedToMe != null && assignedToMe)
@@ -220,11 +221,25 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
         catch (Exception e)
         {
-            throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)),
-                    () -> "Unknown project (" + projectId + ")",
-                    () -> "Error getting reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)));
+            if (projectId == null)
+            {
+                throw getReviewsException(e, "project type", getProjectTypeFromMode(gitLabMode).name(), state);
+            }
+            else
+            {
+                throw getReviewsException(e, "project", String.valueOf(projectId), state);
+
+            }
         }
+    }
+
+    private LegendSDLCServerException getReviewsException(Exception e, String type, String typeValue, ReviewState state)
+    {
+        return buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)),
+                () -> "Unknown " + type + " (" + typeValue + ")",
+                () -> "Error getting reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)));
+
     }
 
     private Predicate<Review> getTimePredicate(ReviewState state, Instant since, Instant until)
