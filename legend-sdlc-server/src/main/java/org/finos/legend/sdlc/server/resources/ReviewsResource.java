@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
@@ -28,6 +29,9 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -37,8 +41,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Set;
 
 @Path("/projects/{projectId}/reviews")
 @Api("Reviews")
@@ -112,7 +114,7 @@ public class ReviewsResource extends BaseResource
         return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), command.getWorkspaceType(), command.getTitle(), command.getDescription())
+                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), command.getTitle(), command.getDescription())
         );
     }
 
