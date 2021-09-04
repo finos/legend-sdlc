@@ -696,7 +696,17 @@ abstract class BaseGitLabApi
         }
 
         // Default default handling (final fall through case)
-        return new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e), e);
+        String message;
+        try
+        {
+            message = StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e);
+        }
+        catch (Exception ex)
+        {
+            LOGGER.error("Error generating default error message ", ex);
+            message = "An unexpected exception occurred";
+        }
+        return new LegendSDLCServerException(message, e);
     }
 
     protected <T> T withRetries(ThrowingSupplier<T, ? extends GitLabApiException> apiCall) throws GitLabApiException
