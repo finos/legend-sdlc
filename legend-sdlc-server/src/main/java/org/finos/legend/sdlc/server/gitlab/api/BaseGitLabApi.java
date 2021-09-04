@@ -39,6 +39,8 @@ import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -57,6 +59,8 @@ import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseGitLabApi.class);
+
     private static final Random RANDOM = new Random();
     private static final Encoder RANDOM_ID_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
@@ -645,28 +649,49 @@ abstract class BaseGitLabApi
         // Special handling
         if ((meHandler != null) && (e instanceof LegendSDLCServerException))
         {
-            LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing LegendSDLCServerException", ex);
             }
         }
         else if ((glaeHandler != null) && (e instanceof GitLabApiException))
         {
-            LegendSDLCServerException result = glaeHandler.apply((GitLabApiException) e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = glaeHandler.apply((GitLabApiException) e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing GitLabApiException", ex);
             }
         }
 
         // Provided default handling
         if (defaultHandler != null)
         {
-            LegendSDLCServerException result = defaultHandler.apply(e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = defaultHandler.apply(e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing exception of type {} with the default handler", e.getClass().getSimpleName(), ex);
             }
         }
 
