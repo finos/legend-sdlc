@@ -52,7 +52,7 @@ public class ReviewsOnlyResource extends BaseResource
 
     @GET
     @ApiOperation(value = "Get reviews without project", notes = "Get reviews for a project. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
-    public List<Review> getReviews(@QueryParam("projectType") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectType,
+    public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectTypes,
                                    @QueryParam("assignedToMe") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
@@ -60,8 +60,8 @@ public class ReviewsOnlyResource extends BaseResource
                                    @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
-                (state == null) ? ("getting reviews for project type(s) "  + projectType.toString()) : ("getting reviews for project type" + projectType.toString() + " with state " + state),
-                () -> this.reviewApi.getReviews(projectType, assignedToMe, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                (state == null) ? ("getting reviews for project type(s) "  + projectTypes) : ("getting reviews for project type" + projectTypes + " with state " + state),
+                () -> this.reviewApi.getReviews(projectTypes, assignedToMe, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 }

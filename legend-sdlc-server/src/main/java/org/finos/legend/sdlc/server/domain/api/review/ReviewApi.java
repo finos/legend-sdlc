@@ -59,7 +59,7 @@ public interface ReviewApi
      * Time filter range (since/until) is inclusive.
      * If the limit equals to 0, effectively no limit is applied.
      * if no projectType is provided the default mode of the system would be selected
-     * @param projectType the project type for which the reviews would be returned
+     * @param projectTypes the project type for which the reviews would be returned
      * @param assignedToMe Boolean true / false the default is true is nothing is selected
      * @param state       review state
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
@@ -67,7 +67,7 @@ public interface ReviewApi
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectType, Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(Set<ProjectType> projectTypes, Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.
