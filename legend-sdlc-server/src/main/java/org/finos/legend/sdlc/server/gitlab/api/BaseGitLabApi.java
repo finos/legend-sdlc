@@ -39,6 +39,8 @@ import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Tag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -57,6 +59,8 @@ import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseGitLabApi.class);
+
     private static final Random RANDOM = new Random();
     private static final Encoder RANDOM_ID_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
@@ -624,11 +628,11 @@ abstract class BaseGitLabApi
                         }
                         case 403:
                         {
-                            return new LegendSDLCServerException((forbiddenMessage != null) ? forbiddenMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.FORBIDDEN, glae);
+                            return new LegendSDLCServerException(buildExceptionMessage(glae, forbiddenMessage, defaultMessage), Status.FORBIDDEN, glae);
                         }
                         case 404:
                         {
-                            return new LegendSDLCServerException((notFoundMessage != null) ? notFoundMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.NOT_FOUND, glae);
+                            return new LegendSDLCServerException(buildExceptionMessage(glae, notFoundMessage, defaultMessage), Status.NOT_FOUND, glae);
                         }
                         default:
                         {
@@ -640,38 +644,104 @@ abstract class BaseGitLabApi
         );
     }
 
+    private String buildExceptionMessage(GitLabApiException glae, Function<? super GitLabApiException, String> message, Function<? super GitLabApiException, String> defaultMessage)
+    {
+        if (message != null)
+        {
+            try
+            {
+                return message.apply(glae);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+            }
+        }
+        if (defaultMessage != null)
+        {
+            try
+            {
+                return defaultMessage.apply(glae);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+            }
+        }
+        try
+        {
+            return glae.getMessage();
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+        }
+        return "An unexpected error occurred (GitLab response status: " + glae.getHttpStatus() + ")";
+    }
+
     protected LegendSDLCServerException processException(Exception e, Function<? super LegendSDLCServerException, ? extends LegendSDLCServerException> meHandler, Function<? super GitLabApiException, ? extends LegendSDLCServerException> glaeHandler, Function<? super Exception, ? extends LegendSDLCServerException> defaultHandler)
     {
         // Special handling
         if ((meHandler != null) && (e instanceof LegendSDLCServerException))
         {
-            LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing exception of type {}", e.getClass().getSimpleName(), ex);
             }
         }
         else if ((glaeHandler != null) && (e instanceof GitLabApiException))
         {
-            LegendSDLCServerException result = glaeHandler.apply((GitLabApiException) e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = glaeHandler.apply((GitLabApiException) e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing exception of type {}", e.getClass().getSimpleName(), ex);
             }
         }
 
         // Provided default handling
         if (defaultHandler != null)
         {
-            LegendSDLCServerException result = defaultHandler.apply(e);
-            if (result != null)
+            try
             {
-                return result;
+                LegendSDLCServerException result = defaultHandler.apply(e);
+                if (result != null)
+                {
+                    return result;
+                }
+            }
+            catch (Exception ex)
+            {
+                LOGGER.error("Error processing exception of type {} with the default handler", e.getClass().getSimpleName(), ex);
             }
         }
 
         // Default default handling (final fall through case)
-        return new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e), e);
+        String message;
+        try
+        {
+            message = StringTools.appendThrowableMessageIfPresent("An unexpected exception occurred", e);
+        }
+        catch (Exception ex)
+        {
+            LOGGER.error("Error generating default error message ", ex);
+            message = "An unexpected exception occurred";
+        }
+        return new LegendSDLCServerException(message, e);
     }
 
     protected <T> T withRetries(ThrowingSupplier<T, ? extends GitLabApiException> apiCall) throws GitLabApiException
