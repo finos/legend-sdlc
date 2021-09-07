@@ -628,11 +628,11 @@ abstract class BaseGitLabApi
                         }
                         case 403:
                         {
-                            return new LegendSDLCServerException((forbiddenMessage != null) ? forbiddenMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.FORBIDDEN, glae);
+                            return new LegendSDLCServerException(buildExceptionMessage(glae, forbiddenMessage, defaultMessage), Status.FORBIDDEN, glae);
                         }
                         case 404:
                         {
-                            return new LegendSDLCServerException((notFoundMessage != null) ? notFoundMessage.apply(glae) : ((defaultMessage != null) ? defaultMessage.apply(glae) : glae.getMessage()), Status.NOT_FOUND, glae);
+                            return new LegendSDLCServerException(buildExceptionMessage(glae, notFoundMessage, defaultMessage), Status.NOT_FOUND, glae);
                         }
                         default:
                         {
@@ -642,6 +642,41 @@ abstract class BaseGitLabApi
                 },
                 (defaultMessage == null) ? null : ex -> Optional.ofNullable(defaultMessage.apply(ex)).map(m -> new LegendSDLCServerException(m, ex)).orElse(null)
         );
+    }
+
+    private String buildExceptionMessage(GitLabApiException glae, Function<? super GitLabApiException, String> message, Function<? super GitLabApiException, String> defaultMessage)
+    {
+        if (message != null)
+        {
+            try
+            {
+                return message.apply(glae);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+            }
+        }
+        if (defaultMessage != null)
+        {
+            try
+            {
+                return defaultMessage.apply(glae);
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+            }
+        }
+        try
+        {
+            return glae.getMessage();
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Error building exception message for {} exception", glae.getHttpStatus(), e);
+        }
+        return "An unexpected error occurred (GitLab response status: " + glae.getHttpStatus() + ")";
     }
 
     protected LegendSDLCServerException processException(Exception e, Function<? super LegendSDLCServerException, ? extends LegendSDLCServerException> meHandler, Function<? super GitLabApiException, ? extends LegendSDLCServerException> glaeHandler, Function<? super Exception, ? extends LegendSDLCServerException> defaultHandler)
