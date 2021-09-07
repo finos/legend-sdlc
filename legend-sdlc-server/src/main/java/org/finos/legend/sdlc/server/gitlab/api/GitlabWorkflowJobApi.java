@@ -183,7 +183,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             MutableList<WorkflowJob> workflowJobs = ListIterate.collect(jobs, this::fromGitLabJob);
             if (!statusSet.isEmpty())
             {
-                workflowJobs.removeIf(job -> statusSet.contains(job.getStatus()));
+                workflowJobs.removeIf(job -> !statusSet.contains(job.getStatus()));
             }
             return workflowJobs;
         }
