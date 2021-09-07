@@ -694,7 +694,7 @@ abstract class BaseGitLabApi
             }
             catch (Exception ex)
             {
-                LOGGER.error("Error processing LegendSDLCServerException", ex);
+                LOGGER.error("Error processing exception of type {}", e.getClass().getSimpleName(), ex);
             }
         }
         else if ((glaeHandler != null) && (e instanceof GitLabApiException))
@@ -709,7 +709,7 @@ abstract class BaseGitLabApi
             }
             catch (Exception ex)
             {
-                LOGGER.error("Error processing GitLabApiException", ex);
+                LOGGER.error("Error processing exception of type {}", e.getClass().getSimpleName(), ex);
             }
         }
 
