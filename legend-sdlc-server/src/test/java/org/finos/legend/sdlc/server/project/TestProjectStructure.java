@@ -1560,13 +1560,14 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             assertStateValid(PROJECT_ID, addGenerationsWorkspaceId, null);
 
             List<ProjectDependency> projectDependencies = Arrays.asList(
-                    ProjectDependency.parseProjectDependency("TestProject0:0.0.1"),
-                    ProjectDependency.parseProjectDependency("TestProject1:1.0.0"),
-                    ProjectDependency.parseProjectDependency("TestProject3:2.0.1"));
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
             projectDependencies.sort(Comparator.naturalOrder());
             for (ProjectDependency projectDependency : projectDependencies)
             {
-                createProjectWithVersions(projectDependency.getProjectId(), null, projectDependency.getProjectId().toLowerCase(), projectDependency.getVersionId());
+                String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);
+                createProjectWithVersions(artifactId, GROUP_ID, artifactId, projectDependency.getVersionId());
             }
 
             ProjectConfigurationUpdateBuilder.newBuilder(this.fileAccessProvider, projectType, PROJECT_ID)
