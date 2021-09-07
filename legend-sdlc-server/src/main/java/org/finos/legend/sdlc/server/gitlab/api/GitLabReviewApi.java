@@ -166,14 +166,11 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
 
                 if (assignedToMe != null && assignedToMe)
                 {
-                   try
-                   {
-                       mergeRequestFilter.setAuthorId(Integer.parseInt(getCurrentUser()));
-                   }
-                   catch (NumberFormatException e)
-                   {
-                       LOGGER.debug("Cant format User to string " + getCurrentUser());
-                   }
+                    org.gitlab4j.api.models.User currentGitLabUser = getGitLabApi(gitLabMode).getUserApi().getCurrentUser();
+                    if (currentGitLabUser != null)
+                    {
+                        mergeRequestFilter.setAssigneeId(currentGitLabUser.getId());
+                    }
                 }
 
                 if ((since != null) && (state != null))
@@ -323,7 +320,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
+    public Review  createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
