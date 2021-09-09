@@ -120,8 +120,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         Stream<MergeRequest> mergeRequestStream;
         try
         {
-
-            //Can revisionId only be used with projectId
+            //revisionId can only be used with projectId
             if (!revisionIdSet.isEmpty() && (projectId != null))
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
@@ -187,7 +186,6 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                         mergeRequestFilter.setAssigneeId(assignee);
                     }
                 }
-
 
                 if ((since != null) && (state != null))
                 {

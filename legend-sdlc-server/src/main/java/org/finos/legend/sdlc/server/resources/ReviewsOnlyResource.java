@@ -49,9 +49,8 @@ public class ReviewsOnlyResource extends BaseResource
         this.reviewApi = reviewApi;
     }
 
-
     @GET
-    @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If assignedToMe is set to true only reviews assigned to the user are returned, if authoredByMe is true only reviews authored by me are returned. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
     public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectTypes,
                                    @QueryParam("assignedToMe") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
                                    @QueryParam("authoredByMe") @ApiParam("show reviews authored by user, would be set to false is not selected") Boolean  authoredByMe,
