@@ -53,21 +53,24 @@ public interface ReviewApi
     List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
 
     /**
-     * Get all reviews with the given state.
+     * Get reviews across all projects with the given state.
      * If state is null, all reviews are returned. Results are undefined for state {@link ReviewState#UNKNOWN}.
      * remove duplicates to form a single list of reviews to return (with other constraints applied on top of that).
      * Time filter range (since/until) is inclusive.
      * If the limit equals to 0, effectively no limit is applied.
      * if no projectType is provided the default mode of the system would be selected
      * @param projectTypes the project type for which the reviews would be returned
-     * @param assignedToMe Boolean true / false the default is true is nothing is selected
+     * @param assignedToMe whether to return only reviews assigned to me
+     * @param authoredByMe whether to return only reviews authored by me
+     * @param assignee    return only reviews assigned to the user
+     * @param author      return only reviews authored by the user
      * @param state       review state
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectTypes, Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Integer assignee, Integer author, ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.

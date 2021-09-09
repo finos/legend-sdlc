@@ -51,9 +51,12 @@ public class ReviewsOnlyResource extends BaseResource
 
 
     @GET
-    @ApiOperation(value = "Get reviews without project", notes = "Get reviews for a project. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
     public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectTypes,
                                    @QueryParam("assignedToMe") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
+                                   @QueryParam("authoredByMe") @ApiParam("show reviews authored by user, would be set to false is not selected") Boolean  authoredByMe,
+                                   @QueryParam("assignee") @ApiParam("show reviews assigned to a particular user") Integer  assignee,
+                                   @QueryParam("author") @ApiParam("show reviews authored by user") Integer  author,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
                                    @QueryParam("until") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
@@ -61,7 +64,16 @@ public class ReviewsOnlyResource extends BaseResource
     {
         return executeWithLogging(
                 (state == null) ? ("getting reviews for project type(s) "  + projectTypes) : ("getting reviews for project type" + projectTypes + " with state " + state),
-                () -> this.reviewApi.getReviews(projectTypes, assignedToMe, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.reviewApi.getReviews(
+                        projectTypes,
+                        (assignedToMe == null) ? false : assignedToMe,
+                        (authoredByMe == null) ? false : authoredByMe,
+                        assignee,
+                        author,
+                        state,
+                        ResolvedInstant.getResolvedInstantIfNonNull(since),
+                        ResolvedInstant.getResolvedInstantIfNonNull(until),
+                        limit)
         );
     }
 }

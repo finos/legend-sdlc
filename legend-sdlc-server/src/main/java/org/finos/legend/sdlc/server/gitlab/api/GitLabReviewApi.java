@@ -31,6 +31,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
+import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.Constants.StateEvent;
 import org.gitlab4j.api.GitLabApi;
@@ -75,15 +76,14 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(),  state, revisionIds, since, until, limit, false);
+        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(),  state, revisionIds, since, until, limit, false, false, null, null);
     }
 
     @Override
-    public List<Review> getReviews(Set<ProjectType> projectTypes, Boolean assignedToMe, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Integer assignee, Integer author, ReviewState state, Instant since, Instant until, Integer limit)
     {
         List<Review> reviews = Lists.mutable.empty();
         Set<GitLabMode> modes = EnumSet.noneOf(GitLabMode.class);
-        assignedToMe = (assignedToMe == null) || assignedToMe;
 
         if (projectTypes == null || projectTypes.isEmpty())
         {
@@ -96,13 +96,12 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
 
         for (GitLabMode mode: modes)
         {
-             reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe));
+             reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe, authoredByMe, assignee, author));
         }
-
         return reviews;
     }
 
-    private List<Review> getReviews(Integer projectId, GitLabMode gitLabMode, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, Boolean assignedToMe)
+    private List<Review> getReviews(Integer projectId, GitLabMode gitLabMode, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, boolean assignedToMe, boolean authoredByMe, Integer assignee, Integer author)
     {
         Set<String> revisionIdSet;
         if (revisionIds == null)
@@ -164,14 +163,31 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                     mergeRequestFilter.setProjectId(projectId);
                 }
 
-                if (assignedToMe != null && assignedToMe)
+                if (assignedToMe)
                 {
-                    org.gitlab4j.api.models.User currentGitLabUser = getGitLabApi(gitLabMode).getUserApi().getCurrentUser();
-                    if (currentGitLabUser != null)
+                    mergeRequestFilter.setScope(Constants.MergeRequestScope.ASSIGNED_TO_ME);
+                }
+
+                if (authoredByMe)
+                {
+                    mergeRequestFilter.setScope(Constants.MergeRequestScope.CREATED_BY_ME);
+                }
+
+                if (author != null || assignee != null)
+                {
+                    mergeRequestFilter.setScope(Constants.MergeRequestScope.ALL);
+
+                    if (author != null)
                     {
-                        mergeRequestFilter.setAssigneeId(currentGitLabUser.getId());
+                        mergeRequestFilter.setAuthorId(author);
+                    }
+
+                    if (assignee != null)
+                    {
+                        mergeRequestFilter.setAssigneeId(assignee);
                     }
                 }
+
 
                 if ((since != null) && (state != null))
                 {
@@ -225,7 +241,6 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             else
             {
                 throw getReviewsException(e, "project", String.valueOf(projectId), state);
-
             }
         }
     }
@@ -236,7 +251,6 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 () -> "User " + getCurrentUser() + " is not allowed to get reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)),
                 () -> "Unknown " + type + " (" + typeValue + ")",
                 () -> "Error getting reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)));
-
     }
 
     private Predicate<Review> getTimePredicate(ReviewState state, Instant since, Instant until)
@@ -320,7 +334,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     }
 
     @Override
-    public Review  createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
+    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
