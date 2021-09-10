@@ -14,12 +14,14 @@
 
 package org.finos.legend.sdlc.server.domain.api.review;
 
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 
 public interface ReviewApi
 {
@@ -49,6 +51,25 @@ public interface ReviewApi
      * @return reviews
      */
     List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
+
+    /**
+     * Get reviews across all projects with the given state.
+     * If assignedToMe or authoredByMe is null the default value of false would be set
+     * If state is null, all reviews are returned. Results are undefined for state {@link ReviewState#UNKNOWN}.
+     * remove duplicates to form a single list of reviews to return (with other constraints applied on top of that).
+     * Time filter range (since/until) is inclusive.
+     * If the limit equals to 0, effectively no limit is applied.
+     * if no projectType is provided the default mode of the system would be selected
+     * @param projectTypes the project type for which the reviews would be returned
+     * @param assignedToMe whether to return only reviews assigned to me
+     * @param authoredByMe whether to return only reviews authored by me
+     * @param state       review state
+     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
+     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
+     * @param limit       maximum number of reviews to get
+     * @return reviews
+     */
+    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.

@@ -14,7 +14,9 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -23,11 +25,13 @@ import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
+import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.Constants.StateEvent;
 import org.gitlab4j.api.GitLabApi;
@@ -47,6 +51,7 @@ import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -70,6 +75,34 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(),  state, revisionIds, since, until, limit, false, false);
+    }
+
+    @Override
+    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit)
+    {
+        List<Review> reviews = Lists.mutable.empty();
+        Set<GitLabMode> modes = EnumSet.noneOf(GitLabMode.class);
+
+        if (projectTypes == null || projectTypes.isEmpty())
+        {
+            getValidGitLabModes().forEach(modes::add);
+        }
+        else
+        {
+            projectTypes.forEach(a -> modes.add(getGitLabModeFromProjectType(a)));
+        }
+
+        for (GitLabMode mode: modes)
+        {
+             reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe, authoredByMe));
+        }
+        return reviews;
+    }
+
+    private List<Review> getReviews(Integer projectId, GitLabMode gitLabMode, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, boolean assignedToMe, boolean authoredByMe)
+    {
         Set<String> revisionIdSet;
         if (revisionIds == null)
         {
@@ -87,21 +120,21 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         Stream<MergeRequest> mergeRequestStream;
         try
         {
-            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            if (!revisionIdSet.isEmpty())
+            //revisionId can only be used with projectId
+            if (!revisionIdSet.isEmpty() && (projectId != null))
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
                 // we can have a threshold for which we change our strategy to  to make a single call for
                 // merge requests by the other criteria and then filter by revisionIds.
                 Set<Integer> mergeRequestIds = Sets.mutable.empty();
-                CommitsApi commitsApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getCommitsApi();
+                CommitsApi commitsApi = getGitLabApi(gitLabMode).getCommitsApi();
                 // Combine all MRs associated with each revision
                 mergeRequestStream = revisionIdSet.stream()
                         .flatMap(revisionId ->
                         {
                             try
                             {
-                                return PagerTools.stream(withRetries(() -> commitsApi.getMergeRequests(gitLabProjectId.getGitLabId(), revisionId, ITEMS_PER_PAGE)));
+                                return PagerTools.stream(withRetries(() -> commitsApi.getMergeRequests(projectId, revisionId, ITEMS_PER_PAGE)));
                             }
                             catch (Exception e)
                             {
@@ -122,8 +155,23 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             {
                 // if no revision ID is specified we will use the default merge request API from Gitlab to take advantage of the filter
                 MergeRequestFilter mergeRequestFilter = new MergeRequestFilter()
-                        .withProjectId(gitLabProjectId.getGitLabId())
                         .withState(mergeRequestState);
+
+                if (projectId != null)
+                {
+                    mergeRequestFilter.setProjectId(projectId);
+                }
+
+                if (assignedToMe)
+                {
+                    mergeRequestFilter.setScope(Constants.MergeRequestScope.ASSIGNED_TO_ME);
+                }
+
+                if (authoredByMe)
+                {
+                    mergeRequestFilter.setScope(Constants.MergeRequestScope.CREATED_BY_ME);
+                }
+
                 if ((since != null) && (state != null))
                 {
                     switch (state)
@@ -145,13 +193,15 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                         }
                     }
                 }
+
                 if (until != null)
                 {
                     mergeRequestFilter.setCreatedBefore(Date.from(until));
                 }
-                mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
+                mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi(gitLabMode).getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(projectId, mr));
+            //Changed the projectId to GitLabProjectId.newProjectId even if the projectId is null a new one would be created per the mergeRequest
+            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(gitLabMode, mr.getProjectId()).toString(), mr));
             Predicate<Review> timePredicate = getTimePredicate(state, since, until);
             if (timePredicate != null)
             {
@@ -167,11 +217,23 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
         catch (Exception e)
         {
-            throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)),
-                    () -> "Unknown project (" + projectId + ")",
-                    () -> "Error getting reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)));
+            if (projectId == null)
+            {
+                throw getReviewsException(e, "project type", getProjectTypeFromMode(gitLabMode).name(), state);
+            }
+            else
+            {
+                throw getReviewsException(e, "project", String.valueOf(projectId), state);
+            }
         }
+    }
+
+    private LegendSDLCServerException getReviewsException(Exception e, String type, String typeValue, ReviewState state)
+    {
+        return buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)),
+                () -> "Unknown " + type + " (" + typeValue + ")",
+                () -> "Error getting reviews for " + type + " " + typeValue + ((state == null) ? "" : (" with state " + state)));
     }
 
     private Predicate<Review> getTimePredicate(ReviewState state, Instant since, Instant until)
