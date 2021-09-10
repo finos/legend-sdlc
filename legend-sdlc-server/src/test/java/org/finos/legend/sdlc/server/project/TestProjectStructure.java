@@ -15,6 +15,8 @@
 package org.finos.legend.sdlc.server.project;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -296,13 +298,14 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected void testUpdateProjectDependencies(ProjectType projectType)
     {
         List<ProjectDependency> projectDependencies = Arrays.asList(
-                ProjectDependency.parseProjectDependency("TestProject0:0.0.1"),
-                ProjectDependency.parseProjectDependency("TestProject1:1.0.0"),
-                ProjectDependency.parseProjectDependency("TestProject3:2.0.1"));
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
+                ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
         projectDependencies.sort(Comparator.naturalOrder());
         for (ProjectDependency projectDependency : projectDependencies)
         {
-            createProjectWithVersions(projectDependency.getProjectId(), null, projectDependency.getProjectId().toLowerCase(), projectDependency.getVersionId());
+            String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);
+            createProjectWithVersions(artifactId, GROUP_ID, artifactId, projectDependency.getVersionId());
         }
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);
@@ -437,6 +440,96 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(Collections.emptyList(), projectConfigUpdateRevisionConfig.getProjectDependencies());
 
         assertEntitiesEquivalent(testEntities, getActualEntities(PROJECT_ID));
+    }
+
+    @Test
+    public void testUpdateOldProjectDependencies_Production()
+    {
+        testUpdateOldProjectDependencies(ProjectType.PRODUCTION);
+    }
+
+    @Test
+    public void testUpdateOldProjectDependencies_Prototype()
+    {
+        testUpdateOldProjectDependencies(ProjectType.PROTOTYPE);
+    }
+
+    protected void testUpdateOldProjectDependencies(ProjectType projectType)
+    {
+        ProjectDependency oldProjectDependency = ProjectDependency.parseProjectDependency("TestProject3:2.0.1");
+        ProjectDependency updatedProjectDependency = ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1");
+
+        ProjectStructure projectStructure = buildProjectStructure(projectType);
+        createProjectWithVersions(oldProjectDependency.getProjectId(), GROUP_ID, "testproject3", oldProjectDependency.getVersionId());
+
+        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, beforeProjectConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, beforeProjectConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(Collections.emptyList(), beforeProjectConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.emptyList(), beforeProjectConfig.getProjectDependencies());
+        assertStateValid(PROJECT_ID, null, null);
+
+        SimpleProjectConfiguration newConfig = new SimpleProjectConfiguration(beforeProjectConfig);
+        newConfig.setProjectDependencies(Collections.singletonList(oldProjectDependency));
+        String serializedConfig = serializeConfig(newConfig);
+        List<ProjectFileOperation> operations = Lists.mutable.empty();
+        operations.add(ProjectFileOperation.modifyFile("/project.json", serializedConfig));
+        this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("set dependencies", operations);
+
+        ProjectConfiguration afterUpdateProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, afterUpdateProjectConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, afterUpdateProjectConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, afterUpdateProjectConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, afterUpdateProjectConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateProjectConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(Collections.emptyList(), afterUpdateProjectConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.singletonList(oldProjectDependency), afterUpdateProjectConfig.getProjectDependencies());
+
+        String updateOldDependenciesId = "UpdateOldDependencies";
+        this.fileAccessProvider.createWorkspace(PROJECT_ID, updateOldDependenciesId);
+        ProjectConfigurationUpdateBuilder.newBuilder(this.fileAccessProvider, projectType, PROJECT_ID)
+                .withWorkspace(updateOldDependenciesId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
+                .withMessage("Update Old Dependencies")
+                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                .updateProjectConfiguration();
+        ProjectConfiguration afterUpdateWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, updateOldDependenciesId, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, afterUpdateWorkspaceConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, afterUpdateWorkspaceConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, afterUpdateWorkspaceConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, afterUpdateWorkspaceConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(Collections.emptyList(), afterUpdateWorkspaceConfig.getMetamodelDependencies());
+
+        Assert.assertEquals(Collections.singletonList(updatedProjectDependency), afterUpdateWorkspaceConfig.getProjectDependencies());
+        assertStateValid(PROJECT_ID, updateOldDependenciesId, null);
+    }
+
+    private static String serializeConfig(SimpleProjectConfiguration newConfig)
+    {
+        try
+        {
+            return JsonMapper.builder()
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                    .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                    .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+                    .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+                    .build().writeValueAsString(newConfig);
+        }
+        catch (Exception e)
+        {
+            StringBuilder message = new StringBuilder("Error creating project configuration file");
+            String errorMessage = e.getMessage();
+            if (errorMessage != null)
+            {
+                message.append(": ").append(errorMessage);
+            }
+            throw new RuntimeException(message.toString(), e);
+        }
     }
 
     @Test
@@ -1467,13 +1560,14 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             assertStateValid(PROJECT_ID, addGenerationsWorkspaceId, null);
 
             List<ProjectDependency> projectDependencies = Arrays.asList(
-                    ProjectDependency.parseProjectDependency("TestProject0:0.0.1"),
-                    ProjectDependency.parseProjectDependency("TestProject1:1.0.0"),
-                    ProjectDependency.parseProjectDependency("TestProject3:2.0.1"));
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
+                    ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
             projectDependencies.sort(Comparator.naturalOrder());
             for (ProjectDependency projectDependency : projectDependencies)
             {
-                createProjectWithVersions(projectDependency.getProjectId(), null, projectDependency.getProjectId().toLowerCase(), projectDependency.getVersionId());
+                String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);
+                createProjectWithVersions(artifactId, GROUP_ID, artifactId, projectDependency.getVersionId());
             }
 
             ProjectConfigurationUpdateBuilder.newBuilder(this.fileAccessProvider, projectType, PROJECT_ID)
