@@ -45,7 +45,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Integer assignee, Integer author, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

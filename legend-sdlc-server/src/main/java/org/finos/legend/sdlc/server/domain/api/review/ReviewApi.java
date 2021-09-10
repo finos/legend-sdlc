@@ -62,15 +62,13 @@ public interface ReviewApi
      * @param projectTypes the project type for which the reviews would be returned
      * @param assignedToMe whether to return only reviews assigned to me
      * @param authoredByMe whether to return only reviews authored by me
-     * @param assignee    return only reviews assigned to the user
-     * @param author      return only reviews authored by the user
      * @param state       review state
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Integer assignee, Integer author, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.

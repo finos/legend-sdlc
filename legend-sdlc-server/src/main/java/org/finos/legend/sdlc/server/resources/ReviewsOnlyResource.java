@@ -27,6 +27,7 @@ import org.finos.legend.sdlc.server.time.StartInstant;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
@@ -52,10 +53,8 @@ public class ReviewsOnlyResource extends BaseResource
     @GET
     @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If assignedToMe is set to true only reviews assigned to the user are returned, if authoredByMe is true only reviews authored by me are returned. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
     public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectTypes,
-                                   @QueryParam("assignedToMe") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
-                                   @QueryParam("authoredByMe") @ApiParam("show reviews authored by user, would be set to false is not selected") Boolean  authoredByMe,
-                                   @QueryParam("assignee") @ApiParam("show reviews assigned to a particular user") Integer  assignee,
-                                   @QueryParam("author") @ApiParam("show reviews authored by user") Integer  author,
+                                   @QueryParam("assignedToMe") @DefaultValue("false") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
+                                   @QueryParam("authoredByMe") @DefaultValue("false") @ApiParam("show reviews authored by user, would be set to false is not selected") Boolean  authoredByMe,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
                                    @QueryParam("until") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
@@ -63,16 +62,7 @@ public class ReviewsOnlyResource extends BaseResource
     {
         return executeWithLogging(
                 (state == null) ? ("getting reviews for project type(s) "  + projectTypes) : ("getting reviews for project type" + projectTypes + " with state " + state),
-                () -> this.reviewApi.getReviews(
-                        projectTypes,
-                        (assignedToMe == null) ? false : assignedToMe,
-                        (authoredByMe == null) ? false : authoredByMe,
-                        assignee,
-                        author,
-                        state,
-                        ResolvedInstant.getResolvedInstantIfNonNull(since),
-                        ResolvedInstant.getResolvedInstantIfNonNull(until),
-                        limit)
+                () -> this.reviewApi.getReviews(projectTypes, assignedToMe, authoredByMe, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 }
