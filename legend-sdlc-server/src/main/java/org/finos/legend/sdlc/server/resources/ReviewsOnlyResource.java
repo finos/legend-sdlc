@@ -52,9 +52,9 @@ public class ReviewsOnlyResource extends BaseResource
 
     @GET
     @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If assignedToMe is set to true only reviews assigned to the user are returned, if authoredByMe is true only reviews authored by me are returned. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
-    public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("If not provided or the provided. valid project types would be used") Set<ProjectType> projectTypes,
-                                   @QueryParam("assignedToMe") @DefaultValue("false") @ApiParam("show reviews assigned to me, would be set to true is not selected") Boolean  assignedToMe,
-                                   @QueryParam("authoredByMe") @DefaultValue("false") @ApiParam("show reviews authored by user, would be set to false is not selected") Boolean  authoredByMe,
+    public List<Review> getReviews(@QueryParam("projectTypes") @ApiParam("Only include reviews for the given project type") Set<ProjectType> projectTypes,
+                                   @QueryParam("assignedToMe") @DefaultValue("false") @ApiParam("Only include reviews assigned to me if true, default is false") Boolean  assignedToMe,
+                                   @QueryParam("authoredByMe") @DefaultValue("false") @ApiParam("Only include reviews authored/created by me if true, default is false") Boolean  authoredByMe,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
                                    @QueryParam("until") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,

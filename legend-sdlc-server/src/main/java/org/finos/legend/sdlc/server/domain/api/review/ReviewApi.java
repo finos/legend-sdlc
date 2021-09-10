@@ -54,6 +54,7 @@ public interface ReviewApi
 
     /**
      * Get reviews across all projects with the given state.
+     * If assignedToMe or authoredByMe is null the default value of false would be set
      * If state is null, all reviews are returned. Results are undefined for state {@link ReviewState#UNKNOWN}.
      * remove duplicates to form a single list of reviews to return (with other constraints applied on top of that).
      * Time filter range (since/until) is inclusive.
