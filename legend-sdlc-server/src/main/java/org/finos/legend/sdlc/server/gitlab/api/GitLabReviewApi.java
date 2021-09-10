@@ -31,7 +31,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.api.Constants.MergeRequestScope;
 import org.gitlab4j.api.Constants.MergeRequestState;
 import org.gitlab4j.api.Constants.StateEvent;
 import org.gitlab4j.api.GitLabApi;
@@ -76,15 +76,13 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(),  state, revisionIds, since, until, limit, false, false);
+        return getReviews(gitLabProjectId.getGitLabId(), gitLabProjectId.getGitLabMode(), state, revisionIds, since, until, limit, false, false);
     }
 
     @Override
     public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit)
     {
-        List<Review> reviews = Lists.mutable.empty();
         Set<GitLabMode> modes = EnumSet.noneOf(GitLabMode.class);
-
         if (projectTypes == null || projectTypes.isEmpty())
         {
             getValidGitLabModes().forEach(modes::add);
@@ -94,15 +92,20 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             projectTypes.forEach(a -> modes.add(getGitLabModeFromProjectType(a)));
         }
 
-        for (GitLabMode mode: modes)
+        List<Review> reviews = Lists.mutable.empty();
+        for (GitLabMode mode : modes)
         {
-             reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe, authoredByMe));
+            reviews.addAll(getReviews(null, mode, state, null, since, until, limit, assignedToMe, authoredByMe));
         }
         return reviews;
     }
 
     private List<Review> getReviews(Integer projectId, GitLabMode gitLabMode, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit, boolean assignedToMe, boolean authoredByMe)
     {
+        if (assignedToMe && authoredByMe)
+        {
+            throw new LegendSDLCServerException("assignedToMe and authoredByMe may not both be true", Status.BAD_REQUEST);
+        }
         Set<String> revisionIdSet;
         if (revisionIds == null)
         {
@@ -116,12 +119,16 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         {
             revisionIdSet = Sets.mutable.withAll(revisionIds);
         }
+        if ((projectId == null) && !revisionIdSet.isEmpty())
+        {
+            throw new LegendSDLCServerException("Revision ids can only be used in the context of a project", Status.BAD_REQUEST);
+        }
         MergeRequestState mergeRequestState = getMergeRequestState(state);
         Stream<MergeRequest> mergeRequestStream;
         try
         {
             //revisionId can only be used with projectId
-            if (!revisionIdSet.isEmpty() && (projectId != null))
+            if (!revisionIdSet.isEmpty())
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
                 // we can have a threshold for which we change our strategy to  to make a single call for
@@ -162,15 +169,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                     mergeRequestFilter.setProjectId(projectId);
                 }
 
-                if (assignedToMe)
-                {
-                    mergeRequestFilter.setScope(Constants.MergeRequestScope.ASSIGNED_TO_ME);
-                }
-
-                if (authoredByMe)
-                {
-                    mergeRequestFilter.setScope(Constants.MergeRequestScope.CREATED_BY_ME);
-                }
+                mergeRequestFilter.setScope(assignedToMe ? MergeRequestScope.ASSIGNED_TO_ME : (authoredByMe ? MergeRequestScope.CREATED_BY_ME : MergeRequestScope.ALL));
 
                 if ((since != null) && (state != null))
                 {
