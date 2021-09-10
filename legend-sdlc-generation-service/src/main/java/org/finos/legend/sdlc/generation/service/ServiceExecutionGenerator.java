@@ -24,6 +24,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.plan.platform.PlanPlatform;
@@ -101,6 +102,15 @@ public class ServiceExecutionGenerator
         {
             writer.write(generatedJavaClass.getCode());
         }
+
+        // Append the class reference to ServiceRunner provider-configuration file
+        Path serviceRunnerProviderConfigFilePath = getServiceRunnerProviderConfigurationFilePath();
+        Files.createDirectories(serviceRunnerProviderConfigFilePath.getParent());
+        try (Writer writer = Files.newBufferedWriter(serviceRunnerProviderConfigFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND))
+        {
+            writer.write(generatedJavaClass.getName());
+            writer.write("\n");
+        }
     }
 
     public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory)
@@ -116,6 +126,13 @@ public class ServiceExecutionGenerator
     private Path getExecutionPlanResourcePath()
     {
         return this.resourceOutputDirectory.resolve(getExecutionPlanRelativePath(this.resourceOutputDirectory.getFileSystem().getSeparator()));
+    }
+
+    private Path getServiceRunnerProviderConfigurationFilePath()
+    {
+        String separator = this.resourceOutputDirectory.getFileSystem().getSeparator();
+        String relativePath = "META-INF" + separator + "services" + separator + ServiceRunner.class.getCanonicalName();
+        return this.resourceOutputDirectory.resolve(relativePath);
     }
 
     private String getExecutionPlanResourceName()

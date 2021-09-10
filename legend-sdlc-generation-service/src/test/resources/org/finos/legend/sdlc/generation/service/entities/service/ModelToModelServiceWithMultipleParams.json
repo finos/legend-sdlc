@@ -1,0 +1,205 @@
+{
+  "classifierPath": "meta::legend::service::metamodel::Service",
+  "content": {
+    "_type": "service",
+    "autoActivateUpdates": true,
+    "documentation": "",
+    "execution": {
+      "_type": "pureSingleExecution",
+      "func": {
+        "_type": "lambda",
+        "body": [
+          {
+            "_type": "func",
+            "function": "serialize",
+            "parameters": [
+              {
+                "_type": "func",
+                "function": "graphFetch",
+                "parameters": [
+                  {
+                    "_type": "func",
+                    "function": "getAll",
+                    "parameters": [
+                      {
+                        "_type": "class",
+                        "fullPath": "model::TargetPerson"
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "rootGraphFetchTree",
+                    "class": "model::TargetPerson",
+                    "subTrees": [
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "parameters": [],
+                        "property": "age",
+                        "subTrees": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "parameters": [],
+                        "property": "fullName",
+                        "subTrees": []
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "_type": "rootGraphFetchTree",
+                "class": "model::TargetPerson",
+                "subTrees": [
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "parameters": [],
+                    "property": "age",
+                    "subTrees": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "parameters": [],
+                    "property": "fullName",
+                    "subTrees": []
+                  }
+                ]
+              }
+            ]
+          }
+        ],
+        "parameters": [
+          {
+            "_type": "var",
+            "class": "String",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_s"
+          },
+          {
+            "_type": "var",
+            "class": "Integer",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_i"
+          },
+          {
+            "_type": "var",
+            "class": "Float",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_f"
+          },
+          {
+            "_type": "var",
+            "class": "Decimal",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_dec"
+          },
+          {
+            "_type": "var",
+            "class": "Boolean",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_b"
+          },
+          {
+            "_type": "var",
+            "class": "StrictDate",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_sd"
+          },
+          {
+            "_type": "var",
+            "class": "DateTime",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_dt"
+          },
+          {
+            "_type": "var",
+            "class": "Date",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "i_d"
+          },
+          {
+            "_type": "var",
+            "class": "Integer",
+            "multiplicity": {
+              "lowerBound": 0,
+              "upperBound": 1
+            },
+            "name": "i_oi"
+          },
+          {
+            "_type": "var",
+            "class": "Integer",
+            "multiplicity": {
+              "lowerBound": 0
+            },
+            "name": "i_li"
+          }
+        ]
+      },
+      "mapping": "model::SimpleModelToModelMapping",
+      "runtime": {
+        "_type": "engineRuntime",
+        "connections": [
+          {
+            "store": {
+              "path": "ModelStore",
+              "type": "STORE"
+            },
+            "storeConnections": [
+              {
+                "connection": {
+                  "_type": "JsonModelConnection",
+                  "class": "model::SourcePerson",
+                  "element": "ModelStore",
+                  "url": "data:application/json,[{\"firstName\": \"Peter\", \"lastName\": \"Smith\", \"age\": 22},{\"firstName\": \"John\", \"lastName\": \"Johnson\", \"age\": 23}]"
+                },
+                "id": "connection_1"
+              }
+            ]
+          }
+        ],
+        "mappings": [
+          {
+            "path": "model::SimpleModelToModelMapping",
+            "type": "MAPPING"
+          }
+        ]
+      }
+    },
+    "name": "ModelToModelServiceWithMultipleParams",
+    "owners": [
+      "testOwner"
+    ],
+    "package": "service",
+    "pattern": "/multiParamModelToModelService",
+    "test": {
+      "_type": "singleExecutionTest",
+      "asserts": [],
+      "data": ""
+    }
+  }
+}

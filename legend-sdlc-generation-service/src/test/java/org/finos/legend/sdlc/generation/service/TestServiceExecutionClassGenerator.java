@@ -17,6 +17,8 @@ package org.finos.legend.sdlc.generation.service;
 import io.github.classgraph.ClassGraph;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
@@ -32,6 +34,7 @@ import org.junit.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
@@ -81,6 +84,8 @@ public class TestServiceExecutionClassGenerator
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelService");
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
     }
 
 
@@ -90,6 +95,8 @@ public class TestServiceExecutionClassGenerator
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithParam");
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class);
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
     }
 
     @Test
@@ -98,6 +105,8 @@ public class TestServiceExecutionClassGenerator
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceMulti");
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class);
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
     }
 
     @Test
@@ -106,6 +115,8 @@ public class TestServiceExecutionClassGenerator
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalService");
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls);
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
     }
 
     @Test
@@ -114,6 +125,8 @@ public class TestServiceExecutionClassGenerator
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithParams");
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class, String.class);
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
     }
 
     private Class<?> loadAndCompileService(String packagePrefix, String servicePath) throws ClassNotFoundException
@@ -153,6 +166,19 @@ public class TestServiceExecutionClassGenerator
             Class<?>[] parameterTypes2 = Arrays.copyOf(parameterTypes, parameterTypes.length + 1);
             parameterTypes2[parameterTypes.length] = StreamProvider.class;
             cls.getMethod("execute", parameterTypes2);
+        }
+        catch (NoSuchMethodException e)
+        {
+            Assert.fail(e.getMessage());
+        }
+    }
+
+    static void assertRunMethodsExist(Class<?> cls)
+    {
+        try
+        {
+            cls.getMethod("run", ServiceRunnerInput.class);
+            cls.getMethod("run", ServiceRunnerInput.class, OutputStream.class);
         }
         catch (NoSuchMethodException e)
         {
