@@ -53,8 +53,9 @@ public interface ReviewApi
     List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
 
     /**
-     * Get reviews across all projects with the given state.
+     * Get reviews across all projects with the given state and labels.
      * If assignedToMe or authoredByMe is null the default value of false would be set
+     * if labels is empty, all reviews are returned
      * If state is null, all reviews are returned. Results are undefined for state {@link ReviewState#UNKNOWN}.
      * remove duplicates to form a single list of reviews to return (with other constraints applied on top of that).
      * Time filter range (since/until) is inclusive.
@@ -63,13 +64,14 @@ public interface ReviewApi
      * @param projectTypes the project type for which the reviews would be returned
      * @param assignedToMe whether to return only reviews assigned to me
      * @param authoredByMe whether to return only reviews authored by me
+     * @param labels      labels to apply
      * @param state       review state
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Set<String> labels,  ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.
@@ -79,9 +81,10 @@ public interface ReviewApi
      * @param workspaceType workspace type
      * @param title         review title
      * @param description   review description
+     * @param labels        review labels
      * @return new review
      */
-    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description);
+    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Set<String> labels);
 
     /**
      * Close a review. This is only valid if the review is open.
@@ -172,6 +175,17 @@ public interface ReviewApi
      * @return update status
      */
     ReviewUpdateStatus updateReview(String projectId, String reviewId);
+
+    /**
+     * Edit review, update the review  title, description and labels
+     * @param projectId     project id
+     * @param reviewId      review id
+     * @param title         updated Title
+     * @param description   description
+     * @param labels        review labels
+     * @return edited review
+     */
+    Review editReview(String projectId, String reviewId, String title, String description, Set<String> labels);
 
     interface ReviewUpdateStatus
     {

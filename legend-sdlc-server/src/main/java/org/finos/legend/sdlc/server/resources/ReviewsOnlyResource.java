@@ -60,6 +60,8 @@ public class ReviewsOnlyResource extends BaseResource
                                    @QueryParam("authoredByMe")
                                    @DefaultValue("true")
                                    @ApiParam("Only include reviews authored/created by me if true") boolean authoredByMe,
+                                   @QueryParam("labels")
+                                   @ApiParam("Only include reviews with the given labels") Set<String> labels,
                                    @QueryParam("state")
                                    @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since")
@@ -71,7 +73,7 @@ public class ReviewsOnlyResource extends BaseResource
     {
         return executeWithLogging(
                 (state == null) ? ("getting reviews for project type(s) " + projectTypes) : ("getting reviews for project type(s) " + projectTypes + " with state " + state),
-                () -> this.reviewApi.getReviews(projectTypes, assignedToMe, authoredByMe, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.reviewApi.getReviews(projectTypes, assignedToMe, authoredByMe, labels, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 }

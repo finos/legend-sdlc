@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,37 +14,13 @@
 
 package org.finos.legend.sdlc.server.application.review;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-
 import java.util.Set;
 
-public class CreateReviewCommand
+public class EditReviewCommand
 {
-    private String workspaceId;
-    private WorkspaceType workspaceType;
     private String title;
     private String description;
     private Set<String> labels;
-
-    public String getWorkspaceId()
-    {
-        return this.workspaceId;
-    }
-
-    public void setWorkspaceId(String workspaceId)
-    {
-        this.workspaceId = workspaceId;
-    }
-
-    public WorkspaceType getWorkspaceType()
-    {
-        return this.workspaceType;
-    }
-
-    public void setWorkspaceType(WorkspaceType workspaceType)
-    {
-        this.workspaceType = workspaceType;
-    }
 
     public String getTitle()
     {
@@ -76,3 +52,4 @@ public class CreateReviewCommand
         return this.labels;
     }
 }
+

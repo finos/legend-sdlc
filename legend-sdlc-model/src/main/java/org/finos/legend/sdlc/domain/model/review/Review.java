@@ -18,6 +18,7 @@ import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 import java.time.Instant;
+import java.util.Set;
 
 public interface Review
 {
@@ -53,4 +54,6 @@ public interface Review
      * @return web URL of the review
      */
     String getWebURL();
+
+    Set<String> getLabels();
 }
