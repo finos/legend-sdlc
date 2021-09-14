@@ -51,6 +51,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -296,9 +297,9 @@ public abstract class MavenProjectStructure extends ProjectStructure
 
     private static Pair<String, String> getGroupAndArtifactIdFromProjectDependency(ProjectDependency projectDependency)
     {
-        String projectId = projectDependency.getProjectId();
-        int index = (projectId == null) ? -1 : projectId.indexOf(':');
-        if ((index == -1) || (index == (projectId.length() - 1)) || (index == 0))
+        String projectId = Objects.requireNonNull(projectDependency.getProjectId(), "project dependency project id may not be null");
+        int index = projectId.indexOf(':');
+        if ((index <= 0) || (index == (projectId.length() - 1)))
         {
             throw new IllegalArgumentException("Could not get group and artifact id from \"" + projectId + "\"");
         }
