@@ -284,8 +284,8 @@ public abstract class MavenProjectStructure extends ProjectStructure
         if (!ProjectDependency.isLegacyProjectDependency(projectDependency))
         {
             Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
-            Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? (Collection<? extends ArtifactType>) DEFAULT_ARTIFACT_TYPES : artifactTypes;
-            return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType, versionString));
+            Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
+            return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString));
         }
         ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
         ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
