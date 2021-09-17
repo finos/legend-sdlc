@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -61,7 +62,7 @@ public class ReviewsOnlyResource extends BaseResource
                                    @DefaultValue("true")
                                    @ApiParam("Only include reviews authored/created by me if true") boolean authoredByMe,
                                    @QueryParam("labels")
-                                   @ApiParam("Only include reviews with the given labels") Set<String> labels,
+                                   @ApiParam("Only include reviews that match all the given labels") List<String> labels,
                                    @QueryParam("state")
                                    @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since")

@@ -214,13 +214,13 @@ public class ReviewsResource extends BaseResource
 
     @POST
     @Path("{reviewId}/edit")
-    @ApiOperation(value = "Edit a review", notes = "Try to update an open review. This updates the title, description and the labels of the review")
+    @ApiOperation(value = "Edit a review", notes = "Edit an open review. This updates the title, description and the labels of the review")
     public Review editReview(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, EditReviewCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create review");
         return execute(
                 "editing review " + reviewId + " in project " + projectId,
-                "create a review",
+                "edit a review",
                 () -> this.reviewApi.editReview(projectId, reviewId, command.getTitle(), command.getDescription(), command.getLabels())
         );
     }

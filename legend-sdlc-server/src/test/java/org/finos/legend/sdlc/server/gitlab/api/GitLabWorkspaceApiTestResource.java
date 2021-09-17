@@ -197,7 +197,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Set<String> labels = Stream.of("default").collect(Collectors.toSet());
+        List<String> labels = Collections.singletonList("default");
         Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.USER,"Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
@@ -335,7 +335,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Set<String> labels = Stream.of("default").collect(Collectors.toSet());
+        List<String> labels = Collections.singletonList("default");
         Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.GROUP, "Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);

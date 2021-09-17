@@ -64,14 +64,14 @@ public interface ReviewApi
      * @param projectTypes the project type for which the reviews would be returned
      * @param assignedToMe whether to return only reviews assigned to me
      * @param authoredByMe whether to return only reviews authored by me
-     * @param labels      labels to apply
+     * @param labels      labels to apply, return only reviews that match all the labels
      * @param state       review state
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, Set<String> labels,  ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels,  ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.
@@ -84,7 +84,7 @@ public interface ReviewApi
      * @param labels        review labels
      * @return new review
      */
-    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Set<String> labels);
+    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels);
 
     /**
      * Close a review. This is only valid if the review is open.
@@ -185,7 +185,7 @@ public interface ReviewApi
      * @param labels        review labels
      * @return edited review
      */
-    Review editReview(String projectId, String reviewId, String title, String description, Set<String> labels);
+    Review editReview(String projectId, String reviewId, String title, String description, List<String> labels);
 
     interface ReviewUpdateStatus
     {

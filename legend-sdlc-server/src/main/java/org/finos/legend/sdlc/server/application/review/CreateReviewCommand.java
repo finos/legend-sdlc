@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.application.review;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
-import java.util.Set;
+import java.util.List;
 
 public class CreateReviewCommand
 {
@@ -24,7 +24,7 @@ public class CreateReviewCommand
     private WorkspaceType workspaceType;
     private String title;
     private String description;
-    private Set<String> labels;
+    private List<String> labels;
 
     public String getWorkspaceId()
     {
@@ -66,12 +66,12 @@ public class CreateReviewCommand
         this.description = description;
     }
 
-    public void setLabels(Set<String> labels)
+    public void setLabels(List<String> labels)
     {
         this.labels = labels;
     }
 
-    public Set<String> getLabels()
+    public List<String> getLabels()
     {
         return this.labels;
     }
