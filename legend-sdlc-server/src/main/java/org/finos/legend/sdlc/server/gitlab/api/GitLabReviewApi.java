@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
@@ -51,12 +50,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -681,7 +678,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         try
         {
             MergeRequestParams mergeRequestParams  = new MergeRequestParams().withTitle(title).withDescription(description);
-            if (labels != null && !labels.isEmpty())
+            if (labels != null)
             {
                 mergeRequestParams.withLabels(labels);
             }
