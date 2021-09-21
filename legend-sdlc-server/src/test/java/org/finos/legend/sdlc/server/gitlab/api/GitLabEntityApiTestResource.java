@@ -300,7 +300,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(1, paths.size());
         Assert.assertEquals(entityPathTwo, paths.get(0));
 
-        List<String> labels =Collections.singletonList("default");
+        List<String> labels = Collections.singletonList("default");
         Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, WorkspaceType.GROUP,"Add Courses.", "add two courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
