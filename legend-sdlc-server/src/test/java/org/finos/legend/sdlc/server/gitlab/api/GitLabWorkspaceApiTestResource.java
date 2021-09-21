@@ -40,6 +40,9 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Substantial test resource class for Workspace API tests shared by the docker-based and server-based GitLab tests.
@@ -194,7 +197,8 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.USER,"Add Courses.", "add two math courses");
+        List<String> labels = Collections.singletonList("default");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.USER,"Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
@@ -331,7 +335,8 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.GROUP, "Add Courses.", "add two math courses");
+        List<String> labels = Collections.singletonList("default");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.GROUP, "Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 

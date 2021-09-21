@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
 import org.finos.legend.sdlc.server.application.review.CreateReviewCommand;
+import org.finos.legend.sdlc.server.application.review.EditReviewCommand;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi.ReviewUpdateStatus;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -114,7 +115,7 @@ public class ReviewsResource extends BaseResource
         return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), command.getTitle(), command.getDescription())
+                () -> this.reviewApi.createReview(projectId, command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), command.getTitle(), command.getDescription(), command.getLabels())
         );
     }
 
@@ -208,6 +209,19 @@ public class ReviewsResource extends BaseResource
                 this.reviewApi::updateReview,
                 projectId,
                 reviewId
+        );
+    }
+
+    @POST
+    @Path("{reviewId}/edit")
+    @ApiOperation(value = "Edit a review", notes = "Edit an open review. This updates the title, description and the labels of the review")
+    public Review editReview(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, EditReviewCommand command)
+    {
+        LegendSDLCServerException.validateNonNull(command, "Input required to create review");
+        return execute(
+                "editing review " + reviewId + " in project " + projectId,
+                "edit a review",
+                () -> this.reviewApi.editReview(projectId, reviewId, command.getTitle(), command.getDescription(), command.getLabels())
         );
     }
 }

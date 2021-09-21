@@ -40,6 +40,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+
 /**
  * Substantial test resource class for Entity API tests shared by the docker-based and server-based GitLab tests.
  */
@@ -149,14 +150,16 @@ public class GitLabEntityApiTestResource
         Assert.assertNotNull(paths);
         Assert.assertEquals(1, paths.size());
         Assert.assertEquals(entityPathTwo, paths.get(0));
+        List<String> labels = Collections.singletonList("default");
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, WorkspaceType.USER, "Add Courses.", "add two courses");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, WorkspaceType.USER, "Add Courses.", "add two courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
         Assert.assertNotNull(approvedReview);
         Assert.assertEquals(reviewId, approvedReview.getId());
         Assert.assertEquals(ReviewState.OPEN, approvedReview.getState());
+        Assert.assertEquals(labels, approvedReview.getLabels());
 
         GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getMergeRequestApi();
@@ -297,7 +300,8 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(1, paths.size());
         Assert.assertEquals(entityPathTwo, paths.get(0));
 
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, WorkspaceType.GROUP,"Add Courses.", "add two courses");
+        List<String> labels = Collections.singletonList("default");
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceId, WorkspaceType.GROUP,"Add Courses.", "add two courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 

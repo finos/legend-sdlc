@@ -45,13 +45,13 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description)
+    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -100,6 +100,12 @@ public class InMemoryReviewApi implements ReviewApi
 
     @Override
     public ReviewUpdateStatus updateReview(String projectId, String reviewId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Review editReview(String projectId, String reviewId, String title, String description, List<String> labels)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
