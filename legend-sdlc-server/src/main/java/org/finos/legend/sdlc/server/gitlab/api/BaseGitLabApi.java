@@ -323,7 +323,7 @@ abstract class BaseGitLabApi
 
     protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : createBranchName(getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), getCurrentUser(), workspaceId);
+        return (workspaceId == null) ? MASTER_BRANCH : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
