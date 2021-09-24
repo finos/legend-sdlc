@@ -23,6 +23,12 @@ env:
 on:
   schedule:
     - cron: '0 20 * * *' # daily at 20:00 UTC
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - "**"
   workflow_dispatch:
     inputs:
       logLevel:

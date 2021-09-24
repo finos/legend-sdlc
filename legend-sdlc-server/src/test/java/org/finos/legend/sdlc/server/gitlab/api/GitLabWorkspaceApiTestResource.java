@@ -215,8 +215,8 @@ public class GitLabWorkspaceApiTestResource
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
                 () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
                 mr -> requiredStatus.equals(mr.getMergeStatus()),
-                10,
-                500);
+                20,
+                1000);
         if (!callUntil.succeeded())
         {
             throw new RuntimeException("Merge request " + approvedReview.getId() + " still does not have status \"" + requiredStatus + "\" after " + callUntil.getTryCount() + " tries");
@@ -353,8 +353,8 @@ public class GitLabWorkspaceApiTestResource
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
                 () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
                 mr -> requiredStatus.equals(mr.getMergeStatus()),
-                10,
-                500);
+                20,
+                1000);
         if (!callUntil.succeeded())
         {
             throw new RuntimeException("Merge request " + approvedReview.getId() + " still does not have status \"" + requiredStatus + "\" after " + callUntil.getTryCount() + " tries");
