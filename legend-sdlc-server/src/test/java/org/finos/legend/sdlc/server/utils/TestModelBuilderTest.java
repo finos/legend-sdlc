@@ -84,6 +84,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForVersion));
     }
 
     @Test
@@ -137,6 +148,55 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b2", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForVersion));
+    }
+
+    @Test
+    public void releaseNewVersionOfUpstreamProject()
+    {
+        /*
+            Path from x to y indicates that project x depends on project y
+            x(~) indicates that project x has been modified
+
+            A
+             +-- B(~)
+             +-- C
+
+             Add new entities to project B and release new version
+         */
+
+        this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.backend.project("B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.backend.project("A").addDependency("B:1.0.0", "C:1.0.0");
+
+        List<Entity> entitiesBefore = findVersionEntities("A", "1.0.0");
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesBefore));
+
+        this.backend.project("B").addVersionedClasses("2.0.0", "b3");
+
+        List<Entity> entitiesAfterForNewVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "2.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForNewVersion));
     }
 
     @Test
@@ -174,6 +234,8 @@ public class TestModelBuilderTest
 
         Assert.assertNotEquals("Version of the entity B::b1 in 1.0.0 is the same as in workspace ws1", entityB1InVersion1.getContent(), entityB1InWorkspace.getContent());
 
+        MutableSet<String> expected = Sets.mutable.with("A::a1", "A::a2", "B::b1", "C::c1", "C::c2");
+
         List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
@@ -182,11 +244,18 @@ public class TestModelBuilderTest
                 revisionId("A")
         );
 
-        Entity entityB1InResult = Iterate.detect(entitiesAfter, e -> "B::b1".equals(e.getPath()));
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfter));
 
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "C::c1", "C::c2"),
-                toEntityPathSet(entitiesAfter));
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
+
+        Entity entityB1InResult = Iterate.detect(entitiesAfter, e -> "B::b1".equals(e.getPath()));
 
         Assert.assertEquals("Transitive closure did not return the latest version of B::b1 from workspace w1", entityB1InWorkspace.getContent(), entityB1InResult.getContent());
     }
@@ -237,6 +306,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
                 toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
+                toEntityPathSet(entitiesAfterForVersion));
     }
 
     @Test
@@ -269,7 +349,9 @@ public class TestModelBuilderTest
 
         this.backend.project("B").addProjectDependency("w1", "D:1.0.0");
 
-        List<Entity> entitiesAfter = testModelBuilder.buildEntitiesForTest(
+        MutableSet<String> expected =  Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2");
+
+        List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
                 revisionId("B", "w1"),
@@ -277,10 +359,16 @@ public class TestModelBuilderTest
                 revisionId("A")
         );
 
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2"),
-                toEntityPathSet(entitiesAfter));
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfter));
 
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
     }
 
     @Test
@@ -314,7 +402,9 @@ public class TestModelBuilderTest
 
         this.backend.project("B").removeProjectDependency("w1", "C:1.0.0");
 
-        List<Entity> entitiesAfter = testModelBuilder.buildEntitiesForTest(
+        MutableSet<String> expected =  Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "D::d1", "D::d2");
+
+        List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
                 revisionId("B", "w1"),
@@ -322,9 +412,16 @@ public class TestModelBuilderTest
                 revisionId("A")
         );
 
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "D::d1", "D::d2"),
-                toEntityPathSet(entitiesAfter));
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
     }
 
     @Test
@@ -366,7 +463,9 @@ public class TestModelBuilderTest
 
         this.backend.project("B").removeProjectDependency("w1", "C:1.0.0");
 
-        List<Entity> entitiesAfter = testModelBuilder.buildEntitiesForTest(
+        MutableSet<String> expected =  Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2");
+
+        List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
                 revisionId("B", "w1"),
@@ -374,9 +473,16 @@ public class TestModelBuilderTest
                 revisionId("A")
         );
 
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
-                toEntityPathSet(entitiesAfter));
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
     }
 
     @Test
@@ -417,6 +523,8 @@ public class TestModelBuilderTest
 
         this.backend.project("B").updateProjectDependency("w1", "C:1.0.0", "C:2.0.0");
 
+        MutableSet<String> expected =  Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "C::c3", "C::c4", "D::d1", "D::d2");
+
         List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
@@ -426,9 +534,16 @@ public class TestModelBuilderTest
         );
 
         // after the change, A depends on version 2.0.0 of C i.e it has entities c1, c2, c3, c4
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "C::c3", "C::c4", "D::d1", "D::d2"),
-                toEntityPathSet(entitiesAfter));
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfter));
+
+        List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "1.0.0",
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
     }
 
     private String revisionId(String projectId, String workspaceId)
