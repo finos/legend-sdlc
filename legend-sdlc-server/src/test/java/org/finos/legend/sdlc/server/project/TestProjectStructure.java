@@ -457,6 +457,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
     protected void testUpdateOldProjectDependencies(ProjectType projectType)
     {
         ProjectDependency oldProjectDependency = ProjectDependency.parseProjectDependency("TestProject3:2.0.1");
+        ProjectDependency oldProjectDependencyToRemove = ProjectDependency.parseProjectDependency("TestProject0:0.0.1");
+        List<ProjectDependency> oldProjectDependencyList = Arrays.asList(oldProjectDependency, oldProjectDependencyToRemove);
         ProjectDependency updatedProjectDependency = ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1");
 
         ProjectStructure projectStructure = buildProjectStructure(projectType);
@@ -473,7 +475,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         assertStateValid(PROJECT_ID, null, null);
 
         SimpleProjectConfiguration newConfig = new SimpleProjectConfiguration(beforeProjectConfig);
-        newConfig.setProjectDependencies(Collections.singletonList(oldProjectDependency));
+        newConfig.setProjectDependencies(oldProjectDependencyList);
         String serializedConfig = serializeConfig(newConfig);
         List<ProjectFileOperation> operations = Lists.mutable.empty();
         operations.add(ProjectFileOperation.modifyFile("/project.json", serializedConfig));
@@ -486,13 +488,14 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureVersion, afterUpdateProjectConfig.getProjectStructureVersion().getVersion());
         Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateProjectConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), afterUpdateProjectConfig.getMetamodelDependencies());
-        Assert.assertEquals(Collections.singletonList(oldProjectDependency), afterUpdateProjectConfig.getProjectDependencies());
+        Assert.assertEquals(oldProjectDependencyList, afterUpdateProjectConfig.getProjectDependencies());
 
         String updateOldDependenciesId = "UpdateOldDependencies";
         this.fileAccessProvider.createWorkspace(PROJECT_ID, updateOldDependenciesId);
         ProjectConfigurationUpdateBuilder.newBuilder(this.fileAccessProvider, projectType, PROJECT_ID)
                 .withWorkspace(updateOldDependenciesId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
                 .withMessage("Update Old Dependencies")
+                .withProjectDependenciesToRemove(Collections.singletonList(oldProjectDependencyToRemove))
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .updateProjectConfiguration();
@@ -504,6 +507,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         Assert.assertEquals(this.projectStructureExtensionVersion, afterUpdateWorkspaceConfig.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(Collections.emptyList(), afterUpdateWorkspaceConfig.getMetamodelDependencies());
 
+        //asserting after deleting one of the old form dependency and updating one of the dependency
         Assert.assertEquals(Collections.singletonList(updatedProjectDependency), afterUpdateWorkspaceConfig.getProjectDependencies());
         assertStateValid(PROJECT_ID, updateOldDependenciesId, null);
     }
