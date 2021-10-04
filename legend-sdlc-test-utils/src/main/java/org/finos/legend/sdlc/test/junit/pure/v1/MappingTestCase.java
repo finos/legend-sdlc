@@ -14,9 +14,6 @@
 
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
-import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
-import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
-
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
@@ -30,6 +27,8 @@ import org.finos.legend.engine.test.runner.mapping.RichMappingTestResult;
 import org.finos.legend.engine.test.runner.shared.TestResult;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
+import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -60,7 +59,14 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
         MappingTest mappingTest = this.mappingTestRunner.mappingTest;
         if (richMappingTestResult.getResult() == TestResult.FAILURE)
         {
-            fail("Test failure for mapping test '" + mappingTest.name + "' for Mapping '" + this.entity.getPath() + "'");
+            String message = "Test failure for mapping test '" + mappingTest.name + "' for Mapping '" + this.entity.getPath() + "'";
+            Optional<String> expected = richMappingTestResult.getExpected();
+            Optional<String> actual = richMappingTestResult.getActual();
+            if (expected.isPresent() || actual.isPresent())
+            {
+                assertEquals(message, expected.orElse(null), actual.orElse(null));
+            }
+            fail(message);
         }
         else if (richMappingTestResult.getResult() == TestResult.ERROR)
         {
