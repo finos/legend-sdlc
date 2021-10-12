@@ -15,3 +15,6 @@ Thumbs.db
 **/surefire-reports-aggregate
 **/dependency-reduced-pom.xml
 /logs
+
+# Development
+legend-sdlc-server/src/test/resources/config-local.yml
