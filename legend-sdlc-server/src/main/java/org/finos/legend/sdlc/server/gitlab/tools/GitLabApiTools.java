@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.tools;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.gitlab4j.api.GitLabApi;
@@ -33,6 +34,7 @@ import javax.ws.rs.core.Response.Status;
 public class GitLabApiTools
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabApiTools.class);
+    private static final String RETRY_METRIC = "gitlab retryable exception";
 
     public static <T> T callWithRetries(ThrowingSupplier<T, ? extends GitLabApiException> apiCall, int maxRetries, long waitIntervalMillis) throws GitLabApiException
     {
@@ -57,6 +59,7 @@ public class GitLabApiTools
             {
                 throw e;
             }
+            noteRetryableException();
             exceptions = Lists.mutable.ofInitialCapacity(maxRetries + 1);
             exceptions.add(e);
             LOGGER.error(getRetryableExceptionLogMessage(e, 1), e);
@@ -92,6 +95,7 @@ public class GitLabApiTools
                     addSuppressedExceptions(e, exceptions);
                     throw e;
                 }
+                noteRetryableException();
                 exceptions.add(e);
                 LOGGER.error(getRetryableExceptionLogMessage(e, i + 2), e);
             }
@@ -187,6 +191,11 @@ public class GitLabApiTools
             builder.append("; message: ").append(eMessage);
         }
         return builder.toString();
+    }
+
+    private static void noteRetryableException()
+    {
+        SDLCMetricsHandler.incrementCounter(RETRY_METRIC);
     }
 
     public static boolean branchExists(GitLabApi api, Object projectIdOrPath, String branchName) throws GitLabApiException

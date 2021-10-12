@@ -33,7 +33,7 @@ public abstract class BaseResource
     protected <T> T execute(String descriptionForLogging, String metricName, Supplier<T> supplier)
     {
         Logger logger = getLogger();
-        SDLCMetricsHandler.incrementSDLCOperationsGauge();
+        SDLCMetricsHandler.operationStart();
         boolean isInfoLogging = logger.isInfoEnabled();
         String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(descriptionForLogging, "_", false) : null;
         long startTime = System.nanoTime();
@@ -45,6 +45,7 @@ public abstract class BaseResource
         {
             T result = supplier.get();
             long endTime = System.nanoTime();
+            SDLCMetricsHandler.operationComplete(startTime, endTime, metricName);
             if (isInfoLogging)
             {
                 long duration = endTime - startTime;
@@ -53,22 +54,15 @@ public abstract class BaseResource
                 builder.append("s)");
                 logger.info(builder.toString());
             }
-            if (metricName != null)
-            {
-                SDLCMetricsHandler.observe(metricName, startTime, endTime);
-            }
             return result;
         }
         catch (LegendSDLCServerException e)
         {
             long endTime = System.nanoTime();
-            if (metricName != null)
-            {
-                SDLCMetricsHandler.observe(metricName, startTime, endTime);
-            }
             Status status = e.getStatus();
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))
             {
+                SDLCMetricsHandler.operationRedirect(startTime, endTime, metricName);
                 if (isInfoLogging)
                 {
                     long duration = endTime - startTime;
@@ -81,7 +75,7 @@ public abstract class BaseResource
             }
             else
             {
-                SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
+                SDLCMetricsHandler.operationError(startTime, endTime, metricName);
                 if (logger.isErrorEnabled())
                 {
                     long duration = endTime - startTime;
@@ -97,11 +91,7 @@ public abstract class BaseResource
         catch (Throwable t)
         {
             long endTime = System.nanoTime();
-            SDLCMetricsHandler.incrementSDLCOperationErrorsGauge();
-            if (metricName != null)
-            {
-                SDLCMetricsHandler.observe(metricName, startTime, endTime);
-            }
+            SDLCMetricsHandler.operationError(startTime, endTime, metricName);
             if (logger.isErrorEnabled())
             {
                 long duration = endTime - startTime;
