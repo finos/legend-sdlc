@@ -62,7 +62,7 @@ public class ModelGenerator
     {
         List<Function3<PackageableElement, CompileContext, String, PureModelContextData>> generators = ListIterate.flatCollect(extensions, ModelGenerationExtension::getPureModelContextDataGenerators);
         return generators.stream()
-                .map(generator -> generator.value(this.generator, this.pureModel.getContext(), PureClientVersions.latest))
+                .map(generator -> generator.value(this.generator, this.pureModel.getContext(), PureClientVersions.production))
                 .filter(Objects::nonNull).findFirst()
                 .orElseThrow(() -> new UnsupportedOperationException("No model generator found for element '" + this.generator.getClass().getSimpleName() + "'"));
     }
