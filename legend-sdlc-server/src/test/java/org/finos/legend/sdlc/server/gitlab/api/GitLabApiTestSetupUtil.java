@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
@@ -44,12 +45,12 @@ public class GitLabApiTestSetupUtil
     /**
      * Authenticates to GitLab and creates a test GitLabUserContext.
      *
-     * @param username the name of user for whom we create this context.
-     * @param password the password of user for whom we create this context.
-     * @param hostUrl the url of the test host.
+     * @param username   the name of user for whom we create this context.
+     * @param password   the password of user for whom we create this context.
+     * @param hostUrl    the url of the test host.
      * @param hostScheme the scheme of the test host.
-     * @param hostHost the test host.
-     * @param hostPort the port (if necessary) of the test host.
+     * @param hostHost   the test host.
+     * @param hostPort   the port (if necessary) of the test host.
      */
     public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort) throws LegendSDLCServerException
     {
@@ -89,7 +90,8 @@ public class GitLabApiTestSetupUtil
         session.setModeInfo(gitLabModeInfo);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 
-        return new GitLabUserContext(httpServletRequest, null);
+        GitLabAuthorizerManager authorizerManager = GitLabAuthorizerManager.newManager(Collections.emptyList());
+        return new GitLabUserContext(httpServletRequest, null, authorizerManager);
     }
 
     protected static boolean hasOnlyBranchesWithNames(List<Branch> branchList, List<String> expectedNames)
