@@ -32,9 +32,6 @@ import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryBackupApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryBuildApi;
@@ -64,8 +61,6 @@ public class InMemoryModule extends AbstractBaseModule
     protected void configureApis(Binder binder)
     {
         configureLegendApis(binder);
-        binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
-
     }
 
     public static void configureLegendApis(Binder binder)
@@ -86,8 +81,6 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(BackupApi.class).to(InMemoryBackupApi.class);
         binder.bind(WorkflowApi.class).to(InMemoryWorkflowApi.class);
         binder.bind(WorkflowJobApi.class).to(InMemoryWorkflowJobApi.class);
-        binder.bind(GitLabUserContext.class);
-        binder.bind(GitLabAuthResource.class);
 
         binder.bind(Project.class).to(InMemoryProject.class);
     }
