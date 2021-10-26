@@ -21,6 +21,7 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -59,6 +60,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
 
         // SDLC specific initialization
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
+        GitLabConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
     }
 
     protected void configureApis(Bootstrap<T> bootstrap)

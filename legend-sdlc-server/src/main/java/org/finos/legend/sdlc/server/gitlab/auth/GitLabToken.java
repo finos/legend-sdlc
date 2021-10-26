@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.gitlab4j.api.Constants.TokenType;
 
-class GitLabToken
+public class GitLabToken
 {
     private final TokenType tokenType;
     private final String token;
@@ -66,7 +66,7 @@ class GitLabToken
         return this.token;
     }
 
-    static GitLabToken newGitLabToken(TokenType type, String token)
+    public static GitLabToken newGitLabToken(TokenType type, String token)
     {
         if (token == null)
         {
