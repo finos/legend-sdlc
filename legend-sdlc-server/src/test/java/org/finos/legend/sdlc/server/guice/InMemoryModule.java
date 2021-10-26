@@ -15,10 +15,8 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
-import com.google.inject.Provides;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
-import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -35,7 +33,6 @@ import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
@@ -55,9 +52,6 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowJobApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkspaceApi;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
-
-import javax.inject.Singleton;
-import java.util.Collections;
 
 public class InMemoryModule extends AbstractBaseModule
 {
@@ -96,12 +90,5 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(GitLabAuthResource.class);
 
         binder.bind(Project.class).to(InMemoryProject.class);
-    }
-
-    @Provides
-    @Singleton
-    public GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
-    {
-        return GitLabAuthorizerManager.newManager(Collections.emptyList());
     }
 }

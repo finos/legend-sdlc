@@ -16,15 +16,8 @@ package org.finos.legend.sdlc.server.gitlab;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.gitlab4j.api.models.Visibility;
 
-import java.util.Collections;
-import java.util.List;
 import java.util.regex.Pattern;
 
 public class GitLabConfiguration
@@ -36,9 +29,8 @@ public class GitLabConfiguration
     private final ModeConfiguration uatConfig;
     private final ModeConfiguration prodConfig;
     private final NewProjectVisibility newProjectVisibility;
-    private final List<GitLabAuthorizer> gitLabAuthorizers;
 
-    private GitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility, List<GitLabAuthorizer> gitLabAuthorizers)
+    private GitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility)
     {
         if ((projectTag != null) && !LEGEND_SDLC_PROJECT_TAG_PATTERN.matcher(projectTag).matches())
         {
@@ -49,7 +41,6 @@ public class GitLabConfiguration
         this.uatConfig = uatConfig;
         this.prodConfig = prodConfig;
         this.newProjectVisibility = newProjectVisibility;
-        this.gitLabAuthorizers = gitLabAuthorizers == null ? Collections.emptyList() : gitLabAuthorizers;
     }
 
     public String getProjectTag()
@@ -77,30 +68,10 @@ public class GitLabConfiguration
         return (this.newProjectVisibility == null) ? null : this.newProjectVisibility.getGitLabVisibility();
     }
 
-    public List<GitLabAuthorizer> getGitLabAuthorizers()
-    {
-        return this.gitLabAuthorizers;
-    }
-
     @JsonCreator
-    public static GitLabConfiguration newGitLabConfiguration(@JsonProperty("projectTag") String projectTag, @JsonProperty("auth") AuthConfiguration authConfig, @JsonProperty("uat") ModeConfiguration uatConfig, @JsonProperty("prod") ModeConfiguration prodConfig, @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility, @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
+    public static GitLabConfiguration newGitLabConfiguration(@JsonProperty("projectTag") String projectTag, @JsonProperty("auth") AuthConfiguration authConfig, @JsonProperty("uat") ModeConfiguration uatConfig, @JsonProperty("prod") ModeConfiguration prodConfig, @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility)
     {
-        return new GitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility, gitLabAuthorizers);
-    }
-
-    public static GitLabConfiguration newGitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility)
-    {
-        return newGitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility, Collections.emptyList());
-    }
-
-    public static void configureObjectMapper(ObjectMapper objectMapper)
-    {
-        @JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.WRAPPER_OBJECT)
-        abstract class WrapperMixin
-        {
-        }
-
-        objectMapper.addMixIn(GitLabAuthorizer.class, WrapperMixin.class);
+        return new GitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility);
     }
 
     public static class AuthConfiguration
