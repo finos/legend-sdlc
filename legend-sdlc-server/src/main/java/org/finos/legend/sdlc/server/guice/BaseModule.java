@@ -15,9 +15,7 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
-import com.google.inject.Scopes;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
-import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -49,13 +47,8 @@ import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
-
-import java.util.Collections;
-import java.util.List;
 
 public class BaseModule extends AbstractBaseModule
 {
@@ -87,20 +80,6 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
-            binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
-        }
-    }
-
-    private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
-    {
-        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getGitLabConfiguration().getGitLabAuthorizers();
-        if (gitLabAuthorizers == null)
-        {
-            return GitLabAuthorizerManager.newManager(Collections.emptyList());
-        }
-        else
-        {
-            return GitLabAuthorizerManager.newManager(gitLabAuthorizers);
         }
     }
 }

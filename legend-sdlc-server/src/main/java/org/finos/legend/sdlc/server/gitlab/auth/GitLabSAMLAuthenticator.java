@@ -18,6 +18,7 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -33,23 +34,45 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.FormElement;
 
+import javax.security.auth.Subject;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.security.PrivilegedAction;
 import java.util.Date;
 
-public abstract class GitLabSAMLAuthenticator
+class GitLabSAMLAuthenticator
 {
+    private static final String SAML_AUTH_PATH = "/users/auth/saml";
     private static final String SESSION_COOKIE_NAME = "_gitlab_session";
     private static final String SAML_FORM_TAG = "form";
 
     private final GitLabModeInfo modeInfo;
+    private final Subject subject;
 
-    protected GitLabSAMLAuthenticator(GitLabModeInfo modeInfo)
+    private GitLabSAMLAuthenticator(GitLabModeInfo modeInfo, Subject subject)
     {
         this.modeInfo = modeInfo;
+        this.subject = subject;
     }
 
-    public Cookie authenticateAndGetSessionCookie()
+    private Cookie authenticateAndGetSessionCookie()
+    {
+        try
+        {
+            return Subject.doAs(this.subject, (PrivilegedAction<Cookie>)this::doAuthenticateAndGetSessionCookie);
+        }
+        catch (GitLabAuthException e)
+        {
+            throw e;
+        }
+        catch (Exception e)
+        {
+            throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), "Error getting GitLab session token", e);
+        }
+    }
+
+    private Cookie doAuthenticateAndGetSessionCookie()
     {
         CookieStore cookieStore = new BasicCookieStore();
         try (CloseableHttpClient client = AuthenticationTools.createHttpClientForSPNego(cookieStore))
@@ -73,7 +96,7 @@ public abstract class GitLabSAMLAuthenticator
                         {
                             responseString = "(error getting response)";
                         }
-                        throw new GitLabAuthFailureException(getUserId(), getGitLabMode(), "Failed to get GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        throw new GitLabAuthFailureException(getUserKerberosId(), getGitLabMode(), "Failed to get GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                     }
                     case HttpStatus.SC_BAD_GATEWAY:
                     case HttpStatus.SC_SERVICE_UNAVAILABLE:
@@ -88,7 +111,7 @@ public abstract class GitLabSAMLAuthenticator
                         {
                             responseString = "(error getting response)";
                         }
-                        throw new GitLabAuthAccessException(getUserId(), getGitLabMode(), "Error accessing auth server: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        throw new GitLabAuthAccessException(getUserKerberosId(), getGitLabMode(), "Error accessing auth server: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                     }
                     default:
                     {
@@ -103,7 +126,7 @@ public abstract class GitLabSAMLAuthenticator
                             {
                                 responseString = "(error getting response)";
                             }
-                            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Error getting GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                            throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), "Error getting GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                         }
                     }
                 }
@@ -128,17 +151,17 @@ public abstract class GitLabSAMLAuthenticator
                 {
                     builder.append("Form:\n").append(samlForm).append("\nMessage: ").append(eMessage);
                 }
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), builder.toString(), e);
+                throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), builder.toString(), e);
             }
             if (isNonSuccessStatusCode(formResponse.statusCode()))
             {
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Error getting token (status " + formResponse.statusCode() + "), response:\n" + formResponse.body());
+                throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), "Error getting token (status " + formResponse.statusCode() + "), response:\n" + formResponse.body());
             }
             String token = formResponse.cookie(SESSION_COOKIE_NAME);
             if (token == null)
             {
                 // TODO Consider what to do in this case. good response but no gitlab session token. Might have another form to execute?
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Could not get token from form response:\n" + formResponse.body());
+                throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), "Could not get token from form response:\n" + formResponse.body());
             }
             return makeSessionCookie(token, this.modeInfo.getServerInfo());
         }
@@ -148,11 +171,11 @@ public abstract class GitLabSAMLAuthenticator
         }
         catch (IOException e)
         {
-            throw new GitLabAuthAccessException(getUserId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
+            throw new GitLabAuthAccessException(getUserKerberosId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
         }
         catch (Exception e)
         {
-            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
+            throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
         }
     }
 
@@ -161,7 +184,18 @@ public abstract class GitLabSAMLAuthenticator
         return (statusCode / 100) != 2;
     }
 
-    protected abstract URI buildAuthURI();
+    private URI buildAuthURI()
+    {
+        URIBuilder builder = this.modeInfo.getServerInfo().newURIBuilder().setPath(SAML_AUTH_PATH);
+        try
+        {
+            return builder.build();
+        }
+        catch (URISyntaxException e)
+        {
+            throw new RuntimeException("Error building SAML authentication URI: " + builder.toString(), e);
+        }
+    }
 
     private FormElement getFormFromResponse(String responseString)
     {
@@ -172,25 +206,28 @@ public abstract class GitLabSAMLAuthenticator
         }
         catch (Exception e)
         {
-            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Invalid SAML form, got\n" + responseString, e);
+            throw new GitLabAuthOtherException(getUserKerberosId(), getGitLabMode(), "Invalid SAML form, got\n" + responseString, e);
         }
     }
 
-    protected abstract String getUserId();
-
-    protected GitLabMode getGitLabMode()
+    private String getUserKerberosId()
     {
-        return this.modeInfo.getMode();
+        return AuthenticationTools.getKerberosIdFromSubject(this.subject);
     }
 
-    protected GitLabModeInfo getModeInfo()
+    private GitLabMode getGitLabMode()
     {
-        return this.modeInfo;
+        return this.modeInfo.getMode();
     }
 
     static Cookie makeSessionCookie(String sessionToken, GitLabServerInfo serverInfo)
     {
         return new SessionCookie(serverInfo, sessionToken);
+    }
+
+    static Cookie authenticateAndGetSessionCookie(GitLabModeInfo modeInfo, Subject subject)
+    {
+        return new GitLabSAMLAuthenticator(modeInfo, subject).authenticateAndGetSessionCookie();
     }
 
     private static class SessionCookie implements ClientCookie

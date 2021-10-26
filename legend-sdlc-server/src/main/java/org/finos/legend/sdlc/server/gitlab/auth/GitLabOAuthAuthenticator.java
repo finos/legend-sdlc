@@ -48,7 +48,6 @@ import org.finos.legend.sdlc.server.tools.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -57,8 +56,10 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import javax.security.auth.Subject;
+import javax.servlet.http.HttpServletRequest;
 
-public class GitLabOAuthAuthenticator
+class GitLabOAuthAuthenticator
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabOAuthAuthenticator.class);
 
@@ -99,8 +100,9 @@ public class GitLabOAuthAuthenticator
         this.modeInfo = modeInfo;
     }
 
-    public String getOAuthTokenFromSessionCookie(Cookie sessionCookie)
+    String getOAuthToken(Subject subject)
     {
+        Cookie sessionCookie = GitLabSAMLAuthenticator.authenticateAndGetSessionCookie(this.modeInfo, subject);
         CookieStore cookieStore = new BasicCookieStore();
         cookieStore.addCookie(sessionCookie);
 
@@ -361,7 +363,7 @@ public class GitLabOAuthAuthenticator
         return Hex.encodeHexString(bytes);
     }
 
-    public static GitLabOAuthAuthenticator newAuthenticator(GitLabModeInfo modeInfo)
+    static GitLabOAuthAuthenticator newAuthenticator(GitLabModeInfo modeInfo)
     {
         return new GitLabOAuthAuthenticator(modeInfo);
     }
