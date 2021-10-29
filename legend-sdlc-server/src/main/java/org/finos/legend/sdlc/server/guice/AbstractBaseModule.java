@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
+import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
@@ -149,6 +150,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         configureApis(binder);
 
         binder.bind(UserContext.class);
+        binder.bind(TestModelBuilder.class);
         binder.bind(ProjectStructureConfiguration.class).toProvider(this::getProjectStructureConfiguration);
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
