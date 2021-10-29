@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,9 @@ import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
+import org.finos.legend.sdlc.server.depot.DepotConfiguration;
+import org.finos.legend.sdlc.server.depot.auth.VoidAuthClientInjector;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
@@ -137,6 +140,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
     protected ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
+    private AuthClientInjector authClientInjector;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
@@ -153,6 +157,8 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(TestModelBuilder.class);
         binder.bind(ProjectStructureConfiguration.class).toProvider(this::getProjectStructureConfiguration);
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
+        binder.bind(DepotConfiguration.class).toProvider(this::getDepotConfiguration);
+        binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
@@ -331,6 +337,35 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         return new VoidProjectStructureExtensionProvider();
+    }
+
+    private DepotConfiguration getDepotConfiguration()
+    {
+        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        return (depotConfiguration == null) ? DepotConfiguration.emptyConfiguration() : depotConfiguration;
+    }
+
+    private AuthClientInjector getAuthClientInjector()
+    {
+        if (this.authClientInjector == null)
+        {
+            this.authClientInjector = resolveAuthClientInjector();
+        }
+        return this.authClientInjector;
+    }
+
+    private AuthClientInjector resolveAuthClientInjector()
+    {
+        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        if (depotConfiguration != null)
+        {
+            AuthClientInjector authClientInjector = depotConfiguration.getAuthClientInjector();
+            if (authClientInjector != null)
+            {
+                return authClientInjector;
+            }
+        }
+        return new VoidAuthClientInjector();
     }
 
     @Provides

@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 
@@ -26,6 +27,9 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     @JsonProperty("projectStructure")
     private ProjectStructureConfiguration projectStructureConfiguration;
 
+    @JsonProperty("depot")
+    private DepotConfiguration depotConfiguration;
+
     public GitLabConfiguration getGitLabConfiguration()
     {
         return this.gitLabConfig;
@@ -34,5 +38,10 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     public ProjectStructureConfiguration getProjectStructureConfiguration()
     {
         return this.projectStructureConfiguration;
+    }
+
+    public DepotConfiguration getDepotConfiguration()
+    {
+        return this.depotConfiguration;
     }
 }
