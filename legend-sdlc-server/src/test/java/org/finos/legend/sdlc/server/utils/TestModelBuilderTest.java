@@ -21,6 +21,8 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
@@ -85,9 +87,22 @@ public class TestModelBuilderTest
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfter));
 
+        List<Entity> entitiesAfterForUserWorkspace = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                "w1",
+                WorkspaceType.USER,
+                revisionId("B", "w1"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForUserWorkspace));
+
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
@@ -95,6 +110,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -151,7 +177,7 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
@@ -159,6 +185,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -189,7 +226,7 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForNewVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "2.0.0",
+                VersionId.parseVersionId("2.0.0"),
                 "A",
                 revisionId("A")
         );
@@ -197,6 +234,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfterForNewVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -228,9 +276,9 @@ public class TestModelBuilderTest
                 toEntityPathSet(entitiesBefore));
 
         this.backend.project("B")
-                .addEntities("w1", TestTools.newClassEntity("b1", "B", Collections.singletonList(TestTools.newProperty("prop1", "Integer", 1, 100))));
+                .addEntities("w1", WorkspaceType.GROUP, TestTools.newClassEntity("b1", "B", Collections.singletonList(TestTools.newProperty("prop1", "Integer", 1, 100))));
 
-        Entity entityB1InWorkspace = this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
+        Entity entityB1InWorkspace = this.backend.getEntityApi().getGroupWorkspaceEntityAccessContext("B", "w1").getEntity("B::b1");
 
         Assert.assertNotEquals("Version of the entity B::b1 in 1.0.0 is the same as in workspace ws1", entityB1InVersion1.getContent(), entityB1InWorkspace.getContent());
 
@@ -239,7 +287,8 @@ public class TestModelBuilderTest
         List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 "w1",
-                revisionId("B", "w1"),
+                WorkspaceType.GROUP,
+                revisionId("B", "w1", WorkspaceType.GROUP),
                 "A",
                 revisionId("A")
         );
@@ -248,7 +297,7 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
@@ -258,6 +307,17 @@ public class TestModelBuilderTest
         Entity entityB1InResult = Iterate.detect(entitiesAfter, e -> "B::b1".equals(e.getPath()));
 
         Assert.assertEquals("Transitive closure did not return the latest version of B::b1 from workspace w1", entityB1InWorkspace.getContent(), entityB1InResult.getContent());
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "C::c1", "C::c2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
 
@@ -309,7 +369,7 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
@@ -317,6 +377,17 @@ public class TestModelBuilderTest
         Assert.assertEquals(
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
                 toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -363,12 +434,23 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
 
         Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -416,12 +498,23 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
 
         Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "D::d1", "D::d2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -477,12 +570,23 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
 
         Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "D::d1", "D::d2", "E::e1", "E::e2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     @Test
@@ -538,17 +642,33 @@ public class TestModelBuilderTest
 
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
-                "1.0.0",
+                VersionId.parseVersionId("1.0.0"),
                 "A",
                 revisionId("A")
         );
 
         Assert.assertEquals(expected, toEntityPathSet(entitiesAfterForVersion));
+
+        List<Entity> entitiesAfterForRevision = this.testModelBuilder.buildEntitiesForTest(
+                "B",
+                revisionId("B"),
+                "A",
+                revisionId("A")
+        );
+
+        Assert.assertEquals(
+                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "C::c1", "C::c2", "C::c3", "C::c4", "D::d1", "D::d2"),
+                toEntityPathSet(entitiesAfterForRevision));
     }
 
     private String revisionId(String projectId, String workspaceId)
     {
         return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+    }
+
+    private String revisionId(String projectId, String workspaceId, WorkspaceType type)
+    {
+        return this.backend.getRevisionApi().getWorkspaceRevisionContext(projectId, workspaceId, type).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId)

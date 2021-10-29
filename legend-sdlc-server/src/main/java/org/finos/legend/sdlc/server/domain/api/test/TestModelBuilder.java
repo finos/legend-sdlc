@@ -21,6 +21,8 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.set.mutable.SetAdapter;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 
@@ -49,20 +51,34 @@ public class TestModelBuilder
         Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
 
         List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getUserWorkspaceRevisionEntityAccessContext(upstreamProjectId, upstreamWorkspaceId, upstreamRevisionId).getEntities(null, null, null);
-        List<Entity> downstreamProjectEntities = this.entityApi.getProjectRevisionEntityAccessContext(downstreamProjectId, downstreamRevisionId).getEntities(null, null, null);
-        List<Entity> dependencyEntities = dependencies.stream().map(this::getEntities).flatMap(Collection::stream).collect(Collectors.toList());
-        return Lists.mutable.withAll(upstreamProjectWorkspaceEntities).withAll(downstreamProjectEntities).withAll(dependencyEntities);
+        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
-    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamVersionId, String downstreamProjectId, String downstreamRevisionId)
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, WorkspaceType type, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
     {
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectVersionUpstreamProjects(upstreamProjectId, upstreamVersionId, false);
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId, false);
+        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
+
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId).getEntities(null, null, null);
+        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+    }
+
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, VersionId upstreamVersionId, String downstreamProjectId, String downstreamRevisionId)
+    {
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectVersionUpstreamProjects(upstreamProjectId, upstreamVersionId.toVersionIdString(), false);
         Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
 
         List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getVersionEntityAccessContext(upstreamProjectId, upstreamVersionId).getEntities(null, null, null);
-        List<Entity> downstreamProjectEntities = this.entityApi.getProjectRevisionEntityAccessContext(downstreamProjectId, downstreamRevisionId).getEntities(null, null, null);
-        List<Entity> dependencyEntities = dependencies.stream().map(this::getEntities).flatMap(Collection::stream).collect(Collectors.toList());
-        return Lists.mutable.withAll(upstreamProjectWorkspaceEntities).withAll(downstreamProjectEntities).withAll(dependencyEntities);
+        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+    }
+
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
+    {
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectRevisionUpstreamProjects(upstreamProjectId, upstreamRevisionId, false);
+        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
+
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getProjectRevisionEntityAccessContext(upstreamProjectId, upstreamRevisionId).getEntities(null, null, null);
+        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
     public Set<ProjectDependency> processDependencies(String upstreamProjectId, String downstreamProjectId, String downstreamRevisionId, Set<ProjectDependency> latestUpstreamLevel1Dependencies)
@@ -98,6 +114,13 @@ public class TestModelBuilder
         dependencies.addAll(latestUpstreamLevel1Dependencies);
 
         return dependencies;
+    }
+
+    private List<Entity> getEntities(String downstreamProjectId, String downstreamRevisionId, Set<ProjectDependency> dependencies, List<Entity> upstreamProjectWorkspaceEntities)
+    {
+        List<Entity> downstreamProjectEntities = this.entityApi.getProjectRevisionEntityAccessContext(downstreamProjectId, downstreamRevisionId).getEntities(null, null, null);
+        List<Entity> dependencyEntities = dependencies.stream().map(this::getEntities).flatMap(Collection::stream).collect(Collectors.toList());
+        return Lists.mutable.withAll(upstreamProjectWorkspaceEntities).withAll(downstreamProjectEntities).withAll(dependencyEntities);
     }
 
     private List<Entity> getEntities(ProjectDependency projectDependency)
