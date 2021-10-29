@@ -87,19 +87,6 @@ public class TestModelBuilderTest
                 Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
                 toEntityPathSet(entitiesAfter));
 
-        List<Entity> entitiesAfterForUserWorkspace = this.testModelBuilder.buildEntitiesForTest(
-                "B",
-                "w1",
-                WorkspaceType.USER,
-                revisionId("B", "w1"),
-                "A",
-                revisionId("A")
-        );
-
-        Assert.assertEquals(
-                Sets.mutable.with("A::a1", "A::a2", "B::b1", "B::b2", "B::b3", "C::c1", "C::c2"),
-                toEntityPathSet(entitiesAfterForUserWorkspace));
-
         List<Entity> entitiesAfterForVersion = this.testModelBuilder.buildEntitiesForTest(
                 "B",
                 VersionId.parseVersionId("1.0.0"),

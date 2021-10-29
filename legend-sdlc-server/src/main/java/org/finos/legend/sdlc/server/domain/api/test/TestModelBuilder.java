@@ -47,11 +47,7 @@ public class TestModelBuilder
 
     public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
     {
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getUserWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, upstreamRevisionId, false);
-        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
-
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getUserWorkspaceRevisionEntityAccessContext(upstreamProjectId, upstreamWorkspaceId, upstreamRevisionId).getEntities(null, null, null);
-        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+        return buildEntitiesForTest(upstreamProjectId, upstreamWorkspaceId, WorkspaceType.USER, upstreamRevisionId, downstreamProjectId, downstreamRevisionId);
     }
 
     public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, WorkspaceType type, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
