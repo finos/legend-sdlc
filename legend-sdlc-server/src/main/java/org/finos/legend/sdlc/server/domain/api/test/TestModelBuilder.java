@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,11 +20,18 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.set.mutable.SetAdapter;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.depot.api.MetadataApi;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.tools.StringTools;
 
 import javax.inject.Inject;
 import java.util.Collection;
@@ -36,95 +43,128 @@ public class TestModelBuilder
 {
     private final DependenciesApi dependenciesApi;
     private final EntityApi entityApi;
+    private final ProjectConfigurationApi projectConfigurationApi;
+    private final MetadataApi metadataApi;
     private final MutableMap<String, List<Entity>> entityCache = Maps.mutable.empty();
 
     @Inject
-    public TestModelBuilder(DependenciesApi dependenciesApi, EntityApi entityApi)
+    public TestModelBuilder(DependenciesApi dependenciesApi, EntityApi entityApi, ProjectConfigurationApi projectConfigurationApi, MetadataApi metadataApi)
     {
         this.dependenciesApi = dependenciesApi;
         this.entityApi = entityApi;
+        this.projectConfigurationApi = projectConfigurationApi;
+        this.metadataApi = metadataApi;
     }
 
-    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, String upstreamRevisionId, String downstreamProjectId, String downstreamVersionId)
     {
-        return buildEntitiesForTest(upstreamProjectId, upstreamWorkspaceId, WorkspaceType.USER, upstreamRevisionId, downstreamProjectId, downstreamRevisionId);
+        return buildEntitiesForTest(upstreamProjectId, upstreamWorkspaceId, WorkspaceType.USER, upstreamRevisionId, downstreamProjectId, downstreamVersionId);
     }
 
-    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, WorkspaceType type, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamWorkspaceId, WorkspaceType type, String upstreamRevisionId, String downstreamProjectId, String downstreamVersionId)
     {
         Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId, false);
-        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
+        Set<DepotProjectVersion> dependencies = processDependencies(getDepotProjectId(upstreamProjectId), downstreamProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
         List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId).getEntities(null, null, null);
-        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+        return getEntities(downstreamProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
-    public List<Entity> buildEntitiesForTest(String upstreamProjectId, VersionId upstreamVersionId, String downstreamProjectId, String downstreamRevisionId)
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, VersionId upstreamVersionId, String downstreamProjectId, String downstreamVersionId)
     {
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectVersionUpstreamProjects(upstreamProjectId, upstreamVersionId.toVersionIdString(), false);
-        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
+        Set<DepotProjectVersion> latestUpstreamLevel1Dependencies = this.metadataApi.getProjectDependencies(upstreamProjectId, upstreamVersionId.toVersionIdString(), false);
+        Set<DepotProjectVersion> dependencies = processDependencies(DepotProjectId.parseProjectId(upstreamProjectId), downstreamProjectId, downstreamVersionId, latestUpstreamLevel1Dependencies);
 
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getVersionEntityAccessContext(upstreamProjectId, upstreamVersionId).getEntities(null, null, null);
-        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+        List<Entity> upstreamProjectWorkspaceEntities = this.metadataApi.getEntities(upstreamProjectId, upstreamVersionId.toVersionIdString());
+        return getEntities(downstreamProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
-    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamRevisionId, String downstreamProjectId, String downstreamRevisionId)
+    public List<Entity> buildEntitiesForTest(String upstreamProjectId, String upstreamRevisionId, String downstreamProjectId, String downstreamVersionId)
     {
         Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectRevisionUpstreamProjects(upstreamProjectId, upstreamRevisionId, false);
-        Set<ProjectDependency> dependencies = processDependencies(upstreamProjectId, downstreamProjectId, downstreamRevisionId, latestUpstreamLevel1Dependencies);
+        Set<DepotProjectVersion> dependencies = processDependencies(getDepotProjectId(upstreamProjectId), downstreamProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
         List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getProjectRevisionEntityAccessContext(upstreamProjectId, upstreamRevisionId).getEntities(null, null, null);
-        return getEntities(downstreamProjectId, downstreamRevisionId, dependencies, upstreamProjectWorkspaceEntities);
+        return getEntities(downstreamProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
-    public Set<ProjectDependency> processDependencies(String upstreamProjectId, String downstreamProjectId, String downstreamRevisionId, Set<ProjectDependency> latestUpstreamLevel1Dependencies)
+    public Set<DepotProjectVersion> processDependencies(DepotProjectId upstreamProjectId, String downstreamProjectId, String downstreamVersionId, Set<DepotProjectVersion> latestUpstreamDependencies)
     {
-        Set<String> latestUpstreamLevel1DependencyProjectIds = SetAdapter.adapt(latestUpstreamLevel1Dependencies).collect(ProjectDependency::getProjectId);
-
-        Set<ProjectDependency> downstreamLevel1Dependencies = this.dependenciesApi.getProjectRevisionUpstreamProjects(downstreamProjectId, downstreamRevisionId, false);
-
-        Set<ProjectDependency> dependencies = Sets.mutable.empty();
-        for (ProjectDependency dependency : downstreamLevel1Dependencies)
+        try
         {
-            // remove the upstream project as it has changed
-            if (dependency.getProjectId().equals(upstreamProjectId))
+            //get transitive dependencies for upstream project from metadata
+            latestUpstreamDependencies.forEach(depotProjectVersion ->
             {
-                continue;
-            }
-            // remove common first level dependencies
-            if (latestUpstreamLevel1Dependencies.contains(dependency))
-            {
-                continue;
-            }
-            // remove dependency if the upstream project has a different version of this dependency
-            if (latestUpstreamLevel1DependencyProjectIds.contains(dependency.getProjectId()))
-            {
-                continue;
-            }
-            // include this dependency
-            dependencies.add(dependency);
-            // and its transitive dependencies
-            dependencies.addAll(this.dependenciesApi.getProjectVersionUpstreamProjects(dependency.getProjectId(), dependency.getVersionId().toVersionIdString(), true));
-        }
-        // finally add the new dependency tree of the upstream project
-        dependencies.addAll(latestUpstreamLevel1Dependencies);
+                Set<DepotProjectVersion> projects = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId().toString(), depotProjectVersion.getVersionId(), true);
+                // remove upstream project as it has changed
+                projects.removeIf(project -> project.getDepotProjectId().equals(upstreamProjectId));
+                latestUpstreamDependencies.addAll(projects);
+            });
 
-        return dependencies;
+            Set<DepotProjectId> transitiveUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
+
+            Set<DepotProjectVersion> downstreamLevel1Dependencies = this.metadataApi.getProjectDependencies(downstreamProjectId, downstreamVersionId, false);
+
+            Set<DepotProjectVersion> dependencies = Sets.mutable.empty();
+            for (DepotProjectVersion dependency : downstreamLevel1Dependencies)
+            {
+                // remove the upstream project as it has changed
+                if (dependency.getDepotProjectId().equals(upstreamProjectId))
+                {
+                    continue;
+                }
+                // remove common first level dependencies
+                if (latestUpstreamDependencies.contains(dependency))
+                {
+                    continue;
+                }
+                // remove dependency if the upstream project has a different version of this dependency
+                if (transitiveUpstreamDependenciesIds.contains(dependency.getDepotProjectId()))
+                {
+                    continue;
+                }
+                // include this dependency
+                dependencies.add(dependency);
+                // and its transitive dependencies
+                dependencies.addAll(this.metadataApi.getProjectDependencies(dependency.getDepotProjectId().toString(), dependency.getVersionId(), true));
+            }
+            // finally add the new dependency tree of the upstream project
+            dependencies.addAll(latestUpstreamDependencies);
+
+            return dependencies;
+        }
+        catch (Exception ex)
+        {
+            throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error getting project dependencies for downstream project", ex), ex);
+        }
     }
 
-    private List<Entity> getEntities(String downstreamProjectId, String downstreamRevisionId, Set<ProjectDependency> dependencies, List<Entity> upstreamProjectWorkspaceEntities)
+    private List<Entity> getEntities(String downstreamProjectId, String downstreamVersionId, Set<DepotProjectVersion> dependencies, List<Entity> upstreamProjectWorkspaceEntities)
     {
-        List<Entity> downstreamProjectEntities = this.entityApi.getProjectRevisionEntityAccessContext(downstreamProjectId, downstreamRevisionId).getEntities(null, null, null);
+        List<Entity> downstreamProjectEntities = this.metadataApi.getEntities(downstreamProjectId, downstreamVersionId);
         List<Entity> dependencyEntities = dependencies.stream().map(this::getEntities).flatMap(Collection::stream).collect(Collectors.toList());
         return Lists.mutable.withAll(upstreamProjectWorkspaceEntities).withAll(downstreamProjectEntities).withAll(dependencyEntities);
     }
 
-    private List<Entity> getEntities(ProjectDependency projectDependency)
+    private List<Entity> getEntities(DepotProjectVersion depotProjectVersion)
     {
+        DepotProjectId projectId = depotProjectVersion.getDepotProjectId();
         // Avoid fetching entities for a project multiple times
         return this.entityCache.getIfAbsentPut(
-                projectDependency.toDependencyString(),
-                () -> this.entityApi.getVersionEntityAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()).getEntities(null, null, null)
+                depotProjectVersion.toString(),
+                () -> this.metadataApi.getEntities(projectId.toString(), depotProjectVersion.getVersionId())
         );
+    }
+
+    private DepotProjectId getDepotProjectId(String gitLabProjectId)
+    {
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectProjectConfiguration(gitLabProjectId);
+        return DepotProjectId.newDepotProjectId(projectConfiguration.getGroupId(), projectConfiguration.getArtifactId());
+    }
+
+    private Set<DepotProjectVersion> transformProjectDependencySet(Set<ProjectDependency> dependencies)
+    {
+        return dependencies.stream().map(dependency ->
+                DepotProjectVersion.newDepotProjectVersion(dependency.getProjectId(), dependency.getVersionId())).collect(Collectors.toSet());
     }
 }

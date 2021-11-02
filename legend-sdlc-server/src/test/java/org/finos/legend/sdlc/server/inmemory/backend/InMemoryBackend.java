@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,6 +31,9 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryProjectConfigurationApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryRevisionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryVersionApi;
+import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataBackend;
+import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryProjectMetadata;
+import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryVersionMetadata;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
@@ -51,12 +54,20 @@ public class InMemoryBackend
     private final VersionApi versionApi = new InMemoryVersionApi(this);
     private final ProjectApi projectApi = new InMemoryProjectApi(this);
 
+    private InMemoryMetadataBackend metadata = null;
+
     private final MutableMap<String, InMemoryProject> projects = Maps.mutable.empty();
 
     @Inject
     public InMemoryBackend()
     {
         RevisionIdGenerator.initialize();
+    }
+
+    public InMemoryBackend(InMemoryMetadataBackend metadata)
+    {
+        RevisionIdGenerator.initialize();
+        this.metadata = metadata;
     }
 
     public void reinitialize()
@@ -71,7 +82,7 @@ public class InMemoryBackend
 
     public ProjectBuilder project(String projectId)
     {
-        return new ProjectBuilder(this.projects.getIfAbsentPutWithKey(projectId, InMemoryProject::new), this);
+        return new ProjectBuilder(this.projects.getIfAbsentPutWithKey(projectId, InMemoryProject::new), this, metadata);
     }
 
     public Iterable<InMemoryProject> getAllProjects()
@@ -84,10 +95,13 @@ public class InMemoryBackend
         private final InMemoryProject project;
         private final InMemoryBackend backend;
 
-        public ProjectBuilder(InMemoryProject project, InMemoryBackend backend)
+        private final InMemoryMetadataBackend metadata;
+
+        public ProjectBuilder(InMemoryProject project, InMemoryBackend backend, InMemoryMetadataBackend metadata)
         {
             this.project = project;
             this.backend = backend;
+            this.metadata = metadata;
         }
 
         public void addWorkspace(String workspaceId, WorkspaceType workspaceType)
@@ -227,6 +241,13 @@ public class InMemoryBackend
             }
         }
 
+        public void setMavenCoordinates(String groupId, String artifactId)
+        {
+            InMemoryRevision newRevision = new InMemoryRevision(this.project.getProjectId(), this.project.getCurrentRevision());
+            this.project.addNewRevision(newRevision);
+            newRevision.getConfiguration().setMavenCoordinates(groupId, artifactId);
+        }
+
         private ProjectDependency validateProjectDependency(String dependencyString)
         {
             ProjectDependency parsedProjectDependency = ProjectDependency.parseProjectDependency(dependencyString);
@@ -235,7 +256,33 @@ public class InMemoryBackend
 
             if (!this.backend.projects.containsKey(projectDependencyId))
             {
-                throw new IllegalStateException(String.format("Unknown project dependency %s", parsedProjectDependency));
+                if (this.metadata != null && this.metadata.getProjects().containsKey(projectDependencyId))
+                {
+                    InMemoryProjectMetadata projectDependency = this.metadata.getProjects().get(projectDependencyId);
+                    InMemoryVersionMetadata projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());
+                    if (projectDependencyVersion == null)
+                    {
+                        throw new IllegalStateException(String.format("Unknown project dependency %s", parsedProjectDependency));
+                    }
+                    return new ProjectDependency()
+                    {
+                        @Override
+                        public String getProjectId()
+                        {
+                            return projectDependency.getProjectId().toString();
+                        }
+
+                        @Override
+                        public VersionId getVersionId()
+                        {
+                            return VersionId.parseVersionId(projectDependency.getCurrentVersionId());
+                        }
+                    };
+                }
+                else
+                {
+                    throw new IllegalStateException(String.format("Unknown project dependency %s", parsedProjectDependency));
+                }
             }
             InMemoryProject projectDependency = this.backend.projects.get(projectDependencyId);
             InMemoryVersion projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());

@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.guice;
 import com.google.inject.Binder;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
+import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -48,6 +49,8 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryVersionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowJobApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkspaceApi;
+import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataApi;
+import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
 public class InMemoryModule extends AbstractBaseModule
@@ -66,6 +69,8 @@ public class InMemoryModule extends AbstractBaseModule
     public static void configureLegendApis(Binder binder)
     {
         binder.bind(InMemoryBackend.class);
+        binder.bind(InMemoryMetadataBackend.class);
+        binder.bind(MetadataApi.class).to(InMemoryMetadataApi.class);
         binder.bind(ProjectApi.class).to(InMemoryProjectApi.class);
         binder.bind(ProjectConfigurationApi.class).to(InMemoryProjectConfigurationApi.class);
         binder.bind(UserApi.class).to(InMemoryUserApi.class);
