@@ -19,8 +19,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 public class VoidAuthClientInjector implements AuthClientInjector
 {
     @Override
-    public boolean inject(HttpClientBuilder builder)
+    public HttpClientBuilder inject(HttpClientBuilder builder)
     {
-        return false;
+        return builder;
     }
 }

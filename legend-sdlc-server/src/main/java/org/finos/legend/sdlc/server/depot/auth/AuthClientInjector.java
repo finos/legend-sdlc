@@ -18,5 +18,5 @@ import org.apache.http.impl.client.HttpClientBuilder;
 
 public interface AuthClientInjector
 {
-    boolean inject(HttpClientBuilder builder);
+    HttpClientBuilder inject(HttpClientBuilder builder);
 }

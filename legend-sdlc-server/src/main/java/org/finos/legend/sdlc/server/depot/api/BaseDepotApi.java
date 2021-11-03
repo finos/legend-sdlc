@@ -74,14 +74,7 @@ abstract class BaseDepotApi
 
     protected String execute(HttpUriRequest request)
     {
-        HttpClientBuilder httpClientBuilder = HttpClientBuilder.create();
-
-        if (!this.authClientInjector.inject(httpClientBuilder))
-        {
-            logger.warn("Authentication was not injected into http client builder");
-        }
-
-        CloseableHttpClient client = httpClientBuilder.build();
+        CloseableHttpClient client = this.authClientInjector.inject(HttpClientBuilder.create()).build();
 
         try (CloseableHttpResponse response = client.execute(request))
         {

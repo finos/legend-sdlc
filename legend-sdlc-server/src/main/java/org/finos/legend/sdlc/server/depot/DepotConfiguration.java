@@ -44,7 +44,7 @@ public class DepotConfiguration
 
     public static DepotConfiguration emptyConfiguration()
     {
-        return new DepotConfiguration(ServerConfiguration.emptyConfiguration(), (HttpClientBuilder builder) -> false);
+        return new DepotConfiguration(ServerConfiguration.emptyConfiguration(), (HttpClientBuilder builder) -> builder);
     }
 
     @JsonCreator
