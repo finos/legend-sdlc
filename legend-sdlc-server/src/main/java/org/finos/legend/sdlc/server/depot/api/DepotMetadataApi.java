@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 
 public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
 {
-    private static final Logger logger = LoggerFactory.getLogger(DepotMetadataApi.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DepotMetadataApi.class);
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     private static final String GET_ENTITIES_PATH = "/api/projects/%s/%s/versions/%s";
@@ -71,8 +71,8 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
         catch (JsonProcessingException ex)
         {
-            logger.warn(ex.getMessage());
-            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex));
+            LOGGER.error("Error getting entities from metadata server: " + ex.getMessage(), ex);
+            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex.getCause());
         }
     }
 
@@ -91,8 +91,8 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
         catch (JsonProcessingException ex)
         {
-            logger.warn(ex.getMessage());
-            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex));
+            LOGGER.error("Error getting project dependencies from metadata server: " + ex.getMessage(), ex);
+            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex.getCause());
         }
     }
 

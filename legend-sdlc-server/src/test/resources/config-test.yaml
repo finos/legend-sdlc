@@ -61,13 +61,6 @@ gitLab:
       secret: na
       redirectURI: na
 
-depot:
-  server:
-    scheme: https
-    host: fake.depot.host.com
-  auth:
-    org.finos.legend.sdlc.server.depot.auth.VoidAuthClientInjector: {}
-
 logging:
   # Change this to affect library class logging
   level: OFF

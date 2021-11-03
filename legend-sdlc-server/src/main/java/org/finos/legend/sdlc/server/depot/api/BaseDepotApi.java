@@ -35,7 +35,7 @@ import java.util.List;
 
 abstract class BaseDepotApi
 {
-    private static final Logger logger = LoggerFactory.getLogger(BaseDepotApi.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseDepotApi.class);
 
     private final DepotServerInfo serverInfo;
     private final AuthClientInjector authClientInjector;
@@ -99,8 +99,8 @@ abstract class BaseDepotApi
         }
         catch (Exception ex)
         {
-            logger.warn(ex.getMessage());
-            throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex));
+            LOGGER.error(ex.getMessage(), ex);
+            throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex), ex.getCause());
         }
     }
 }

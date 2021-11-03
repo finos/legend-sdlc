@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.http.impl.client.HttpClientBuilder;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 
 public class DepotConfiguration
@@ -44,7 +43,7 @@ public class DepotConfiguration
 
     public static DepotConfiguration emptyConfiguration()
     {
-        return new DepotConfiguration(ServerConfiguration.emptyConfiguration(), (HttpClientBuilder builder) -> builder);
+        return new DepotConfiguration(ServerConfiguration.emptyConfiguration(), null);
     }
 
     @JsonCreator

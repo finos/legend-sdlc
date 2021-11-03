@@ -22,7 +22,6 @@ import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
-import org.finos.legend.sdlc.server.depot.auth.VoidAuthClientInjector;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
@@ -365,7 +364,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
                 return authClientInjector;
             }
         }
-        return new VoidAuthClientInjector();
+        return builder -> builder;
     }
 
     @Provides
