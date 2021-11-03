@@ -315,6 +315,7 @@
                                         <exclude>org.slf4j</exclude>
                                         <exclude>commons-logging</exclude>
                                         <exclude>javax.mail</exclude>
+                                        <exclude>org.antlr:antlr4</exclude>
                                     </excludes>
                                     <includes>
                                         <!--only the specific included logging jars are allowed -->
@@ -561,11 +562,23 @@
                 <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-code-compiled-core</artifactId>
                 <version>${legend.pure.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>org.antlr</groupId>
+                            <artifactId>*</artifactId>
+                        </exclusion>
+                    </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-code-java-compiled-core</artifactId>
                 <version>${legend.pure.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
@@ -574,11 +587,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -589,11 +598,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -604,11 +609,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -619,11 +620,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -634,11 +631,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -646,16 +639,34 @@
                 <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-runtime-java-engine-compiled</artifactId>
                 <version>${legend.pure.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-runtime-java-extension-external-json</artifactId>
                 <version>${legend.pure.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
                 <artifactId>legend-pure-runtime-java-extension-dsl-mapping</artifactId>
                 <version>${legend.pure.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
@@ -664,11 +675,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -679,11 +686,7 @@
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
-                        <artifactId>antlr4</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>org.antlr</groupId>
-                        <artifactId>antlr-runtime</artifactId>
+                        <artifactId>*</artifactId>
                     </exclusion>
                 </exclusions>
             </dependency>
@@ -711,6 +714,12 @@
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-store-relational</artifactId>
                 <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
