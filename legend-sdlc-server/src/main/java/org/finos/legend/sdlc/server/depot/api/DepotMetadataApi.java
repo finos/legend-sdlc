@@ -71,8 +71,8 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
         catch (JsonProcessingException ex)
         {
-            LOGGER.error("Error getting entities from metadata server: " + ex.getMessage(), ex);
-            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex.getCause());
+            LOGGER.error("Error getting entities from metadata server", ex);
+            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex);
         }
     }
 
@@ -91,8 +91,8 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
         catch (JsonProcessingException ex)
         {
-            LOGGER.error("Error getting project dependencies from metadata server: " + ex.getMessage(), ex);
-            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex.getCause());
+            LOGGER.error("Error getting project dependencies from metadata server", ex);
+            throw new DepotServerException(this.getServerInfo().getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Failed to process response", ex), ex);
         }
     }
 
@@ -109,9 +109,9 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
 
     public static class DepotEntity implements Entity
     {
-        String path;
-        String classifierPath;
-        Map<String, ?> content;
+        private final String path;
+        private final String classifierPath;
+        private final Map<String, ?> content;
 
         @JsonCreator
         public DepotEntity(@JsonProperty("path") String path, @JsonProperty("classifierPath") String classifierPath, @JsonProperty("content") Map<String, ?> content)

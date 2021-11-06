@@ -74,9 +74,8 @@ abstract class BaseDepotApi
 
     protected String execute(HttpUriRequest request)
     {
-        CloseableHttpClient client = this.authClientInjector.inject(HttpClientBuilder.create()).build();
-
-        try (CloseableHttpResponse response = client.execute(request))
+        try (CloseableHttpClient client = this.authClientInjector.inject(HttpClientBuilder.create()).build();
+              CloseableHttpResponse response = client.execute(request))
         {
             int statusCode = response.getStatusLine().getStatusCode();
 
@@ -100,7 +99,7 @@ abstract class BaseDepotApi
         catch (Exception ex)
         {
             LOGGER.error(ex.getMessage(), ex);
-            throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex), ex.getCause());
+            throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex), ex);
         }
     }
 }
