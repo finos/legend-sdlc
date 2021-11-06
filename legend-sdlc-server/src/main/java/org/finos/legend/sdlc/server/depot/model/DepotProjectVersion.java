@@ -18,6 +18,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+
+import java.util.Objects;
 
 public class DepotProjectVersion
 {
@@ -80,13 +83,13 @@ public class DepotProjectVersion
     @Override
     public int hashCode()
     {
-        return this.depotProjectId.hashCode() ^ this.versionId.hashCode();
+        return Objects.hash(this.depotProjectId, this.versionId);
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s%s%s", this.depotProjectId.toString(), DELIMITER, this.versionId);
+        return this.depotProjectId.toString() + DELIMITER + this.versionId;
     }
 
     public static DepotProjectVersion parseDepotProjectVersion(String depotProjectVersion)
@@ -117,6 +120,8 @@ public class DepotProjectVersion
 
     public static DepotProjectVersion newDepotProjectVersion(String projectId, VersionId versionId)
     {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
 
         return new DepotProjectVersion(DepotProjectId.parseProjectId(projectId), versionId.toVersionIdString());
     }
@@ -124,6 +129,10 @@ public class DepotProjectVersion
     @JsonCreator
     public static DepotProjectVersion newDepotProjectVersion(@JsonProperty("groupId") String groupId, @JsonProperty("artifactId") String artifactId, @JsonProperty("versionId") String versionId)
     {
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
+        LegendSDLCServerException.validateNonNull(groupId, "groupId may not be null");
+        LegendSDLCServerException.validateNonNull(artifactId, "artifactId may not be null");
+
         return new DepotProjectVersion(DepotProjectId.newDepotProjectId(groupId, artifactId), versionId);
     }
 }

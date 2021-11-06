@@ -82,6 +82,7 @@ abstract class BaseDepotApi
             switch (statusCode)
             {
                 case HttpStatus.SC_OK:
+                case HttpStatus.SC_NO_CONTENT:
                 {
                     return response.getEntity() == null ? "" : EntityUtils.toString(response.getEntity(), "UTF-8");
                 }
@@ -92,13 +93,13 @@ abstract class BaseDepotApi
                 }
                 default:
                 {
-                    throw new DepotServerException("Server responded with code " + statusCode + " when 200 was expected");
+                    throw new DepotServerException("Server responded with code " + statusCode + ". Response received: " + response.getEntity());
                 }
             }
         }
         catch (Exception ex)
         {
-            LOGGER.error(ex.getMessage(), ex);
+            LOGGER.error("Request " + request.getMethod() + " " + request.getURI().toString() + " failed.", ex);
             throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex), ex);
         }
     }

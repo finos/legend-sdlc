@@ -16,9 +16,10 @@ package org.finos.legend.sdlc.server.depot.api;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.message.BasicNameValuePair;
@@ -38,12 +39,11 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepotMetadataApi.class);
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final JsonMapper jsonMapper = JsonMapper.builder().addMixIn(Entity.class, EntityMixIn.class).build();
 
     private static final String GET_ENTITIES_PATH = "/api/projects/%s/%s/versions/%s";
     private static final String GET_DEPENDENCIES_PATH = "/api/projects/%s/%s/versions/%s/projectDependencies";
@@ -64,10 +64,7 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         String response = this.execute(getRequest);
         try
         {
-            List<DepotEntity> entities = objectMapper.readValue(response, new TypeReference<List<DepotEntity>>()
-            {
-            });
-            return entities.stream().map(entity -> Entity.newEntity(entity.path, entity.classifierPath, entity.content)).collect(Collectors.toList());
+            return jsonMapper.readValue(response, new TypeReference<List<Entity>>() {});
         }
         catch (JsonProcessingException ex)
         {
@@ -87,7 +84,7 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         String response = this.execute(getRequest);
         try
         {
-            return objectMapper.readValue(response, new TypeReference<Set<DepotProjectVersion>>() {});
+            return jsonMapper.readValue(response, new TypeReference<Set<DepotProjectVersion>>() {});
         }
         catch (JsonProcessingException ex)
         {
@@ -105,6 +102,11 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         URI uri = buildURI(path, parameters);
 
         return new HttpGet(uri);
+    }
+
+    @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, defaultImpl = DepotEntity.class)
+    public interface EntityMixIn
+    {
     }
 
     public static class DepotEntity implements Entity

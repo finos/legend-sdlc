@@ -16,6 +16,9 @@ package org.finos.legend.sdlc.server.depot.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+
+import java.util.Objects;
 
 public class DepotProjectId
 {
@@ -59,13 +62,13 @@ public class DepotProjectId
     @Override
     public int hashCode()
     {
-        return this.groupId.hashCode() ^ this.artifactId.hashCode();
+        return Objects.hash(this.groupId, this.artifactId);
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s%s%s", this.groupId, DELIMITER, this.artifactId);
+        return this.groupId + DELIMITER + this.artifactId;
     }
 
     public static boolean isValid(String projectId)
@@ -76,6 +79,9 @@ public class DepotProjectId
     @JsonCreator
     public static DepotProjectId newDepotProjectId(@JsonProperty("groupId") String groupId, @JsonProperty("artifactId") String artifactId)
     {
+        LegendSDLCServerException.validateNonNull(groupId, "groupId may not be null");
+        LegendSDLCServerException.validateNonNull(artifactId, "artifactId may not be null");
+
         return new DepotProjectId(groupId, artifactId);
     }
 
