@@ -43,7 +43,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
     private MappingTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Mapping mapping, MappingTest mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, mapping);
-        this.mappingTestRunner = new MappingTestRunner(pureModel, mapping.getPath(), mappingTest, this.planExecutor, extensions, planTransformers, pureVersion);
+        this.mappingTestRunner = new MappingTestRunner(pureModelContextData, pureModel, mapping.getPath(), mappingTest, this.planExecutor, extensions, planTransformers, pureVersion);
     }
 
     @Override
