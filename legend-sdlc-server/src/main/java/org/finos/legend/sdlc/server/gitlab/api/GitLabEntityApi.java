@@ -23,6 +23,8 @@ import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.serialization.EntityTextSerializer;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
@@ -40,6 +42,7 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -53,6 +56,7 @@ import javax.ws.rs.core.Response.Status;
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabEntityApi.class);
+    private static final EntityTextSerializer entityTextSerializer = EntitySerializers.getAvailableTextSerializersByName().get("pure");
 
     @Inject
     public GitLabEntityApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
@@ -571,7 +575,25 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                         Map<String, ?> newContent = newDefinition.getContent();
                         if (!newClassifierPath.equals(entity.getClassifierPath()) || !newContent.equals(entity.getContent()))
                         {
-                            entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
+                            if (entityTextSerializer != null)
+                            {
+                                try
+                                {
+                                    // check if new content is still different after serialization
+                                    if (!entityTextSerializer.serializeToString(entity).equals(entityTextSerializer.serializeToString(newDefinition)))
+                                    {
+                                        entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
+                                    }
+                                }
+                                catch (IOException ex)
+                                {
+                                    throw new LegendSDLCServerException("Entity " + path + " couldn't be serialized.", ex);
+                                }
+                            }
+                            else
+                            {
+                                entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
+                            }
                         }
                     }
                 });
