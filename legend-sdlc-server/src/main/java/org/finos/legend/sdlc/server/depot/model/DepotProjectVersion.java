@@ -48,20 +48,12 @@ public class DepotProjectVersion
 
     public String getGroupId()
     {
-        if (this.depotProjectId != null)
-        {
-            return this.depotProjectId.getGroupId();
-        }
-        return null;
+        return this.depotProjectId.getGroupId();
     }
 
     public String getArtifactId()
     {
-        if (this.depotProjectId != null)
-        {
-            return this.depotProjectId.getArtifactId();
-        }
-        return null;
+        return this.depotProjectId.getArtifactId();
     }
 
     @Override

@@ -99,7 +99,7 @@ abstract class BaseDepotApi
         }
         catch (Exception ex)
         {
-            LOGGER.error("Request " + request.getMethod() + " " + request.getURI().toString() + " failed.", ex);
+            LOGGER.error("Request {} {} failed.", request.getMethod(), request.getURI(), ex);
             throw new DepotServerException(this.serverInfo.getDepotURLString(), StringTools.appendThrowableMessageIfPresent("Error getting data from Depot", ex), ex);
         }
     }

@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.inmemory.backend.metadata;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 
@@ -24,8 +26,8 @@ import java.util.Set;
 
 public class InMemoryVersionMetadata
 {
-    private Set<DepotProjectVersion> dependencies = Sets.mutable.empty();
-    private List<Entity> entities = Lists.mutable.empty();
+    private final MutableSet<DepotProjectVersion> dependencies = Sets.mutable.empty();
+    private final MutableList<Entity> entities = Lists.mutable.empty();
 
     public void addEntity(Entity entity)
     {
@@ -34,7 +36,7 @@ public class InMemoryVersionMetadata
 
     public void addEntities(Iterable<? extends Entity> newEntities)
     {
-        newEntities.forEach(this::addEntity);
+        this.entities.addAllIterable(newEntities);
     }
 
     public void addDependency(DepotProjectVersion dependency)
@@ -44,11 +46,11 @@ public class InMemoryVersionMetadata
 
     public Set<DepotProjectVersion> getDependencies()
     {
-        return this.dependencies;
+        return this.dependencies.asUnmodifiable();
     }
 
     public List<Entity> getEntities()
     {
-        return this.entities;
+        return this.entities.asUnmodifiable();
     }
 }
