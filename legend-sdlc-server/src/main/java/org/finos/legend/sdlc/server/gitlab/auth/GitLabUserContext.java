@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import com.google.inject.servlet.RequestScoped;
-import org.finos.legend.sdlc.server.auth.KerberosSession;
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
@@ -132,27 +131,20 @@ public class GitLabUserContext extends UserContext
                 {
                     if (gitLabSession.getGitLabToken(mode) == null)
                     {
-                        if (gitLabSession instanceof KerberosSession)
+                        try
                         {
-                            try
+                            GitLabToken token = authorizerManager.authorize(session, gitLabSession.getModeInfo(mode));
+                            if (token == null)
                             {
-                                GitLabToken token = authorizerManager.authorize(session, gitLabSession.getModeInfo(mode));
-                                if (token == null)
-                                {
-                                    return false;
-                                }
-                                // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                                gitLabSession.putGitLabToken(mode, token);
-                                LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
-                            }
-                            catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
-                            {
-                                // These exceptions indicate the mode is not yet authorized or that authorization has failed.
                                 return false;
                             }
+                            // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
+                            gitLabSession.putGitLabToken(mode, token);
+                            LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                         }
-                        else
+                        catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
                         {
+                            // These exceptions indicate the mode is not yet authorized or that authorization has failed.
                             return false;
                         }
                     }
