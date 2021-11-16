@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,8 +23,6 @@ import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.serialization.EntitySerializers;
-import org.finos.legend.sdlc.serialization.EntityTextSerializer;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
@@ -42,8 +40,9 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -56,7 +55,6 @@ import javax.ws.rs.core.Response.Status;
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabEntityApi.class);
-    private static final EntityTextSerializer entityTextSerializer = EntitySerializers.getAvailableTextSerializersByName().get("pure");
 
     @Inject
     public GitLabEntityApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
@@ -575,25 +573,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                         Map<String, ?> newContent = newDefinition.getContent();
                         if (!newClassifierPath.equals(entity.getClassifierPath()) || !newContent.equals(entity.getContent()))
                         {
-                            if (entityTextSerializer != null)
-                            {
-                                try
-                                {
-                                    // check if new content is still different after serialization
-                                    if (!entityTextSerializer.serializeToString(entity).equals(entityTextSerializer.serializeToString(newDefinition)))
-                                    {
-                                        entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
-                                    }
-                                }
-                                catch (IOException ex)
-                                {
-                                    throw new LegendSDLCServerException("Entity " + path + " couldn't be serialized.", ex);
-                                }
-                            }
-                            else
-                            {
-                                entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
-                            }
+                            entityChanges.add(EntityChange.newModifyEntity(path, newClassifierPath, newContent));
                         }
                     }
                 });
@@ -617,7 +597,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId);
             ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-            List<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
+            List<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext)).stream().filter(Objects::nonNull).collect(Collectors.toList());
             return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId).submit(message, fileOperations);
         }
         catch (Exception e)
@@ -678,10 +658,19 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
                 }
+                byte[] currentEntity = fileAccessContext.getFile(currentFilePath).getContentAsBytes();
 
                 String newFilePath = newSourceDirectory.entityPathToFilePath(entityPath);
                 byte[] serialized = newSourceDirectory.serializeToBytes(entity);
-                return currentFilePath.equals(newFilePath) ? ProjectFileOperation.modifyFile(currentFilePath, serialized) : ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+
+                if (Arrays.equals(currentEntity, serialized) && currentFilePath.equals(newFilePath))
+                {
+                    return null;
+                }
+                else
+                {
+                    return currentFilePath.equals(newFilePath) ? ProjectFileOperation.modifyFile(currentFilePath, serialized) : ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+                }
             }
             case RENAME:
             {
