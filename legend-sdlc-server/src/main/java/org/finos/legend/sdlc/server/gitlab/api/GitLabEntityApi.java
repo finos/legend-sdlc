@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
@@ -597,7 +598,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId);
             ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-            List<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext)).stream().filter(Objects::nonNull).collect(Collectors.toList());
+            MutableList<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
+            fileOperations.removeIf(Objects::isNull);
             return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId).submit(message, fileOperations);
         }
         catch (Exception e)
@@ -658,19 +660,20 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
                 }
-                byte[] currentEntity = fileAccessContext.getFile(currentFilePath).getContentAsBytes();
 
                 String newFilePath = newSourceDirectory.entityPathToFilePath(entityPath);
                 byte[] serialized = newSourceDirectory.serializeToBytes(entity);
 
-                if (Arrays.equals(currentEntity, serialized) && currentFilePath.equals(newFilePath))
+                if (!currentFilePath.equals(newFilePath))
                 {
-                    return null;
+                    return ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
                 }
-                else
+                if (!Arrays.equals(serialized, fileAccessContext.getFile(currentFilePath).getContentAsBytes()))
                 {
-                    return currentFilePath.equals(newFilePath) ? ProjectFileOperation.modifyFile(currentFilePath, serialized) : ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+                    return ProjectFileOperation.modifyFile(currentFilePath, serialized);
                 }
+
+                return null;
             }
             case RENAME:
             {
