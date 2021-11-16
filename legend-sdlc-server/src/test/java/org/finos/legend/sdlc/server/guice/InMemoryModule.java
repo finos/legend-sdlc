@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
+import com.google.inject.Scopes;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
@@ -69,7 +70,7 @@ public class InMemoryModule extends AbstractBaseModule
     public static void configureLegendApis(Binder binder)
     {
         binder.bind(InMemoryBackend.class);
-        binder.bind(InMemoryMetadataBackend.class);
+        binder.bind(InMemoryMetadataBackend.class).in(Scopes.SINGLETON);
         binder.bind(MetadataApi.class).to(InMemoryMetadataApi.class);
         binder.bind(ProjectApi.class).to(InMemoryProjectApi.class);
         binder.bind(ProjectConfigurationApi.class).to(InMemoryProjectConfigurationApi.class);

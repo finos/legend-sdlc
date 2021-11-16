@@ -59,15 +59,15 @@ public class InMemoryBackend
     private final MutableMap<String, InMemoryProject> projects = Maps.mutable.empty();
 
     @Inject
-    public InMemoryBackend()
-    {
-        RevisionIdGenerator.initialize();
-    }
-
     public InMemoryBackend(InMemoryMetadataBackend metadata)
     {
         RevisionIdGenerator.initialize();
         this.metadata = metadata;
+    }
+
+    public InMemoryBackend()
+    {
+        RevisionIdGenerator.initialize();
     }
 
     public void reinitialize()

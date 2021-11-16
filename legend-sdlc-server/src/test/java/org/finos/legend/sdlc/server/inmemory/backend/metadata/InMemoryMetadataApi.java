@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.metadata;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
@@ -36,15 +37,31 @@ public class InMemoryMetadataApi implements MetadataApi
     @Override
     public List<Entity> getEntities(String projectId, String versionId)
     {
-        InMemoryVersionMetadata version = this.backend.getProject(projectId).getVersion(versionId);
-        return version.getEntities();
+        InMemoryProjectMetadata project = this.backend.getProject(projectId);
+        if (project == null)
+        {
+            return Lists.mutable.empty();
+        }
+        else
+        {
+            InMemoryVersionMetadata version = this.backend.getProject(projectId).getVersion(versionId);
+            return version.getEntities();
+        }
     }
 
     @Override
     public Set<DepotProjectVersion> getProjectDependencies(String projectId, String versionId, boolean transitive)
     {
-        InMemoryVersionMetadata version = this.backend.getProject(projectId).getVersion(versionId);
-        return searchUpstream(version, transitive);
+        InMemoryProjectMetadata project = this.backend.getProject(projectId);
+        if (project == null)
+        {
+            return Sets.mutable.empty();
+        }
+        else
+        {
+            InMemoryVersionMetadata version = project.getVersion(versionId);
+            return searchUpstream(version, transitive);
+        }
     }
 
     private Set<DepotProjectVersion> searchUpstream(InMemoryVersionMetadata rootProjectVersion, boolean transitive)
