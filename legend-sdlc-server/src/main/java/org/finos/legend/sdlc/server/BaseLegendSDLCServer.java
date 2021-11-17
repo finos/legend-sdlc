@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
@@ -61,6 +62,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         // SDLC specific initialization
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         GitLabConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
+        DepotConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
     }
 
     protected void configureApis(Bootstrap<T> bootstrap)

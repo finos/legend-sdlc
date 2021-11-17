@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -28,6 +28,14 @@ import java.util.List;
 public class InMemoryProjectConfiguration implements ProjectConfiguration
 {
     private final MutableList<ProjectDependency> projectDependencies = Lists.mutable.empty();
+    private String groupId;
+    private String artifactId;
+
+    public void setMavenCoordinates(String groupId, String artifactId)
+    {
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+    }
 
     @Override
     public String getProjectId()
@@ -50,13 +58,13 @@ public class InMemoryProjectConfiguration implements ProjectConfiguration
     @Override
     public String getGroupId()
     {
-        return null;
+        return this.groupId;
     }
 
     @Override
     public String getArtifactId()
     {
-        return null;
+        return this.artifactId;
     }
 
     @Override
