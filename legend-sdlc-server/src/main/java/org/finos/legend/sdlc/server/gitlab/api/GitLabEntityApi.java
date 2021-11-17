@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
@@ -40,7 +41,9 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -595,7 +598,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId);
             ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-            List<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
+            MutableList<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
+            fileOperations.removeIf(Objects::isNull);
             return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId).submit(message, fileOperations);
         }
         catch (Exception e)
@@ -659,7 +663,17 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
                 String newFilePath = newSourceDirectory.entityPathToFilePath(entityPath);
                 byte[] serialized = newSourceDirectory.serializeToBytes(entity);
-                return currentFilePath.equals(newFilePath) ? ProjectFileOperation.modifyFile(currentFilePath, serialized) : ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+
+                if (!currentFilePath.equals(newFilePath))
+                {
+                    return ProjectFileOperation.moveFile(currentFilePath, newFilePath, serialized);
+                }
+                if (!Arrays.equals(serialized, fileAccessContext.getFile(currentFilePath).getContentAsBytes()))
+                {
+                    return ProjectFileOperation.modifyFile(currentFilePath, serialized);
+                }
+
+                return null;
             }
             case RENAME:
             {
