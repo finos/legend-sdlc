@@ -46,7 +46,7 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
     private final JsonMapper jsonMapper = JsonMapper.builder().addMixIn(Entity.class, EntityMixIn.class).build();
 
     private static final String GET_ENTITIES_PATH = "/api/projects/%s/%s/versions/%s";
-    private static final String GET_DEPENDENCIES_PATH = "/api/projects/%s/%s/version/%s/projectDependencies";
+    private static final String GET_DEPENDENCIES_PATH = "/api/projects/%s/%s/versions/%s/projectDependencies";
 
     @Inject
     public DepotMetadataApi(DepotConfiguration configuration)

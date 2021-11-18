@@ -101,22 +101,18 @@ public class TestModelBuilder
     {
         try
         {
-            Set<DepotProjectId> latestUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
-            if (latestUpstreamDependenciesIds.contains(downstreamProjectId))
+            if (latestUpstreamDependencies.stream().anyMatch(dependency -> dependency.getDepotProjectId().equals(downstreamProjectId)))
             {
                 throw new IllegalArgumentException("Project " + downstreamProjectId.toString() + " was specified as downstream but in fact it is a direct dependency for upstream project " + upstreamProjectId.toString());
             }
 
             //get transitive dependencies for upstream project from metadata
-            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = Sets.mutable.empty();
-            latestUpstreamDependencies.forEach(depotProjectVersion ->
-            {
-                Set<DepotProjectVersion> projects = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true);
-                // remove upstream project as it has changed
-                projects.removeIf(project -> project.getDepotProjectId().equals(upstreamProjectId));
-                latestUpstreamTransitiveDependencies.addAll(projects);
-            });
-            latestUpstreamDependencies.addAll(latestUpstreamTransitiveDependencies);
+            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = latestUpstreamDependencies.stream().map(depotProjectVersion -> {
+                Set<DepotProjectVersion> upstreamDependencies = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true);
+                upstreamDependencies.add(depotProjectVersion);
+                return upstreamDependencies;
+            }).flatMap(Collection::stream).collect(Collectors.toSet());
+            latestUpstreamTransitiveDependencies.removeIf(dependency -> dependency.getDepotProjectId().equals(upstreamProjectId));
 
             Set<DepotProjectId> transitiveUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
             if (transitiveUpstreamDependenciesIds.contains(downstreamProjectId))
@@ -151,7 +147,7 @@ public class TestModelBuilder
             }
 
             // finally add the new dependency tree of the upstream project
-            dependencies.addAll(latestUpstreamDependencies);
+            dependencies.addAll(latestUpstreamTransitiveDependencies);
 
             //make sure that downstream or upstream projects were not included in dependencies list (it will cause entity duplication error)
             dependencies.removeIf(project -> project.getDepotProjectId().equals(downstreamProjectId) || project.getDepotProjectId().equals(upstreamProjectId));
