@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
@@ -837,9 +838,10 @@ public class TestModelBuilderTest
 
     private List<Entity> findEntitiesInMetadata(String projectId, String versionId)
     {
-        Set<DepotProjectVersion> dependencies = this.metadata.getMetadataApi().getProjectDependencies(projectId, versionId, true);
-        List<Entity> entities = Lists.mutable.withAll(this.metadata.getMetadataApi().getEntities(projectId, versionId));
-        dependencies.stream().map(d -> this.metadata.getMetadataApi().getEntities(d.getDepotProjectId().toString(), d.getVersionId())).forEach(entities::addAll);
+        DepotProjectId depotProjectId = DepotProjectId.parseProjectId(projectId);
+        Set<DepotProjectVersion> dependencies = this.metadata.getMetadataApi().getProjectDependencies(depotProjectId, versionId, true);
+        List<Entity> entities = Lists.mutable.withAll(this.metadata.getMetadataApi().getEntities(depotProjectId, versionId));
+        dependencies.stream().map(d -> this.metadata.getMetadataApi().getEntities(d.getDepotProjectId(), d.getVersionId())).forEach(entities::addAll);
         return entities;
     }
 

@@ -55,7 +55,7 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
     }
 
     @Override
-    public List<Entity> getEntities(String projectId, String versionId)
+    public List<Entity> getEntities(DepotProjectId projectId, String versionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "Project id may be null");
         LegendSDLCServerException.validateNonNull(versionId, "Version id may be null");
@@ -74,7 +74,7 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
     }
 
     @Override
-    public Set<DepotProjectVersion> getProjectDependencies(String projectId, String versionId, boolean transitive)
+    public Set<DepotProjectVersion> getProjectDependencies(DepotProjectId projectId, String versionId, boolean transitive)
     {
         LegendSDLCServerException.validateNonNull(projectId, "Project id may be null");
         LegendSDLCServerException.validateNonNull(versionId, "Version id may be null");
@@ -93,12 +93,9 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
     }
 
-    private HttpGet prepareGetRequest(String projectId, String versionId, String requestPatch, List<NameValuePair> parameters)
+    private HttpGet prepareGetRequest(DepotProjectId projectId, String versionId, String requestPatch, List<NameValuePair> parameters)
     {
-        DepotProjectId depotProjectId = DepotProjectId.parseProjectId(projectId);
-        LegendSDLCServerException.validateNonNull(depotProjectId, "Project id may be null");
-
-        String path = String.format(requestPatch, depotProjectId.getGroupId(), depotProjectId.getArtifactId(), versionId);
+        String path = String.format(requestPatch, projectId.getGroupId(), projectId.getArtifactId(), versionId);
         URI uri = buildURI(path, parameters);
 
         return new HttpGet(uri);

@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 
 import javax.inject.Inject;
@@ -35,24 +36,24 @@ public class InMemoryMetadataApi implements MetadataApi
     }
 
     @Override
-    public List<Entity> getEntities(String projectId, String versionId)
+    public List<Entity> getEntities(DepotProjectId projectId, String versionId)
     {
-        InMemoryProjectMetadata project = this.backend.getProject(projectId);
+        InMemoryProjectMetadata project = this.backend.getProject(projectId.toString());
         if (project == null)
         {
             return Lists.mutable.empty();
         }
         else
         {
-            InMemoryVersionMetadata version = this.backend.getProject(projectId).getVersion(versionId);
+            InMemoryVersionMetadata version = this.backend.getProject(projectId.toString()).getVersion(versionId);
             return version.getEntities();
         }
     }
 
     @Override
-    public Set<DepotProjectVersion> getProjectDependencies(String projectId, String versionId, boolean transitive)
+    public Set<DepotProjectVersion> getProjectDependencies(DepotProjectId projectId, String versionId, boolean transitive)
     {
-        InMemoryProjectMetadata project = this.backend.getProject(projectId);
+        InMemoryProjectMetadata project = this.backend.getProject(projectId.toString());
         if (project == null)
         {
             return Sets.mutable.empty();
