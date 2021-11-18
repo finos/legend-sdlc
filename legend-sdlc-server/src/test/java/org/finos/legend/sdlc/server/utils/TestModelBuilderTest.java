@@ -681,6 +681,76 @@ public class TestModelBuilderTest
                 toEntityPathSet(entitiesAfterForRevision));
     }
 
+    @Test
+    public void testTestModelBuilderWithWrongInput()
+    {
+        /*
+            Path from x to y indicates that project x depends on project y
+
+            org.test:A
+             +-- org.test:B
+                 +-- org.test:C
+                     +-- org.test:D
+         */
+        this.metadata.project("org.test:A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.metadata.project("org.test:B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.metadata.project("org.test:D").addVersionedClasses("1.0.0", "d1", "d2");
+
+        this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:B:1.0.0");
+        this.metadata.project("org.test:B").addDependency("1.0.0", "org.test:C:1.0.0");
+        this.metadata.project("org.test:C").addDependency("1.0.0", "org.test:D:1.0.0");
+
+        this.testModelBuilder.buildEntitiesForTest(
+                "org.test:B",
+                VersionId.parseVersionId("1.0.0"),
+                "org.test:A",
+                "1.0.0"
+        );
+
+        try
+        {
+            this.testModelBuilder.buildEntitiesForTest(
+                    "org.test:A",
+                    VersionId.parseVersionId("1.0.0"),
+                    "org.test:B",
+                    "1.0.0"
+            );
+        }
+        catch (Exception ex)
+        {
+            Assert.assertEquals("Error processing dependencies: Project org.test:B was specified as downstream but in fact it is a direct dependency for upstream project org.test:A", ex.getMessage());
+        }
+
+        try
+        {
+            this.testModelBuilder.buildEntitiesForTest(
+                    "org.test:A",
+                    VersionId.parseVersionId("1.0.0"),
+                    "org.test:C",
+                    "1.0.0"
+            );
+        }
+        catch (Exception ex)
+        {
+            Assert.assertEquals("Error processing dependencies: Project org.test:C was specified as downstream but in fact it is an indirect dependency for upstream project org.test:A", ex.getMessage());
+        }
+
+        try
+        {
+            this.testModelBuilder.buildEntitiesForTest(
+                    "org.test:C",
+                    VersionId.parseVersionId("1.0.0"),
+                    "org.test:A",
+                    "1.0.0"
+            );
+        }
+        catch (Exception ex)
+        {
+            Assert.assertEquals("Error processing dependencies: Project org.test:A does not directly depend on org.test:C", ex.getMessage());
+        }
+    }
+
     private String revisionId(String projectId, String workspaceId)
     {
         return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();

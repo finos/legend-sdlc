@@ -92,16 +92,29 @@ public class TestModelBuilder
     {
         try
         {
+            Set<String> latestUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(dependency -> dependency.getDepotProjectId().toString());
+            if (latestUpstreamDependenciesIds.contains(downstreamProjectId))
+            {
+                throw new IllegalArgumentException("Project " + downstreamProjectId + " was specified as downstream but in fact it is a direct dependency for upstream project " + upstreamProjectId.toString());
+            }
+
             //get transitive dependencies for upstream project from metadata
+            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = Sets.mutable.empty();
             latestUpstreamDependencies.forEach(depotProjectVersion ->
             {
                 Set<DepotProjectVersion> projects = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId().toString(), depotProjectVersion.getVersionId(), true);
                 // remove upstream project as it has changed
                 projects.removeIf(project -> project.getDepotProjectId().equals(upstreamProjectId));
-                latestUpstreamDependencies.addAll(projects);
+                latestUpstreamTransitiveDependencies.addAll(projects);
             });
+            latestUpstreamDependencies.addAll(latestUpstreamTransitiveDependencies);
 
             Set<DepotProjectId> transitiveUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
+
+            if (transitiveUpstreamDependenciesIds.contains(DepotProjectId.parseProjectId(downstreamProjectId)))
+            {
+                throw new IllegalArgumentException("Project " + downstreamProjectId + " was specified as downstream but in fact it is an indirect dependency for upstream project " + upstreamProjectId.toString());
+            }
 
             Set<DepotProjectVersion> downstreamLevel1Dependencies = this.metadataApi.getProjectDependencies(downstreamProjectId, downstreamVersionId, false);
 
@@ -128,6 +141,12 @@ public class TestModelBuilder
                 // and its transitive dependencies
                 dependencies.addAll(this.metadataApi.getProjectDependencies(dependency.getDepotProjectId().toString(), dependency.getVersionId(), true));
             }
+
+            Set<DepotProjectId> dependenciesProjects = SetAdapter.adapt(dependencies).collect(DepotProjectVersion::getDepotProjectId);
+            if (dependenciesProjects.contains(upstreamProjectId))
+            {
+                throw new IllegalArgumentException("Project " + downstreamProjectId + " does not directly depend on " + upstreamProjectId.toString());
+            }
             // finally add the new dependency tree of the upstream project
             dependencies.addAll(latestUpstreamDependencies);
 
@@ -135,7 +154,7 @@ public class TestModelBuilder
         }
         catch (Exception ex)
         {
-            throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error getting project dependencies for downstream project", ex), ex);
+            throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error processing dependencies", ex), ex);
         }
     }
 
