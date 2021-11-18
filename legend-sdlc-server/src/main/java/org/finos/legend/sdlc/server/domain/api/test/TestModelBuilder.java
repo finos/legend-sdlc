@@ -101,19 +101,19 @@ public class TestModelBuilder
     {
         try
         {
-            if (latestUpstreamDependencies.stream().anyMatch(dependency -> dependency.getDepotProjectId().equals(downstreamProjectId)))
+            if (Iterate.anySatisfy(latestUpstreamDependencies, dependency -> downstreamProjectId.equals(dependency.getDepotProjectId())))
             {
                 throw new IllegalArgumentException("Project " + downstreamProjectId.toString() + " was specified as downstream but in fact it is a direct dependency for upstream project " + upstreamProjectId.toString());
             }
 
             //get transitive dependencies for upstream project from metadata
-            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = latestUpstreamDependencies.stream().map(depotProjectVersion ->
+            MutableSet<DepotProjectVersion> latestUpstreamTransitiveDependencies = Iterate.flatCollect(latestUpstreamDependencies, depotProjectVersion -> this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true), Sets.mutable.withAll(latestUpstreamDependencies));
             {
                 Set<DepotProjectVersion> upstreamDependencies = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true);
                 upstreamDependencies.add(depotProjectVersion);
                 return upstreamDependencies;
             }).flatMap(Collection::stream).collect(Collectors.toSet());
-            latestUpstreamTransitiveDependencies.removeIf(dependency -> dependency.getDepotProjectId().equals(upstreamProjectId));
+            latestUpstreamTransitiveDependencies.removeIf(dependency -> upstreamProjectId.equals(dependency.getDepotProjectId()));
 
             Set<DepotProjectId> transitiveUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
             if (transitiveUpstreamDependenciesIds.contains(downstreamProjectId))
