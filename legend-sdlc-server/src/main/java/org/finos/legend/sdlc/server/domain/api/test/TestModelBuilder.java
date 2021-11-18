@@ -142,13 +142,11 @@ public class TestModelBuilder
                 dependencies.addAll(this.metadataApi.getProjectDependencies(dependency.getDepotProjectId().toString(), dependency.getVersionId(), true));
             }
 
-            Set<DepotProjectId> dependenciesProjects = SetAdapter.adapt(dependencies).collect(DepotProjectVersion::getDepotProjectId);
-            if (dependenciesProjects.contains(upstreamProjectId))
-            {
-                throw new IllegalArgumentException("Project " + downstreamProjectId + " does not directly depend on " + upstreamProjectId.toString());
-            }
             // finally add the new dependency tree of the upstream project
             dependencies.addAll(latestUpstreamDependencies);
+
+            //make sure that downstream or upstream projects were not included in dependencies list (it will cause entity duplication error)
+            dependencies.removeIf(project -> project.getDepotProjectId().toString().equals(downstreamProjectId) || project.getDepotProjectId().equals(upstreamProjectId));
 
             return dependencies;
         }
