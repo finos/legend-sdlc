@@ -107,7 +107,8 @@ public class TestModelBuilder
             }
 
             //get transitive dependencies for upstream project from metadata
-            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = latestUpstreamDependencies.stream().map(depotProjectVersion -> {
+            Set<DepotProjectVersion> latestUpstreamTransitiveDependencies = latestUpstreamDependencies.stream().map(depotProjectVersion ->
+            {
                 Set<DepotProjectVersion> upstreamDependencies = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true);
                 upstreamDependencies.add(depotProjectVersion);
                 return upstreamDependencies;
