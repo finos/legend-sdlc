@@ -18,7 +18,9 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.set.mutable.SetAdapter;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -103,22 +105,17 @@ public class TestModelBuilder
         {
             if (Iterate.anySatisfy(latestUpstreamDependencies, dependency -> downstreamProjectId.equals(dependency.getDepotProjectId())))
             {
-                throw new IllegalArgumentException("Project " + downstreamProjectId.toString() + " was specified as downstream but in fact it is a direct dependency for upstream project " + upstreamProjectId.toString());
+                throw new IllegalArgumentException("Project " + downstreamProjectId + " was specified as downstream but in fact it is a direct dependency for upstream project " + upstreamProjectId);
             }
 
             //get transitive dependencies for upstream project from metadata
             MutableSet<DepotProjectVersion> latestUpstreamTransitiveDependencies = Iterate.flatCollect(latestUpstreamDependencies, depotProjectVersion -> this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true), Sets.mutable.withAll(latestUpstreamDependencies));
-            {
-                Set<DepotProjectVersion> upstreamDependencies = this.metadataApi.getProjectDependencies(depotProjectVersion.getDepotProjectId(), depotProjectVersion.getVersionId(), true);
-                upstreamDependencies.add(depotProjectVersion);
-                return upstreamDependencies;
-            }).flatMap(Collection::stream).collect(Collectors.toSet());
             latestUpstreamTransitiveDependencies.removeIf(dependency -> upstreamProjectId.equals(dependency.getDepotProjectId()));
 
             Set<DepotProjectId> transitiveUpstreamDependenciesIds = SetAdapter.adapt(latestUpstreamDependencies).collect(DepotProjectVersion::getDepotProjectId);
             if (transitiveUpstreamDependenciesIds.contains(downstreamProjectId))
             {
-                throw new IllegalArgumentException("Project " + downstreamProjectId.toString() + " was specified as downstream but in fact it is an indirect dependency for upstream project " + upstreamProjectId.toString());
+                throw new IllegalArgumentException("Project " + downstreamProjectId + " was specified as downstream but in fact it is an indirect dependency for upstream project " + upstreamProjectId);
             }
 
             Set<DepotProjectVersion> downstreamLevel1Dependencies = this.metadataApi.getProjectDependencies(downstreamProjectId, downstreamVersionId, false);

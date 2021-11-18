@@ -93,9 +93,9 @@ public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
         }
     }
 
-    private HttpGet prepareGetRequest(DepotProjectId projectId, String versionId, String requestPatch, List<NameValuePair> parameters)
+    private HttpGet prepareGetRequest(DepotProjectId projectId, String versionId, String requestPath, List<NameValuePair> parameters)
     {
-        String path = String.format(requestPatch, projectId.getGroupId(), projectId.getArtifactId(), versionId);
+        String path = String.format(requestPath, projectId.getGroupId(), projectId.getArtifactId(), versionId);
         URI uri = buildURI(path, parameters);
 
         return new HttpGet(uri);
