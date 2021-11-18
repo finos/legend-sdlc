@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
@@ -606,6 +607,49 @@ public class TestModelBuilderTest
     }
 
     @Test
+    public void sharedDependencyRemovedSecondScenario()
+    {
+        /*
+            Path from x to y indicates that project x depends on project y
+            x(~) indicates that project x has been modified
+            x(*) refers to project x that has been defined elsewhere in the tree
+
+            org.test:A
+             +-- org.test:B
+             |   +-- org.test:C
+             +-- org.test:C(~)
+
+             Project org.test:C is common dependency of both org.test:A and org.test:B
+             Project org.test:C is removed as a dependency of project org.test:B
+         */
+        this.backend.project("PROD-1").addVersionedClasses("1.0.0", "c1", "c2");
+        this.backend.project("PROD-1").setMavenCoordinates("org.test", "C");
+
+        this.metadata.project("org.test:A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.metadata.project("org.test:B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:B:1.0.0");
+        this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:C:1.0.0");
+        this.metadata.project("org.test:B").addDependency("1.0.0", "org.test:C:1.0.0");
+
+        List<Entity> entitiesBefore = findEntitiesInMetadata("org.test:C", "1.0.0");
+        Assert.assertEquals(Sets.mutable.with("org.test:C::c1", "org.test:C::c2"), toEntityPathSet(entitiesBefore));
+
+        this.backend.project("PROD-1").addClasses("w1", "c3");
+
+        List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
+                "PROD-1",
+                "w1",
+                revisionId("PROD-1", "w1"),
+                "org.test:A",
+                "1.0.0"
+        );
+
+        Assert.assertEquals(Sets.mutable.with("org.test:A::a1", "org.test:A::a2", "PROD-1::c1", "PROD-1::c2", "PROD-1::c3", "org.test:B::b1", "org.test:B::b2"),
+                toEntityPathSet(entitiesAfter));
+    }
+
+    @Test
     public void sharedDependencyWithDifferingVersions()
     {
         /*
@@ -681,6 +725,102 @@ public class TestModelBuilderTest
                 toEntityPathSet(entitiesAfterForRevision));
     }
 
+    @Test
+    public void testNotDirectDependency()
+    {
+        /*
+            Path from x to y indicates that project x depends on project y
+            x(~) indicates that project x has been modified
+
+            org.test:A
+             +-- org.test:B
+                 +-- org.test:C
+                    +-- org.test:D(~)
+         */
+        this.backend.project("PROD-1").addVersionedClasses("1.0.0", "d1", "d2");
+        this.backend.project("PROD-1").setMavenCoordinates("org.test", "D");
+
+        this.metadata.project("org.test:A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.metadata.project("org.test:B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.metadata.project("org.test:D").addVersionedClasses("1.0.0", "d1", "d2");
+        this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:B:1.0.0");
+        this.metadata.project("org.test:B").addDependency("1.0.0", "org.test:C:1.0.0");
+        this.metadata.project("org.test:C").addDependency("1.0.0", "org.test:D:1.0.0");
+
+        List<Entity> entitiesBefore = findEntitiesInMetadata("org.test:D", "1.0.0");
+        Assert.assertEquals(Sets.mutable.with("org.test:D::d1", "org.test:D::d2"), toEntityPathSet(entitiesBefore));
+
+        this.backend.project("PROD-1").addClasses("w1", "d3");
+
+        List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
+                "PROD-1",
+                "w1",
+                revisionId("PROD-1", "w1"),
+                "org.test:A",
+                "1.0.0"
+        );
+
+        Assert.assertEquals(Sets.mutable.with("org.test:A::a1", "org.test:A::a2", "PROD-1::d1", "PROD-1::d2", "PROD-1::d3", "org.test:B::b1", "org.test:B::b2", "org.test:C::c1", "org.test:C::c2"),
+                toEntityPathSet(entitiesAfter));
+    }
+
+    @Test
+    public void testTestModelBuilderWithWrongInput()
+    {
+        /*
+            Path from x to y indicates that project x depends on project y
+
+            org.test:A
+             +-- org.test:B
+                 +-- org.test:C
+                     +-- org.test:D
+         */
+        this.metadata.project("org.test:A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.metadata.project("org.test:B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.metadata.project("org.test:D").addVersionedClasses("1.0.0", "d1", "d2");
+
+        this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:B:1.0.0");
+        this.metadata.project("org.test:B").addDependency("1.0.0", "org.test:C:1.0.0");
+        this.metadata.project("org.test:C").addDependency("1.0.0", "org.test:D:1.0.0");
+
+        this.testModelBuilder.buildEntitiesForTest(
+                "org.test:B",
+                VersionId.parseVersionId("1.0.0"),
+                "org.test:A",
+                "1.0.0"
+        );
+
+        try
+        {
+            this.testModelBuilder.buildEntitiesForTest(
+                    "org.test:A",
+                    VersionId.parseVersionId("1.0.0"),
+                    "org.test:B",
+                    "1.0.0"
+            );
+        }
+        catch (Exception ex)
+        {
+            Assert.assertEquals("Error processing dependencies: Project org.test:B was specified as downstream but in fact it is a direct dependency for upstream project org.test:A", ex.getMessage());
+        }
+
+        try
+        {
+            this.testModelBuilder.buildEntitiesForTest(
+                    "org.test:A",
+                    VersionId.parseVersionId("1.0.0"),
+                    "org.test:C",
+                    "1.0.0"
+            );
+        }
+        catch (Exception ex)
+        {
+            Assert.assertEquals("Error processing dependencies: Project org.test:C was specified as downstream but in fact it is an indirect dependency for upstream project org.test:A", ex.getMessage());
+        }
+    }
+
     private String revisionId(String projectId, String workspaceId)
     {
         return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
@@ -698,9 +838,10 @@ public class TestModelBuilderTest
 
     private List<Entity> findEntitiesInMetadata(String projectId, String versionId)
     {
-        Set<DepotProjectVersion> dependencies = this.metadata.getMetadataApi().getProjectDependencies(projectId, versionId, true);
-        List<Entity> entities = Lists.mutable.withAll(this.metadata.getMetadataApi().getEntities(projectId, versionId));
-        dependencies.stream().map(d -> this.metadata.getMetadataApi().getEntities(d.getDepotProjectId().toString(), d.getVersionId())).forEach(entities::addAll);
+        DepotProjectId depotProjectId = DepotProjectId.parseProjectId(projectId);
+        Set<DepotProjectVersion> dependencies = this.metadata.getMetadataApi().getProjectDependencies(depotProjectId, versionId, true);
+        List<Entity> entities = Lists.mutable.withAll(this.metadata.getMetadataApi().getEntities(depotProjectId, versionId));
+        dependencies.stream().map(d -> this.metadata.getMetadataApi().getEntities(d.getDepotProjectId(), d.getVersionId())).forEach(entities::addAll);
         return entities;
     }
 

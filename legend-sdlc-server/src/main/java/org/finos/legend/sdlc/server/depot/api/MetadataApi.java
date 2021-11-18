@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.depot.api;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 
 import java.util.List;
@@ -22,7 +23,7 @@ import java.util.Set;
 
 public interface MetadataApi
 {
-    List<Entity> getEntities(String projectId, String versionId);
+    List<Entity> getEntities(DepotProjectId projectId, String versionId);
 
-    Set<DepotProjectVersion> getProjectDependencies(String projectId, String versionId, boolean transitive);
+    Set<DepotProjectVersion> getProjectDependencies(DepotProjectId projectId, String versionId, boolean transitive);
 }
