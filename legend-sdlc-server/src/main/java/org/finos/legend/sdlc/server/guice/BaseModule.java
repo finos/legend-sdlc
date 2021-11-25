@@ -18,6 +18,8 @@ import com.google.inject.Binder;
 import com.google.inject.Scopes;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.depot.api.DepotMetadataApi;
+import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
@@ -89,6 +91,7 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
             binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
         }
+        binder.bind(MetadataApi.class).to(DepotMetadataApi.class);
     }
 
     private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
