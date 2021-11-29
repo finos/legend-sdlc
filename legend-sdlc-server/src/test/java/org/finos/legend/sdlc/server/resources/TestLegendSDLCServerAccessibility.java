@@ -53,7 +53,7 @@ public class TestLegendSDLCServerAccessibility
         this.client.target(getServerUrl()).request().get();
     }
 
-    protected WebTarget clientFor(String url, String port)
+    protected WebTarget clientFor(String url, int port)
     {
         return this.client.target(getServerUrl(url, port));
     }
