@@ -91,6 +91,11 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
             binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
         }
+        configureMetadataApi(binder);
+    }
+
+    protected void configureMetadataApi(Binder binder)
+    {
         binder.bind(MetadataApi.class).to(DepotMetadataApi.class);
     }
 
