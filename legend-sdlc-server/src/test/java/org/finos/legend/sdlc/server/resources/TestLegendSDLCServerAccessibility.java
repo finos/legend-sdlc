@@ -53,25 +53,39 @@ public class TestLegendSDLCServerAccessibility
         this.client.target(getServerUrl()).request().get();
     }
 
-    protected WebTarget clientFor(String url)
+    protected WebTarget clientFor(String url, String port)
     {
-        return this.client.target(getServerUrl(url));
+        return this.client.target(getServerUrl(url, port));
     }
 
     protected String getServerUrl()
     {
-        return getServerUrl(null);
+        return getServerUrl(null, APP_RULE.getLocalPort());
     }
 
-    protected String getServerUrl(String path)
+    protected String getServerUrl(String path, int port)
     {
-        return "http://localhost:" + APP_RULE.getLocalPort() + Optional.ofNullable(path).orElse("");
+        return "http://localhost:" + port + Optional.ofNullable(path).orElse("");
     }
 
     @Test
     public void testSwaggerPageAccessible()
     {
-        Response response = clientFor("/api/swagger").request().get();
+        Response response = clientFor("/api/swagger", APP_RULE.getLocalPort()).request().get();
+        Assert.assertEquals(200, response.getStatus());
+    }
+    
+    @Test
+    public void testApiInfoPageAccessible()
+    {
+        Response response = clientFor("/api/info", APP_RULE.getLocalPort()).request().get();
+        Assert.assertEquals(200, response.getStatus());
+    }
+    
+    @Test
+    public void testHealthCheckPageAccessible()
+    {
+        Response response = clientFor("/healthcheck", APP_RULE.getAdminPort()).request().get();
         Assert.assertEquals(200, response.getStatus());
     }
 }
