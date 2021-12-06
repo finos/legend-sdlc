@@ -196,6 +196,7 @@ public class GitLabApiTools
     private static void noteRetryableException()
     {
         SDLCMetricsHandler.incrementCounter(RETRY_METRIC);
+        SDLCMetricsHandler.incrementOperationCounter(RETRY_METRIC);
     }
 
     public static boolean branchExists(GitLabApi api, Object projectIdOrPath, String branchName) throws GitLabApiException
