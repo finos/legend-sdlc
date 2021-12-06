@@ -58,6 +58,6 @@ jobs:
     - name: Build + Test
       if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
       run: mvn install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
-    - name: Build + Test + Sonar + Maven Deploy
+    - name: Build + Test + Maven Deploy + Sonar + Docker Snapshot
       if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
-      run: mvn javadoc:javadoc deploy -Psonar -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+      run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
