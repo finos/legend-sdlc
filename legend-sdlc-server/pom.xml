@@ -330,6 +330,7 @@
                                 <phase>deploy</phase>
                                 <goals>
                                     <goal>build</goal>
+                                    <goal>tag</goal>
                                     <goal>push</goal>
                                 </goals>
                             </execution>
@@ -338,7 +339,7 @@
                             <tag>snapshot</tag>
                             <username>${env.DOCKER_USERNAME}</username>
                             <password>${env.DOCKER_PASSWORD}</password>
-                            <repository>registry.hub.docker.com/r/${env.DOCKER_USERNAME}/${project.artifactId}</repository>
+                            <repository>registry.hub.docker.com/${env.DOCKER_USERNAME}/${project.artifactId}</repository>
                         </configuration>
                     </plugin>
                 </plugins>
