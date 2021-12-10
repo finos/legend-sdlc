@@ -21,6 +21,7 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
+import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -49,6 +50,7 @@ import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.ProjectAccess;
+import org.gitlab4j.api.models.ProtectedTag;
 import org.gitlab4j.api.models.Visibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +59,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -649,6 +652,183 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
+    @Override
+    public Set<ProjectAuthorizationAction> checkUserAuthorizationActions(String id, Set<ProjectAuthorizationAction> actions)
+    {
+        try
+        {
+            GitLabProjectId projectId = parseProjectId(id);
+            org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
+            if (!isLegendSDLCProject(gitLabProject))
+            {
+                throw new LegendSDLCServerException("Failed to get project " + id);
+            }
+            AccessLevel userLevel = getUserAccess(gitLabProject);
+            if (userLevel == null)
+            {
+                return Collections.emptySet();
+            }
+            return actions
+                    .stream()
+                    .filter(Objects::nonNull)
+                    .filter(a -> checkUserAction(projectId, a, userLevel))
+                    .collect(Collectors.toSet());
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get project " +  id);
+        }
+    }
+
+    @Override
+    public boolean checkUserAuthorizationAction(String id, ProjectAuthorizationAction action)
+    {
+        try
+        {
+            GitLabProjectId projectId = parseProjectId(id);
+            org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getProjectApi().getProject(projectId.getGitLabId()));
+            if (!isLegendSDLCProject(gitLabProject))
+            {
+                throw new LegendSDLCServerException("Failed to get project " + id);
+            }
+            AccessLevel userLevel = getUserAccess(gitLabProject);
+            if (userLevel == null)
+            {
+                return false;
+            }
+
+            return checkUserAction(projectId, action, userLevel);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get project " +  id);
+        }
+    }
+
+    private AccessLevel getUserAccess(org.gitlab4j.api.models.Project gitLabProject)
+    {
+       Permissions permissions = gitLabProject.getPermissions();
+       if (permissions != null)
+       {
+           ProjectAccess projectAccess = permissions.getProjectAccess();
+           AccessLevel projectAccessLevel = (projectAccess == null) ? null : projectAccess.getAccessLevel();
+           if (projectAccessLevel != null)
+           {
+               return projectAccessLevel;
+           }
+
+           ProjectAccess groupAccess = permissions.getGroupAccess();
+           return (groupAccess == null) ? null : groupAccess.getAccessLevel();
+       }
+       return null;
+    }
+
+    private boolean checkUserAction(GitLabProjectId projectId, ProjectAuthorizationAction action, AccessLevel accessLevel)
+    {
+        switch (action)
+        {
+            case CREATE_VERSION:
+            {
+                return checkUserReleasePermission(projectId, action, accessLevel);
+            }
+            case COMMIT_REVIEW:
+            {
+                return checkUserMergeReviewPermission(projectId, action, accessLevel);
+            }
+            case SUBMIT_REVIEW:
+            {
+                return defaultSubmitReviewAccess(accessLevel);
+            }
+            case CREATE_WORKSPACE:
+            {
+                return defaultCreateWorkspaceAccess(accessLevel);
+            }
+            default:
+            {
+                return false;
+            }
+        }
+    }
+
+    private boolean checkUserMergeReviewPermission(GitLabProjectId projectId, ProjectAuthorizationAction action, AccessLevel accessLevel)
+    {
+        return defaultMergeReviewAccess(accessLevel);
+    }
+
+    private boolean checkUserReleasePermission(GitLabProjectId projectId, ProjectAuthorizationAction action, AccessLevel accessLevel)
+    {
+        try
+        {
+            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi(projectId.getGitLabMode()).getTagsApi().getProtectedTags(projectId.getGitLabId()));
+            if (protectedTags == null || protectedTags.isEmpty())
+            {
+                //By default user can perform a release if the user has developer access or above https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
+                return defaultReleaseAction(accessLevel);
+            }
+            protectedTags = protectedTags.stream().filter(a -> a.getName().startsWith("release") || a.getName().startsWith("version")).collect(Collectors.toList());
+            for (ProtectedTag tag : protectedTags)
+            {
+                if (tag.getCreateAccessLevels().isEmpty())
+                {
+                    return defaultReleaseAction(accessLevel);
+                }
+                //with th release protected tag the user must have the min access_level
+                List<ProtectedTag.CreateAccessLevel> matchedTags = tag.getCreateAccessLevels().stream().filter(a -> a.getAccess_level().value >= accessLevel.value).collect(Collectors.toList());
+                //if the  machedTags are empty or null user access does not match any of the protected tags
+                if (matchedTags.isEmpty())
+                {
+                    return defaultReleaseAction(accessLevel);
+                }
+
+                //User does not meet all criteria not authorized for the action
+                if (matchedTags.size() != tag.getCreateAccessLevels().size())
+                {
+                    return false;
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
+        }
+        return false;
+    }
+
+    private boolean defaultReleaseAction(AccessLevel accessLevel)
+    {
+        return  (accessLevel.value >= GitlabProjectAccess.CREATE_VERSION);
+    }
+
+    /**
+     * Default access level needed to create a workspace or a branch https://docs.gitlab.com/ee/user/permissions.html
+     * @param userAccessLevel the access level of the user
+     * @return action and whether the user is authorized for that
+     */
+    private boolean defaultCreateWorkspaceAccess(AccessLevel userAccessLevel)
+    {
+        return (userAccessLevel.value >= GitlabProjectAccess.CREATE_WORKSPACE);
+    }
+
+    /**
+     * Default access level needed to submit a review https://docs.gitlab.com/ee/user/permissions.html
+     * @param userAccessLevel access level  of the user
+     * @return projectAuthorizationState
+     */
+    private boolean defaultSubmitReviewAccess(AccessLevel userAccessLevel)
+    {
+        return  (userAccessLevel.value >= GitlabProjectAccess.SUBMIT_REVIEW);
+    }
+
+    /**
+     * Default access level needed to merge an approved review https://docs.gitlab.com/ee/user/permissions.html
+     * @param userAccessLevel  access level  of the user
+     * @return projectAuthorizationState
+     */
+    private boolean defaultMergeReviewAccess(AccessLevel userAccessLevel)
+    {
+        return (userAccessLevel.value >= GitlabProjectAccess.MERGE_REVIEW);
+    }
+
     private int getDefaultProjectStructureVersion()
     {
         ProjectCreationConfiguration projectCreationConfig = getProjectCreationConfiguration();
@@ -841,5 +1021,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             return this.accessRole;
         }
+    }
+
+    private static  class  GitlabProjectAccess
+    {
+        public static int MERGE_REVIEW = AccessLevel.MAINTAINER.value;
+        public static int CREATE_WORKSPACE = AccessLevel.DEVELOPER.value;
+        public static int SUBMIT_REVIEW = AccessLevel.DEVELOPER.value;
+        public static int CREATE_VERSION = AccessLevel.DEVELOPER.value;
     }
 }
