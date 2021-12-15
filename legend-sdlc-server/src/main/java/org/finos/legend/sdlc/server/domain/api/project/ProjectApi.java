@@ -17,9 +17,11 @@ package org.finos.legend.sdlc.server.domain.api.project;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
+import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 public interface ProjectApi
 {
@@ -60,6 +62,23 @@ public interface ProjectApi
     void setProjectTags(String id, Iterable<String> tags);
 
     AccessRole getCurrentUserAccessRole(String id);
+
+    /**
+     * Check if a user is authorized to perform a list of actions.
+     * Checks for each of the actions whether the user is authorized or not
+     * @param id the project id
+     * @param actions list of actions to check if the user is authorized
+     * @return list of action and whether the user has permission to perform each
+     */
+    Set<ProjectAuthorizationAction> checkUserAuthorizationActions(String id, Set<ProjectAuthorizationAction> actions);
+
+    /**
+     * Checks if a user is authorized to perform an action
+     * @param id the project Id
+     * @param action action to check is authorized
+     * @return boolean is user is authorized
+     */
+    boolean checkUserAuthorizationAction(String id, ProjectAuthorizationAction action);
 
     ImportReport importProject(String id, ProjectType type, String groupId, String artifactId);
 

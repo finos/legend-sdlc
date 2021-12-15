@@ -18,11 +18,13 @@ import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
+import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Set;
 
 public class InMemoryProjectApi implements ProjectApi
 {
@@ -84,6 +86,18 @@ public class InMemoryProjectApi implements ProjectApi
 
     @Override
     public AccessRole getCurrentUserAccessRole(String id)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Set<ProjectAuthorizationAction> checkUserAuthorizationActions(String id, Set<ProjectAuthorizationAction> actions)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public boolean checkUserAuthorizationAction(String id, ProjectAuthorizationAction action)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

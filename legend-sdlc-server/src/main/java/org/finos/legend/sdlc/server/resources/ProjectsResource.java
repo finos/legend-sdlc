@@ -20,6 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
+import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
 import org.finos.legend.sdlc.server.application.project.CreateProjectCommand;
 import org.finos.legend.sdlc.server.application.project.ImportProjectCommand;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectCommand;
@@ -39,6 +40,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -160,5 +164,34 @@ public class ProjectsResource extends BaseResource
         return executeWithLogging(
                 "getting project access role",
                 () -> this.projectApi.getCurrentUserAccessRole(projectId));
+    }
+
+    @GET
+    @Path("{id}/authorizedActions")
+    @ApiOperation("Check if the current user can perform set of actions provided")
+    public Set<ProjectAuthorizationAction> checkAuthorizedActions(@PathParam("id") String projectId,
+                                                                  @ApiParam("List of actions to be checked for the current user")
+                                                                  @QueryParam("actions") Set<ProjectAuthorizationAction> actions)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
+
+        return executeWithLogging(
+                "checking if the current user has been authorized to perform the set of actions given",
+                () -> this.projectApi.checkUserAuthorizationActions(projectId, (actions == null || actions.isEmpty()) ? EnumSet.allOf(ProjectAuthorizationAction.class) : actions));
+    }
+
+    @GET
+    @Path("{id}/authorizedActions/{action}")
+    @ApiOperation("Check if the current user can perform an action ")
+    public boolean checkAuthorizedAction(@PathParam("id") String projectId,
+                                         @ApiParam("action to be checked for the current user")
+                                         @QueryParam("action") ProjectAuthorizationAction action)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
+        LegendSDLCServerException.validateNonNull(action, "action may not be null");
+
+        return executeWithLogging(
+                "checking if the current user is authorized to perform the action given",
+                () -> this.projectApi.checkUserAuthorizationAction(projectId, action));
     }
 }
