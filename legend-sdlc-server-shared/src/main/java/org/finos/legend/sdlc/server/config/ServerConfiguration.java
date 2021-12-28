@@ -32,6 +32,9 @@ public class ServerConfiguration extends Configuration
     @JsonProperty("pac4j")
     private LegendPac4jConfiguration pac4jConfiguration;
 
+    @JsonProperty("cors")
+    private CORSConfiguration corsConfiguration;
+
     @JsonProperty("filterPriorities")
     private Map<String, Integer> filterPriorities;
 
@@ -56,6 +59,11 @@ public class ServerConfiguration extends Configuration
     public LegendPac4jConfiguration getPac4jConfiguration()
     {
         return this.pac4jConfiguration;
+    }
+
+    public CORSConfiguration getCORSConfiguration()
+    {
+        return this.corsConfiguration;
     }
 
     public Map<String, Integer> getFilterPriorities()
