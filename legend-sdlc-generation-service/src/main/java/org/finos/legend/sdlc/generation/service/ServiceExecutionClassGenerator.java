@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
+import org.finos.legend.engine.plan.execution.stores.StoreExecutorConfiguration;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 
@@ -54,6 +55,7 @@ public class ServiceExecutionClassGenerator
     private final Set<String> otherImports = Sets.mutable.empty();
     private String packageName;
     private String constructor;
+    private String constructorWithStoreExecutorConfigurations;
     private String executeMethod;
     private String executeMethodWithStreamProvider;
     private String runMethod;
@@ -66,13 +68,14 @@ public class ServiceExecutionClassGenerator
 
         // add base imports
         addImport(AbstractServicePlanExecutor.class);
+        addImport(StoreExecutorConfiguration.class);
         addImport(Result.class);
     }
 
     public GeneratedJavaClass generate()
     {
         generatePackageName();
-        generateConstructor();
+        generateConstructors();
         generateExecuteMethods();
         generateRunMethod();
 
@@ -92,6 +95,8 @@ public class ServiceExecutionClassGenerator
         builder.append("public class ").append(this.service.name).append(" extends ").append(AbstractServicePlanExecutor.class.getSimpleName()).append('\n');
         builder.append("{\n");
         builder.append(this.constructor);
+        builder.append('\n');
+        builder.append(this.constructorWithStoreExecutorConfigurations);
         builder.append('\n');
         builder.append(this.executeMethod);
         builder.append('\n');
@@ -121,11 +126,25 @@ public class ServiceExecutionClassGenerator
         this.packageName = this.packagePrefix + "." + Arrays.stream(servicePackage.split("::")).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining("."));
     }
 
-    private void generateConstructor()
+    private void generateConstructors()
+    {
+        this.generateDefaultConstructor();
+        this.generateConstructorWithStoreExecutorConfigurations();
+    }
+
+    private void generateDefaultConstructor()
     {
         this.constructor = "    public " + this.service.name + "()\n" +
                 "    {\n" +
                 "        super(\"" + this.service.getPath() + "\", \"" + this.planResourceName + "\", false);\n" +
+                "    }\n";
+    }
+
+    private void generateConstructorWithStoreExecutorConfigurations()
+    {
+        this.constructorWithStoreExecutorConfigurations = "    public " + this.service.name + "(StoreExecutorConfiguration ...storeExecutorConfigurations)\n" +
+                "    {\n" +
+                "        super(\"" + this.service.getPath() + "\", \"" + this.planResourceName + "\", storeExecutorConfigurations);\n" +
                 "    }\n";
     }
 
