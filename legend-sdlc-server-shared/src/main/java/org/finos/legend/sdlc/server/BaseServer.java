@@ -95,7 +95,17 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,DELETE,OPTIONS");
         corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
         corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_TIMING_ORIGINS_PARAM, "*");
-        corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin,Access-Control-Allow-Credentials" + (configuration.getCORSConfiguration() != null && configuration.getCORSConfiguration().getAllowedHeaders() != null ? LazyIterate.adapt(configuration.getCORSConfiguration().getAllowedHeaders()).makeString(",", ",", "") : ""));
+
+        if (configuration.getCORSConfiguration() != null && configuration.getCORSConfiguration().getAllowedHeaders() != null)
+        {
+            corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, LazyIterate.adapt(configuration.getCORSConfiguration().getAllowedHeaders()).makeString(","));
+        }
+        else
+        {
+            // NOTE: this set of headers are kept as default for backward compatibility, the headers starting with prefix `x-` are meant for Zipkin
+            // client using SDLC server. We should consider using the CORS configuration and remove those from this default list.
+            corsFilter.setInitParameter(CrossOriginFilter.ALLOWED_HEADERS_PARAM, "X-Requested-With,Content-Type,Accept,Origin,Access-Control-Allow-Credentials,x-b3-parentspanid,x-b3-sampled,x-b3-spanid,x-b3-traceid");
+        }
         corsFilter.setInitParameter(CrossOriginFilter.CHAIN_PREFLIGHT_PARAM, "false");
         corsFilter.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), false, "*");
 
