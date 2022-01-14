@@ -19,6 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
@@ -63,6 +64,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         GitLabConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         DepotConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
+        PureProtocolObjectMapperFactory.withPureProtocolExtensions(bootstrap.getObjectMapper());
     }
 
     protected void configureApis(Bootstrap<T> bootstrap)
