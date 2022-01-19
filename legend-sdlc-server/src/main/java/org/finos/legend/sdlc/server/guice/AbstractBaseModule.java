@@ -87,6 +87,8 @@ import org.finos.legend.sdlc.server.resources.GroupWorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.GroupWorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.GroupWorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.GroupWorkspacesResource;
+import org.finos.legend.sdlc.server.resources.GroupWorkspacePureModelContextDataResource;
+import org.finos.legend.sdlc.server.resources.GroupWorkspaceRevisionPureModelContextDataResource;
 import org.finos.legend.sdlc.server.resources.InfoResource;
 import org.finos.legend.sdlc.server.resources.IssuesResource;
 import org.finos.legend.sdlc.server.resources.ProjectBuildsResource;
@@ -129,6 +131,8 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
+import org.finos.legend.sdlc.server.resources.WorkspacePureModelContextDataResource;
+import org.finos.legend.sdlc.server.resources.WorkspaceRevisionPureModelContextDataResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
 import javax.inject.Named;
@@ -181,9 +185,11 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectRevisionEntitiesResource.class);
         binder.bind(ProjectRevisionEntityPathsResource.class);
         binder.bind(WorkspaceEntitiesResource.class);
+        binder.bind(WorkspacePureModelContextDataResource.class);
         binder.bind(WorkspaceEntityPathsResource.class);
         binder.bind(WorkspaceEntityChangesResource.class);
         binder.bind(WorkspaceRevisionEntitiesResource.class);
+        binder.bind(WorkspaceRevisionPureModelContextDataResource.class);
         binder.bind(WorkspaceRevisionEntityPathsResource.class);
         binder.bind(VersionEntitiesResource.class);
         binder.bind(VersionEntityPathsResource.class);
@@ -254,6 +260,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(GroupConflictResolutionWorkspaceRevisionProjectConfigurationResource.class);
         binder.bind(GroupConflictResolutionWorkspaceRevisionsResource.class);
         binder.bind(GroupWorkspaceEntitiesResource.class);
+        binder.bind(GroupWorkspacePureModelContextDataResource.class);
         binder.bind(GroupWorkspaceEntityChangesResource.class);
         binder.bind(GroupWorkspaceEntityPathsResource.class);
         binder.bind(GroupWorkspaceEntityRevisionsResource.class);
@@ -261,6 +268,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(GroupWorkspaceProjectConfigurationResource.class);
         binder.bind(GroupWorkspaceRevisionDependenciesResource.class);
         binder.bind(GroupWorkspaceRevisionEntitiesResource.class);
+        binder.bind(GroupWorkspaceRevisionPureModelContextDataResource.class);
         binder.bind(GroupWorkspaceRevisionEntityPathsResource.class);
         binder.bind(GroupWorkspaceRevisionProjectConfigurationResource.class);
         binder.bind(GroupWorkspaceRevisionsResource.class);
