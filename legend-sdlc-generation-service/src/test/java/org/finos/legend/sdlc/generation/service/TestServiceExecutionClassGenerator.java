@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.generation.service;
 
 import io.github.classgraph.ClassGraph;
+import org.apache.commons.io.IOUtils;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
@@ -32,21 +33,26 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.net.URI;
-import java.net.URL;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Map;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.SimpleJavaFileObject;
 import javax.tools.ToolProvider;
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Paths;
+import java.time.LocalDate;
+import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 
 public class TestServiceExecutionClassGenerator
 {
@@ -83,64 +89,70 @@ public class TestServiceExecutionClassGenerator
     public void testSimpleService() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelService");
-        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
-        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
-        assertRunMethodsExist(cls);
+        assertExecuteMethodsExist(cls);
     }
-
 
     @Test
     public void testSimpleServiceWithParam() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithParam");
-        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class);
-        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
-        assertRunMethodsExist(cls);
+    }
+
+    @Test
+    public void testSimpleServiceWithNMultiplicityParam() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithNMultiplicityParam");
+        assertExecuteMethodsExist(cls, List.class);
     }
 
     @Test
     public void testSimpleMultiService() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceMulti");
-        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class);
-        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
-        assertRunMethodsExist(cls);
     }
 
     @Test
     public void testSimpleRelational() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalService");
-        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls);
-        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
-        assertRunMethodsExist(cls);
     }
 
     @Test
     public void testSimpleRelationalWithParams() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithParams");
-        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         assertExecuteMethodsExist(cls, String.class, String.class);
-        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
-        assertRunMethodsExist(cls);
     }
 
-    private Class<?> loadAndCompileService(String packagePrefix, String servicePath) throws ClassNotFoundException
+    @Test
+    public void testModelToModelServiceWithMultipleParams() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithMultipleParams");
+        assertExecuteMethodsExist(cls, String.class, long.class, double.class, BigDecimal.class, boolean.class, LocalDate.class, ZonedDateTime.class, Temporal.class, Long.class, List.class);
+    }
+
+    private Class<?> loadAndCompileService(String packagePrefix, String servicePath) throws Exception
     {
         Service service = SERVICES.get(servicePath);
         if (service == null)
         {
             throw new RuntimeException("Could not find service: " + servicePath);
         }
-        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, servicePath.replace("::", "/").concat(".json"));
+        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace("::", "/").concat(".json"));
         ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass = generator.generate();
         String expectedClassName = ((packagePrefix == null) ? "" : (packagePrefix + ".")) + servicePath.replace("::", ".");
         Assert.assertEquals(expectedClassName, generatedJavaClass.getName());
-        return compileGeneratedJavaClass(generatedJavaClass);
+        // Uncomment to update generated code
+        // org.apache.commons.io.FileUtils.writeStringToFile(new java.io.File("src/test/resources/generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode(), StandardCharsets.UTF_8);
+        Assert.assertEquals("Generated code matches expected formatting?", generatedJavaClass.getCode(), IOUtils.resourceToString("generation/service/" + service.name + ".generated.java", StandardCharsets.UTF_8, Thread.currentThread().getContextClassLoader()));
+        Class<?> cls = compileGeneratedJavaClass(generatedJavaClass);
+        Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
+        Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
+        assertRunMethodsExist(cls);
+        return cls;
     }
 
     private Class<?> compileGeneratedJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass) throws ClassNotFoundException
