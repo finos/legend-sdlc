@@ -600,6 +600,11 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
             MutableList<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
             fileOperations.removeIf(Objects::isNull);
+            if (fileOperations.isEmpty())
+            {
+                LOGGER.debug("No changes for {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
+                return null;
+            }
             return getProjectFileAccessProvider().getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId).submit(message, fileOperations);
         }
         catch (Exception e)
