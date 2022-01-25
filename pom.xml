@@ -86,7 +86,7 @@
         <guice.version>4.2.1</guice.version>
         <h2.version>1.4.200</h2.version>
         <hk2.version>2.5.0-b32</hk2.version>
-        <jackson.version>2.10.5</jackson.version>
+        <jackson.version>2.13.1</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
