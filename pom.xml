@@ -98,6 +98,7 @@
         <jersey2-guice.version>1.0.6</jersey2-guice.version>
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
+        <javassist.version>3.28.0-GA</javassist.version>
         <junit.version>4.13.1</junit.version>
         <apache.maven.version>3.6.2</apache.maven.version>
         <pac4j.version>3.9.0</pac4j.version>
@@ -1282,7 +1283,7 @@
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.21.0-GA</version>
+                <version>${javassist.version}</version>
             </dependency>
 
             <dependency>
