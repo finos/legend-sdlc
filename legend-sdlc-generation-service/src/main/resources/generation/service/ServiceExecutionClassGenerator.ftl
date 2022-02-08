@@ -19,6 +19,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceVariable;
 import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.stores.StoreExecutorConfiguration;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 
 ${imports?map(import->"import ${import};")?join("\n", "", "\n")}
@@ -27,6 +28,11 @@ public class ${service.name} extends AbstractServicePlanExecutor
     public ${service.name}()
     {
         super("${service.path}", "${planResourceName}", false);
+    }
+
+    public ${service.name}(StoreExecutorConfiguration... storeExecutorConfigurations)
+    {
+        super("${service.path}", "${planResourceName}", storeExecutorConfigurations);
     }
 
     public Result execute(${executionParameters?map(param->param.javaSignature)?join(", ")})

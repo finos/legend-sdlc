@@ -191,7 +191,7 @@
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
-            <scope>test</scope>
+            <!--not define as test scope to avoid overriding the scope from the transitive dependency-->
         </dependency>
         <!-- TEST -->
     </dependencies>

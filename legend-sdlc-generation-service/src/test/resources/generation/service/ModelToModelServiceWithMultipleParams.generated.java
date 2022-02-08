@@ -4,6 +4,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceVariable;
 import org.finos.legend.engine.plan.execution.result.Result;
+import org.finos.legend.engine.plan.execution.stores.StoreExecutorConfiguration;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 
 import java.math.BigDecimal;
@@ -17,6 +18,11 @@ public class ModelToModelServiceWithMultipleParams extends AbstractServicePlanEx
     public ModelToModelServiceWithMultipleParams()
     {
         super("service::ModelToModelServiceWithMultipleParams", "org/finos/legend/sdlc/generation/service/entities/service/ModelToModelServiceWithMultipleParams.json", false);
+    }
+
+    public ModelToModelServiceWithMultipleParams(StoreExecutorConfiguration... storeExecutorConfigurations)
+    {
+        super("service::ModelToModelServiceWithMultipleParams", "org/finos/legend/sdlc/generation/service/entities/service/ModelToModelServiceWithMultipleParams.json", storeExecutorConfigurations);
     }
 
     public Result execute(String i_s, long i_i, double i_f, BigDecimal i_dec, boolean i_b, LocalDate i_sd, ZonedDateTime i_dt, Temporal i_d, Long i_oi, List<? extends Long> i_li)
