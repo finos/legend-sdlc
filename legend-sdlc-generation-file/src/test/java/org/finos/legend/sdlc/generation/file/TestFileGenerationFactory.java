@@ -95,20 +95,26 @@ public class TestFileGenerationFactory
         testAvroOutput(avroResult);
 
         // protobuf
-        List<GenerationOutput> protoBufResult = result.get(specifications.get("generation::MyProtobuf"));
-        Assert.assertEquals(2, protoBufResult.size());
-        MapIterable<String, GenerationOutput> protobufOutputs = LazyIterate.adapt(protoBufResult).groupByUniqueKey(GenerationOutput::getFileName);
-        Assert.assertEquals("message Person {\n" +
-                " string firstname = 1;\n" +
-                " string lastname = 2;\n" +
-                "}", protobufOutputs.get("model/Person.proto").getContent());
-        Assert.assertEquals("message Firm {\n" +
-                " Person employees = 1;\n" +
-                "}\n" +
-                "message Person {\n" +
-                " string firstname = 1;\n" +
-                " string lastname = 2;\n" +
-                "}", protobufOutputs.get("model/Firm.proto").getContent());
+         List<GenerationOutput> protoBufResult = result.get(specifications.get("generation::MyProtobuf"));
+         Assert.assertEquals(2, protoBufResult.size());
+         MapIterable<String, GenerationOutput> protobufOutputs = LazyIterate.adapt(protoBufResult).groupByUniqueKey(GenerationOutput::getFileName);
+         Assert.assertEquals("syntax = \"proto3\";\n" +
+                 "import \"google/protobuf/timestamp.proto\";\n" +
+                 "package model;\n" +
+                 "message Person {\n" +
+                 " string firstname = 1;\n" +
+                 " string lastname = 2;\n" +
+                 "}", protobufOutputs.get("model_Person.proto").getContent());
+         Assert.assertEquals("syntax = \"proto3\";\n" +
+                 "import \"google/protobuf/timestamp.proto\";\n" +
+                 "package model;\n" +
+                 "message Firm {\n" +
+                 " Person employees = 1;\n" +
+                 "}\n" +
+                 "message Person {\n" +
+                 " string firstname = 1;\n" +
+                 " string lastname = 2;\n" +
+                 "}", protobufOutputs.get("model_Firm.proto").getContent());
         // rosetta
         List<GenerationOutput> rosettaResult = result.get(specifications.get("generation::MyRosetta"));
         Assert.assertEquals(1, rosettaResult.size());
