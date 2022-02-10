@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.server;
 
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -54,7 +53,6 @@ public class AbstractGitLabServerApiTest
     @BeforeClass
     public static void suiteSetup()
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null);
         backgroundTaskProcessor = new BackgroundTaskProcessor(1);
     }
 
