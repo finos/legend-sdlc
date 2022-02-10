@@ -96,19 +96,18 @@ public class TestFileGenerationFactory
 
         // protobuf
         List<GenerationOutput> protoBufResult = result.get(specifications.get("generation::MyProtobuf"));
-        Assert.assertEquals(2, protoBufResult.size());
+        Assert.assertEquals(1, protoBufResult.size());
         MapIterable<String, GenerationOutput> protobufOutputs = LazyIterate.adapt(protoBufResult).groupByUniqueKey(GenerationOutput::getFileName);
-        Assert.assertEquals("message Person {\n" +
-                " string firstname = 1;\n" +
-                " string lastname = 2;\n" +
-                "}", protobufOutputs.get("model/Person.proto").getContent());
-        Assert.assertEquals("message Firm {\n" +
-                " Person employees = 1;\n" +
-                "}\n" +
+        Assert.assertEquals("syntax = \"proto3\";\n" +
+                "import \"google/protobuf/timestamp.proto\";\n" +
+                "package model;\n" +
                 "message Person {\n" +
                 " string firstname = 1;\n" +
                 " string lastname = 2;\n" +
-                "}", protobufOutputs.get("model/Firm.proto").getContent());
+                "}\n" +
+                "message Firm {\n" +
+                " Person employees = 1;\n" +
+                "}", protobufOutputs.get("model.proto").getContent());
         // rosetta
         List<GenerationOutput> rosettaResult = result.get(specifications.get("generation::MyRosetta"));
         Assert.assertEquals(1, rosettaResult.size());
