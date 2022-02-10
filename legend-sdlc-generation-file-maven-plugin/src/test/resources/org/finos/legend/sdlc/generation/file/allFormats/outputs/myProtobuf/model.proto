@@ -1,7 +1,10 @@
+syntax = "proto3";
+import "google/protobuf/timestamp.proto";
+package model;
 message Person {
  string lastname = 1;
  string firstname = 2;
- timestamp dateofbirth = 3;
+ google.protobuf.Timestamp dateofbirth = 3;
  string middlename = 4;
  Address address = 5;
 }
@@ -10,6 +13,11 @@ message Address {
  City city = 2;
  Country country = 3;
 }
+message Firm {
+ Person employees = 1;
+ string legalname = 2;
+ IncType inctype = 3;
+}
 enum City {
    London = 0;
    NY = 1;
@@ -17,4 +25,8 @@ enum City {
 enum Country {
    UK = 0;
    USA = 1;
+}
+enum IncType {
+   CORP = 0;
+   LLC = 1;
 }

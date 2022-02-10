@@ -24,6 +24,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.ImportAwareCodeSection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.Section;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.section.SectionIndex;
+import org.finos.legend.engine.shared.core.api.grammar.RenderStyle;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntityTextSerializer;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class PureEntitySerializer implements EntityTextSerializer
 
     private final EntityToPureConverter entityToPureConverter = new EntityToPureConverter();
     private final PureGrammarComposer pureComposer = PureGrammarComposer.newInstance(PureGrammarComposerContext.Builder.newInstance()
-            .withRenderStyle(PureGrammarComposerContext.RenderStyle.PRETTY)
+            .withRenderStyle(RenderStyle.PRETTY)
             .build());
 
     @Override

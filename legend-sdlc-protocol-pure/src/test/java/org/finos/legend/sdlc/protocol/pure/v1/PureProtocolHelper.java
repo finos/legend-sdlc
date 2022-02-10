@@ -21,6 +21,7 @@ import org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposer;
 import org.finos.legend.engine.language.pure.grammar.to.PureGrammarComposerContext;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.shared.core.api.grammar.RenderStyle;
 import org.junit.Assert;
 
 import java.util.List;
@@ -64,7 +65,7 @@ public class PureProtocolHelper
     {
         PureModelContextData pureModelContextData = PureModelContextData.newBuilder().withElement(element).build();
         PureGrammarComposerContext composerContext = PureGrammarComposerContext.Builder.newInstance()
-                .withRenderStyle(PureGrammarComposerContext.RenderStyle.PRETTY)
+                .withRenderStyle(RenderStyle.PRETTY)
                 .build();
         String result = PureGrammarComposer.newInstance(composerContext).renderPureModelContextData(pureModelContextData);
         if (result.startsWith("###"))
