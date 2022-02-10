@@ -132,6 +132,11 @@
             <artifactId>eclipse-collections-api</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.freemarker</groupId>
+            <artifactId>freemarker</artifactId>
+        </dependency>
+
         <!-- TEST -->
         <dependency>
             <groupId>junit</groupId>
@@ -182,6 +187,11 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-servlet</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>commons-io</groupId>
+            <artifactId>commons-io</artifactId>
+            <!--not define as test scope to avoid overriding the scope from the transitive dependency-->
         </dependency>
         <!-- TEST -->
     </dependencies>

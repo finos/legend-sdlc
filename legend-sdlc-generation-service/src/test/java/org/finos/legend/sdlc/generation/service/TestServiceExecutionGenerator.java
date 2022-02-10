@@ -20,6 +20,7 @@ import io.github.classgraph.ClassGraph;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
+import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceVariable;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
@@ -29,20 +30,26 @@ import org.finos.legend.engine.plan.execution.result.serialization.Serialization
 import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.core_relational_relational_router_router_extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.junit.Rule;
-import org.junit.BeforeClass;
 import org.junit.AfterClass;
-import org.junit.Test;
-import org.junit.Before;
 import org.junit.Assert;
+import org.junit.Before;
+import org.junit.BeforeClass;
+import org.junit.Rule;
+import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.ToolProvider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,6 +66,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,11 +79,6 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 
 public class TestServiceExecutionGenerator
 {
@@ -223,7 +226,7 @@ public class TestServiceExecutionGenerator
         {
             // No Param Model To Model Service
             ServiceRunner noParamServiceRunner = findServiceRunnerByPath("service::ModelToModelService");
-
+            assertServiceVariables(noParamServiceRunner);
             IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> noParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Collections.singletonList("a"))));
             Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 0, Passed parameter size: 1", e.getMessage());
 
@@ -234,20 +237,35 @@ public class TestServiceExecutionGenerator
 
             // Multi Param Model To Model Service
             ServiceRunner multiParamServiceRunner = findServiceRunnerByPath("service::ModelToModelServiceWithMultipleParams");
-
+            assertServiceVariables(multiParamServiceRunner,
+                    new ServiceVariable("i_s", String.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_i", Long.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_f", Double.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_dec", BigDecimal.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_b", Boolean.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_sd", LocalDate.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_dt", ZonedDateTime.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_d", Temporal.class, new Multiplicity(1, 1)),
+                    new ServiceVariable("i_oi", Long.class, new Multiplicity(0, 1)),
+                    new ServiceVariable("i_li", Long.class, new Multiplicity(0, null))
+            );
             IllegalArgumentException e1 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance()));
             Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 10, Passed parameter size: 0", e1.getMessage());
 
             IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2, 3.0))));
             Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 10, Passed parameter size: 3", e2.getMessage());
 
-            List<Object> args1 = Arrays.asList(1, 1, 1, 1, 1, 1, 1, 1, 1, 1);
+            List<Object> args1 = Arrays.asList(1, 2, 3.0, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), 5, Arrays.asList(6, 7));
             IllegalArgumentException e3 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args1)));
-            Assert.assertEquals("Unexpected parameter type. 'i_s' parameter (index: 0) should be of type 'String'", e3.getMessage());
+            Assert.assertEquals("Invalid provided parameter(s): [Unable to process 'String' parameter, value: 1.]", e3.getMessage());
 
-            List<Object> args2 = Arrays.asList(null, null, 1, 1, 1, 1, 1, 1, 1, 1);
+            List<Object> args2 = Arrays.asList("1", null, 3.0, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), 5, Arrays.asList(6, 7));
             IllegalArgumentException e4 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args2)));
-            Assert.assertEquals("Unexpected parameter value. 'i_i' parameter (index: 1) should not be null", e4.getMessage());
+            Assert.assertEquals("Missing external parameter(s): i_i:Integer[1]", e4.getMessage());
+
+            List<Object> arg3 = Arrays.asList("1", 2, 3.0, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), 5, Arrays.asList(1, "hello"));
+            IllegalArgumentException e5 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(arg3).withSerializationFormat(SerializationFormat.PURE)));
+            Assert.assertEquals("Invalid provided parameter(s): [Unable to process 'Integer' parameter, value: 'hello' is not parsable.]", e5.getMessage());
 
             JsonNode expected = OBJECT_MAPPER.readTree("[{\"age\":22,\"fullName\":\"Peter Smith\"},{\"age\":23,\"fullName\":\"John Johnson\"}]");
             Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", 2, 3.0, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), 5, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
@@ -256,8 +274,24 @@ public class TestServiceExecutionGenerator
             int x = 2;
             float y = 2.0f;
             Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, y, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
-            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, x, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, Arrays.asList(6, 7))).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, x, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, 7)).withSerializationFormat(SerializationFormat.PURE))));
             Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList("1", x, x, new BigDecimal("4.0"), true, LocalDate.now(), ZonedDateTime.of(LocalDateTime.now(), ZoneId.of("UTC")), LocalDateTime.now(), null, null)).withSerializationFormat(SerializationFormat.PURE))));
+        }
+    }
+
+    private static void assertServiceVariables(ServiceRunner runner, ServiceVariable... serviceVariables)
+    {
+        List<ServiceVariable> parameters = runner.getServiceVariables();
+        Assert.assertEquals(serviceVariables.length, parameters.size());
+        for (int i = 0; i < serviceVariables.length; i++)
+        {
+            ServiceVariable expected = serviceVariables[i];
+            ServiceVariable actual = parameters.get(i);
+
+            Assert.assertEquals(expected.getName(), actual.getName());
+            Assert.assertEquals(expected.getType(), actual.getType());
+            Assert.assertEquals(expected.isOptional(), actual.isOptional());
+            Assert.assertEquals(expected.isToMany(), actual.isToMany());
         }
     }
 
