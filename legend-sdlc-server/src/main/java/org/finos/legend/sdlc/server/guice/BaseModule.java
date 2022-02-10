@@ -91,7 +91,6 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> configuration().getGitLabConfiguration());
             binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(configuration().getGitLabConfiguration()));
-            binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(configuration())).in(Scopes.SINGLETON);
         }
         configureMetadataApi(binder);
     }
@@ -99,18 +98,5 @@ public class BaseModule extends AbstractBaseModule
     protected void configureMetadataApi(Binder binder)
     {
         binder.bind(MetadataApi.class).to(DepotMetadataApi.class);
-    }
-
-    private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
-    {
-        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getGitLabConfiguration().getGitLabAuthorizers();
-        if (gitLabAuthorizers == null)
-        {
-            return GitLabAuthorizerManager.newManager(Collections.emptyList());
-        }
-        else
-        {
-            return GitLabAuthorizerManager.newManager(gitLabAuthorizers);
-        }
     }
 }
