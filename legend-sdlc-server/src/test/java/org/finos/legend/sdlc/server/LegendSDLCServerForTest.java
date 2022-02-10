@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server;
 
-import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.setup.Bootstrap;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -28,10 +27,11 @@ import org.finos.legend.sdlc.server.guice.InMemoryModule;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
-    private GuiceBundle<LegendSDLCServerConfiguration> guiceBundle;
+    private GuiceBundle guiceBundle;
 
     public LegendSDLCServerForTest()
     {
@@ -52,7 +52,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     }
 
     @Override
-    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle buildGuiceBundle()
     {
         this.guiceBundle = super.buildGuiceBundle();
         return this.guiceBundle;
@@ -64,7 +64,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
         return new InMemoryModule(this);
     }
 
-    public GuiceBundle<LegendSDLCServerConfiguration> getGuiceBundle()
+    public GuiceBundle getGuiceBundle()
     {
         return this.guiceBundle;
     }

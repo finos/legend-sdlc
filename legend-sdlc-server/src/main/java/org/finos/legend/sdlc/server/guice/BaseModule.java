@@ -89,9 +89,9 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(WorkflowJobApi.class).to(GitlabWorkflowJobApi.class);
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
-            binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
-            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getGitLabConfiguration()));
-            binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
+            binder.bind(GitLabConfiguration.class).toProvider(() -> configuration().getGitLabConfiguration());
+            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(configuration().getGitLabConfiguration()));
+            binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(configuration())).in(Scopes.SINGLETON);
         }
         configureMetadataApi(binder);
     }

@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server;
 
-import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
@@ -30,6 +29,7 @@ import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 import java.util.concurrent.TimeUnit;
 
@@ -79,9 +79,11 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         bootstrap.addBundle(buildGuiceBundle());
     }
 
-    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle buildGuiceBundle()
     {
-        return GuiceBundle.defaultBuilder(LegendSDLCServerConfiguration.class)
+        return GuiceBundle
+                .builder()
+                .enableAutoConfig(getClass().getPackage().getName())
                 .modules(buildBaseModule())
                 .build();
     }
