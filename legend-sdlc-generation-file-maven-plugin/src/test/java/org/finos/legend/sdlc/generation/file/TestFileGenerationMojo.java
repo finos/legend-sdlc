@@ -141,7 +141,7 @@ public class TestFileGenerationMojo
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(20, actualGeneratedSourceFiles.size());
         // Temporary disable because of ordering issue in the Protobuf generation
-        //verifyDirsAreEqual(generatedSourceDir, expectedPath);
+        verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
 
     private static class FileDiff
