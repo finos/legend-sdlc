@@ -34,6 +34,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lam
 
 import javax.lang.model.SourceVersion;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
@@ -76,7 +77,12 @@ public class ServiceExecutionClassGenerator
                 ).withKeyValue("imports", getImports(executionParameters))
                 .withKeyValue("executionParameters", executionParameters);
 
-        try (InputStreamReader reader = new InputStreamReader(Objects.requireNonNull(ClassLoader.getSystemResourceAsStream("generation/service/ServiceExecutionClassGenerator.ftl"))))
+        String freeMarkerTemplate = "generation/service/ServiceExecutionClassGenerator.ftl";
+        InputStream inputStream = Objects.requireNonNull(
+                Thread.currentThread().getContextClassLoader().getResourceAsStream(freeMarkerTemplate),
+                () -> "Unable to find freemarker template '" + freeMarkerTemplate + "' on context classpath"
+        );
+        try (InputStreamReader reader = new InputStreamReader(inputStream))
         {
             DefaultObjectWrapper objectWrapper = new DefaultObjectWrapper(Configuration.VERSION_2_3_30);
             objectWrapper.setExposeFields(true);
@@ -280,7 +286,7 @@ public class ServiceExecutionClassGenerator
             return this.variable.name;
         }
 
-        public  String getJavaParamName()
+        public String getJavaParamName()
         {
             return this.javaParamName;
         }
@@ -295,7 +301,7 @@ public class ServiceExecutionClassGenerator
             return getVariableJavaClass(this.variable, false).getSimpleName();
         }
 
-        public  Multiplicity getMultiplicity()
+        public Multiplicity getMultiplicity()
         {
             return this.variable.multiplicity;
         }
