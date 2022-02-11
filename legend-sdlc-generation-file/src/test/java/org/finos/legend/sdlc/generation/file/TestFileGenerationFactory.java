@@ -101,12 +101,12 @@ public class TestFileGenerationFactory
         Assert.assertEquals("syntax = \"proto3\";\n" +
                 "import \"google/protobuf/timestamp.proto\";\n" +
                 "package model;\n" +
+                "message Firm {\n" +
+                " Person employees = 1;\n" +
+                "}\n" +
                 "message Person {\n" +
                 " string firstname = 1;\n" +
                 " string lastname = 2;\n" +
-                "}\n" +
-                "message Firm {\n" +
-                " Person employees = 1;\n" +
                 "}", protobufOutputs.get("model.proto").getContent());
         // rosetta
         List<GenerationOutput> rosettaResult = result.get(specifications.get("generation::MyRosetta"));
