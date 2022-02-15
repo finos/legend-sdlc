@@ -78,8 +78,8 @@
         <dropwizard.version>2.0.28</dropwizard.version>
         <dropwizard.metrics.version>4.2.5</dropwizard.metrics.version>
         <dropwizard-guicey.version>5.4.2</dropwizard-guicey.version>
-        <dropwizard-swagger.version>2.0.12-1</dropwizard-swagger.version>
-        <swagger.annotation.version>1.6.4</swagger.annotation.version>
+        <dropwizard-swagger.version>2.0.0-1</dropwizard-swagger.version>
+        <swagger.annotation.version>1.6.5</swagger.annotation.version>
         <eclipsecollections.version>10.2.0</eclipsecollections.version>
         <findbugs.version>3.0.0</findbugs.version>
         <gitlab4j.version>4.16.0</gitlab4j.version>
@@ -916,6 +916,12 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
