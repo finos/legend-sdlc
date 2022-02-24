@@ -66,7 +66,7 @@ public class TestProjectStructureStaticMethods
     @Test
     public void testGetLatestProjectStructureVersion()
     {
-        Assert.assertEquals(11, ProjectStructure.getLatestProjectStructureVersion());
+        Assert.assertEquals(12, ProjectStructure.getLatestProjectStructureVersion());
     }
 
     @Test
