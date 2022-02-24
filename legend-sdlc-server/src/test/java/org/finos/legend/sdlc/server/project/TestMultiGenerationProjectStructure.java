@@ -67,7 +67,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     protected void collectExpectedEntitiesModelPlugins(T projectStructure, Consumer<Plugin> pluginConsumer)
     {
         super.collectExpectedEntitiesModelPlugins(projectStructure, pluginConsumer);
-        pluginConsumer.accept(LEGEND_TEST_UTILS_MAVEN_HELPER.getMavenSurefirePlugin());
+        pluginConsumer.accept(LEGEND_TEST_UTILS_MAVEN_HELPER.getMavenSurefirePlugin(false));
     }
 
     @Override

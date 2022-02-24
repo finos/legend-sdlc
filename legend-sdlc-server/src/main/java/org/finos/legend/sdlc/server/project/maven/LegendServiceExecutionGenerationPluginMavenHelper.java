@@ -18,6 +18,7 @@ import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -39,6 +40,22 @@ public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractL
         PluginExecution execution = MavenPluginTools.newPluginExecution("initialize", "add-source");
         MavenPluginTools.addPluginExecution(plugin, execution);
         MavenPluginTools.addConfiguration(execution, MavenPluginTools.newDom("sources", MavenPluginTools.newDom("source", "${project.basedir}/target/generated-sources")));
+        return plugin;
+    }
+
+    public Plugin getShadePlugin()
+    {
+        Plugin plugin = MavenPluginTools.newPlugin(null, "maven-shade-plugin", null);
+        Xpp3Dom artifact = MavenPluginTools.newDom("artifact", "*:*");
+        Xpp3Dom excludes = MavenPluginTools.newDom("excludes",
+                Lists.mutable.with(
+                        MavenPluginTools.newDom("exclude", "META-INF/*.SF"),
+                        MavenPluginTools.newDom("exclude", "META-INF/*.DSA"),
+                        MavenPluginTools.newDom("exclude", "META-INF/*.RSA")
+                ));
+        MavenPluginTools.addConfiguration(plugin, MavenPluginTools.newDom("filters", MavenPluginTools.newDom("filter", Lists.mutable.with(artifact, excludes))));
+        PluginExecution execution = MavenPluginTools.newPluginExecution("package", "shade");
+        MavenPluginTools.addConfigurations(execution, MavenPluginTools.newDom("shadedArtifactAttached", "true"), MavenPluginTools.newDom("transformers", MavenPluginTools.newDom("transformer implementation=\"org.apache.maven.plugins.shade.resource.ServicesResourceTransformer\"")));
         return plugin;
     }
 
