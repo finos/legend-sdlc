@@ -44,7 +44,7 @@ public class LegendTestUtilsMavenHelper
         Plugin plugin = MavenPluginTools.newPlugin(null, "maven-surefire-plugin", null);
         MavenPluginTools.setConfiguration(plugin,
                 MavenPluginTools.newDom("includes", INCLUSION_PATTERNS.stream().map(p -> MavenPluginTools.newDom("include", p))),
-                MavenPluginTools.newDom("useSystemClassLoader", useSystemClassLoader ? "false" : "true"));
+                MavenPluginTools.newDom("useSystemClassLoader", useSystemClassLoader ? "true" : "false"));
         return plugin;
     }
 }
