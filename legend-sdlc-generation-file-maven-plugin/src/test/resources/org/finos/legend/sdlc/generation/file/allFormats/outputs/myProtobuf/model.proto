@@ -2,31 +2,31 @@ syntax = "proto3";
 import "google/protobuf/timestamp.proto";
 package model;
 message Address {
- string street = 1;
- City city = 2;
- Country country = 3;
+  string street = 1;
+  City city = 2;
+  Country country = 3;
 }
 enum City {
-   London = 0;
-   NY = 1;
+  London = 0;
+  NY = 1;
 }
 enum Country {
-   UK = 0;
-   USA = 1;
+  UK = 0;
+  USA = 1;
 }
 message Firm {
- Person employees = 1;
- string legalname = 2;
- IncType inctype = 3;
+  Person employees = 1;
+  string legal_name = 2;
+  IncType inc_type = 3;
 }
 enum IncType {
-   CORP = 0;
-   LLC = 1;
+  CORP = 0;
+  LLC = 1;
 }
 message Person {
- string lastname = 1;
- string firstname = 2;
- google.protobuf.Timestamp dateofbirth = 3;
- string middlename = 4;
- Address address = 5;
+  string last_name = 1;
+  string first_name = 2;
+  google.protobuf.Timestamp date_of_birth = 3;
+  string middle_name = 4;
+  Address address = 5;
 }
