@@ -45,6 +45,9 @@ import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenBuilder;
 import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,6 +60,7 @@ import java.security.SecureRandom;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public class GitLabOAuthAuthenticator
 {
@@ -112,13 +116,23 @@ public class GitLabOAuthAuthenticator
             {
                 // We expect a redirect to the redirect URI plus a fragment containing the access token
                 int statusCode = response.getStatusLine().getStatusCode();
+                String location;
 
                 switch (statusCode)
                 {
                     case HttpStatus.SC_OK:
                     {
-                        // If the response is OK (200), the user has probably not authorized the app
-                        throw new UserInputRequiredException(this.modeInfo);
+                        Optional<String> redirectUrlFromResponse = getRedirectUrlFromResponse(response);
+                        if (redirectUrlFromResponse.isPresent())
+                        {
+                            location = redirectUrlFromResponse.get();
+                        }
+                        else
+                        {
+                            // If the response is not a redirect page, the user has probably not authorized the app
+                            throw new UserInputRequiredException(this.modeInfo);
+                        }
+                        break;
                     }
                     case HttpStatus.SC_UNAUTHORIZED:
                     case HttpStatus.SC_FORBIDDEN:
@@ -147,10 +161,9 @@ public class GitLabOAuthAuthenticator
                             LOGGER.warn(message);
                             throw new GitLabAuthOtherException(this.modeInfo.getMode(), message);
                         }
+                        location = getLocationHeaderValue(response);
                     }
                 }
-
-                String location = getLocationHeaderValue(response);
 
                 // Check that the location starts with the expected redirect URL
                 if (!locationStartsWithRedirectURI(location))
@@ -185,6 +198,30 @@ public class GitLabOAuthAuthenticator
         catch (Exception e)
         {
             throw new GitLabAuthOtherException(this.modeInfo.getMode(), StringTools.appendThrowableMessageIfPresent("Error getting OAuth token", e), e);
+        }
+    }
+
+    private Optional<String> getRedirectUrlFromResponse(CloseableHttpResponse response)
+    {
+        try
+        {
+            String responseString = EntityUtils.toString(response.getEntity());
+            Document doc = Jsoup.parse(responseString);
+            Element header = doc.getElementsByTag("h3").get(0);
+            if ("Redirecting".equals(header.text()))
+            {
+                Element anchor = doc.getElementsByTag("a").get(0);
+                String redirectUrl = anchor.attr("href");
+                if (!StringIterate.isEmptyOrWhitespace(redirectUrl))
+                {
+                    return Optional.of(redirectUrl);
+                }
+            }
+            return Optional.empty();
+        }
+        catch (Exception e)
+        {
+            return Optional.empty();
         }
     }
 
