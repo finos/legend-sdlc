@@ -96,7 +96,7 @@ public class TestDefaultProjectStructureExtensionProvider
     @Test(expected = IllegalStateException.class)
     public void testConflictingVersions()
     {
-        DefaultProjectStructureExtensionProvider.fromExtensions(newProjectStructureExtension(12, 2), newProjectStructureExtension(12, 2));
+        DefaultProjectStructureExtensionProvider.fromExtensions(newProjectStructureExtension(13, 2), newProjectStructureExtension(13, 2));
     }
 
     private ProjectStructureExtension newProjectStructureExtension(int projectStructureVersion, int extensionVersion)

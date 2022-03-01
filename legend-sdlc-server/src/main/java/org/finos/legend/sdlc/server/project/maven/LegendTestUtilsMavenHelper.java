@@ -39,12 +39,12 @@ public class LegendTestUtilsMavenHelper
         return MavenProjectStructure.newMavenTestDependency(group_id, artifact_id, includeVersion ? this.version : null);
     }
 
-    public Plugin getMavenSurefirePlugin()
+    public Plugin getMavenSurefirePlugin(boolean useSystemClassLoader)
     {
         Plugin plugin = MavenPluginTools.newPlugin(null, "maven-surefire-plugin", null);
         MavenPluginTools.setConfiguration(plugin,
                 MavenPluginTools.newDom("includes", INCLUSION_PATTERNS.stream().map(p -> MavenPluginTools.newDom("include", p))),
-                MavenPluginTools.newDom("useSystemClassLoader", "false"));
+                MavenPluginTools.newDom("useSystemClassLoader", useSystemClassLoader ? "true" : "false"));
         return plugin;
     }
 }

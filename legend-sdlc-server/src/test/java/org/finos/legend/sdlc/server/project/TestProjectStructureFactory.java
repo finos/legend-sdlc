@@ -26,9 +26,9 @@ import java.util.Collections;
 public class TestProjectStructureFactory
 {
     @Test
-    public void testFactoryWithV0_V11()
+    public void testFactoryWithV0_V11_V12()
     {
-        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory())));
+        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory(), new ProjectStructureV12Factory())));
     }
 
     @Test
@@ -70,7 +70,7 @@ public class TestProjectStructureFactory
 
     private void assertFactoryWithV0(ProjectStructureFactory factory)
     {
-        assertSupportsVersions(factory, 0, 11);
+        assertSupportsVersions(factory, 0, 11, 12);
 
         ProjectStructure structure = factory.newProjectStructure(null, null);
         Assert.assertEquals(0, structure.getVersion());

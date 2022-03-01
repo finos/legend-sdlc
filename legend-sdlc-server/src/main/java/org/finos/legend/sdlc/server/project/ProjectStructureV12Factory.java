@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2022 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -23,12 +23,9 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-
 import org.finos.legend.sdlc.server.project.extension.UpdateProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.maven.LegendEntityPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendFileGenerationPluginMavenHelper;
@@ -39,32 +36,31 @@ import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMave
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
+public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
 {
     @Override
     public int getVersion()
     {
-        return 11;
+        return 12;
     }
 
     @Override
     protected ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
-        return new ProjectStructureV11(projectConfiguration, projectStructurePlatformExtensions, this.getVersion());
+        return new ProjectStructureV12(projectConfiguration, projectStructurePlatformExtensions, this.getVersion());
     }
 
-    public static class ProjectStructureV11 extends MultiModuleMavenProjectStructure
+    public static class ProjectStructureV12 extends MultiModuleMavenProjectStructure
     {
         private static final String ENTITIES_MODULE_NAME = "entities";
         private static final ImmutableList<String> ENTITY_SERIALIZERS = Lists.immutable.with("pure", "legend");
@@ -78,13 +74,13 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         // LEGEND SDLC
         private static final String LEGEND_SDLC_GROUP_ID = "org.finos.legend.sdlc";
-        private static final String LEGEND_SDLC_VERSION = "0.40.0";
+        private static final String LEGEND_SDLC_VERSION = "0.69.1";
         private static final String LEGEND_SDLC_PROPERTY = "platform.legend-sdlc.version";
         private static final String LEGEND_SDLC_PROPERTY_REFERENCE = getPropertyReference(LEGEND_SDLC_PROPERTY);
 
         // LEGEND ENGINE
         private static final String LEGEND_ENGINE_GROUP_ID = "org.finos.legend.engine";
-        private static final String LEGEND_ENGINE_VERSION = "2.37.0";
+        private static final String LEGEND_ENGINE_VERSION = "2.57.0";
         private static final String LEGEND_ENGINE_PROPERTY = "platform.legend-engine.version";
         private static final String LEGEND_ENGINE_PROPERTY_REFERENCE = getPropertyReference(LEGEND_ENGINE_PROPERTY);
         private static final String LEGEND_SDLC_VERSION_PLUGIN = "legend-sdlc-version-package-maven-plugin";
@@ -97,10 +93,10 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         private static final String DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID = "legend-engine-extensions-collection-execution";
         private static final String DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID = "legend-sdlc-extensions-collection-entity-serializer";
 
-        private static final Map<String, MavenCoordinates> DEFAULT_EXTENSIONS_COLLECTION =
-                Maps.immutable.with(GENERATION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_GENERATION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
-                        EXECUTION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
-                        SERIALIZER_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_SDLC_GROUP_ID, DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID, LEGEND_SDLC_PROPERTY_REFERENCE))
+        private static final Map<String, ProjectStructureV12Factory.ProjectStructureV12.MavenCoordinates> DEFAULT_EXTENSIONS_COLLECTION =
+                Maps.immutable.with(GENERATION_EXTENSIONS_COLLECTION_KEY, new ProjectStructureV12Factory.ProjectStructureV12.MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_GENERATION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
+                        EXECUTION_EXTENSIONS_COLLECTION_KEY, new ProjectStructureV12Factory.ProjectStructureV12.MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
+                        SERIALIZER_EXTENSIONS_COLLECTION_KEY, new ProjectStructureV12Factory.ProjectStructureV12.MavenCoordinates(LEGEND_SDLC_GROUP_ID, DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID, LEGEND_SDLC_PROPERTY_REFERENCE))
                         .toMap();
 
         // Plugin Helpers
@@ -116,7 +112,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private final int version;
 
-        private ProjectStructureV11(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions, int version)
+        private ProjectStructureV12(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions, int version)
         {
             super(projectConfiguration, ENTITIES_MODULE_NAME, getEntitySourceDirectories(projectConfiguration), OTHER_MODULES.castToMap(), false, projectStructurePlatformExtensions);
             this.version = version;
@@ -134,7 +130,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             Dependency dependency = this.getOverrideExtensionsCollectionDependency(extensionName, includeVersion, scopeTest);
             if (dependency == null)
             {
-                MavenCoordinates mavenCoordinates = DEFAULT_EXTENSIONS_COLLECTION.get(extensionName);
+                ProjectStructureV12Factory.ProjectStructureV12.MavenCoordinates mavenCoordinates = DEFAULT_EXTENSIONS_COLLECTION.get(extensionName);
                 String groupId = mavenCoordinates.groupId;
                 String artifactId = mavenCoordinates.artifactId;
                 String version = includeVersion ? mavenCoordinates.version : null;
@@ -217,6 +213,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                     break;
                 }
                 case 11:
+                case 12:
                 {
                     String oldEntitiesModuleName = ((MultiModuleMavenProjectStructure) oldStructure).getEntitiesModuleName();
                     moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
@@ -226,6 +223,12 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                 default:
                     break;
             }
+        }
+
+        @Override
+        public Set<ArtifactType> getSupportedArtifactTypes()
+        {
+            return SUPPORTED_ARTIFACT_TYPES;
         }
 
         @Override
@@ -248,12 +251,6 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                     return Stream.empty();
                 }
             }
-        }
-
-        @Override
-        public Set<ArtifactType> getSupportedArtifactTypes()
-        {
-            return SUPPORTED_ARTIFACT_TYPES;
         }
 
         @Override
@@ -314,7 +311,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             pluginConsumer.accept(this.legendEntityPluginMavenHelper.getPlugin(this, versionFileAccessContextProvider));
 //            check model dependency
             pluginConsumer.accept(this.legendModelGenerationPluginMavenHelper.getPlugin(this, versionFileAccessContextProvider));
-            pluginConsumer.accept(this.legendTestUtilsMavenHelper.getMavenSurefirePlugin(false));
+            pluginConsumer.accept(this.legendTestUtilsMavenHelper.getMavenSurefirePlugin(true));
         }
 
         @ModuleConfig(artifactType = ArtifactType.service_execution, type = ModuleConfigType.PLUGINS)
@@ -322,6 +319,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         {
             pluginConsumer.accept(this.legendServiceExecutionGenerationPluginMavenHelper.getPlugin(this, versionFileAccessContextProvider));
             pluginConsumer.accept(this.legendServiceExecutionGenerationPluginMavenHelper.getBuildHelperPlugin("3.0.0"));
+            pluginConsumer.accept(this.legendServiceExecutionGenerationPluginMavenHelper.getShadePlugin());
         }
 
         @ModuleConfig(artifactType = ArtifactType.service_execution, type = ModuleConfigType.DEPENDENCIES)
@@ -396,6 +394,6 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                 return groupId;
             }
         }
-
     }
+
 }
