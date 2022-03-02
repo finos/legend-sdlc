@@ -75,6 +75,12 @@ public class InMemoryProject implements Project
         return ProjectType.PRODUCTION;
     }
 
+    @Override
+    public String getWebUrl()
+    {
+        return null;
+    }
+
     @JsonIgnore
     public boolean containsUserWorkspace(String workspaceId)
     {

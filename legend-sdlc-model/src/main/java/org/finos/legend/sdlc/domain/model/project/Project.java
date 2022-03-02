@@ -27,4 +27,6 @@ public interface Project
     List<String> getTags();
 
     ProjectType getProjectType();
+
+    String getWebUrl();
 }
