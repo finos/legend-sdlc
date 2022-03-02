@@ -1005,6 +1005,12 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             return this.type;
         }
+
+        @Override
+        public String getWebUrl()
+        {
+            return this.gitLabProject.getWebUrl();
+        }
     }
 
     private static class AccessRoleWrapper implements AccessRole
