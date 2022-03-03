@@ -43,7 +43,7 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types)
+    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
     {
         return Lists.mutable.withAll(this.backend.getAllProjects());
     }

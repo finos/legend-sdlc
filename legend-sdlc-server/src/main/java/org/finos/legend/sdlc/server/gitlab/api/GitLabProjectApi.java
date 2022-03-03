@@ -113,7 +113,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types)
+    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
     {
         try
         {
@@ -143,7 +143,22 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 {
                     stream = stream.filter(p -> p.getTagList().stream().anyMatch(tagSet::contains));
                 }
-                stream.map(p -> fromGitLabProject(p, mode)).forEach(projects::add);
+                // check limit
+                if (limit == null) {
+                    stream.map(p -> fromGitLabProject(p, mode)).forEach(projects::add);
+                } else {
+                    // NOTE: this check implies that the mode that is scanned first could take all the slots within the
+                    // limit. This limitation hopefully will be removed when we remove support for prototype (UAT) mode.
+                    stream.map(p -> fromGitLabProject(p, mode)).limit(limit - projects.size()).forEach(projects::add);
+                    if (projects.size() > limit) {
+                        // If the number of projects found already exceed the limit, skip the check for the other modes
+                        break;
+                    }
+                }
+            }
+            // ensure the list of returned projects cannot exceed the limit (if specified) for whatever reasons
+            if (limit != null) {
+                return projects.stream().limit(limit).collect(Collectors.toList());
             }
             return projects;
         }

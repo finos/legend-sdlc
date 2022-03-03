@@ -27,7 +27,7 @@ public interface ProjectApi
 {
     Project getProject(String id);
 
-    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types);
+    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit);
 
     Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
 
