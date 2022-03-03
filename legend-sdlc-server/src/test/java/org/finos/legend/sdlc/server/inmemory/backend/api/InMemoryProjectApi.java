@@ -45,7 +45,12 @@ public class InMemoryProjectApi implements ProjectApi
     @Override
     public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
     {
-        return Lists.mutable.withAll(this.backend.getAllProjects());
+        List<Project> projects = Lists.mutable.withAll(this.backend.getAllProjects());
+        if (limit != null && projects.size() > limit)
+        {
+            projects = projects.subList(0, limit);
+        }
+        return projects;
     }
 
     @Override

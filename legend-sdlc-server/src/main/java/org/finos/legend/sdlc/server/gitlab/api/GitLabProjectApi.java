@@ -143,27 +143,23 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 {
                     stream = stream.filter(p -> p.getTagList().stream().anyMatch(tagSet::contains));
                 }
-                // check limit
-                if (limit == null)
-                {
-                    stream.map(p -> fromGitLabProject(p, mode)).forEach(projects::add);
-                }
-                else
+                if (limit != null)
                 {
                     // NOTE: this check implies that the mode that is scanned first could take all the slots within the
                     // limit. This limitation hopefully will be removed when we remove support for prototype (UAT) mode.
-                    stream.map(p -> fromGitLabProject(p, mode)).limit(limit - projects.size()).forEach(projects::add);
-                    if (projects.size() > limit)
-                    {
-                        // If the number of projects found already exceed the limit, skip the check for the other modes
-                        break;
-                    }
+                    stream = stream.limit(limit - projects.size());
+                }
+                stream.map(p -> fromGitLabProject(p, mode)).forEach(projects::add);
+                if (limit != null && projects.size() >= limit)
+                {
+                    // If the number of projects found already exceed the limit, skip the check for the other modes
+                    break;
                 }
             }
             // ensure the list of returned projects cannot exceed the limit (if specified) for whatever reasons
-            if (limit != null)
+            if (limit != null && projects.size() > limit)
             {
-                return projects.stream().limit(limit).collect(Collectors.toList());
+                return projects.subList(0, limit);
             }
             return projects;
         }

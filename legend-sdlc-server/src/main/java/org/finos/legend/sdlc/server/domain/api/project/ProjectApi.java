@@ -27,6 +27,12 @@ public interface ProjectApi
 {
     Project getProject(String id);
 
+    // this is kept for backward compatibility
+    default List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types)
+    {
+        return this.getProjects(user, search, tags, types, null);
+    }
+
     List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit);
 
     Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
