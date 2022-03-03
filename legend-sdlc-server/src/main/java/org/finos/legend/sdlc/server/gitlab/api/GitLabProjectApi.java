@@ -137,7 +137,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
             for (GitLabMode mode : modes)
             {
-                Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi(mode).getProjectApi().getProjects(null, null, null, null, search, null, null, user, null, null, ITEMS_PER_PAGE));
+                Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi(mode).getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, ITEMS_PER_PAGE));
                 Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
                 if (!tagSet.isEmpty())
                 {
