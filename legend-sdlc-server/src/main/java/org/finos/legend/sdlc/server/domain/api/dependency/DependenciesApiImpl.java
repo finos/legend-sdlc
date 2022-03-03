@@ -71,7 +71,7 @@ public class DependenciesApiImpl implements DependenciesApi
             TODO : Maybe enable ElasticSearch for Gitlab https://docs.gitlab.com/ee/integration/elasticsearch.html ??
         */
         List<Project> projects = this.projectApi.getProjects(false,  // false because downstream projects might not be owned by the current user
-                null, null, null);
+                null, null, null, null);
 
         Set<ProjectRevision> results = Sets.mutable.empty();
         for (Project otherProject : projects)

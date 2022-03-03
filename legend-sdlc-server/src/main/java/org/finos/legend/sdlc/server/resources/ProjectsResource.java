@@ -70,12 +70,13 @@ public class ProjectsResource extends BaseResource
                                      @QueryParam("tag")
                                      @ApiParam("only include projects with one or more of these tags") Set<String> tags,
                                      @QueryParam("type")
-                                     @ApiParam("only include projects of the given types (defaults to all types)") Set<ProjectType> types)
+                                     @ApiParam("only include projects of the given types (defaults to all types)") Set<ProjectType> types,
+                                     @QueryParam("limit") Integer limit)
     {
         return execute(
                 "getting projects",
                 "get projects",
-                () -> this.projectApi.getProjects(user, search, tags, types));
+                () -> this.projectApi.getProjects(user, search, tags, types, limit));
     }
 
     @GET

@@ -108,7 +108,7 @@ public class AbstractGitLabServerApiTest
      */
     protected static void cleanUpTestProjects(GitLabProjectApi gitLabProjectApi)
     {
-        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.with(INTEGRATION_TEST_PROJECT_TAG), Lists.mutable.empty());
+        List<Project> projectsToBeCleaned = gitLabProjectApi.getProjects(true, "", Lists.mutable.with(INTEGRATION_TEST_PROJECT_TAG), Lists.mutable.empty(), null);
         for (Project project : projectsToBeCleaned)
         {
             String projectId = project.getProjectId();
