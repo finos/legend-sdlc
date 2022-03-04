@@ -14,7 +14,8 @@
 
 package org.finos.legend.sdlc.domain.model.project;
 
+@Deprecated
 public enum ProjectType
 {
-    PRODUCTION, PROTOTYPE
+    @Deprecated PRODUCTION, @Deprecated PROTOTYPE
 }

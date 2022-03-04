@@ -60,15 +60,15 @@ pac4j:
 
 gitLab:
   newProjectVisibility: public
+  projectIdPrefix: SAMPLE
   projectTag: legend
-  prod:
-    server:
-      scheme: https
-      host: $GITLAB_HOST
-    app:
-      id: $APP_ID
-      secret: $APP_SECRET
-      redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
+  server:
+    scheme: https
+    host: $GITLAB_HOST
+  app:
+    id: $APP_ID
+    secret: $APP_SECRET
+    redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
 
 projectStructure:
   extensionProvider:

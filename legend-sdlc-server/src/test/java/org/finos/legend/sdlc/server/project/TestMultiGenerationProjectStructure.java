@@ -71,7 +71,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     }
 
     @Override
-    protected void assertMultiformatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType artifactType)
+    protected void assertMultiFormatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType artifactType)
     {
         ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, workspaceId, revisionId, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
         Assert.assertNotNull(configuration);

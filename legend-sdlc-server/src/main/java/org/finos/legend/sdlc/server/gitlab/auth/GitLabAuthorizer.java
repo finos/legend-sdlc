@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 public interface GitLabAuthorizer
 {
-    GitLabToken authorize(Session session, GitLabModeInfo modeInfo);
+    GitLabToken authorize(Session session, GitLabAppInfo appInfo);
 }

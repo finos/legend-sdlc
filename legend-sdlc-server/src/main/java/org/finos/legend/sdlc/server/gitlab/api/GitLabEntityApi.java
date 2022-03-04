@@ -21,13 +21,14 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
@@ -41,26 +42,25 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabEntityApi.class);
 
     @Inject
-    public GitLabEntityApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabEntityApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -102,10 +102,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 catch (Exception e)
                 {
                     throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
-                            () -> "Unknown " + getInfoForException(),
-                            () -> "Failed to get " + getInfoForException()
-                    );
+                        () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
+                        () -> "Unknown " + getInfoForException(),
+                        () -> "Failed to get " + getInfoForException());
                 }
                 if (resolvedRevisionId == null)
                 {
@@ -128,7 +127,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
@@ -162,7 +161,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
@@ -278,10 +277,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 catch (Exception e)
                 {
                     throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
-                            () -> "Unknown " + getInfoForException(),
-                            () -> "Failed to get " + getInfoForException()
-                    );
+                        () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
+                        () -> "Unknown " + getInfoForException(),
+                        () -> "Failed to get " + getInfoForException());
                 }
                 if (resolvedRevisionId == null)
                 {
@@ -380,10 +378,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get entity " + path + " for " + getInfoForException(),
-                        () -> "Unknown entity " + path + " for " + getInfoForException(),
-                        () -> "Failed to get entity " + path + " for " + getInfoForException()
-                );
+                    () -> "User " + getCurrentUser() + " is not allowed to get entity " + path + " for " + getInfoForException(),
+                    () -> "Unknown entity " + path + " for " + getInfoForException(),
+                    () -> "Failed to get entity " + path + " for " + getInfoForException());
             }
             throw new LegendSDLCServerException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
         }
@@ -398,10 +395,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get entities for " + getInfoForException(),
-                        () -> "Unknown entities for " + getInfoForException(),
-                        () -> "Failed to get entities for " + getInfoForException()
-                );
+                    () -> "User " + getCurrentUser() + " is not allowed to get entities for " + getInfoForException(),
+                    () -> "Unknown entities for " + getInfoForException(),
+                    () -> "Failed to get entities for " + getInfoForException());
             }
         }
 
@@ -415,10 +411,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get entity paths for " + getInfoForException(),
-                        () -> "Unknown entity paths for " + getInfoForException(),
-                        () -> "Failed to get entity paths for " + getInfoForException()
-                );
+                    () -> "User " + getCurrentUser() + " is not allowed to get entity paths for " + getInfoForException(),
+                    () -> "Unknown entity paths for " + getInfoForException(),
+                    () -> "Failed to get entity paths for " + getInfoForException());
             }
         }
 
@@ -610,9 +605,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Failed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " (message: " + message + ")");
+                () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                () -> "Failed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " (message: " + message + ")");
         }
     }
 
@@ -735,8 +730,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, ProjectStructure.EntitySourceDirectory sourceDirectory)
     {
         return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
-                .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
-                .map(f -> new EntityProjectFile(sourceDirectory, f));
+            .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
+            .map(f -> new EntityProjectFile(sourceDirectory, f));
     }
 
     private static void validateEntityChanges(List<? extends EntityChange> entityChanges)

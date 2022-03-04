@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.cookie.Cookie;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.tools.AuthenticationTools;
 
 import javax.security.auth.Subject;
@@ -29,9 +29,9 @@ public class KerberosGitLabSAMLAuthenticator extends GitLabSAMLAuthenticator
     private static final String SAML_AUTH_PATH = "/users/auth/saml";
     private final Subject subject;
 
-    KerberosGitLabSAMLAuthenticator(GitLabModeInfo modeInfo, Subject subject)
+    KerberosGitLabSAMLAuthenticator(GitLabAppInfo appInfo, Subject subject)
     {
-        super(modeInfo);
+        super(appInfo);
         this.subject = subject;
     }
 
@@ -47,14 +47,14 @@ public class KerberosGitLabSAMLAuthenticator extends GitLabSAMLAuthenticator
         }
         catch (Exception e)
         {
-            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Error getting GitLab session token", e);
+            throw new GitLabAuthOtherException(getUserId(), "Error getting GitLab session token", e);
         }
     }
 
     @Override
     protected URI buildAuthURI()
     {
-        URIBuilder builder = this.getModeInfo().getServerInfo().newURIBuilder().setPath(SAML_AUTH_PATH);
+        URIBuilder builder = this.getAppInfo().getServerInfo().newURIBuilder().setPath(SAML_AUTH_PATH);
         try
         {
             return builder.build();

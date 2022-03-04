@@ -14,60 +14,25 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-
 public abstract class GitLabAuthException extends RuntimeException
 {
     private static final String BASE_MESSAGE = "GitLab auth error";
 
     private final String user;
-    private final GitLabMode mode;
     private final String detail;
 
-    GitLabAuthException(String user, GitLabMode mode, String detail, Throwable cause)
+    GitLabAuthException(String user, String detail, Throwable cause)
     {
         super(detail, cause);
         this.user = user;
-        this.mode = mode;
         this.detail = detail;
     }
 
-    GitLabAuthException(String user, GitLabMode mode, String detail)
+    GitLabAuthException(String user, String detail)
     {
         super(detail);
         this.user = user;
-        this.mode = mode;
         this.detail = detail;
-    }
-
-    GitLabAuthException(String user, GitLabMode mode, Throwable cause)
-    {
-        this(user, mode, null, cause);
-    }
-
-    GitLabAuthException(GitLabMode mode, String detail, Throwable cause)
-    {
-        this(null, mode, detail, cause);
-    }
-
-    GitLabAuthException(String user, GitLabMode mode)
-    {
-        this(user, mode, (String)null);
-    }
-
-    GitLabAuthException(GitLabMode mode, String detail)
-    {
-        this(null, mode, detail);
-    }
-
-    GitLabAuthException(String detail, Throwable cause)
-    {
-        this(null, null, detail, cause);
-    }
-
-    GitLabAuthException(String detail)
-    {
-        this(null, null, detail);
     }
 
     public String getUser()
@@ -82,20 +47,6 @@ public abstract class GitLabAuthException extends RuntimeException
             }
         }
         return localUser;
-    }
-
-    public GitLabMode getMode()
-    {
-        GitLabMode localMode = this.mode;
-        if (localMode == null)
-        {
-            Throwable cause = getCause();
-            if (cause instanceof GitLabAuthException)
-            {
-                localMode = ((GitLabAuthException)cause).getMode();
-            }
-        }
-        return localMode;
     }
 
     public String getDetail()
@@ -115,33 +66,20 @@ public abstract class GitLabAuthException extends RuntimeException
     @Override
     public String getMessage()
     {
-        return buildMessage(getUser(), getMode(), getDetail());
+        return buildMessage(getUser(), getDetail());
     }
 
-    private static String buildMessage(String user, GitLabMode mode, String detail)
+    private static String buildMessage(String user, String detail)
     {
-        if ((detail == null) && (user == null) && (mode == null))
+        if ((detail == null) && (user == null))
         {
             return BASE_MESSAGE;
         }
 
         StringBuilder message = new StringBuilder(BASE_MESSAGE);
-        if ((user != null) || (mode != null))
+        if (user != null)
         {
-            message.append(" (");
-            if (user != null)
-            {
-                message.append("user='").append(user).append("'");
-            }
-            if (mode != null)
-            {
-                if (user != null)
-                {
-                    message.append(", ");
-                }
-                message.append("mode=").append(mode);
-            }
-            message.append(")");
+            message.append(" (user='").append(user).append("')");
         }
         if (detail != null)
         {

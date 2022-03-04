@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -35,7 +36,6 @@ import org.gitlab4j.api.models.Tag;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BinaryOperator;
@@ -47,9 +47,9 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     private static final VersionId NULL_VERSION = VersionId.newVersionId(0, 0, 0);
 
     @Inject
-    public GitLabVersionApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabVersionApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -57,23 +57,9 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
-        {
-            case PROTOTYPE:
-            {
-                return Collections.emptyList();
-            }
-            case PRODUCTION:
-            {
-                List<Version> versions = getVersions(gitLabProjectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).collect(Collectors.toList());
-                versions.sort(Comparator.comparing(Version::getId).reversed());
-                return versions;
-            }
-            default:
-            {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
-            }
-        }
+        List<Version> versions = getVersions(gitLabProjectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).collect(Collectors.toList());
+        versions.sort(Comparator.comparing(Version::getId).reversed());
+        return versions;
     }
 
     @Override
@@ -88,36 +74,22 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
+        if ((majorVersion < 0) || (minorVersion < 0) || (patchVersion < 0))
         {
-            case PROTOTYPE:
-            {
-                return null;
-            }
-            case PRODUCTION:
-            {
-                if ((majorVersion < 0) || (minorVersion < 0) || (patchVersion < 0))
-                {
-                    return null;
-                }
-                VersionId versionId = VersionId.newVersionId(majorVersion, minorVersion, patchVersion);
-                String name = buildVersionTagName(versionId);
-                try
-                {
-                    return fromGitLabTag(projectId, getGitLabApi(gitLabProjectId.getGitLabMode()).getTagsApi().getTag(gitLabProjectId.getGitLabId(), name));
-                }
-                catch (Exception e)
-                {
-                    throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to access version " + versionId.toVersionIdString() + " of project " + projectId,
-                            () -> "Version " + versionId.toVersionIdString() + " is unknown for project " + projectId,
-                            () -> "Error accessing version " + versionId.toVersionIdString() + " of project " + projectId);
-                }
-            }
-            default:
-            {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
-            }
+            return null;
+        }
+        VersionId versionId = VersionId.newVersionId(majorVersion, minorVersion, patchVersion);
+        String name = buildVersionTagName(versionId);
+        try
+        {
+            return fromGitLabTag(projectId, getGitLabApi().getTagsApi().getTag(gitLabProjectId.getGitLabId(), name));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to access version " + versionId.toVersionIdString() + " of project " + projectId,
+                () -> "Version " + versionId.toVersionIdString() + " is unknown for project " + projectId,
+                () -> "Error accessing version " + versionId.toVersionIdString() + " of project " + projectId);
         }
     }
 
@@ -127,166 +99,136 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(type, "type may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        switch (getProjectTypeFromMode(gitLabProjectId.getGitLabMode()))
+        Version latestVersion = getLatestVersion(gitLabProjectId);
+        VersionId latestVersionId = (latestVersion == null) ? NULL_VERSION : latestVersion.getId();
+        VersionId nextVersionId;
+        switch (type)
         {
-            case PROTOTYPE:
+            case MAJOR:
             {
-                throw new LegendSDLCServerException("Cannot create versions for prototype projects", Status.BAD_REQUEST);
+                nextVersionId = latestVersionId.nextMajorVersion();
+                break;
             }
-            case PRODUCTION:
+            case MINOR:
             {
-                Version latestVersion = getLatestVersion(gitLabProjectId);
-                VersionId latestVersionId = (latestVersion == null) ? NULL_VERSION : latestVersion.getId();
-                VersionId nextVersionId;
-                switch (type)
-                {
-                    case MAJOR:
-                    {
-                        nextVersionId = latestVersionId.nextMajorVersion();
-                        break;
-                    }
-                    case MINOR:
-                    {
-                        nextVersionId = latestVersionId.nextMinorVersion();
-                        break;
-                    }
-                    case PATCH:
-                    {
-                        nextVersionId = latestVersionId.nextPatchVersion();
-                        break;
-                    }
-                    default:
-                    {
-                        throw new LegendSDLCServerException("Unknown new version type: " + type, Status.BAD_REQUEST);
-                    }
-                }
-                return newVersion(gitLabProjectId, revisionId, nextVersionId, notes);
+                nextVersionId = latestVersionId.nextMinorVersion();
+                break;
+            }
+            case PATCH:
+            {
+                nextVersionId = latestVersionId.nextPatchVersion();
+                break;
             }
             default:
             {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                throw new LegendSDLCServerException("Unknown new version type: " + type, Status.BAD_REQUEST);
             }
         }
+        return newVersion(gitLabProjectId, revisionId, nextVersionId, notes);
     }
 
     private Stream<Version> getVersions(GitLabProjectId projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        switch (getProjectTypeFromMode(projectId.getGitLabMode()))
+        try
         {
-            case PROTOTYPE:
+            Stream<Version> stream = PagerTools.stream(getGitLabApi().getTagsApi().getTags(projectId.getGitLabId(), ITEMS_PER_PAGE)).filter(GitLabVersionApi::isVersionTag).map(tag -> fromGitLabTag(projectId.toString(), tag));
+
+            // major version constraint
+            if ((minMajorVersion != null) && (maxMajorVersion != null))
             {
-                return Stream.empty();
-            }
-            case PRODUCTION:
-            {
-                try
+                int minMajorVersionInt = minMajorVersion;
+                int maxMajorVersionInt = maxMajorVersion;
+                if (minMajorVersionInt == maxMajorVersionInt)
                 {
-                    Stream<Version> stream = PagerTools.stream(getGitLabApi(projectId.getGitLabMode()).getTagsApi().getTags(projectId.getGitLabId(), ITEMS_PER_PAGE))
-                            .filter(GitLabVersionApi::isVersionTag)
-                            .map(tag -> fromGitLabTag(projectId.toString(), tag));
-
-                    // major version constraint
-                    if ((minMajorVersion != null) && (maxMajorVersion != null))
-                    {
-                        int minMajorVersionInt = minMajorVersion;
-                        int maxMajorVersionInt = maxMajorVersion;
-                        if (minMajorVersionInt == maxMajorVersionInt)
-                        {
-                            stream = stream.filter(v -> v.getId().getMajorVersion() == minMajorVersionInt);
-                        }
-                        else
-                        {
-                            stream = stream.filter(v ->
-                            {
-                                int majorVersion = v.getId().getMajorVersion();
-                                return (minMajorVersionInt <= majorVersion) && (majorVersion <= maxMajorVersionInt);
-                            });
-                        }
-                    }
-                    else if (minMajorVersion != null)
-                    {
-                        int minMajorVersionInt = minMajorVersion;
-                        stream = stream.filter(v -> v.getId().getMajorVersion() >= minMajorVersionInt);
-                    }
-                    else if (maxMajorVersion != null)
-                    {
-                        int maxMajorVersionInt = maxMajorVersion;
-                        stream = stream.filter(v -> v.getId().getMajorVersion() <= maxMajorVersionInt);
-                    }
-
-                    // minor version constraint
-                    if ((minMinorVersion != null) && (maxMinorVersion != null))
-                    {
-                        int minMinorVersionInt = minMinorVersion;
-                        int maxMinorVersionInt = maxMinorVersion;
-                        if (minMinorVersionInt == maxMinorVersionInt)
-                        {
-                            stream = stream.filter(v -> v.getId().getMinorVersion() == minMinorVersionInt);
-                        }
-                        else
-                        {
-                            stream = stream.filter(v ->
-                            {
-                                int minorVersion = v.getId().getMinorVersion();
-                                return (minMinorVersionInt <= minorVersion) && (minorVersion <= maxMinorVersionInt);
-                            });
-                        }
-                    }
-                    else if (minMinorVersion != null)
-                    {
-                        int minMinorVersionInt = minMinorVersion;
-                        stream = stream.filter(v -> v.getId().getMinorVersion() >= minMinorVersionInt);
-                    }
-                    else if (maxMinorVersion != null)
-                    {
-                        int maxMinorVersionInt = maxMinorVersion;
-                        stream = stream.filter(v -> v.getId().getMinorVersion() <= maxMinorVersionInt);
-                    }
-
-
-                    // patch version constraint
-                    if ((minPatchVersion != null) && (maxPatchVersion != null))
-                    {
-                        int minPatchVersionInt = minPatchVersion;
-                        int maxPatchVersionInt = maxPatchVersion;
-                        if (minPatchVersionInt == maxPatchVersionInt)
-                        {
-                            stream = stream.filter(v -> v.getId().getPatchVersion() == minPatchVersionInt);
-                        }
-                        else
-                        {
-                            stream = stream.filter(v ->
-                            {
-                                int patchVersion = v.getId().getPatchVersion();
-                                return (minPatchVersionInt <= patchVersion) && (patchVersion <= maxPatchVersionInt);
-                            });
-                        }
-                    }
-                    else if (minPatchVersion != null)
-                    {
-                        int minPatchVersionInt = minPatchVersion;
-                        stream = stream.filter(v -> v.getId().getPatchVersion() >= minPatchVersionInt);
-                    }
-                    else if (maxPatchVersion != null)
-                    {
-                        int maxPatchVersionInt = maxPatchVersion;
-                        stream = stream.filter(v -> v.getId().getPatchVersion() <= maxPatchVersionInt);
-                    }
-
-                    return stream;
+                    stream = stream.filter(v -> v.getId().getMajorVersion() == minMajorVersionInt);
                 }
-                catch (Exception e)
+                else
                 {
-                    throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to get versions for project " + projectId,
-                            () -> "Unknown project: " + projectId,
-                            () -> "Error getting versions for project " + projectId);
+                    stream = stream.filter(v ->
+                    {
+                        int majorVersion = v.getId().getMajorVersion();
+                        return (minMajorVersionInt <= majorVersion) && (majorVersion <= maxMajorVersionInt);
+                    });
                 }
             }
-            default:
+            else if (minMajorVersion != null)
             {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
+                int minMajorVersionInt = minMajorVersion;
+                stream = stream.filter(v -> v.getId().getMajorVersion() >= minMajorVersionInt);
             }
+            else if (maxMajorVersion != null)
+            {
+                int maxMajorVersionInt = maxMajorVersion;
+                stream = stream.filter(v -> v.getId().getMajorVersion() <= maxMajorVersionInt);
+            }
+
+            // minor version constraint
+            if ((minMinorVersion != null) && (maxMinorVersion != null))
+            {
+                int minMinorVersionInt = minMinorVersion;
+                int maxMinorVersionInt = maxMinorVersion;
+                if (minMinorVersionInt == maxMinorVersionInt)
+                {
+                    stream = stream.filter(v -> v.getId().getMinorVersion() == minMinorVersionInt);
+                }
+                else
+                {
+                    stream = stream.filter(v ->
+                    {
+                        int minorVersion = v.getId().getMinorVersion();
+                        return (minMinorVersionInt <= minorVersion) && (minorVersion <= maxMinorVersionInt);
+                    });
+                }
+            }
+            else if (minMinorVersion != null)
+            {
+                int minMinorVersionInt = minMinorVersion;
+                stream = stream.filter(v -> v.getId().getMinorVersion() >= minMinorVersionInt);
+            }
+            else if (maxMinorVersion != null)
+            {
+                int maxMinorVersionInt = maxMinorVersion;
+                stream = stream.filter(v -> v.getId().getMinorVersion() <= maxMinorVersionInt);
+            }
+
+
+            // patch version constraint
+            if ((minPatchVersion != null) && (maxPatchVersion != null))
+            {
+                int minPatchVersionInt = minPatchVersion;
+                int maxPatchVersionInt = maxPatchVersion;
+                if (minPatchVersionInt == maxPatchVersionInt)
+                {
+                    stream = stream.filter(v -> v.getId().getPatchVersion() == minPatchVersionInt);
+                }
+                else
+                {
+                    stream = stream.filter(v ->
+                    {
+                        int patchVersion = v.getId().getPatchVersion();
+                        return (minPatchVersionInt <= patchVersion) && (patchVersion <= maxPatchVersionInt);
+                    });
+                }
+            }
+            else if (minPatchVersion != null)
+            {
+                int minPatchVersionInt = minPatchVersion;
+                stream = stream.filter(v -> v.getId().getPatchVersion() >= minPatchVersionInt);
+            }
+            else if (maxPatchVersion != null)
+            {
+                int maxPatchVersionInt = maxPatchVersion;
+                stream = stream.filter(v -> v.getId().getPatchVersion() <= maxPatchVersionInt);
+            }
+
+            return stream;
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get versions for project " + projectId,
+                () -> "Unknown project: " + projectId,
+                () -> "Error getting versions for project " + projectId);
         }
     }
 
@@ -297,21 +239,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
 
     private Version getLatestVersion(GitLabProjectId projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        switch (getProjectTypeFromMode(projectId.getGitLabMode()))
-        {
-            case PROTOTYPE:
-            {
-                return null;
-            }
-            case PRODUCTION:
-            {
-                return getVersions(projectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).reduce(BinaryOperator.maxBy(Comparator.comparing(Version::getId))).orElse(null);
-            }
-            default:
-            {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.BAD_REQUEST);
-            }
-        }
+        return getVersions(projectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).reduce(BinaryOperator.maxBy(Comparator.comparing(Version::getId))).orElse(null);
     }
 
     private Version newVersion(GitLabProjectId projectId, String revisionId, VersionId versionId, String notes)
@@ -321,7 +249,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
 
         try
         {
-            GitLabApi gitLabApi = getGitLabApi(projectId.getGitLabMode());
+            GitLabApi gitLabApi = getGitLabApi();
             CommitsApi commitsApi = gitLabApi.getCommitsApi();
 
             Commit referenceCommit;
@@ -363,10 +291,10 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             {
                 StringBuilder builder = new StringBuilder("Revision ").append(referenceRevisionId).append(" has already been released in ");
                 List<VersionId> revisionVersionIds = referenceCommitTags.stream()
-                        .map(CommitRef::getName)
-                        .filter(GitLabVersionApi::isVersionTagName)
-                        .map(GitLabVersionApi::parseVersionTagName)
-                        .collect(Collectors.toList());
+                    .map(CommitRef::getName)
+                    .filter(GitLabVersionApi::isVersionTagName)
+                    .map(GitLabVersionApi::parseVersionTagName)
+                    .collect(Collectors.toList());
                 if (revisionVersionIds.size() == 1)
                 {
                     builder.append("version ");
@@ -393,15 +321,15 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                 throw new LegendSDLCServerException(builder.toString());
             }
 
-            Tag tag = getGitLabApi(projectId.getGitLabMode()).getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceRevisionId, message, notes);
+            Tag tag = getGitLabApi().getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceRevisionId, message, notes);
             return fromGitLabTag(projectId.toString(), tag);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to create version " + versionId.toVersionIdString() + " of project " + projectId,
-                    () -> "Unknown project: " + projectId,
-                    () -> "Error creating version " + versionId.toVersionIdString() + " of project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to create version " + versionId.toVersionIdString() + " of project " + projectId,
+                () -> "Unknown project: " + projectId,
+                () -> "Error creating version " + versionId.toVersionIdString() + " of project " + projectId);
         }
     }
 }

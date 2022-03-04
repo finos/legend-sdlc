@@ -20,6 +20,7 @@ import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
@@ -138,10 +139,11 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
+import org.finos.legend.sdlc.server.resources.ServerResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
-import java.util.List;
 import javax.inject.Named;
+import java.util.List;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
@@ -168,6 +170,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(DepotConfiguration.class).toProvider(this::getDepotConfiguration);
         binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
+        binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
 
@@ -178,6 +181,8 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private void bindResources(Binder binder)
     {
+        binder.bind(InfoResource.class);
+        binder.bind(ServerResource.class);
         binder.bind(ProjectsResource.class);
         binder.bind(WorkspacesResource.class);
         binder.bind(ProjectConfigurationResource.class);
@@ -217,7 +222,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(WorkspaceBuildsResource.class);
         binder.bind(VersionBuildsResource.class);
         binder.bind(VersionsResource.class);
-        binder.bind(InfoResource.class);
         binder.bind(ComparisonWorkspaceResource.class);
         binder.bind(ComparisonReviewResource.class);
         binder.bind(ComparisonReviewEntitiesResource.class);
@@ -360,6 +364,12 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
         return (depotConfiguration == null) ? DepotConfiguration.emptyConfiguration() : depotConfiguration;
+    }
+
+    private LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
+    {
+        LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
+        return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
     }
 
     private AuthClientInjector getAuthClientInjector()

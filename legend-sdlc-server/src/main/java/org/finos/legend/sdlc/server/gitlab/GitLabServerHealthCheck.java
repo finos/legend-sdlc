@@ -15,26 +15,26 @@
 package org.finos.legend.sdlc.server.gitlab;
 
 import com.codahale.metrics.health.HealthCheck;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
 
 public class GitLabServerHealthCheck extends HealthCheck
 {
-    private final GitLabModeInfos gitLabModeInfos;
+    private final GitLabAppInfo appInfo;
 
-    private GitLabServerHealthCheck(GitLabModeInfos gitLabModeInfos)
+    private GitLabServerHealthCheck(GitLabConfiguration config)
     {
-        this.gitLabModeInfos = gitLabModeInfos;
+        this.appInfo = GitLabAppInfo.newAppInfo(config);
     }
 
     @Override
     protected Result check()
     {
         // TODO do a more substantive health check
-        return this.gitLabModeInfos.isEmpty() ? Result.unhealthy("No GitLab modes available") : Result.healthy();
+        // e.g. If possible, we should check that the GitLab server is accessible
+        return this.appInfo.getAppId().isEmpty() || this.appInfo.getAppSecret().isEmpty() ? Result.unhealthy("GitLab application is not properly configured") : Result.healthy();
     }
 
     public static GitLabServerHealthCheck fromConfig(GitLabConfiguration config)
     {
-        return new GitLabServerHealthCheck(GitLabModeInfos.fromConfig(config));
+        return new GitLabServerHealthCheck(config);
     }
 }

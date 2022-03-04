@@ -23,14 +23,14 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -69,6 +69,8 @@ import org.gitlab4j.api.models.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -87,8 +89,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 
 abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 {
@@ -99,9 +99,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     private final BackgroundTaskProcessor backgroundTaskProcessor;
 
-    protected GitLabApiWithFileAccess(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    protected GitLabApiWithFileAccess(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext);
+        super(gitLabConfiguration, userContext);
         this.backgroundTaskProcessor = backgroundTaskProcessor;
     }
 
@@ -110,8 +110,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, workspaceId, revisionId, getProjectFileAccessProvider(), workspaceType, workspaceAccessType);
         if (config == null)
         {
-            ProjectType projectType = getProjectTypeFromMode(GitLabProjectId.getGitLabMode(projectId));
-            config = ProjectStructure.getDefaultProjectConfiguration(projectId, projectType);
+            config = ProjectStructure.getDefaultProjectConfiguration(projectId);
         }
         return config;
     }
@@ -121,8 +120,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, versionId, getProjectFileAccessProvider());
         if (config == null)
         {
-            ProjectType projectType = getProjectTypeFromMode(GitLabProjectId.getGitLabMode(projectId));
-            config = ProjectStructure.getDefaultProjectConfiguration(projectId, projectType);
+            config = ProjectStructure.getDefaultProjectConfiguration(projectId);
         }
         return config;
     }
@@ -234,9 +232,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
             }
             throw buildException(exception,
-                    () -> "User " + getCurrentUser() + " is not allowed to access files for " + getDescriptionForExceptionMessage(),
-                    () -> "Unknown " + getDescriptionForExceptionMessage(),
-                    () -> "Failed to access files for " + getDescriptionForExceptionMessage());
+                () -> "User " + getCurrentUser() + " is not allowed to access files for " + getDescriptionForExceptionMessage(),
+                () -> "Unknown " + getDescriptionForExceptionMessage(),
+                () -> "Failed to access files for " + getDescriptionForExceptionMessage());
         }
 
         private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromRepoArchive(MutableList<String> directories) throws GitLabApiException, IOException
@@ -246,7 +244,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             try
             {
                 String referenceId = getReference();
-                RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+                RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
                 inStream = withRetries(() -> repositoryApi.getRepositoryArchive(this.projectId.getGitLabId(), referenceId));
                 archiveInputStream = new TarArchiveInputStream(new GzipCompressorInputStream(inStream));
                 Stream<ProjectFileAccessProvider.ProjectFile> stream = IOTools.streamCloseableSpliterator(new ArchiveStreamProjectFileSpliterator(archiveInputStream), false);
@@ -299,7 +297,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         private Stream<ProjectFileAccessProvider.ProjectFile> getFilesFromTrees(List<String> directories) throws GitLabApiException
         {
             String referenceId = getReference();
-            RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+            RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
             MutableList<Pager<TreeItem>> pagers = Lists.mutable.ofInitialCapacity(directories.size());
             for (String directory : directories)
             {
@@ -331,11 +329,11 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 return Stream.empty();
             }
             return pagers.stream()
-                    .flatMap(PagerTools::stream)
-                    .filter(ti -> ti.getType() == TreeItem.Type.BLOB)
-                    .map(TreeItem::getPath)
-                    .map(p -> p.startsWith("/") ? p : ("/" + p))
-                    .map(path -> ProjectFiles.newDelegatingProjectFile(path, this::getFile));
+                .flatMap(PagerTools::stream)
+                .filter(ti -> ti.getType() == TreeItem.Type.BLOB)
+                .map(TreeItem::getPath)
+                .map(p -> p.startsWith("/") ? p : ("/" + p))
+                .map(path -> ProjectFiles.newDelegatingProjectFile(path, this::getFile));
         }
 
         @Override
@@ -344,7 +342,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             String referenceId = getReference();
             try
             {
-                RepositoryFileApi repositoryFileApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi();
+                RepositoryFileApi repositoryFileApi = getGitLabApi().getRepositoryFileApi();
                 String gitLabFilePath = toGitLabFilePath(path);
                 RepositoryFile file = withRetries(() -> repositoryFileApi.getFile(this.projectId.getGitLabId(), gitLabFilePath, referenceId, true));
                 Encoding encoding = file.getEncoding();
@@ -376,9 +374,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     return null;
                 }
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown file " + path + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting file " + path + " for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown file " + path + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting file " + path + " for " + getDescriptionForExceptionMessage());
             }
         }
 
@@ -388,7 +386,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             String referenceId = getReference();
             try
             {
-                RepositoryFileApi repositoryFileApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi();
+                RepositoryFileApi repositoryFileApi = getGitLabApi().getRepositoryFileApi();
                 String gitLabFilePath = toGitLabFilePath(path);
                 RepositoryFile file = withRetries(() -> repositoryFileApi.getFile(this.projectId.getGitLabId(), gitLabFilePath, referenceId, false));
                 return file != null;
@@ -400,9 +398,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     return false;
                 }
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown file " + path + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting file " + path + " for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to access file " + path + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown file " + path + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting file " + path + " for " + getDescriptionForExceptionMessage());
             }
         }
 
@@ -510,7 +508,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             try
             {
-                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
+                CommitsApi commitsApi = getGitLabApi().getCommitsApi();
                 String referenceId = getReference();
 
                 // Search for current commit
@@ -568,9 +566,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get current revision for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting current revision for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to get current revision for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown: " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting current revision for " + getDescriptionForExceptionMessage());
             }
         }
 
@@ -586,7 +584,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             try
             {
-                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
+                CommitsApi commitsApi = getGitLabApi().getCommitsApi();
                 String referenceId = getReference();
 
                 // Search for base commit
@@ -628,9 +626,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get base revision for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting base revision for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to get base revision for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown: " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting base revision for " + getDescriptionForExceptionMessage());
             }
         }
 
@@ -645,7 +643,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         public Revision getRevision(String revisionId)
         {
             LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-            CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
+            CommitsApi commitsApi = getGitLabApi().getCommitsApi();
             String resolvedRevisionId;
             try
             {
@@ -654,10 +652,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access revision " + revisionId + " of project " + this.projectId,
-                        () -> "Unknown revision " + revisionId + " of project " + this.projectId,
-                        () -> "Failed to get revision " + revisionId + " of project " + this.projectId
-                );
+                    () -> "User " + getCurrentUser() + " is not allowed to access revision " + revisionId + " of project " + this.projectId,
+                    () -> "Unknown revision " + revisionId + " of project " + this.projectId,
+                    () -> "Failed to get revision " + revisionId + " of project " + this.projectId);
             }
             if (resolvedRevisionId == null)
             {
@@ -672,9 +669,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
-                        () -> "Error accessing revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
+                    () -> "Error accessing revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage());
             }
 
             // Validate the commit is for the appropriate branch
@@ -690,9 +687,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
-                        () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
-                        () -> "Error accessing revision " + resolvedRevisionId + "for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to access revision " + resolvedRevisionId + " for " + getDescriptionForExceptionMessage(),
+                    () -> "Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(),
+                    () -> "Error accessing revision " + resolvedRevisionId + "for " + getDescriptionForExceptionMessage());
             }
 
             // Validate the commit is for the appropriate files
@@ -709,9 +706,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 catch (Exception e)
                 {
                     throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to access revisions for " + getDescriptionForExceptionMessage(),
-                            () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                            () -> "Error accessing revisions for " + getDescriptionForExceptionMessage());
+                        () -> "User " + getCurrentUser() + " is not allowed to access revisions for " + getDescriptionForExceptionMessage(),
+                        () -> "Unknown: " + getDescriptionForExceptionMessage(),
+                        () -> "Error accessing revisions for " + getDescriptionForExceptionMessage());
                 }
             }
 
@@ -721,11 +718,23 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         public Stream<Revision> getAllRevisions(Predicate<? super Revision> predicate, Instant since, Instant until, Integer limit)
         {
-            boolean limited = (limit != null) && (limit > 0);
+            boolean limited = false;
+            if (limit != null)
+            {
+                if (limit == 0)
+                {
+                    return Stream.empty();
+                }
+                if (limit < 0)
+                {
+                    throw new LegendSDLCServerException("Invalid limit: " + limit, Status.BAD_REQUEST);
+                }
+                limited = true;
+            }
             int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
             try
             {
-                CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
+                CommitsApi commitsApi = getGitLabApi().getCommitsApi();
                 String branchName = getReference();
                 Stream<Commit> commitStream = getAllCommits(commitsApi, branchName, toDateIfNotNull(since), toDateIfNotNull(until), itemsPerPage);
                 if (commitStream == null)
@@ -751,9 +760,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get revisions for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting revisions for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to get revisions for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown: " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting revisions for " + getDescriptionForExceptionMessage());
             }
         }
 
@@ -852,7 +861,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
             try
             {
-                RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+                RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
                 Branch branch = withRetries(() -> repositoryApi.getBranch(this.projectId.getGitLabId(), getReference()));
                 return branch != null;
             }
@@ -885,7 +894,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
             try
             {
-                RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+                RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
                 Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, getReference()))));
                 if (this.paths == null)
                 {
@@ -913,9 +922,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get base revision for " + getDescriptionForExceptionMessage(),
-                        () -> "Unknown: " + getDescriptionForExceptionMessage(),
-                        () -> "Error getting base revision for " + getDescriptionForExceptionMessage());
+                    () -> "User " + getCurrentUser() + " is not allowed to get base revision for " + getDescriptionForExceptionMessage(),
+                    () -> "Unknown: " + getDescriptionForExceptionMessage(),
+                    () -> "Error getting base revision for " + getDescriptionForExceptionMessage());
             }
         }
     }
@@ -941,7 +950,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             try
             {
-                Tag tag = getGitLabApi(this.projectId.getGitLabMode()).getTagsApi().getTag(this.projectId.getGitLabId(), getReference());
+                Tag tag = getGitLabApi().getTagsApi().getTag(this.projectId.getGitLabId(), getReference());
                 return tag != null;
             }
             catch (GitLabApiException e)
@@ -1016,7 +1025,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         }
                     }
                     String branchName = getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType);
-                    commit = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi().createCommit(this.projectId.getGitLabId(), branchName, message, null, null, null, commitActions);
+                    commit = getGitLabApi().getCommitsApi().createCommit(this.projectId.getGitLabId(), branchName, message, null, null, null, commitActions);
                 }
                 if (this.workspaceId == null)
                 {
@@ -1032,9 +1041,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             {
                 // TODO improve exception handling
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
-                        () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
-                        () -> "Failed to perform changes on " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " (message: " + message + ")");
+                    () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
+                    () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
+                    () -> "Failed to perform changes on " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " (message: " + message + ")");
             }
         }
 
@@ -1043,32 +1052,32 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             if (fileOperation instanceof ProjectFileOperation.AddFile)
             {
                 return new CommitAction()
-                        .withAction(Action.CREATE)
-                        .withFilePath(fileOperation.getPath())
-                        .withEncoding(Encoding.BASE64)
-                        .withContent(encodeBase64(((ProjectFileOperation.AddFile) fileOperation).getContent()));
+                    .withAction(Action.CREATE)
+                    .withFilePath(fileOperation.getPath())
+                    .withEncoding(Encoding.BASE64)
+                    .withContent(encodeBase64(((ProjectFileOperation.AddFile) fileOperation).getContent()));
             }
             if (fileOperation instanceof ProjectFileOperation.ModifyFile)
             {
                 return new CommitAction()
-                        .withAction(Action.UPDATE)
-                        .withFilePath(toGitLabFilePath(fileOperation.getPath()))
-                        .withEncoding(Encoding.BASE64)
-                        .withContent(encodeBase64(((ProjectFileOperation.ModifyFile) fileOperation).getNewContent()));
+                    .withAction(Action.UPDATE)
+                    .withFilePath(toGitLabFilePath(fileOperation.getPath()))
+                    .withEncoding(Encoding.BASE64)
+                    .withContent(encodeBase64(((ProjectFileOperation.ModifyFile) fileOperation).getNewContent()));
             }
             if (fileOperation instanceof ProjectFileOperation.DeleteFile)
             {
                 return new CommitAction()
-                        .withAction(Action.DELETE)
-                        .withFilePath(toGitLabFilePath(fileOperation.getPath()));
+                    .withAction(Action.DELETE)
+                    .withFilePath(toGitLabFilePath(fileOperation.getPath()));
             }
             if (fileOperation instanceof ProjectFileOperation.MoveFile)
             {
                 ProjectFileOperation.MoveFile moveFileOperation = (ProjectFileOperation.MoveFile) fileOperation;
                 CommitAction commitAction = new CommitAction()
-                        .withAction(Action.MOVE)
-                        .withPreviousPath(toGitLabFilePath(moveFileOperation.getPath()))
-                        .withFilePath(toGitLabFilePath(moveFileOperation.getNewPath()));
+                    .withAction(Action.MOVE)
+                    .withPreviousPath(toGitLabFilePath(moveFileOperation.getPath()))
+                    .withFilePath(toGitLabFilePath(moveFileOperation.getNewPath()));
 
                 byte[] newContent = moveFileOperation.getNewContent();
                 if (newContent != null)
@@ -1104,7 +1113,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                             }
                             LOGGER.debug("Getting content for move from {} to {} from revision {}", commitAction.getPreviousPath(), commitAction.getFilePath(), referenceRevisionId);
                             // TODO handle not found case
-                            RepositoryFile file = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryFileApi().getFile(this.projectId.getGitLabId(), commitAction.getPreviousPath(), referenceRevisionId, true);
+                            RepositoryFile file = getGitLabApi().getRepositoryFileApi().getFile(this.projectId.getGitLabId(), commitAction.getPreviousPath(), referenceRevisionId, true);
                             commitAction.setEncoding(file.getEncoding());
                             commitAction.setContent(file.getContent());
                         }
@@ -1322,7 +1331,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         {
             checkOpen();
 
-            CommitsApi commitsApi = getGitLabApi(this.projectId.getGitLabMode()).getCommitsApi();
+            CommitsApi commitsApi = getGitLabApi().getCommitsApi();
             Exception lastException = null;
             for (int i = 1; i <= MAX_COMMIT_RETRIES; i++)
             {
@@ -1350,8 +1359,8 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         if (Family.familyOf(statusCode) == Family.CLIENT_ERROR)
                         {
                             StringBuilder builder = new StringBuilder("Error committing to temporary branch ").append(this.tempBranchName)
-                                    .append("for ").append(this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel()).append(" ").append(this.workspaceId)
-                                    .append(" in project ").append(this.projectId);
+                                .append("for ").append(this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel()).append(" ").append(this.workspaceId)
+                                .append(" in project ").append(this.projectId);
                             StringTools.appendThrowableMessageIfPresent(builder, e);
                             String msg = builder.toString();
                             LOGGER.error(msg, e);
@@ -1379,8 +1388,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
 
             // Reached the max number of retries, give up
-            StringBuilder builder = new StringBuilder("Failed to commit to temporary branch for ").append(this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel()).append(" ").append(this.workspaceId)
-                    .append(" in project ").append(this.projectId).append(" after ").append(MAX_COMMIT_RETRIES).append(" tries");
+            StringBuilder builder = new StringBuilder("Failed to commit to temporary branch for ").append(this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel()).append(" ").append(this.workspaceId).append(" in project ").append(this.projectId).append(" after ").append(MAX_COMMIT_RETRIES).append(" tries");
             StringTools.appendThrowableMessageIfPresent(builder, lastException);
             String msg = builder.toString();
             LOGGER.error(msg, lastException);
@@ -1403,7 +1411,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             String targetBranchName = GitLabApiWithFileAccess.this.getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType);
             LOGGER.debug("Replacing target branch {} with temporary branch {} in project {}", targetBranchName, this.tempBranchName, this.projectId);
 
-            RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+            RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
 
             Branch targetBranch;
             try
@@ -1413,9 +1421,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
-                        () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
-                        () -> "Failed to get " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
+                    () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
+                    () -> "Failed to get " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId);
             }
 
             if (targetBranch != null)
@@ -1435,9 +1443,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 catch (Exception e)
                 {
                     throw buildException(e,
-                            () -> "User " + getCurrentUser() + " is not allowed to delete " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
-                            () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
-                            () -> "Failed to delete " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId);
+                        () -> "User " + getCurrentUser() + " is not allowed to delete " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId,
+                        () -> "Unknown " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
+                        () -> "Failed to delete " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId);
                 }
                 if (!oldDeleted)
                 {
@@ -1453,9 +1461,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to create " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + this.lastSuccessfulCommitId,
-                        () -> "Unknown revision (" + this.lastSuccessfulCommitId + "), " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
-                        () -> "Failed to create " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + this.lastSuccessfulCommitId);
+                    () -> "User " + getCurrentUser() + " is not allowed to create " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + this.lastSuccessfulCommitId,
+                    () -> "Unknown revision (" + this.lastSuccessfulCommitId + "), " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " (" + this.workspaceId + ") or project (" + this.projectId + ")",
+                    () -> "Failed to create " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + this.lastSuccessfulCommitId);
             }
             if (newBranch == null)
             {
@@ -1496,7 +1504,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             String branchCreationRef = (this.lastSuccessfulCommitId == null) ? this.referenceCommitId : this.lastSuccessfulCommitId;
             LOGGER.debug("Creating temporary branch for {} {} in project {} from {}: {}", this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel(), this.workspaceId, this.projectId, branchCreationRef, newTempBranchName);
             // Create new temp branch
-            RepositoryApi repositoryApi = getGitLabApi(this.projectId.getGitLabMode()).getRepositoryApi();
+            RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
             Branch tempBranch;
             try
             {
@@ -1507,9 +1515,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             {
                 LOGGER.debug("Failed to create temporary branch for {} {} in project {} from {}: {}", this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel(), this.workspaceId, this.projectId, branchCreationRef, newTempBranchName);
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to create temporary branch " + newTempBranchName + " in project " + this.projectId + " from revision " + branchCreationRef,
-                        () -> "Unknown project " + this.projectId + " or revision " + branchCreationRef,
-                        () -> "Error creating temporary branch " + newTempBranchName + " for " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + branchCreationRef);
+                    () -> "User " + getCurrentUser() + " is not allowed to create temporary branch " + newTempBranchName + " in project " + this.projectId + " from revision " + branchCreationRef,
+                    () -> "Unknown project " + this.projectId + " or revision " + branchCreationRef,
+                    () -> "Error creating temporary branch " + newTempBranchName + " for " + this.workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + this.workspaceType.getLabel() + " " + this.workspaceId + " in project " + this.projectId + " from revision " + branchCreationRef);
             }
             if (tempBranch == null)
             {
@@ -1526,7 +1534,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
         private void deleteTempBranch(String branchName)
         {
-            GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
+            GitLabApi gitLabApi = getGitLabApi();
             GitLabProjectId projectId = this.projectId;
             submitBackgroundRetryableTask(() -> waitForPipelinesDeleteBranchAndVerify(gitLabApi, projectId, branchName), 5000L, "delete " + branchName);
         }

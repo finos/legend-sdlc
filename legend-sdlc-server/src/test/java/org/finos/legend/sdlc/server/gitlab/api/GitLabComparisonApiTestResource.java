@@ -21,7 +21,6 @@ import org.finos.legend.sdlc.domain.model.comparison.EntityDiff;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
@@ -58,18 +57,16 @@ public class GitLabComparisonApiTestResource
     {
         String projectName = "ComparisonTestProjectOne";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "comptestprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
         Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
@@ -129,18 +126,16 @@ public class GitLabComparisonApiTestResource
     {
         String projectName = "ComparisonTestProjectTwo";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "comptestprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
         Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();

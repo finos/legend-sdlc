@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -23,10 +22,10 @@ import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
@@ -42,6 +41,8 @@ import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response.Status;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -54,8 +55,6 @@ import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
 {
@@ -93,11 +92,18 @@ abstract class BaseGitLabApi
     protected static final String RELEASE_TAG_PREFIX = "release-";
     protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile("^" + RELEASE_TAG_PREFIX + "\\d+\\.\\d+\\.\\d+$");
 
+    private final GitLabConfiguration gitLabConfiguration;
     private final GitLabUserContext userContext;
 
-    protected BaseGitLabApi(GitLabUserContext userContext)
+    protected BaseGitLabApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext)
     {
+        this.gitLabConfiguration = gitLabConfiguration;
         this.userContext = userContext;
+    }
+
+    protected GitLabConfiguration getGitLabConfiguration()
+    {
+        return this.gitLabConfiguration;
     }
 
     protected String getCurrentUser()
@@ -116,18 +122,14 @@ abstract class BaseGitLabApi
         {
             throw new LegendSDLCServerException("Invalid project id: " + projectId, Status.BAD_REQUEST, e);
         }
-        if (!this.userContext.isValidMode(gitLabProjectId.getGitLabMode()))
-        {
-            throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND);
-        }
         return gitLabProjectId;
     }
 
-    protected GitLabApi getGitLabApi(GitLabMode mode)
+    protected GitLabApi getGitLabApi()
     {
         try
         {
-            return this.userContext.getGitLabAPI(mode);
+            return this.userContext.getGitLabAPI();
         }
         catch (LegendSDLCServerException e)
         {
@@ -135,7 +137,7 @@ abstract class BaseGitLabApi
         }
         catch (Exception e)
         {
-            StringBuilder message = new StringBuilder("Error getting GitLabApi for user ").append(getCurrentUser()).append(" and mode ").append(mode);
+            StringBuilder message = new StringBuilder("Error getting GitLabApi for user ").append(getCurrentUser());
             String detail = (e instanceof GitLabAuthException) ? ((GitLabAuthException) e).getDetail() : e.getMessage();
             if (detail != null)
             {
@@ -145,16 +147,6 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected Iterable<GitLabMode> getValidGitLabModes()
-    {
-        return this.userContext.getValidGitLabModes();
-    }
-
-    protected boolean isValidGitLabMode(GitLabMode mode)
-    {
-        return this.userContext.isValidMode(mode);
-    }
-
     protected static boolean isValidEntityName(String string)
     {
         return (string != null) && !string.isEmpty() && string.chars().allMatch(c -> (c == '_') || Character.isLetterOrDigit(c));
@@ -162,9 +154,7 @@ abstract class BaseGitLabApi
 
     protected static boolean isValidEntityPath(String string)
     {
-        return isValidPackageableElementPath(string) &&
-                !string.startsWith("meta::") &&
-                string.contains(PACKAGE_SEPARATOR);
+        return isValidPackageableElementPath(string) && !string.startsWith("meta::") && string.contains(PACKAGE_SEPARATOR);
     }
 
     protected static boolean isValidPackagePath(String string)
@@ -455,44 +445,6 @@ abstract class BaseGitLabApi
         return isVersionTagName(tag.getName());
     }
 
-    protected static ProjectType getProjectTypeFromMode(GitLabMode mode)
-    {
-        switch (mode)
-        {
-            case PROD:
-            {
-                return ProjectType.PRODUCTION;
-            }
-            case UAT:
-            {
-                return ProjectType.PROTOTYPE;
-            }
-            default:
-            {
-                throw new RuntimeException("Unknown GitLab mode: " + mode);
-            }
-        }
-    }
-
-    protected static GitLabMode getGitLabModeFromProjectType(ProjectType type)
-    {
-        switch (type)
-        {
-            case PRODUCTION:
-            {
-                return GitLabMode.PROD;
-            }
-            case PROTOTYPE:
-            {
-                return GitLabMode.UAT;
-            }
-            default:
-            {
-                throw new RuntimeException("Unknown project type: " + type);
-            }
-        }
-    }
-
     protected static String getReferenceInfo(GitLabProjectId projectId, String workspaceId, String revisionId)
     {
         return getReferenceInfo(projectId.toString(), workspaceId, revisionId);
@@ -600,47 +552,47 @@ abstract class BaseGitLabApi
     protected LegendSDLCServerException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
     {
         return processException(e,
-                Function.identity(),
-                glae ->
+            Function.identity(),
+            glae ->
+            {
+                switch (glae.getHttpStatus())
                 {
-                    switch (glae.getHttpStatus())
+                    case 401:
                     {
-                        case 401:
+                        // this means the access token is invalid
+                        BaseGitLabApi.this.userContext.clearAccessToken();
+                        HttpServletRequest httpRequest = BaseGitLabApi.this.userContext.getHttpRequest();
+                        StringBuffer urlBuilder = httpRequest.getRequestURL();
+                        String requestQueryString = httpRequest.getQueryString();
+                        if (requestQueryString != null)
                         {
-                            // this means the access token is invalid
-                            BaseGitLabApi.this.userContext.clearAccessTokens();
-                            HttpServletRequest httpRequest = BaseGitLabApi.this.userContext.getHttpRequest();
-                            StringBuffer urlBuilder = httpRequest.getRequestURL();
-                            String requestQueryString = httpRequest.getQueryString();
-                            if (requestQueryString != null)
-                            {
-                                urlBuilder.append('?').append(requestQueryString);
-                            }
-                            if ("GET".equalsIgnoreCase(httpRequest.getMethod()))
-                            {
-                                // TODO consider a more appropriate redirect status if HTTP version is 1.1
-                                return new LegendSDLCServerException(urlBuilder.toString(), Status.FOUND);
-                            }
-                            else
-                            {
-                                return new LegendSDLCServerException("Please retry request: " + httpRequest.getMethod() + " " + urlBuilder.toString(), Status.SERVICE_UNAVAILABLE, glae);
-                            }
+                            urlBuilder.append('?').append(requestQueryString);
                         }
-                        case 403:
+                        if ("GET".equalsIgnoreCase(httpRequest.getMethod()))
                         {
-                            return new LegendSDLCServerException(buildExceptionMessage(glae, forbiddenMessage, defaultMessage), Status.FORBIDDEN, glae);
+                            // TODO consider a more appropriate redirect status if HTTP version is 1.1
+                            return new LegendSDLCServerException(urlBuilder.toString(), Status.FOUND);
                         }
-                        case 404:
+                        else
                         {
-                            return new LegendSDLCServerException(buildExceptionMessage(glae, notFoundMessage, defaultMessage), Status.NOT_FOUND, glae);
-                        }
-                        default:
-                        {
-                            return null;
+                            return new LegendSDLCServerException("Please retry request: " + httpRequest.getMethod() + " " + urlBuilder.toString(), Status.SERVICE_UNAVAILABLE, glae);
                         }
                     }
-                },
-                (defaultMessage == null) ? null : ex -> Optional.ofNullable(defaultMessage.apply(ex)).map(m -> new LegendSDLCServerException(m, ex)).orElse(null)
+                    case 403:
+                    {
+                        return new LegendSDLCServerException(buildExceptionMessage(glae, forbiddenMessage, defaultMessage), Status.FORBIDDEN, glae);
+                    }
+                    case 404:
+                    {
+                        return new LegendSDLCServerException(buildExceptionMessage(glae, notFoundMessage, defaultMessage), Status.NOT_FOUND, glae);
+                    }
+                    default:
+                    {
+                        return null;
+                    }
+                }
+            },
+            (defaultMessage == null) ? null : ex -> Optional.ofNullable(defaultMessage.apply(ex)).map(m -> new LegendSDLCServerException(m, ex)).orElse(null)
         );
     }
 
@@ -827,9 +779,9 @@ abstract class BaseGitLabApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access review " + reviewId + " in project " + projectId,
-                    () -> "Unknown review in project " + projectId + ": " + reviewId,
-                    () -> "Error accessing review " + reviewId + " in project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to access review " + reviewId + " in project " + projectId,
+                () -> "Unknown review in project " + projectId + ": " + reviewId,
+                () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
         if (!isReviewMergeRequest(mergeRequest))
         {
@@ -952,9 +904,7 @@ abstract class BaseGitLabApi
             {
                 return RevisionAlias.BASE;
             }
-            if (RevisionAlias.HEAD.getValue().equalsIgnoreCase(revisionId)
-                    || RevisionAlias.CURRENT.getValue().equalsIgnoreCase(revisionId)
-                    || RevisionAlias.LATEST.getValue().equalsIgnoreCase(revisionId))
+            if (RevisionAlias.HEAD.getValue().equalsIgnoreCase(revisionId) || RevisionAlias.CURRENT.getValue().equalsIgnoreCase(revisionId) || RevisionAlias.LATEST.getValue().equalsIgnoreCase(revisionId))
             {
                 return RevisionAlias.HEAD;
             }

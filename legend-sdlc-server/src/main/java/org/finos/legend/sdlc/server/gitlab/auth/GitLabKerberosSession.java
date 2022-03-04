@@ -16,13 +16,10 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.BaseKerberosSession;
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
 
 public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> implements GitLabSession
 {
@@ -49,11 +46,11 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
             return false;
         }
 
-        GitLabKerberosSession that = (GitLabKerberosSession)other;
+        GitLabKerberosSession that = (GitLabKerberosSession) other;
         return Objects.equals(this.getUserId(), that.getUserId()) &&
-                Objects.equals(this.getProfile(), that.getProfile()) &&
-                this.getCreationTime().equals(that.getCreationTime()) &&
-                this.tokenManager.equals(that.tokenManager);
+            Objects.equals(this.getProfile(), that.getProfile()) &&
+            this.getCreationTime().equals(that.getCreationTime()) &&
+            this.tokenManager.equals(that.tokenManager);
     }
 
     @Override
@@ -63,45 +60,27 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     }
 
     @Override
-    public Set<GitLabMode> getValidModes()
+    public boolean gitLabOAuthCallback(String code)
     {
-        return this.tokenManager.getValidModes();
+        return this.tokenManager.gitLabOAuthCallback(code);
     }
 
     @Override
-    public boolean isValidMode(GitLabMode mode)
+    public GitLabToken getGitLabToken()
     {
-        return this.tokenManager.isValidMode(mode);
+        return this.tokenManager.getGitLabToken();
     }
 
     @Override
-    public boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    public void clearGitLabToken()
     {
-        return this.tokenManager.gitLabOAuthCallback(mode, code);
+        this.tokenManager.clearGitLabToken();
     }
 
     @Override
-    public GitLabToken getGitLabToken(GitLabMode mode)
+    public void setGitLabToken(GitLabToken token)
     {
-        return this.tokenManager.getGitLabToken(mode);
-    }
-
-    @Override
-    public void clearGitLabTokens()
-    {
-        this.tokenManager.clearGitLabTokens();
-    }
-
-    @Override
-    public void putGitLabToken(GitLabMode mode, GitLabToken token)
-    {
-        this.tokenManager.putGitLabToken(mode, token);
-    }
-
-    @Override
-    public GitLabModeInfo getModeInfo(GitLabMode mode)
-    {
-        return this.tokenManager.getModeInfo(mode);
+        this.tokenManager.setGitLabToken(token);
     }
 
     @Override
@@ -113,6 +92,6 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     @Override
     protected void writeToStringInfo(StringBuilder builder)
     {
-        this.tokenManager.appendTokenInfo(builder.append(' '));
+        this.tokenManager.appendGitLabTokenInfo(builder.append(' '));
     }
 }

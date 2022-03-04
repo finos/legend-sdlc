@@ -14,16 +14,14 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 
 public class InMemoryReviewApi implements ReviewApi
 {
@@ -45,7 +43,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

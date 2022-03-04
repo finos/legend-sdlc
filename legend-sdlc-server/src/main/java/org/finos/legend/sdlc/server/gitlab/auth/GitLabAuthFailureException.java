@@ -14,50 +14,23 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-
 /**
  * Exception indicating that auth failed.
  */
 public class GitLabAuthFailureException extends GitLabAuthException
 {
-    GitLabAuthFailureException(String user, GitLabMode mode, String detail, Throwable cause)
+    GitLabAuthFailureException(String user, String detail, Throwable cause)
     {
-        super(user, mode, detail, cause);
+        super(user, detail, cause);
     }
 
-    GitLabAuthFailureException(String user, GitLabMode mode, String detail)
+    GitLabAuthFailureException(String user, String detail)
     {
-        super(user, mode, detail);
-    }
-
-    GitLabAuthFailureException(String user, GitLabMode mode, Throwable cause)
-    {
-        super(user, mode, cause);
-    }
-
-    GitLabAuthFailureException(GitLabMode mode, String detail, Throwable cause)
-    {
-        super(mode, detail, cause);
-    }
-
-    GitLabAuthFailureException(String user, GitLabMode mode)
-    {
-        super(user, mode);
-    }
-
-    GitLabAuthFailureException(GitLabMode mode, String detail)
-    {
-        super(mode, detail);
-    }
-
-    GitLabAuthFailureException(String detail, Throwable cause)
-    {
-        super(detail, cause);
+        super(user, detail);
     }
 
     GitLabAuthFailureException(String detail)
     {
-        super(detail);
+        super(null, detail);
     }
 }

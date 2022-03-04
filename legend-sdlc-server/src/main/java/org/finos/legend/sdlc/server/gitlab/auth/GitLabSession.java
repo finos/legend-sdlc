@@ -15,24 +15,15 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-
-import java.util.Set;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 public interface GitLabSession extends Session
 {
-    Set<GitLabMode> getValidModes();
+    boolean gitLabOAuthCallback(String code);
 
-    boolean isValidMode(GitLabMode mode);
+    GitLabToken getGitLabToken();
 
-    boolean gitLabOAuthCallback(GitLabMode mode, String code);
+    void clearGitLabToken();
 
-    GitLabToken getGitLabToken(GitLabMode mode);
-
-    void clearGitLabTokens();
-
-    void putGitLabToken(GitLabMode mode, GitLabToken token);
-
-    GitLabModeInfo getModeInfo(GitLabMode mode);
+    void setGitLabToken(GitLabToken token);
 }

@@ -20,10 +20,11 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
-import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 import org.finos.legend.sdlc.server.application.project.CreateProjectCommand;
 import org.finos.legend.sdlc.server.application.project.ImportProjectCommand;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectCommand;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi.ImportReport;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -41,7 +42,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -53,10 +53,12 @@ import java.util.Set;
 public class ProjectsResource extends BaseResource
 {
     private final ProjectApi projectApi;
+    private final LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
     @Inject
-    public ProjectsResource(ProjectApi projectApi)
+    public ProjectsResource(LegendSDLCServerFeaturesConfiguration featuresConfiguration, ProjectApi projectApi)
     {
+        this.featuresConfiguration = featuresConfiguration;
         this.projectApi = projectApi;
     }
 
@@ -69,14 +71,16 @@ public class ProjectsResource extends BaseResource
                                      @ApiParam("only include projects the user is associated with") boolean user,
                                      @QueryParam("tag")
                                      @ApiParam("only include projects with one or more of these tags") Set<String> tags,
+                                     @QueryParam("limit")
+                                     @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
+                                     // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
                                      @QueryParam("type")
-                                     @ApiParam("only include projects of the given types (defaults to all types)") Set<ProjectType> types,
-                                     @QueryParam("limit") Integer limit)
+                                     @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<ProjectType> types)
     {
         return execute(
-                "getting projects",
-                "get projects",
-                () -> this.projectApi.getProjects(user, search, tags, types, limit));
+            "getting projects",
+            "get projects",
+            () -> this.projectApi.getProjects(user, search, tags, limit));
     }
 
     @GET
@@ -85,9 +89,9 @@ public class ProjectsResource extends BaseResource
     public Project getProjectById(@PathParam("id") String id)
     {
         return executeWithLogging(
-                "getting project " + id,
-                this.projectApi::getProject,
-                id
+            "getting project " + id,
+            this.projectApi::getProject,
+            id
         );
     }
 
@@ -96,9 +100,18 @@ public class ProjectsResource extends BaseResource
     public Project createProject(CreateProjectCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create project");
+        if (!featuresConfiguration.canCreateProject)
+        {
+            throw new LegendSDLCServerException("Server does not support creating project(s)",
+                Response.Status.METHOD_NOT_ALLOWED);
+        }
         return executeWithLogging(
-                "creating new project \"" + command.getName() + "\"",
-                () -> this.projectApi.createProject(command.getName(), command.getDescription(), command.getType(), command.getGroupId(), command.getArtifactId(), command.getTags())
+            "creating new project \"" + command.getName() + "\"",
+            () -> this.projectApi.createProject(command.getName(),
+                command.getDescription(),
+                command.getGroupId(),
+                command.getArtifactId(),
+                command.getTags())
         );
     }
 
@@ -109,27 +122,27 @@ public class ProjectsResource extends BaseResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project");
         executeWithLogging(
-                "updating project " + id,
-                () ->
+            "updating project " + id,
+            () ->
+            {
+                String name = command.getName();
+                if (name != null)
                 {
-                    String name = command.getName();
-                    if (name != null)
-                    {
-                        this.projectApi.changeProjectName(id, name);
-                    }
-
-                    String description = command.getDescription();
-                    if (description != null)
-                    {
-                        this.projectApi.changeProjectDescription(id, description);
-                    }
-
-                    List<String> tags = command.getTags();
-                    if (tags != null)
-                    {
-                        this.projectApi.setProjectTags(id, tags);
-                    }
+                    this.projectApi.changeProjectName(id, name);
                 }
+
+                String description = command.getDescription();
+                if (description != null)
+                {
+                    this.projectApi.changeProjectDescription(id, description);
+                }
+
+                List<String> tags = command.getTags();
+                if (tags != null)
+                {
+                    this.projectApi.setProjectTags(id, tags);
+                }
+            }
         );
     }
 
@@ -139,9 +152,9 @@ public class ProjectsResource extends BaseResource
     public void deleteProject(@PathParam("id") String projectId)
     {
         executeWithLogging(
-                "deleting project " + projectId,
-                this.projectApi::deleteProject,
-                projectId
+            "deleting project " + projectId,
+            this.projectApi::deleteProject,
+            projectId
         );
     }
 
@@ -152,8 +165,8 @@ public class ProjectsResource extends BaseResource
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to import project");
         return executeWithLogging(
-                "importing project " + command.getId() + " (type: " + command.getType() + ", groupId: " + command.getGroupId() + ", artifactId: " + command.getArtifactId() + ")",
-                () -> this.projectApi.importProject(command.getId(), command.getType(), command.getGroupId(), command.getArtifactId())
+            "importing project " + command.getId() + " (type: " + command.getType() + ", groupId: " + command.getGroupId() + ", artifactId: " + command.getArtifactId() + ")",
+            () -> this.projectApi.importProject(command.getId(), command.getType(), command.getGroupId(), command.getArtifactId())
         );
     }
 
@@ -163,22 +176,23 @@ public class ProjectsResource extends BaseResource
     public AccessRole getProjectAccessRole(@PathParam("id") String projectId)
     {
         return executeWithLogging(
-                "getting project access role",
-                () -> this.projectApi.getCurrentUserAccessRole(projectId));
+            "getting project access role",
+            () -> this.projectApi.getCurrentUserAccessRole(projectId));
     }
 
     @GET
     @Path("{id}/authorizedActions")
     @ApiOperation("Check if the current user can perform set of actions provided")
-    public Set<ProjectAuthorizationAction> checkAuthorizedActions(@PathParam("id") String projectId,
-                                                                  @ApiParam("List of actions to be checked for the current user")
-                                                                  @QueryParam("actions") Set<ProjectAuthorizationAction> actions)
+    public Set<AuthorizableProjectAction> checkAuthorizedActions(@PathParam("id") String projectId,
+                                                                 @ApiParam("List of actions to be checked for the current user")
+                                                                 @QueryParam("actions") Set<AuthorizableProjectAction> actions)
     {
         LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
 
         return executeWithLogging(
-                "checking if the current user has been authorized to perform the set of actions given",
-                () -> this.projectApi.checkUserAuthorizationActions(projectId, (actions == null || actions.isEmpty()) ? EnumSet.allOf(ProjectAuthorizationAction.class) : actions));
+            "checking if the current user has been authorized to perform the set of actions given",
+            () -> this.projectApi.checkUserAuthorizedActions(projectId,
+                (actions == null || actions.isEmpty()) ? EnumSet.allOf(AuthorizableProjectAction.class) : actions));
     }
 
     @GET
@@ -186,13 +200,13 @@ public class ProjectsResource extends BaseResource
     @ApiOperation("Check if the current user can perform an action ")
     public boolean checkAuthorizedAction(@PathParam("id") String projectId,
                                          @ApiParam("action to be checked for the current user")
-                                         @QueryParam("action") ProjectAuthorizationAction action)
+                                         @QueryParam("action") AuthorizableProjectAction action)
     {
         LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
         LegendSDLCServerException.validateNonNull(action, "action may not be null");
 
         return executeWithLogging(
-                "checking if the current user is authorized to perform the action given",
-                () -> this.projectApi.checkUserAuthorizationAction(projectId, action));
+            "checking if the current user is authorized to perform the action given",
+            () -> this.projectApi.checkUserAuthorizedAction(projectId, action));
     }
 }

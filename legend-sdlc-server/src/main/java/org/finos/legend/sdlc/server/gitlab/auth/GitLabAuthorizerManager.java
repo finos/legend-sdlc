@@ -18,7 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 import java.util.Arrays;
 
@@ -46,11 +46,11 @@ public class GitLabAuthorizerManager
         return new GitLabAuthorizerManager(gitLabAuthorizers);
     }
 
-    public GitLabToken authorize(Session session, GitLabModeInfo modeInfo)
+    public GitLabToken authorize(Session session, GitLabAppInfo appInfo)
     {
         for (GitLabAuthorizer gitLabAuthorizer : this.gitLabAuthorizers)
         {
-            GitLabToken token = gitLabAuthorizer.authorize(session, modeInfo);
+            GitLabToken token = gitLabAuthorizer.authorize(session, appInfo);
             if (token != null)
             {
                 return token;

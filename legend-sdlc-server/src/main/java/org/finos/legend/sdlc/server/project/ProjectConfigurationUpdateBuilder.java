@@ -16,12 +16,11 @@ package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 
 import java.util.Collections;
@@ -32,7 +31,6 @@ import java.util.Set;
 public class ProjectConfigurationUpdateBuilder
 {
     private final ProjectFileAccessProvider projectFileAccessProvider;
-    private final ProjectType projectType;
     private final String projectId;
     private String workspaceId;
     private WorkspaceType workspaceType;
@@ -53,22 +51,15 @@ public class ProjectConfigurationUpdateBuilder
 
     private String message;
 
-    private ProjectConfigurationUpdateBuilder(ProjectFileAccessProvider projectFileAccessProvider, ProjectType projectType, String projectId)
+    private ProjectConfigurationUpdateBuilder(ProjectFileAccessProvider projectFileAccessProvider, String projectId)
     {
         this.projectFileAccessProvider = projectFileAccessProvider;
-        this.projectType = projectType;
         this.projectId = projectId;
     }
 
     public ProjectFileAccessProvider getProjectFileAccessProvider()
     {
         return this.projectFileAccessProvider;
-    }
-
-
-    public ProjectType getProjectType()
-    {
-        return this.projectType;
     }
 
     public String getProjectId()
@@ -91,7 +82,6 @@ public class ProjectConfigurationUpdateBuilder
         this.workspaceId = workspaceId;
     }
 
-
     public boolean hasRevisionId()
     {
         return this.revisionId != null;
@@ -106,7 +96,6 @@ public class ProjectConfigurationUpdateBuilder
     {
         this.revisionId = revisionId;
     }
-
 
     public boolean hasProjectStructureVersion()
     {
@@ -471,13 +460,10 @@ public class ProjectConfigurationUpdateBuilder
         return ProjectStructure.updateProjectConfiguration(this);
     }
 
-    public static ProjectConfigurationUpdateBuilder newBuilder(ProjectFileAccessProvider projectFileAccessProvider, ProjectType projectType, String projectId)
+    public static ProjectConfigurationUpdateBuilder newBuilder(ProjectFileAccessProvider projectFileAccessProvider, String projectId)
     {
         Objects.requireNonNull(projectFileAccessProvider, "projectFileAccessProvider may not be null");
-        Objects.requireNonNull(projectType, "projectType may not be null");
         Objects.requireNonNull(projectId, "projectId may not be null");
-        return new ProjectConfigurationUpdateBuilder(projectFileAccessProvider, projectType, projectId);
+        return new ProjectConfigurationUpdateBuilder(projectFileAccessProvider, projectId);
     }
-
-
 }

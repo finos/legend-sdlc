@@ -25,7 +25,6 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -34,9 +33,9 @@ import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDepende
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -45,6 +44,8 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFil
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
+import javax.lang.model.SourceVersion;
+import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -66,18 +67,16 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.lang.model.SourceVersion;
-import javax.ws.rs.core.Response.Status;
 
 public abstract class ProjectStructure
 {
     private static final JsonMapper JSON = JsonMapper.builder()
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-            .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
-            .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
-            .build();
+        .enable(SerializationFeature.INDENT_OUTPUT)
+        .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+        .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+        .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+        .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+        .build();
 
     private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
 
@@ -352,9 +351,9 @@ public abstract class ProjectStructure
         return (configFile == null) ? null : readProjectConfiguration(configFile);
     }
 
-    public static ProjectConfiguration getDefaultProjectConfiguration(String projectId, ProjectType projectType)
+    public static ProjectConfiguration getDefaultProjectConfiguration(String projectId)
     {
-        return new SimpleProjectConfiguration(projectId, projectType, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
+        return new SimpleProjectConfiguration(projectId, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
     }
 
     public static boolean isValidGroupId(String groupId)
@@ -405,7 +404,6 @@ public abstract class ProjectStructure
             throw new LegendSDLCServerException("Invalid artifactId: " + updateBuilder.getArtifactId(), Status.BAD_REQUEST);
         }
 
-        ProjectType projectType = updateBuilder.getProjectType();
         String projectId = updateBuilder.getProjectId();
         String workspaceId = updateBuilder.getWorkspaceId();
         String revisionId = updateBuilder.getRevisionId();
@@ -423,7 +421,7 @@ public abstract class ProjectStructure
                 StringBuilder builder = new StringBuilder("Could not find current revision for ");
                 if (workspaceId != null)
                 {
-                    builder.append(workspaceType.getLabel() + " " + workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
+                    builder.append(workspaceType.getLabel()).append(" ").append(workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
                 }
                 builder.append("project ").append(projectId).append(": it may be corrupt");
                 throw new LegendSDLCServerException(builder.toString());
@@ -433,11 +431,8 @@ public abstract class ProjectStructure
         // find out what we need to update for project structure
         FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
-        ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId, projectType) : readProjectConfiguration(configFile);
-        if (projectType != currentConfig.getProjectType())
-        {
-            throw new LegendSDLCServerException("Project type mismatch for project " + projectId + ": got " + projectType + ", found " + currentConfig.getProjectType(), Status.BAD_REQUEST);
-        }
+        ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId) : readProjectConfiguration(configFile);
+
         boolean updateProjectStructureVersion = updateBuilder.hasProjectStructureVersion() && (updateBuilder.getProjectStructureVersion() != currentConfig.getProjectStructureVersion().getVersion());
         boolean updateProjectStructureExtensionVersion = updateBuilder.hasProjectStructureExtensionVersion() && !updateBuilder.getProjectStructureExtensionVersion().equals(currentConfig.getProjectStructureVersion().getExtensionVersion());
         boolean updateGroupId = updateBuilder.hasGroupId() && !updateBuilder.getGroupId().equals(currentConfig.getGroupId());
@@ -469,30 +464,26 @@ public abstract class ProjectStructure
         // validate if there are any conflicts between the dependencies
         if (updateProjectDependencies)
         {
-            validateDependencyConflicts(
-                    projectDependencies,
-                    ProjectDependency::getProjectId,
-                    (id, deps) ->
-                    {
-                        if ((deps.size() <= 1) || deps.stream().allMatch(dep -> getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities)))
-                        {
-                            return null;
-                        }
-                        List<ProjectDependency> supported = Lists.mutable.empty();
-                        List<ProjectDependency> unsupported = Lists.mutable.empty();
-                        deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
-                        StringBuilder message = new StringBuilder();
-                        unsupported.forEach(dep -> dep.appendVersionIdString((message.length() == 0) ? message : message.append(", ")));
-                        message.append((unsupported.size() == 1) ? " does" : " do").append(" not support multi-version dependency");
-                        if (!supported.isEmpty())
-                        {
-                            int startLen = message.length();
-                            supported.forEach(dep -> dep.appendVersionIdString(message.append((message.length() == startLen) ? "; " : ", ")));
-                            message.append((supported.size() == 1) ? " does" : " do");
-                        }
-                        return message.toString();
-                    },
-                    "projects");
+            validateDependencyConflicts(projectDependencies, ProjectDependency::getProjectId, (id, deps) ->
+            {
+                if ((deps.size() <= 1) || deps.stream().allMatch(dep -> getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities)))
+                {
+                    return null;
+                }
+                List<ProjectDependency> supported = Lists.mutable.empty();
+                List<ProjectDependency> unsupported = Lists.mutable.empty();
+                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
+                StringBuilder message = new StringBuilder();
+                unsupported.forEach(dep -> dep.appendVersionIdString((message.length() == 0) ? message : message.append(", ")));
+                message.append((unsupported.size() == 1) ? " does" : " do").append(" not support multi-version dependency");
+                if (!supported.isEmpty())
+                {
+                    int startLen = message.length();
+                    supported.forEach(dep -> dep.appendVersionIdString(message.append((message.length() == startLen) ? "; " : ", ")));
+                    message.append((supported.size() == 1) ? " does" : " do");
+                }
+                return message.toString();
+            }, "projects");
         }
 
         // check if we need to update any metamodel dependencies
@@ -532,10 +523,10 @@ public abstract class ProjectStructure
         if (updateMetamodelDependencies)
         {
             validateDependencyConflicts(
-                    metamodelDependencies,
-                    MetamodelDependency::getMetamodel,
-                    (id, deps) -> (deps.size() > 1) ? deps.stream().collect(StringBuilder::new, (builder, dep) -> dep.appendVersionIdString(builder.append((builder.length() == 0) ? "multiple versions not allowed: " : ", ")), StringBuilder::append).toString() : null,
-                    "metamodels");
+                metamodelDependencies,
+                MetamodelDependency::getMetamodel,
+                (id, deps) -> (deps.size() > 1) ? deps.stream().collect(StringBuilder::new, (builder, dep) -> dep.appendVersionIdString(builder.append((builder.length() == 0) ? "multiple versions not allowed: " : ", ")), StringBuilder::append).toString() : null,
+                "metamodels");
         }
 
 
@@ -632,44 +623,43 @@ public abstract class ProjectStructure
         List<EntitySourceDirectory> newEntityDirectories = newProjectStructure.getEntitySourceDirectories();
         if (!currentEntityDirectories.equals(newEntityDirectories))
         {
-            currentEntityDirectories.forEach(currentSourceDirectory ->
-                    fileAccessContext.getFilesInDirectory(currentSourceDirectory.getDirectory()).forEach(file ->
+            currentEntityDirectories.forEach(currentSourceDirectory -> fileAccessContext.getFilesInDirectory(currentSourceDirectory.getDirectory()).forEach(file ->
+            {
+                String currentPath = file.getPath();
+                if (currentSourceDirectory.isPossiblyEntityFilePath(currentPath))
+                {
+                    byte[] currentBytes = file.getContentAsBytes();
+                    Entity entity;
+                    try
                     {
-                        String currentPath = file.getPath();
-                        if (currentSourceDirectory.isPossiblyEntityFilePath(currentPath))
+                        entity = currentSourceDirectory.deserialize(currentBytes);
+                    }
+                    catch (Exception e)
+                    {
+                        StringBuilder builder = new StringBuilder("Error deserializing entity from file \"").append(currentPath).append('"');
+                        StringTools.appendThrowableMessageIfPresent(builder, e);
+                        throw new LegendSDLCServerException(builder.toString(), e);
+                    }
+                    EntitySourceDirectory newSourceDirectory = Iterate.detectWith(newEntityDirectories, EntitySourceDirectory::canSerialize, entity);
+                    if (newSourceDirectory == null)
+                    {
+                        throw new LegendSDLCServerException("Could not find a new source directory for entity " + entity.getPath() + ", currently in " + currentPath);
+                    }
+                    if (!currentSourceDirectory.equals(newSourceDirectory))
+                    {
+                        String newPath = newSourceDirectory.entityPathToFilePath(entity.getPath());
+                        byte[] newBytes = newSourceDirectory.serializeToBytes(entity);
+                        if (!newPath.equals(currentPath))
                         {
-                            byte[] currentBytes = file.getContentAsBytes();
-                            Entity entity;
-                            try
-                            {
-                                entity = currentSourceDirectory.deserialize(currentBytes);
-                            }
-                            catch (Exception e)
-                            {
-                                StringBuilder builder = new StringBuilder("Error deserializing entity from file \"").append(currentPath).append('"');
-                                StringTools.appendThrowableMessageIfPresent(builder, e);
-                                throw new LegendSDLCServerException(builder.toString(), e);
-                            }
-                            EntitySourceDirectory newSourceDirectory = Iterate.detectWith(newEntityDirectories, EntitySourceDirectory::canSerialize, entity);
-                            if (newSourceDirectory == null)
-                            {
-                                throw new LegendSDLCServerException("Could not find a new source directory for entity " + entity.getPath() + ", currently in " + currentPath);
-                            }
-                            if (!currentSourceDirectory.equals(newSourceDirectory))
-                            {
-                                String newPath = newSourceDirectory.entityPathToFilePath(entity.getPath());
-                                byte[] newBytes = newSourceDirectory.serializeToBytes(entity);
-                                if (!newPath.equals(currentPath))
-                                {
-                                    operations.add(ProjectFileOperation.moveFile(currentPath, newPath, newBytes));
-                                }
-                                else if (!Arrays.equals(currentBytes, newBytes))
-                                {
-                                    operations.add(ProjectFileOperation.modifyFile(currentPath, newBytes));
-                                }
-                            }
+                            operations.add(ProjectFileOperation.moveFile(currentPath, newPath, newBytes));
                         }
-                    }));
+                        else if (!Arrays.equals(currentBytes, newBytes))
+                        {
+                            operations.add(ProjectFileOperation.modifyFile(currentPath, newBytes));
+                        }
+                    }
+                }
+            }));
         }
 
         // Collect any further update operations
@@ -689,7 +679,6 @@ public abstract class ProjectStructure
     private static void updateOrAddDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
     {
         List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
-        List<ProjectDependency> nonProdDependencies = Lists.mutable.empty();
         SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
         for (ProjectDependency projectDependency : toUpdateProjectDependencies)
         {
@@ -701,10 +690,6 @@ public abstract class ProjectStructure
                     if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
                     {
                         unknownDependencies.add(projectDependency);
-                    }
-                    else if (dependencyConfig.getProjectType() != ProjectType.PRODUCTION)
-                    {
-                        nonProdDependencies.add(projectDependency);
                     }
                     else
                     {
@@ -725,7 +710,7 @@ public abstract class ProjectStructure
                 projectDependencies.add(ProjectDependency.newProjectDependency(projectDependency.getProjectId(), projectDependency.getVersionId()));
             }
         }
-        if (!unknownDependencies.isEmpty() || !nonProdDependencies.isEmpty() || !accessExceptions.isEmpty())
+        if (!unknownDependencies.isEmpty() || !accessExceptions.isEmpty())
         {
             StringBuilder builder = new StringBuilder("There were issues with one or more added project dependencies");
             if (!unknownDependencies.isEmpty())
@@ -733,12 +718,6 @@ public abstract class ProjectStructure
                 builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
                 unknownDependencies.sort(Comparator.naturalOrder());
                 unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
-            }
-            if (!nonProdDependencies.isEmpty())
-            {
-                builder.append("; non-production ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                nonProdDependencies.sort(Comparator.naturalOrder());
-                nonProdDependencies.forEach(d -> d.appendDependencyString((d == nonProdDependencies.get(0)) ? builder : builder.append(", ")));
             }
             if (!accessExceptions.isEmpty())
             {
@@ -958,10 +937,7 @@ public abstract class ProjectStructure
          */
         public boolean isPossiblyEntityFilePath(String filePath)
         {
-            return (filePath != null) &&
-                    (filePath.length() > (this.directory.length() + this.serializer.getDefaultFileExtension().length() + 2)) &&
-                    filePathStartsWithDirectory(filePath) &&
-                    filePathHasEntityExtension(filePath);
+            return (filePath != null) && (filePath.length() > (this.directory.length() + this.serializer.getDefaultFileExtension().length() + 2)) && filePathStartsWithDirectory(filePath) && filePathHasEntityExtension(filePath);
         }
 
         /**
@@ -1016,16 +992,13 @@ public abstract class ProjectStructure
 
         private boolean filePathStartsWithDirectory(String filePath)
         {
-            return filePath.startsWith(this.directory) &&
-                    ((filePath.length() == this.directory.length()) || (filePath.charAt(this.directory.length()) == '/'));
+            return filePath.startsWith(this.directory) && ((filePath.length() == this.directory.length()) || (filePath.charAt(this.directory.length()) == '/'));
         }
 
         private boolean filePathHasEntityExtension(String filePath)
         {
             String extension = this.serializer.getDefaultFileExtension();
-            return filePath.endsWith(extension) &&
-                    (filePath.length() > extension.length()) &&
-                    (filePath.charAt(filePath.length() - (extension.length() + 1)) == '.');
+            return filePath.endsWith(extension) && (filePath.length() > extension.length()) && (filePath.charAt(filePath.length() - (extension.length() + 1)) == '.');
         }
 
         // Serialization

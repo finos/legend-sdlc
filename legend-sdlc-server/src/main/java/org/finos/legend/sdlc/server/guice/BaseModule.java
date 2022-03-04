@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBackupApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBuildApi;
@@ -89,6 +90,7 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
+            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getGitLabConfiguration()));
             binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
         }
         configureMetadataApi(binder);

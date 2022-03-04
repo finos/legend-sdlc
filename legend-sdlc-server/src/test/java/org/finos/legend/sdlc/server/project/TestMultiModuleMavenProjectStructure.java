@@ -20,7 +20,6 @@ import org.apache.maven.model.Parent;
 import org.apache.maven.model.Plugin;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -48,20 +47,9 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected static final LegendTestUtilsMavenHelper LEGEND_TEST_UTILS_MAVEN_HELPER = new LegendTestUtilsMavenHelper("org.finos.legend.sdlc", "legend-sdlc-test-utils", "${platform.legend-sdlc.version}");
 
     @Test
-    public void testModuleNames_Production()
+    public void testModuleNames()
     {
-        testModuleNames(ProjectType.PRODUCTION);
-    }
-
-    @Test
-    public void testModuleNames_Prototype()
-    {
-        testModuleNames(ProjectType.PROTOTYPE);
-    }
-
-    protected void testModuleNames(ProjectType projectType)
-    {
-        MultiModuleMavenProjectStructure projectStructure = buildProjectStructure(projectType);
+        MultiModuleMavenProjectStructure projectStructure = buildProjectStructure();
 
         Assert.assertTrue(projectStructure.getEntitiesModuleName(), MultiModuleMavenProjectStructure.isValidModuleName(projectStructure.getEntitiesModuleName()));
         Assert.assertEquals(1, projectStructure.getArtifactIdsForType(ArtifactType.entities).count());
@@ -80,13 +68,13 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         Assert.assertNotNull(projectStructure.getEntitiesModuleName(), entitiesMavenModel);
         assertMavenEntitiesModelValid(entitiesMavenModel, projectStructure);
 
-        Map<ArtifactType,List<String>> expectedArtifacts = getExpectedArtifactIdsByType(projectStructure);
+        Map<ArtifactType, List<String>> expectedArtifacts = getExpectedArtifactIdsByType(projectStructure);
         expectedArtifacts.keySet().forEach(artifactType ->
         {
             List<String> projectArtifactsForType = projectStructure.getArtifactIdsForType(artifactType).collect(Collectors.toList());
-            Assert.assertEquals("same size",expectedArtifacts.get(artifactType).size(),projectArtifactsForType.size());
-            Assert.assertTrue("projects artifacts contains all expected",projectArtifactsForType.containsAll(expectedArtifacts.get(artifactType)));
-            Assert.assertTrue("expected contains all project artifacts",expectedArtifacts.get(artifactType).containsAll(projectArtifactsForType));
+            Assert.assertEquals("same size", expectedArtifacts.get(artifactType).size(), projectArtifactsForType.size());
+            Assert.assertTrue("projects artifacts contains all expected", projectArtifactsForType.containsAll(expectedArtifacts.get(artifactType)));
+            Assert.assertTrue("expected contains all project artifacts", expectedArtifacts.get(artifactType).containsAll(projectArtifactsForType));
 
         });
         Map<String, Map<ModuleConfigType, Method>> expectedConfigMethods = getExpectedConfigMethods();
@@ -94,8 +82,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         {
             Model otherModuleMavenModel = projectStructure.getModuleMavenModel(otherModuleName, fileAccessContext);
             Assert.assertNotNull(otherModuleName, otherModuleMavenModel);
-            assertMavenOtherModuleModelValid(otherModuleName, otherModuleMavenModel, projectStructure,
-                    expectedConfigMethods.getOrDefault(MultiModuleMavenProjectStructure.getModuleConfigName(projectStructure.getOtherModuleArtifactType(otherModuleName)), Collections.emptyMap()));
+            assertMavenOtherModuleModelValid(otherModuleName, otherModuleMavenModel, projectStructure, expectedConfigMethods.getOrDefault(MultiModuleMavenProjectStructure.getModuleConfigName(projectStructure.getOtherModuleArtifactType(otherModuleName)), Collections.emptyMap()));
         }
     }
 
@@ -110,9 +97,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         super.assertMavenProjectModelValid(mavenModel, projectStructure);
         Assert.assertEquals(MavenProjectStructure.POM_PACKAGING, mavenModel.getPackaging());
 
-        Set<String> expectedModules = Stream.concat(Stream.of(projectStructure.getEntitiesModuleName()), projectStructure.getOtherModulesNames().stream())
-                .map(projectStructure::getModuleFullName)
-                .collect(Collectors.toSet());
+        Set<String> expectedModules = Stream.concat(Stream.of(projectStructure.getEntitiesModuleName()), projectStructure.getOtherModulesNames().stream()).map(projectStructure::getModuleFullName).collect(Collectors.toSet());
         Assert.assertEquals(expectedModules, Sets.mutable.withAll(mavenModel.getModules()));
     }
 
@@ -143,17 +128,17 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected void assertMavenEntitiesModelValid(Model mavenEntitiesModel, T projectStructure)
     {
         assertMavenModelValid(
-                projectStructure.getEntitiesModuleName(),
-                mavenEntitiesModel,
-                projectStructure,
-                ps -> ps.getProjectConfiguration().getGroupId(),
-                ps -> ps.getModuleFullName(ps.getEntitiesModuleName()),
-                this::getExpectedParent,
-                this::collectExpectedEntitiesModelProperties,
-                this::collectExpectedEntitiesModelDependencies,
-                this::collectExpectedEntitiesModelPlugins,
-                this::collectExpectedEntitiesModelDependencyManagement,
-                null);
+            projectStructure.getEntitiesModuleName(),
+            mavenEntitiesModel,
+            projectStructure,
+            ps -> ps.getProjectConfiguration().getGroupId(),
+            ps -> ps.getModuleFullName(ps.getEntitiesModuleName()),
+            this::getExpectedParent,
+            this::collectExpectedEntitiesModelProperties,
+            this::collectExpectedEntitiesModelDependencies,
+            this::collectExpectedEntitiesModelPlugins,
+            this::collectExpectedEntitiesModelDependencyManagement,
+            null);
     }
 
     protected void assertMavenOtherModuleModelValid(String otherModuleName, Model mavenOtherModuleModel, T projectStructure, Map<ModuleConfigType, Method> moduleExpectedConfigMethods)
@@ -166,17 +151,17 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         };
         BiConsumer<? super T, Consumer<Plugin>> pluginCollector = (ps, c) -> invokeExpectedConfigMethod(moduleExpectedConfigMethods.get(ModuleConfigType.PLUGINS), otherModuleName, ps, c);
         assertMavenModelValid(
-                otherModuleName,
-                mavenOtherModuleModel,
-                projectStructure,
-                ps -> ps.getProjectConfiguration().getGroupId(),
-                ps -> ps.getModuleFullName(otherModuleName),
-                this::getExpectedParent,
-                propertyCollector,
-                dependencyCollector,
-                pluginCollector,
-                null,
-                null);
+            otherModuleName,
+            mavenOtherModuleModel,
+            projectStructure,
+            ps -> ps.getProjectConfiguration().getGroupId(),
+            ps -> ps.getModuleFullName(otherModuleName),
+            this::getExpectedParent,
+            propertyCollector,
+            dependencyCollector,
+            pluginCollector,
+            null,
+            null);
     }
 
     protected void collectExpectedEntitiesModelProperties(T projectStructure, BiConsumer<String, String> propertyConsumer)
