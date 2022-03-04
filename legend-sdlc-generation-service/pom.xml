@@ -188,11 +188,6 @@
             <artifactId>jetty-servlet</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>commons-io</groupId>
-            <artifactId>commons-io</artifactId>
-            <!--not define as test scope to avoid overriding the scope from the transitive dependency-->
-        </dependency>
         <!-- TEST -->
     </dependencies>
 </project>
