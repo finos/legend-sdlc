@@ -28,6 +28,7 @@ See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for gen
 application in GitLab. The application will need to have "api" scope and have [http://`SDLC_SERVER`/api/auth/callback](http://127.0.0.1:7070/api/auth/callback) as a
 redirect URI, where `SDLC_SERVER` is the host and possibly port needed to connect to the SDLC Server. (For testing
 purposes, you can use `127.0.0.1:7070`) This redirect URI will also need to appear in your configuration file.
+If you are testing SDLC server in combination with Legend Studio you should also add the urls with (`localhost:7070`)
 
 If you are using the GitlabClient for authentication (see the pac4j section of the configuration), you will need a
 GitLab application for that as well. It will need "openid" and "profile" scopes, and will require
