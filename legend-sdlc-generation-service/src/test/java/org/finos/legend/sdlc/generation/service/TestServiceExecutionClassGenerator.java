@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.generation.service;
 
 import io.github.classgraph.ClassGraph;
-import org.apache.commons.io.IOUtils;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
@@ -33,13 +32,11 @@ import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
+import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.net.URI;
@@ -53,6 +50,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.ToolProvider;
 
 public class TestServiceExecutionClassGenerator
 {
@@ -147,12 +149,40 @@ public class TestServiceExecutionClassGenerator
         Assert.assertEquals(expectedClassName, generatedJavaClass.getName());
         // Uncomment to update generated code
         // org.apache.commons.io.FileUtils.writeStringToFile(new java.io.File("src/test/resources/generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode(), StandardCharsets.UTF_8);
-        Assert.assertEquals("Generated code matches expected formatting?", generatedJavaClass.getCode(), IOUtils.resourceToString("generation/service/" + service.name + ".generated.java", StandardCharsets.UTF_8, Thread.currentThread().getContextClassLoader()));
+        Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedServiceJavaFile(service.name), generatedJavaClass.getCode());
         Class<?> cls = compileGeneratedJavaClass(generatedJavaClass);
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
         assertRunMethodsExist(cls);
         return cls;
+    }
+
+    private String loadExpectedGeneratedServiceJavaFile(String serviceName)
+    {
+        String resourceName = "generation/service/" + serviceName + ".generated.java";
+        URL url = getClass().getClassLoader().getResource(resourceName);
+        if (url == null)
+        {
+            throw new RuntimeException("Could not find resource: " + resourceName);
+        }
+        StringBuilder builder = new StringBuilder();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(url.openStream(), StandardCharsets.UTF_8)))
+        {
+            String line = reader.readLine();
+            if (line != null)
+            {
+                builder.append(line);
+                while ((line = reader.readLine()) != null)
+                {
+                    builder.append('\n').append(line);
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Error loading " + resourceName, e);
+        }
+        return builder.toString();
     }
 
     private Class<?> compileGeneratedJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass) throws ClassNotFoundException

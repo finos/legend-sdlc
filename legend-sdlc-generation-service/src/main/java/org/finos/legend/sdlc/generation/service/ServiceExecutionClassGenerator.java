@@ -22,7 +22,12 @@ import freemarker.template.TemplateException;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
@@ -32,26 +37,22 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 
-import javax.lang.model.SourceVersion;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.StringWriter;
 import java.math.BigDecimal;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionClassGenerator
 {
-    private static final List<String> PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES = Arrays.asList("streamProvider", "inputStreamProvider");
+    private static final ImmutableList<String> PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES = Lists.immutable.with("streamProvider", "inputStreamProvider");
 
     private final Service service;
     private final String packagePrefix;
@@ -67,50 +68,56 @@ public class ServiceExecutionClassGenerator
     public GeneratedJavaClass generate()
     {
         String packageName = generatePackageName();
-        List<ExecutionParameter> executionParameters = getExecutionParameters();
-        MutableMap<String, Object> dataModel = Maps.mutable
-                .with(
-                        "classPackage", packageName,
-                        "service", this.service,
-                        "planResourceName", this.planResourceName,
-                        "streamProviderParameterName", getStreamProviderParameterName(executionParameters)
-                ).withKeyValue("imports", getImports(executionParameters))
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters();
+        MutableMap<String, Object> dataModel = Maps.mutable.<String, Object>empty()
+                .withKeyValue("classPackage", packageName)
+                .withKeyValue("service", this.service)
+                .withKeyValue("planResourceName", this.planResourceName)
+                .withKeyValue("streamProviderParameterName", getStreamProviderParameterName(executionParameters))
+                .withKeyValue("imports", getImports(executionParameters))
                 .withKeyValue("executionParameters", executionParameters);
 
-        String freeMarkerTemplate = "generation/service/ServiceExecutionClassGenerator.ftl";
-        InputStream inputStream = Objects.requireNonNull(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream(freeMarkerTemplate),
-                () -> "Unable to find freemarker template '" + freeMarkerTemplate + "' on context classpath"
-        );
-        try (InputStreamReader reader = new InputStreamReader(inputStream))
+        DefaultObjectWrapper objectWrapper = new DefaultObjectWrapper(Configuration.VERSION_2_3_30);
+        objectWrapper.setExposeFields(true);
+        objectWrapper.setExposureLevel(BeansWrapper.EXPOSE_ALL);
+        Template template = loadTemplate();
+        try
         {
-            DefaultObjectWrapper objectWrapper = new DefaultObjectWrapper(Configuration.VERSION_2_3_30);
-            objectWrapper.setExposeFields(true);
-            objectWrapper.setExposureLevel(BeansWrapper.EXPOSE_ALL);
-            Template template = new Template("ServiceExecutionClassGenerator", reader, new Configuration(Configuration.VERSION_2_3_30));
             StringWriter code = new StringWriter();
             template.process(dataModel, code, objectWrapper);
-            return new GeneratedJavaClass(packageName + "." + this.service.name, code.toString());
+            // Use \n for all line breaks to ensure consistent behavior across environments
+            String codeString = code.toString().replaceAll("\\R", "\n");
+            return new GeneratedJavaClass(packageName + "." + this.service.name, codeString);
         }
         catch (TemplateException | IOException e)
         {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Error generating execution class for " + this.service.getPath(), e);
         }
     }
 
-    private List<String> getImports(List<ExecutionParameter> executionParameters)
+    private Template loadTemplate()
     {
-        Stream<? extends Class<?>> classesToImportFromParameters = executionParameters.stream()
-                .map(x -> getVariableJavaClass(x.variable, false))
-                .filter(x -> !Objects.equals(x.getPackage().getName(), "java.lang"));
+        String freeMarkerTemplate = "generation/service/ServiceExecutionClassGenerator.ftl";
+        URL templateURL = Thread.currentThread().getContextClassLoader().getResource(freeMarkerTemplate);
+        if (templateURL == null)
+        {
+            throw new RuntimeException("Unable to find freemarker template '" + freeMarkerTemplate + "' on context classpath");
+        }
+        try (InputStreamReader reader = new InputStreamReader(templateURL.openStream(), StandardCharsets.UTF_8))
+        {
+            return new Template("ServiceExecutionClassGenerator", reader, new Configuration(Configuration.VERSION_2_3_30));
+        }
+        catch (IOException e)
+        {
+            throw new RuntimeException("Error loading freemarker template from " + freeMarkerTemplate, e);
+        }
+    }
 
-        Stream<? extends Class<?>> defaultJdkImports = Stream.of(List.class);
-
-        return Stream.concat(classesToImportFromParameters, defaultJdkImports)
-                .distinct()
-                .map(Class::getName)
-                .sorted()
-                .collect(Collectors.toList());
+    private MutableList<String> getImports(ListIterable<ExecutionParameter> executionParameters)
+    {
+        MutableSet<Class<?>> imports = executionParameters.collect(p -> getVariableJavaClass(p.variable, false), Sets.mutable.with(List.class));
+        imports.removeIf(c -> "java.lang".equals(c.getPackage().getName()));
+        return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
 
     private String generatePackageName()
@@ -120,18 +127,20 @@ public class ServiceExecutionClassGenerator
         {
             throw new RuntimeException("Service does not have a package: " + this.service.getPath());
         }
-        if (this.packagePrefix == null)
+        StringBuilder builder = new StringBuilder();
+        if (this.packagePrefix != null)
         {
-            return Arrays.stream(servicePackage.split("::")).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining("."));
+            if (!SourceVersion.isName(this.packagePrefix))
+            {
+                throw new RuntimeException("Invalid package prefix: \"" + this.packagePrefix + "\"");
+            }
+            builder.append(this.packagePrefix).append('.');
         }
-        if (!SourceVersion.isName(this.packagePrefix))
-        {
-            throw new RuntimeException("Invalid package prefix: \"" + this.packagePrefix + "\"");
-        }
-        return this.packagePrefix + "." + Arrays.stream(servicePackage.split("::")).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining("."));
+        ArrayAdapter.adapt(servicePackage.split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, ".");
+        return builder.toString();
     }
 
-    private List<ExecutionParameter> getExecutionParameters()
+    private MutableList<ExecutionParameter> getExecutionParameters()
     {
         Execution execution = this.service.execution;
         if (!(execution instanceof PureExecution))
@@ -139,8 +148,8 @@ public class ServiceExecutionClassGenerator
             throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
         }
         Lambda lambda = ((PureExecution) execution).func;
-        List<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
-        Set<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         if (execution instanceof PureMultiExecution)
         {
             String executionKey = ((PureMultiExecution) execution).executionKey;
@@ -167,23 +176,21 @@ public class ServiceExecutionClassGenerator
         return parameters;
     }
 
-    private String getStreamProviderParameterName(List<ExecutionParameter> parameters)
+    private String getStreamProviderParameterName(ListIterable<ExecutionParameter> parameters)
     {
-        Set<String> parameterNames = parameters.stream().map(ExecutionParameter::getLegendParamName).collect(Collectors.toSet());
-        Optional<String> name = PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES.stream().filter(n -> !parameterNames.contains(n)).findFirst();
-        if (!name.isPresent())
+        MutableSet<String> parameterNames = parameters.collect(ExecutionParameter::getLegendParamName, Sets.mutable.ofInitialCapacity(parameters.size()));
+        String name = PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES.detect(n -> !parameterNames.contains(n));
+        if (name == null)
         {
-            String previousPrefix = "";
-            while (!name.isPresent())
+            String prefix = "";
+            while (name == null)
             {
-                String prefix = "_" + previousPrefix;
-                name = PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES.stream().map(prefix::concat).filter(n -> !parameterNames.contains(n)).findFirst();
-                previousPrefix = prefix;
+                prefix += "_";
+                name = PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES.asLazy().collect(prefix::concat).detect(n -> !parameterNames.contains(n));
             }
         }
-        return name.get();
+        return name;
     }
-
 
     private static Class<?> getVariableJavaClass(Variable variable, boolean usePrimitive)
     {
