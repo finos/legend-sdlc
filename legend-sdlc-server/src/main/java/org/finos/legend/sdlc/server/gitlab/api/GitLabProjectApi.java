@@ -356,21 +356,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
         catch (Exception e)
         {
-            // Try to delete the branch
-            try
-            {
-                boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                    getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
-                if (!deleted)
-                {
-                    LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
-                }
-            }
-            catch (Exception ee)
-            {
-                // Possibly failed to delete branch - unfortunate, but ignore it
-                LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ee);
-            }
+            // Try to delete the branch in case of exception
+            deleteWorkspace(projectId, repositoryApi, workspaceId);
             throw e;
         }
 
@@ -382,20 +369,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             reviewId = null;
 
             // Try to delete the branch
-            try
-            {
-                boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                    getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
-                if (!deleted)
-                {
-                    LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
-                }
-            }
-            catch (Exception e)
-            {
-                // Possibly failed to delete branch - unfortunate, but ignore it
-                LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, e);
-            }
+            deleteWorkspace(projectId, repositoryApi, workspaceId);
         }
         else
         {
@@ -408,21 +382,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             }
             catch (Exception e)
             {
-                // Try to delete the branch
-                try
-                {
-                    boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                        getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
-                    if (!deleted)
-                    {
-                        LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
-                    }
-                }
-                catch (Exception ee)
-                {
-                    // Possibly failed to delete branch - unfortunate, but ignore it
-                    LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ee);
-                }
+                // Try to delete the branch in case of exception
+                deleteWorkspace(projectId, repositoryApi, workspaceId);
                 throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id + " of type " + type,
                     () -> "Could not find workspace " + workspaceId + " project " + id + " of type " + type,
@@ -456,6 +417,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             }
             catch (Exception e)
             {
+                // Try to delete the branch in case of exception
+                deleteWorkspace(projectId, repositoryApi, workspaceId);
                 throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to import project " + id + " of type " + type,
                     () -> "Could not find project " + id + " of type " + type,
@@ -477,6 +440,24 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 return reviewId;
             }
         };
+    }
+
+    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, String workspaceId)
+    {
+        try
+        {
+            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
+                    getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
+            if (!deleted)
+            {
+                LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
+            }
+        }
+        catch (Exception ex)
+        {
+            // Possibly failed to delete branch - unfortunate, but ignore it
+            LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ex);
+        }
     }
 
     @Override
