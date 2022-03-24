@@ -21,6 +21,8 @@ import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 
+import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -29,8 +31,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
-import java.util.Set;
 
 @Path("/projects/{projectId}/versions/{versionId}/workflows")
 @Api("Workflows")
@@ -58,7 +58,7 @@ public class VersionWorkflowsResource extends BaseResource
                                        @ApiParam("Limit the number of workflows returned (if not provided or the provided value is non-positive, no filtering will be applied)") Integer limit)
     {
         return executeWithLogging(
-                "getting workflows for version " + versionId + " in project " + projectId,
+                "getting workflows for version " + versionId + " of project " + projectId,
                 () -> this.workflowApi.getVersionWorkflowAccessContext(projectId, versionId).getWorkflows(revisionIds, statuses, limit)
         );
     }
@@ -69,7 +69,7 @@ public class VersionWorkflowsResource extends BaseResource
     public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId, @PathParam("workflowId") String workflowId)
     {
         return executeWithLogging(
-                "getting workflow " + workflowId + " for version " + versionId + " in project " + projectId,
+                "getting workflow " + workflowId + " for version " + versionId + " of project " + projectId,
                 () -> this.workflowApi.getVersionWorkflowAccessContext(projectId, versionId).getWorkflow(workflowId)
         );
     }

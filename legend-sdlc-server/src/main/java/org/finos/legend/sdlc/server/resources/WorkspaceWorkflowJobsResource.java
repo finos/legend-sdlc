@@ -59,7 +59,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
-                "getting workflow jobs for project " + projectId + " in user workspace " + workspaceId,
+                "getting workflow jobs for user workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
         );
     }
@@ -73,7 +73,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
+                "getting workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -88,7 +88,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                        @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for project " + projectId + " in user workspace " + workspaceId,
+                "getting workflow job logs " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId,
                 () ->
                 {
                     String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
@@ -108,7 +108,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "running workflow job " + workflowJobId + " for project " + projectId,
+                "running workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).runWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -122,7 +122,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                         @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "retrying workflow job " + workflowJobId + " for project " + projectId,
+                "retrying workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -137,7 +137,7 @@ public class WorkspaceWorkflowJobsResource extends BaseResource
                                          @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "canceling workflow job " + workflowJobId + " for project " + projectId,
+                "canceling workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }

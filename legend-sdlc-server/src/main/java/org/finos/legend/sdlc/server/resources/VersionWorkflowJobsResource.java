@@ -57,7 +57,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
-                "getting workflow jobs for project " + projectId,
+                "getting workflow jobs for version " + versionId + " of project " + projectId,
                 () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobs(workflowId, statuses)
         );
     }
@@ -71,7 +71,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for project " + projectId,
+                "getting workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
                 () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -86,7 +86,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                        @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for project " + projectId,
+                "getting workflow job logs " + workflowJobId + " for version " + versionId + " of project " + projectId,
                 () ->
                 {
                     String logs = this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobLog(workflowId, workflowJobId);
@@ -107,7 +107,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "running workflow job " + workflowJobId + " for project " + projectId,
+                "running workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
                 () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).runWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -121,7 +121,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                         @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "retrying workflow job " + workflowJobId + " for project " + projectId,
+                "retrying workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
                 () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -136,7 +136,7 @@ public class VersionWorkflowJobsResource extends BaseResource
                                          @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "canceling workflow job " + workflowJobId + " for project " + projectId,
+                "canceling workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
                 () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }
