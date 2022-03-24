@@ -36,7 +36,6 @@ import org.gitlab4j.api.models.JobStatus;
 import org.gitlab4j.api.models.Pipeline;
 
 import java.time.Instant;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -112,6 +111,27 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             }
         };
     }
+    
+    @Override
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        return new GitLabWorkflowJobAccessContext(projectId)
+        {
+            @Override
+            protected String getRef()
+            {
+                return "refs/merge-requests/" + reviewId + "/head";
+            }
+
+            @Override
+            protected String getRefInfoForException()
+            {
+                return "review " + reviewId + " of project " + projectId;
+            }
+        };
+    }
 
     private abstract class GitLabWorkflowJobAccessContext implements WorkflowJobAccessContext
     {
@@ -140,8 +160,6 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
         public List<WorkflowJob> getWorkflowJobs(String workflowId, Iterable<WorkflowJobStatus> statuses)
         {
             LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-
-            Set<WorkflowJobStatus> statusSet = (statuses == null) ? Collections.emptySet() : ((statuses instanceof Set) ? (Set<WorkflowJobStatus>) statuses : Iterate.addAllTo(statuses, EnumSet.noneOf(WorkflowJobStatus.class)));
 
             int pipelineId = parseIntegerIdIfNotNull(workflowId);
             GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
@@ -181,9 +199,13 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                         () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
             }
             MutableList<WorkflowJob> workflowJobs = ListIterate.collect(jobs, this::fromGitLabJob);
-            if (!statusSet.isEmpty())
+            if (statuses != null)
             {
-                workflowJobs.removeIf(job -> !statusSet.contains(job.getStatus()));
+                Set<WorkflowJobStatus> statusSet = (statuses instanceof Set) ? (Set<WorkflowJobStatus>) statuses : Iterate.addAllTo(statuses, EnumSet.noneOf(WorkflowJobStatus.class));
+                if (!statusSet.isEmpty())
+                {
+                    workflowJobs.removeIf(job -> !statusSet.contains(job.getStatus()));
+                }
             }
             return workflowJobs;
         }
