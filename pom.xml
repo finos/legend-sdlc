@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.70.2-SNAPSHOT</version>
+    <version>0.71.0</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -105,7 +105,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/finos/legend-sdlc</developerConnection>
-        <tag>legend-sdlc-0.70.0</tag>
+        <tag>legend-sdlc-0.71.0</tag>
     </scm>
 
     <build>
