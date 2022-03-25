@@ -1,28 +1,35 @@
 syntax = "proto3";
-import "google/protobuf/timestamp.proto";
 package model;
+
+import "google/protobuf/timestamp.proto";
+
 message Address {
   string street = 1;
   City city = 2;
   Country country = 3;
 }
+
 enum City {
   London = 0;
   NY = 1;
 }
+
 enum Country {
   UK = 0;
   USA = 1;
 }
+
 message Firm {
   Person employees = 1;
   string legal_name = 2;
   IncType inc_type = 3;
 }
+
 enum IncType {
   CORP = 0;
   LLC = 1;
 }
+
 message Person {
   string last_name = 1;
   string first_name = 2;

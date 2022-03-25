@@ -100,9 +100,11 @@ public class TestFileGenerationFactory
         MapIterable<String, GenerationOutput> protobufOutputs = LazyIterate.adapt(protoBufResult).groupByUniqueKey(GenerationOutput::getFileName);
         Assert.assertEquals("syntax = \"proto3\";\n" +
                 "package model;\n" +
+                "\n" +
                 "message Firm {\n" +
                 "  Person employees = 1;\n" +
                 "}\n" +
+                "\n" +
                 "message Person {\n" +
                 "  string first_name = 1;\n" +
                 "  string last_name = 2;\n" +
