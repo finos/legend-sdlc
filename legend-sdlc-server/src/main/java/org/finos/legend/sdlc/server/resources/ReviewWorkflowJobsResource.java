@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2022 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -35,16 +35,16 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/versions/{versionId}/workflows/{workflowId}/jobs")
+@Path("/projects/{projectId}/reviews/{reviewId}/workflows/{workflowId}/jobs")
 @Api("Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class VersionWorkflowJobsResource extends BaseResource
+public class ReviewWorkflowJobsResource extends BaseResource
 {
     private final WorkflowJobApi workflowJobApi;
 
     @Inject
-    public VersionWorkflowJobsResource(WorkflowJobApi workflowJobApi)
+    public ReviewWorkflowJobsResource(WorkflowJobApi workflowJobApi)
     {
         this.workflowJobApi = workflowJobApi;
     }
@@ -52,13 +52,13 @@ public class VersionWorkflowJobsResource extends BaseResource
     @GET
     @ApiOperation(value = "Get jobs for a workflow", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
-                                             @PathParam("versionId") String versionId,
+                                             @PathParam("reviewId") String reviewId,
                                              @PathParam("workflowId") String workflowId,
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
-                "getting workflow jobs for version " + versionId + " of project " + projectId,
-                () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobs(workflowId, statuses)
+                "getting workflow jobs for review " + reviewId + " for project " + projectId,
+                () -> this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -66,13 +66,13 @@ public class VersionWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}")
     @ApiOperation("Get a workflow job")
     public WorkflowJob getWorkflowJob(@PathParam("projectId") String projectId,
-                                      @PathParam("versionId") String versionId,
+                                      @PathParam("reviewId") String reviewId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
-                () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJob(workflowId, workflowJobId)
+                "getting workflow job " + workflowJobId + "for review " + reviewId + " for project ",
+                () -> this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -81,15 +81,15 @@ public class VersionWorkflowJobsResource extends BaseResource
     @ApiOperation("Get a workflow job log")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getWorkflowJobLogs(@PathParam("projectId") String projectId,
-                                       @PathParam("versionId") String versionId,
+                                       @PathParam("reviewId") String reviewId,
                                        @PathParam("workflowId") String workflowId,
                                        @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for version " + versionId + " of project " + projectId,
+                "getting workflow job logs " + workflowJobId + " for review " + reviewId + " for project " + projectId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
@@ -97,18 +97,17 @@ public class VersionWorkflowJobsResource extends BaseResource
         );
     }
 
-
     @POST
     @Path("{workflowJobId}/run")
     @ApiOperation("Run a manual workflow job")
     public WorkflowJob runWorkflowJob(@PathParam("projectId") String projectId,
-                                      @PathParam("versionId") String versionId,
+                                      @PathParam("reviewId") String reviewId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "running workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
-                () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).runWorkflowJob(workflowId, workflowJobId)
+                "running workflow job " + workflowJobId + " for review " + reviewId + " for project " + projectId,
+                () -> this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).runWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -116,13 +115,13 @@ public class VersionWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}/retry")
     @ApiOperation("Retry a failed workflow job")
     public WorkflowJob retryWorkflowJob(@PathParam("projectId") String projectId,
-                                        @PathParam("versionId") String versionId,
+                                        @PathParam("reviewId") String reviewId,
                                         @PathParam("workflowId") String workflowId,
                                         @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "retrying workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
-                () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).retryWorkflowJob(workflowId, workflowJobId)
+                "retrying workflow job " + workflowJobId + " for review " + reviewId + " for project " + projectId,
+                () -> this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -131,13 +130,13 @@ public class VersionWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}/cancel")
     @ApiOperation("Cancel a workflow job that is in progress")
     public WorkflowJob cancelWorkflowJob(@PathParam("projectId") String projectId,
-                                         @PathParam("versionId") String versionId,
+                                         @PathParam("reviewId") String reviewId,
                                          @PathParam("workflowId") String workflowId,
                                          @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "canceling workflow job " + workflowJobId + " for version " + versionId + " of project " + projectId,
-                () -> this.workflowJobApi.getVersionWorkflowJobAccessContext(projectId, versionId).cancelWorkflowJob(workflowId, workflowJobId)
+                "canceling workflow job " + workflowJobId + " for review " + reviewId + " for project " + projectId,
+                () -> this.workflowJobApi.getReviewWorkflowJobAccessContext(projectId, reviewId).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }
 }

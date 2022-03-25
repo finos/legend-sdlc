@@ -46,4 +46,10 @@ public class InMemoryWorkflowJobApi implements WorkflowJobApi
     {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    {
+        throw new UnsupportedOperationException();
+    }
 }

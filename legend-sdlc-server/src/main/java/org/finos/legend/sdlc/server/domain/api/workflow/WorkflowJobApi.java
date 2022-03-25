@@ -42,4 +42,6 @@ public interface WorkflowJobApi
     }
 
     WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId);
+
+    WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId);
 }

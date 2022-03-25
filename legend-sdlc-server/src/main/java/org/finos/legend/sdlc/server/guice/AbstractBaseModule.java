@@ -108,6 +108,8 @@ import org.finos.legend.sdlc.server.resources.ProjectVersionDependenciesResource
 import org.finos.legend.sdlc.server.resources.ProjectWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.ProjectWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.ProjectsResource;
+import org.finos.legend.sdlc.server.resources.ReviewWorkflowJobsResource;
+import org.finos.legend.sdlc.server.resources.ReviewWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.ReviewsOnlyResource;
 import org.finos.legend.sdlc.server.resources.ReviewsResource;
 import org.finos.legend.sdlc.server.resources.UsersResource;
@@ -245,9 +247,11 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectWorkflowsResource.class);
         binder.bind(VersionWorkflowsResource.class);
         binder.bind(WorkspaceWorkflowsResource.class);
+        binder.bind(ReviewWorkflowsResource.class);
         binder.bind(ProjectWorkflowJobsResource.class);
         binder.bind(VersionWorkflowJobsResource.class);
         binder.bind(WorkspaceWorkflowJobsResource.class);
+        binder.bind(ReviewWorkflowJobsResource.class);
         binder.bind(GroupBackupWorkspaceEntitiesResource.class);
         binder.bind(GroupBackupWorkspaceEntityPathsResource.class);
         binder.bind(GroupBackupWorkspaceProjectConfigurationResource.class);

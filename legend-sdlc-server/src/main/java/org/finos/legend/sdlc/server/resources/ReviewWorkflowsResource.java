@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2022 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -32,45 +32,45 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 
-@Path("/projects/{projectId}/versions/{versionId}/workflows")
+@Path("/projects/{projectId}/reviews/{reviewId}/workflows")
 @Api("Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class VersionWorkflowsResource extends BaseResource
+public class ReviewWorkflowsResource extends BaseResource
 {
     private final WorkflowApi workflowApi;
 
     @Inject
-    public VersionWorkflowsResource(WorkflowApi workflowApi)
+    public ReviewWorkflowsResource(WorkflowApi workflowApi)
     {
         this.workflowApi = workflowApi;
     }
 
     @GET
-    @ApiOperation(value = "Get workflows for a version", notes = "Get workflows for a version. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get workflows for a review", notes = "Get workflows for a review. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<Workflow> getWorkflows(@PathParam("projectId") String projectId,
-                                       @PathParam("versionId") String versionId,
+                                       @PathParam("reviewId") String reviewId,
                                        @QueryParam("revisionId")
                                        @ApiParam("Only include workflows for one of the given revisions") Set<String> revisionIds,
                                        @QueryParam("status")
                                        @ApiParam("Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
                                        @QueryParam("limit")
-                                       @ApiParam("Limit the number of workflows returned (if not provided or the provided value is non-positive, no filtering will be applied)") Integer limit)
+                                       @ApiParam("Limit the number of workflows returned") Integer limit)
     {
         return executeWithLogging(
-                "getting workflows for version " + versionId + " of project " + projectId,
-                () -> this.workflowApi.getVersionWorkflowAccessContext(projectId, versionId).getWorkflows(revisionIds, statuses, limit)
+                "getting workflows for review " + reviewId + " in project " + projectId,
+                () -> this.workflowApi.getReviewWorkflowAccessContext(projectId, reviewId).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
     @GET
     @Path("{workflowId}")
-    @ApiOperation("Get a workflow for a version")
-    public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId, @PathParam("workflowId") String workflowId)
+    @ApiOperation("Get a workflow for a user workspace")
+    public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, @PathParam("workflowId") String workflowId)
     {
         return executeWithLogging(
-                "getting workflow " + workflowId + " for version " + versionId + " of project " + projectId,
-                () -> this.workflowApi.getVersionWorkflowAccessContext(projectId, versionId).getWorkflow(workflowId)
+                "getting workflow " + workflowId + " for review " + reviewId + " in project " + projectId,
+                () -> this.workflowApi.getReviewWorkflowAccessContext(projectId, reviewId).getWorkflow(workflowId)
         );
     }
 }

@@ -52,14 +52,14 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get jobs for a workflow in a group workspace", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @ApiOperation(value = "Get jobs for a workflow for a group workspace", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
                                              @PathParam("workspaceId") String workspaceId,
                                              @PathParam("workflowId") String workflowId,
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
-                "getting workflow jobs for project " + projectId + " in group workspace " + workspaceId,
+                "getting workflow jobs for group workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
         );
     }
@@ -73,7 +73,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
+                "getting workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -88,7 +88,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                                        @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for project " + projectId + " in group workspace " + workspaceId,
+                "getting workflow job logs " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId,
                 () ->
                 {
                     String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
@@ -108,7 +108,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                                       @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "running workflow job " + workflowJobId + " for project " + projectId,
+                "running workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).runWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -122,7 +122,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                                         @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "retrying workflow job " + workflowJobId + " for project " + projectId,
+                "retrying workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
@@ -137,7 +137,7 @@ public class GroupWorkspaceWorkflowJobsResource extends BaseResource
                                          @PathParam("workflowJobId") String workflowJobId)
     {
         return executeWithLogging(
-                "canceling workflow job " + workflowJobId + " for project " + projectId,
+                "canceling workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId,
                 () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }

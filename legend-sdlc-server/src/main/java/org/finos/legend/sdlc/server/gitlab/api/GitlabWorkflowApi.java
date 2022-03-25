@@ -14,11 +14,15 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -27,22 +31,20 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.PipelineApi;
+import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 import java.time.Instant;
-import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 
 public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements WorkflowApi
 {
@@ -132,6 +134,43 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         };
     }
 
+    @Override
+    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId, true);
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceInfo == null)
+        {
+            throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
+        }
+
+        return new GitLabWorkflowAccessContext(gitLabProjectId)
+        {
+            @Override
+            protected String getRef()
+            {
+                return "refs/merge-requests/" + reviewId + "/head";
+            }
+
+            @Override
+            protected String getRefInfoForException()
+            {
+                return "review " + reviewId + " of project " + projectId;
+            }
+
+            @Override
+            protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
+            {
+                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+            }
+        };
+    }
+
     private abstract class GitLabWorkflowAccessContext implements WorkflowAccessContext
     {
         private final GitLabProjectId projectId;
@@ -181,28 +220,55 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
                 PipelineApi pipelineApi = getGitLabApi(this.projectId.getGitLabMode()).getPipelineApi();
                 Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, itemsPerPage));
                 Stream<Pipeline> pipelineStream = PagerTools.stream(pager);
-                Set<String> revisionIdSet = (revisionIds == null)
-                        ? Collections.emptySet()
-                        : StreamSupport.stream(revisionIds.spliterator(), false)
-                        // make sure various synonymous aliases are grouped together properly
-                        .filter(Objects::nonNull).map(revisionId ->
-                        {
-                            RevisionAlias alias = getRevisionAlias(revisionId);
-                            return (alias == RevisionAlias.REVISION_ID) ? revisionId : alias.getValue();
-                        })
-                        .distinct()
-                        // resolve revision alias when possible
-                        .map(revisionId -> resolveRevisionId(revisionId, getRevisionAccessContext()))
-                        .collect(Collectors.toSet());
-                if (!revisionIdSet.isEmpty())
+                if (revisionIds != null)
                 {
-                    pipelineStream = pipelineStream.filter(pipeline -> revisionIdSet.contains(pipeline.getSha()));
+                    Set<RevisionAlias> revisionAliases = EnumSet.noneOf(RevisionAlias.class);
+                    MutableSet<String> revisionIdSet = Sets.mutable.empty();
+                    revisionIds.forEach(revisionId ->
+                    {
+                        RevisionAlias alias = getRevisionAlias(revisionId);
+                        if (alias == RevisionAlias.REVISION_ID)
+                        {
+                            revisionIdSet.add(revisionId);
+                        }
+                        else
+                        {
+                            revisionAliases.add(alias);
+                        }
+                    });
+                    if (!revisionAliases.isEmpty())
+                    {
+                        ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext = getRevisionAccessContext();
+                        if (revisionAliases.contains(RevisionAlias.BASE))
+                        {
+                            Revision baseRevision = revisionAccessContext.getBaseRevision();
+                            if (baseRevision != null)
+                            {
+                                revisionIdSet.add(baseRevision.getId());
+                            }
+                        }
+                        if (revisionAliases.contains(RevisionAlias.HEAD) || revisionAliases.contains(RevisionAlias.CURRENT) || revisionAliases.contains(RevisionAlias.LATEST))
+                        {
+                            Revision currentRevision = revisionAccessContext.getCurrentRevision();
+                            if (currentRevision != null)
+                            {
+                                revisionIdSet.add(currentRevision.getId());
+                            }
+                        }
+                    }
+                    if (revisionIdSet.notEmpty())
+                    {
+                        pipelineStream = pipelineStream.filter(pipeline -> revisionIdSet.contains(pipeline.getSha()));
+                    }
                 }
 
-                Set<WorkflowStatus> statusSet = (statuses == null) ? Collections.emptySet() : ((statuses instanceof Set) ? (Set<WorkflowStatus>) statuses : StreamSupport.stream(statuses.spliterator(), false).collect(Collectors.toCollection(() -> EnumSet.noneOf(WorkflowStatus.class))));
-                if (!statusSet.isEmpty())
+                if (statuses != null)
                 {
-                    pipelineStream = pipelineStream.filter(pipeline -> statusSet.contains(fromGitLabPipelineStatus(pipeline.getStatus())));
+                    Set<WorkflowStatus> statusSet = (statuses instanceof Set) ? (Set<WorkflowStatus>) statuses : Iterate.addAllTo(statuses, EnumSet.noneOf(WorkflowStatus.class));
+                    if (!statusSet.isEmpty())
+                    {
+                        pipelineStream = pipelineStream.filter(pipeline -> statusSet.contains(fromGitLabPipelineStatus(pipeline.getStatus())));
+                    }
                 }
 
                 if (limited)
