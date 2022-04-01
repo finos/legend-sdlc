@@ -56,7 +56,7 @@ public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractL
         MavenPluginTools.addConfiguration(plugin, MavenPluginTools.newDom("filters", MavenPluginTools.newDom("filter", Lists.mutable.with(artifact, excludes))));
         PluginExecution execution = MavenPluginTools.newPluginExecution("package", "shade");
         MavenPluginTools.addPluginExecution(plugin, execution);
-        MavenPluginTools.addConfigurations(execution, MavenPluginTools.newDom("shadedArtifactAttached", "true"), MavenPluginTools.newDom("transformers", MavenPluginTools.newDom("transformer implementation=\"org.apache.maven.plugins.shade.resource.ServicesResourceTransformer\"")));
+        MavenPluginTools.addConfigurations(execution, MavenPluginTools.newDom("shadedArtifactAttached", "true"), MavenPluginTools.newDom("createDependencyReducedPom", "false"), MavenPluginTools.newDom("transformers", MavenPluginTools.newDom("transformer implementation=\"org.apache.maven.plugins.shade.resource.ServicesResourceTransformer\"")));
         return plugin;
     }
 
