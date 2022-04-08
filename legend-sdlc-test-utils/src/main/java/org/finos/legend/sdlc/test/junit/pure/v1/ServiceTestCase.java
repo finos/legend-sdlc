@@ -23,7 +23,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.Connection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.MultiExecutionTest;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.ServiceTest;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.ServiceTest_Legacy;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.SingleExecutionTest;
 import org.finos.legend.engine.test.runner.service.RichServiceTestResult;
 import org.finos.legend.engine.test.runner.service.ServiceTestRunner;
@@ -44,10 +44,10 @@ import java.util.stream.Collectors;
 
 public class ServiceTestCase extends LegendPureV1TestCase<Service>
 {
-    private final ServiceTest serviceTest;
+    private final ServiceTest_Legacy serviceTest;
     private final ServiceTestRunner serviceTestRunner;
 
-    public ServiceTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Service service, ServiceTest serviceTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
+    public ServiceTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Service service, ServiceTest_Legacy serviceTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, service);
         this.serviceTest = serviceTest;
