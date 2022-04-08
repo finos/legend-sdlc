@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -29,9 +30,9 @@ import java.util.List;
 public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
 {
     @Inject
-    public GitLabIssueApi(GitLabUserContext userContext)
+    public GitLabIssueApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext)
     {
-        super(userContext);
+        super(gitLabConfiguration, userContext);
     }
 
     @Override
@@ -42,15 +43,15 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getIssuesApi().getIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
+            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi().getIssuesApi().getIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
             return fromGitLabIssue(issue);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get issue " + issueId + " for project " + projectId,
-                    () -> "Unknown issue (" + issueId + ") or project (" + projectId + ")",
-                    () -> "Failed to get issue " + issueId + " for project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to get issue " + issueId + " for project " + projectId,
+                () -> "Unknown issue (" + issueId + ") or project (" + projectId + ")",
+                () -> "Failed to get issue " + issueId + " for project " + projectId);
         }
     }
 
@@ -61,15 +62,15 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            Pager<org.gitlab4j.api.models.Issue> pager = withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getIssuesApi().getIssues((Integer)gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE));
+            Pager<org.gitlab4j.api.models.Issue> pager = withRetries(() -> getGitLabApi().getIssuesApi().getIssues((Integer) gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE));
             return PagerTools.stream(pager).map(GitLabIssueApi::fromGitLabIssue).collect(PagerTools.listCollector(pager));
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get issues for project " + projectId,
-                    () -> "Unknown project: " + projectId,
-                    () -> "Failed to get issues for project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to get issues for project " + projectId,
+                () -> "Unknown project: " + projectId,
+                () -> "Failed to get issues for project " + projectId);
         }
     }
 
@@ -82,15 +83,15 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getIssuesApi().createIssue(gitLabProjectId.getGitLabId(), title, description));
+            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi().getIssuesApi().createIssue(gitLabProjectId.getGitLabId(), title, description));
             return fromGitLabIssue(issue);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to create issues for project " + projectId,
-                    () -> "Unknown project: " + projectId,
-                    () -> "Failed to create issue for project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to create issues for project " + projectId,
+                () -> "Unknown project: " + projectId,
+                () -> "Failed to create issue for project " + projectId);
         }
     }
 
@@ -102,7 +103,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            withRetries(() -> getGitLabApi(gitLabProjectId.getGitLabMode()).getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
+            withRetries(() -> getGitLabApi().getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
         }
         catch (LegendSDLCServerException e)
         {
@@ -111,9 +112,9 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete issue " + issueId + " for project " + projectId,
-                    () -> "Unknown issue (" + issueId + ") or project (" + projectId + ")",
-                    () -> "Failed to delete issue " + issueId + " for project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to delete issue " + issueId + " for project " + projectId,
+                () -> "Unknown issue (" + issueId + ") or project (" + projectId + ")",
+                () -> "Failed to delete issue " + issueId + " for project " + projectId);
         }
     }
 

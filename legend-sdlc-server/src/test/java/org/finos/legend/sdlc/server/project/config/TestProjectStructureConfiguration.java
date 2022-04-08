@@ -16,8 +16,6 @@ package org.finos.legend.sdlc.server.project.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
-import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration.DisallowedType;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -40,15 +38,15 @@ public class TestProjectStructureConfiguration
     public void testEmptyConfig() throws IOException
     {
         List<String> emptyConfigs = Arrays.asList(
-                "{}",
-                "{\"demisedVersions\":null}",
-                "{\"extensions\":null}",
-                "{\"projectCreation\":null}",
-                "{\"demisedVersions\":null, \"extensions\":null}",
-                "{\"demisedVersions\":null, \"projectCreation\":null}",
-                "{\"extensionProvider\":null, \"projectCreation\":null}",
-                "{\"extensions\":null, \"projectCreation\":null}",
-                "{\"demisedVersions\":null, \"extensionProvider\":null, \"extensions\":null, \"projectCreation\":null}");
+            "{}",
+            "{\"demisedVersions\":null}",
+            "{\"extensions\":null}",
+            "{\"projectCreation\":null}",
+            "{\"demisedVersions\":null, \"extensions\":null}",
+            "{\"demisedVersions\":null, \"projectCreation\":null}",
+            "{\"extensionProvider\":null, \"projectCreation\":null}",
+            "{\"extensions\":null, \"projectCreation\":null}",
+            "{\"demisedVersions\":null, \"extensionProvider\":null, \"extensions\":null, \"projectCreation\":null}");
         for (String emptyConfig : emptyConfigs)
         {
             assertConfig(emptyConfig, Collections.emptySet(), null, Collections.emptyList(), null);
@@ -70,12 +68,12 @@ public class TestProjectStructureConfiguration
         assertConfig("{\"extensionProvider\":{\"org.finos.legend.sdlc.server.project.extension.VoidProjectStructureExtensionProvider\":{}}}", Collections.emptySet(), new VoidProjectStructureExtensionProvider(), Collections.emptyList(), null);
         assertConfig("{\"extensionProvider\":{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider\":{}}}", Collections.emptySet(), DefaultProjectStructureExtensionProvider.fromExtensions(), Collections.emptyList(), null);
         assertConfig("{\"extensionProvider\":{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider\":{\"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}]}}}",
-                Collections.emptySet(),
-                DefaultProjectStructureExtensionProvider.fromExtensions(
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
-                Collections.emptyList(),
-                null);
+            Collections.emptySet(),
+            DefaultProjectStructureExtensionProvider.fromExtensions(
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
+            Collections.emptyList(),
+            null);
     }
 
     @Test
@@ -83,13 +81,13 @@ public class TestProjectStructureConfiguration
     {
         assertConfig("{\"extensions\":[]}", Collections.emptySet(), null, Collections.emptyList(), null);
         assertConfig(
-                "{\"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}]}",
-                Collections.emptySet(),
-                null,
-                Arrays.asList(
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
-                null);
+            "{\"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}]}",
+            Collections.emptySet(),
+            null,
+            Arrays.asList(
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
+            null);
     }
 
     @Test
@@ -104,34 +102,34 @@ public class TestProjectStructureConfiguration
     public void testProjectCreation() throws IOException
     {
         assertConfig("{\"projectCreation\":{}}", Collections.emptySet(), null, Collections.emptyList(), ProjectCreationConfiguration.emptyConfig());
-        assertConfig("{\"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\", \"disallowedTypes\":[{\"type\":\"PRODUCTION\"}]}}", Collections.emptySet(), null, Collections.emptyList(), ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$", DisallowedType.newDisallowedType(ProjectType.PRODUCTION, null)));
+        assertConfig("{\"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\"}}", Collections.emptySet(), null, Collections.emptyList(), ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$"));
     }
 
     @Test
     public void testAll() throws IOException
     {
         assertConfig(
-                "{\"demisedVersions\":[], \"extensionProvider\":null, \"extensions\":[], \"projectCreation\":null}",
-                Collections.emptySet(),
-                null,
-                Collections.emptyList(),
-                null);
+            "{\"demisedVersions\":[], \"extensionProvider\":null, \"extensions\":[], \"projectCreation\":null}",
+            Collections.emptySet(),
+            null,
+            Collections.emptyList(),
+            null);
         assertConfig(
-                "{\"demisedVersions\":[0, 1, 2, 3, 4], \"extensionProvider\":null, \"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}], \"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\", \"disallowedTypes\":[{\"type\":\"PRODUCTION\"}]}}",
-                Sets.mutable.with(0, 1, 2, 3, 4),
-                null,
-                Arrays.asList(
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
-                ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$", DisallowedType.newDisallowedType(ProjectType.PRODUCTION, null)));
+            "{\"demisedVersions\":[0, 1, 2, 3, 4], \"extensionProvider\":null, \"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}], \"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\"}}",
+            Sets.mutable.with(0, 1, 2, 3, 4),
+            null,
+            Arrays.asList(
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
+            ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$"));
         assertConfig(
-                "{\"demisedVersions\":[0, 1, 2, 3, 4], \"extensionProvider\":{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider\":{\"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}]}}, \"extensions\":[], \"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\", \"disallowedTypes\":[{\"type\":\"PRODUCTION\"}]}}",
-                Sets.mutable.with(0, 1, 2, 3, 4),
-                DefaultProjectStructureExtensionProvider.fromExtensions(
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
-                        DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
-                Collections.emptyList(),
-                ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$", DisallowedType.newDisallowedType(ProjectType.PRODUCTION, null)));
+            "{\"demisedVersions\":[0, 1, 2, 3, 4], \"extensionProvider\":{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider\":{\"extensions\":[{\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 1, \"files\":{\"PANGRAM.TXT\":{\"content\":\"THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG\"}}}}, {\"org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension\":{\"projectStructureVersion\": 0, \"extensionVersion\": 2, \"files\":{\"pangram.txt\":{\"content\":\"the quick brown fox jumped over the lazy dog\"}}}}]}}, \"extensions\":[], \"projectCreation\":{\"defaultProjectStructureVersion\":0, \"groupIdPattern\":\"^abc$\", \"artifactIdPattern\":\"^xyz$\"}}",
+            Sets.mutable.with(0, 1, 2, 3, 4),
+            DefaultProjectStructureExtensionProvider.fromExtensions(
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 1, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")),
+                DefaultProjectStructureExtension.newProjectStructureExtension(0, 2, Collections.singletonMap("/pangram.txt", "the quick brown fox jumped over the lazy dog"))),
+            Collections.emptyList(),
+            ProjectCreationConfiguration.newConfig(0, "^abc$", "^xyz$"));
     }
 
     private void assertConfig(String json, Set<Integer> expectedDemisedVersions, ProjectStructureExtensionProvider expectedExtensionProvider, List<ProjectStructureExtension> expectedExtensions, ProjectCreationConfiguration expectedProjectCreation) throws IOException

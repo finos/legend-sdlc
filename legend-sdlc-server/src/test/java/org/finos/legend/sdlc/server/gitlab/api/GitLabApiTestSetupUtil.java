@@ -20,10 +20,9 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabToken;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
@@ -54,7 +53,6 @@ public class GitLabApiTestSetupUtil
      */
     public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort) throws LegendSDLCServerException
     {
-        GitLabMode gitLabMode = GitLabMode.PROD;
         TestHttpServletRequest httpServletRequest = new TestHttpServletRequest();
 
         TestGitLabSession session = new TestGitLabSession(username);
@@ -84,24 +82,21 @@ public class GitLabApiTestSetupUtil
 
         GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(hostScheme, hostHost, hostPort);
         GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
-        GitLabModeInfo gitLabModeInfo = GitLabModeInfo.newModeInfo(gitLabMode, gitLabAppInfo);
 
-        session.setGitLabToken(gitLabMode, oauthToken, TokenType.OAUTH2_ACCESS);
-        session.setModeInfo(gitLabModeInfo);
+        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oauthToken));
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 
         GitLabAuthorizerManager authorizerManager = GitLabAuthorizerManager.newManager(Collections.emptyList());
-        return new GitLabUserContext(httpServletRequest, null, authorizerManager);
+        return new GitLabUserContext(httpServletRequest, null, authorizerManager, gitLabAppInfo);
     }
 
     protected static boolean hasOnlyBranchesWithNames(List<Branch> branchList, List<String> expectedNames)
     {
         List<String> branchNames = Lists.mutable.withAll(branchList.stream().map(branch ->
-                                                                                        {
-                                                                                            String branchName = branch.getName();
-                                                                                            return "master".equals(branchName) ? branchName : branchName.substring(branchName.lastIndexOf('/') + 1);
-                                                                                        })
-                                                                            .collect(Collectors.toList()));
+        {
+            String branchName = branch.getName();
+            return "master".equals(branchName) ? branchName : branchName.substring(branchName.lastIndexOf('/') + 1);
+        }).collect(Collectors.toList()));
         Collections.sort(branchNames);
         Collections.sort(expectedNames);
         return expectedNames.equals(branchNames);

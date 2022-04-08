@@ -16,9 +16,9 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.SessionBuilder;
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
-import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
+import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.oidc.profile.OidcProfile;
 
@@ -27,12 +27,13 @@ import java.util.Objects;
 
 class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
 {
-    private CommonProfile profile;
     private final GitLabTokenManager tokenManager;
 
-    private GitLabSessionBuilder(GitLabModeInfos modeInfos)
+    private CommonProfile profile;
+
+    private GitLabSessionBuilder(GitLabTokenManager tokenManager)
     {
-        this.tokenManager = GitLabTokenManager.newTokenManager(modeInfos);
+        this.tokenManager = tokenManager;
     }
 
     public CommonProfile getProfile()
@@ -57,6 +58,7 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         return this;
     }
 
+    @Override
     public GitLabSessionBuilder withCreationTime(Instant creationTime)
     {
         super.withCreationTime(creationTime);
@@ -74,7 +76,7 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
     public GitLabSessionBuilder fromToken(Token.TokenReader reader)
     {
         super.fromToken(reader);
-        this.tokenManager.putAllFromToken(reader);
+        this.tokenManager.decodeAndSetToken(reader);
         return this;
     }
 
@@ -110,15 +112,15 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
     {
         if (this.profile instanceof KerberosProfile)
         {
-            return new GitLabKerberosSession((KerberosProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
+            return new GitLabKerberosSession((KerberosProfile) this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
         if (this.profile instanceof OidcProfile)
         {
-            return new GitLabOidcSession((OidcProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
+            return new GitLabOidcSession((OidcProfile) this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
         if (this.profile instanceof GitlabPersonalAccessTokenProfile)
         {
-            return new GitLabPersonalAccessTokenSession((GitlabPersonalAccessTokenProfile)this.profile, getUserId(), getCreationTime(), this.tokenManager);
+            return new GitLabPersonalAccessTokenSession((GitlabPersonalAccessTokenProfile) this.profile, getUserId(), getCreationTime(), this.tokenManager);
         }
         throw new IllegalStateException("Unsupported profile type: " + profile);
     }
@@ -128,8 +130,8 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }
 
-    static GitLabSessionBuilder newBuilder(GitLabModeInfos gitLabModeInfos)
+    static GitLabSessionBuilder newBuilder(GitLabAppInfo appInfo)
     {
-        return new GitLabSessionBuilder(gitLabModeInfos);
+        return new GitLabSessionBuilder(GitLabTokenManager.newTokenManager(appInfo));
     }
 }

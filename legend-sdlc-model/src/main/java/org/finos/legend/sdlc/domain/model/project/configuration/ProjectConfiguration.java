@@ -22,6 +22,7 @@ public interface ProjectConfiguration
 {
     String getProjectId();
 
+    @Deprecated
     ProjectType getProjectType();
 
     ProjectStructureVersion getProjectStructureVersion();

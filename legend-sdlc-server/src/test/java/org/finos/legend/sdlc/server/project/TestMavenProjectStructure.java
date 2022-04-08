@@ -24,7 +24,6 @@ import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.junit.Assert;
@@ -52,9 +51,9 @@ public abstract class
 TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectStructure<T>
 {
     @Override
-    protected void testBuild(ProjectType projectType)
+    public void testBuild()
     {
-        super.testBuild(projectType);
+        super.testBuild();
         Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getProjectFileAccessContext(PROJECT_ID));
         Assert.assertNotNull(mavenModel);
         Assert.assertEquals(GROUP_ID, mavenModel.getGroupId());
@@ -62,9 +61,9 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     }
 
     @Override
-    protected void testUpdateGroupAndArtifactIds(ProjectType projectType)
+    public void testUpdateGroupAndArtifactIds()
     {
-        super.testUpdateGroupAndArtifactIds(projectType);
+        super.testUpdateGroupAndArtifactIds();
         Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getProjectFileAccessContext(PROJECT_ID));
         Assert.assertNotNull(mavenModel);
         Assert.assertEquals(GROUP_ID_2, mavenModel.getGroupId());

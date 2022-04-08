@@ -40,14 +40,14 @@ public class GitLabToken
             return false;
         }
 
-        GitLabToken that = (GitLabToken)other;
+        GitLabToken that = (GitLabToken) other;
         return this.tokenType.equals(that.tokenType) && this.token.equals(that.token);
     }
 
     @Override
     public int hashCode()
     {
-        return this.tokenType.hashCode() +  61 * this.token.hashCode();
+        return this.tokenType.hashCode() + 61 * this.token.hashCode();
     }
 
     @Override

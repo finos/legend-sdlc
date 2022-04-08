@@ -14,25 +14,21 @@
 
 package org.finos.legend.sdlc.server.gitlab;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.gitlab4j.api.models.Project;
+
+import java.util.Objects;
 
 public final class GitLabProjectId
 {
     private static final char DELIMITER = '-';
 
-    private final GitLabMode mode;
+    private final String prefix;
     private final int gitLabId;
 
-    private GitLabProjectId(GitLabMode mode, int gitLabId)
+    private GitLabProjectId(String prefix, int gitLabId)
     {
-        this.mode = mode;
+        this.prefix = prefix;
         this.gitLabId = gitLabId;
-    }
-
-    public GitLabMode getGitLabMode()
-    {
-        return this.mode;
     }
 
     public int getGitLabId()
@@ -51,30 +47,30 @@ public final class GitLabProjectId
         {
             return false;
         }
-        GitLabProjectId that = (GitLabProjectId)other;
-        return (this.mode == that.mode) && (this.gitLabId == that.gitLabId);
+        GitLabProjectId that = (GitLabProjectId) other;
+        return Objects.equals(this.prefix, that.prefix) && (this.gitLabId == that.gitLabId);
     }
 
     @Override
     public int hashCode()
     {
-        return this.mode.hashCode() ^ this.gitLabId;
+        return Objects.hashCode(this.prefix) ^ this.gitLabId;
     }
 
     @Override
     public String toString()
     {
-        return getProjectIdString(this.mode, this.gitLabId);
+        return getProjectIdString(this.prefix, this.gitLabId);
     }
 
-    public static GitLabProjectId newProjectId(GitLabMode mode, int gitLabId)
+    public static GitLabProjectId newProjectId(String prefix, int gitLabId)
     {
-        return new GitLabProjectId(mode, gitLabId);
+        return new GitLabProjectId(prefix, gitLabId);
     }
 
-    public static String getProjectIdString(GitLabMode mode, Project gitLabProject)
+    public static String getProjectIdString(String prefix, Project gitLabProject)
     {
-        return getProjectIdString(mode, gitLabProject.getId());
+        return getProjectIdString(prefix, gitLabProject.getId());
     }
 
     public static GitLabProjectId parseProjectId(String projectId)
@@ -84,35 +80,8 @@ public final class GitLabProjectId
             return null;
         }
 
-        int separatorIndex = getSeparatorIndex(projectId);
-        return newProjectId(parseGitLabMode(projectId, separatorIndex), parseGitLabId(projectId, separatorIndex));
-    }
-
-    public static GitLabMode getGitLabMode(String projectId)
-    {
-        return parseGitLabMode(projectId, getSeparatorIndex(projectId));
-    }
-
-    private static int getSeparatorIndex(String projectId)
-    {
         int separatorIndex = projectId.indexOf(DELIMITER);
-        if (separatorIndex == -1)
-        {
-            throw new IllegalArgumentException("Invalid project id: " + projectId);
-        }
-        return separatorIndex;
-    }
-
-    private static GitLabMode parseGitLabMode(String projectId, int separatorIndex)
-    {
-        try
-        {
-            return GitLabMode.getMode(projectId, true, 0, separatorIndex);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new IllegalArgumentException("Invalid project id: " + projectId);
-        }
+        return newProjectId(separatorIndex == -1 ? null : projectId.substring(0, separatorIndex), parseGitLabId(projectId, separatorIndex));
     }
 
     private static int parseGitLabId(String projectId, int separatorIndex)
@@ -127,8 +96,8 @@ public final class GitLabProjectId
         }
     }
 
-    private static String getProjectIdString(GitLabMode mode, int gitLabId)
+    private static String getProjectIdString(String prefix, int gitLabId)
     {
-        return mode.name() + DELIMITER + gitLabId;
+        return (prefix != null ? (prefix + DELIMITER) : "") + gitLabId;
     }
 }

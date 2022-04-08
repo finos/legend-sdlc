@@ -26,6 +26,7 @@ public interface Project
 
     List<String> getTags();
 
+    @Deprecated
     ProjectType getProjectType();
 
     String getWebUrl();

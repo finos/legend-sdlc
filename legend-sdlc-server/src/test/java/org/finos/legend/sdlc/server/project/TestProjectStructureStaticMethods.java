@@ -17,7 +17,6 @@ package org.finos.legend.sdlc.server.project;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.junit.Assert;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
 
 public class TestProjectStructureStaticMethods
 {
-    private static final ImmutableIntSet UNPUBLISHED_VERSION = IntSets.immutable.with(1,2,3,4,5,6,7,8,9,10);
+    private static final ImmutableIntSet UNPUBLISHED_VERSION = IntSets.immutable.with(1, 2, 3, 4, 5, 6, 7, 8, 9, 10);
 
     @Test
     public void testIsValidGroupId()
@@ -80,9 +79,7 @@ public class TestProjectStructureStaticMethods
             {
                 continue;
             }
-            ProjectConfiguration projectConfig = new SimpleProjectConfiguration("ProjectId", ProjectType.PROTOTYPE,
-                    ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id",
-                    Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            ProjectConfiguration projectConfig = new SimpleProjectConfiguration("ProjectId", ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id", Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
             ProjectStructure structure;
             try
             {
@@ -120,14 +117,11 @@ public class TestProjectStructureStaticMethods
     public void testGetDefaultProjectConfiguration()
     {
         String projectId = "pid";
-        for (ProjectType projectType : ProjectType.values())
-        {
-            ProjectConfiguration config = ProjectStructure.getDefaultProjectConfiguration(projectId, projectType);
-            Assert.assertNotNull(config);
-            Assert.assertEquals(0, config.getProjectStructureVersion().getVersion());
-            Assert.assertNull(config.getProjectStructureVersion().getExtensionVersion());
-            Assert.assertEquals(projectId, config.getProjectId());
-            Assert.assertSame(projectType, config.getProjectType());
-        }
+        ProjectConfiguration config = ProjectStructure.getDefaultProjectConfiguration(projectId);
+        Assert.assertNotNull(config);
+        Assert.assertEquals(0, config.getProjectStructureVersion().getVersion());
+        Assert.assertNull(config.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(projectId, config.getProjectId());
+        Assert.assertNull(config.getProjectType());
     }
 }

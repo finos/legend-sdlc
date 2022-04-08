@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.project;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
-import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 
 import java.util.Collections;
 import java.util.List;
@@ -27,15 +27,21 @@ public interface ProjectApi
 {
     Project getProject(String id);
 
-    // this is kept for backward compatibility
+    @Deprecated
     default List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types)
     {
-        return this.getProjects(user, search, tags, types, null);
+        return this.getProjects(user, search, tags, null, null);
     }
 
-    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit);
+    @Deprecated
+    default List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
+    {
+        return this.getProjects(user, search, tags, limit);
+    }
 
-    Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
+    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit);
+
+    Project createProject(String name, String description, String groupId, String artifactId, Iterable<String> tags);
 
     void deleteProject(String id);
 
@@ -72,21 +78,29 @@ public interface ProjectApi
     /**
      * Check if a user is authorized to perform a list of actions.
      * Checks for each of the actions whether the user is authorized or not
-     * @param id the project id
+     *
+     * @param id      the project id
      * @param actions list of actions to check if the user is authorized
      * @return list of action and whether the user has permission to perform each
      */
-    Set<ProjectAuthorizationAction> checkUserAuthorizationActions(String id, Set<ProjectAuthorizationAction> actions);
+    Set<AuthorizableProjectAction> checkUserAuthorizedActions(String id, Set<AuthorizableProjectAction> actions);
 
     /**
      * Checks if a user is authorized to perform an action
-     * @param id the project Id
+     *
+     * @param id     the project ID
      * @param action action to check is authorized
      * @return boolean is user is authorized
      */
-    boolean checkUserAuthorizationAction(String id, ProjectAuthorizationAction action);
+    boolean checkUserAuthorizedAction(String id, AuthorizableProjectAction action);
 
-    ImportReport importProject(String id, ProjectType type, String groupId, String artifactId);
+    @Deprecated
+    default ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
+    {
+        return this.importProject(id, groupId, artifactId);
+    }
+
+    ImportReport importProject(String id, String groupId, String artifactId);
 
     interface ImportReport
     {

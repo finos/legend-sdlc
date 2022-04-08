@@ -15,11 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
-
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.junit.Assert;
 import org.junit.Ignore;
-import org.junit.Test;
 import org.pac4j.core.profile.CommonProfile;
 
 @Ignore

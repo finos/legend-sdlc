@@ -20,16 +20,12 @@ import org.finos.legend.sdlc.server.auth.Token.TokenReader;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthAccessException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 
-import java.util.Set;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -37,6 +33,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response.Status;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 @Path("/auth")
 public class GitLabAuthResource extends BaseResource
@@ -62,53 +62,34 @@ public class GitLabAuthResource extends BaseResource
     @GET
     @Path("authorized")
     @Produces(MediaType.APPLICATION_JSON)
-    public boolean isAuthorized(@QueryParam("mode")
-                                @ApiParam("GitLab modes to check authorization for") Set<GitLabMode> modes)
+    public boolean isAuthorized(
+        // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
+        @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
     {
-        return executeWithLogging("checking authorization",
-                () ->
-                {
-                    if ((modes == null) || modes.isEmpty())
-                    {
-                        return this.userContext.getValidGitLabModes().stream().allMatch(mode ->
-                        {
-                            try
-                            {
-                                return this.userContext.isModeAuthorized(mode);
-                            }
-                            catch (GitLabAuthAccessException e)
-                            {
-                                // tolerate access exceptions
-                                getLogger().error("Access exception occurred while checking auth for mode {}", mode, e);
-                                return true;
-                            }
-                        });
-                    }
-                    else
-                    {
-                        return modes.stream().filter(this.userContext::isValidMode).allMatch(this.userContext::isModeAuthorized);
-                    }
-                });
+        return executeWithLogging("checking authorization", () ->
+        {
+            try
+            {
+                return this.userContext.isUserAuthorized();
+            }
+            catch (GitLabAuthAccessException e)
+            {
+                getLogger().error("Access exception occurred while checking authorization", e);
+                return false;
+            }
+        });
     }
 
     @GET
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public String authorize(@QueryParam("mode")
-                            @ApiParam("GitLab modes to attempt authorization for (defaults to all)") Set<GitLabMode> modes,
-                            @QueryParam("redirect_uri")
-                            @ApiParam("URI to redirect to when authorization is complete") String redirectUri)
+    public String authorize(@QueryParam("redirect_uri") @ApiParam("URI to redirect to when authorization is complete") String redirectUri,
+                            // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
+                            @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
     {
         return executeWithLogging("authorizing", () ->
         {
-            if ((modes == null) || modes.isEmpty())
-            {
-                this.userContext.getValidGitLabModes().forEach(mode -> this.userContext.getGitLabAPI(mode, true));
-            }
-            else
-            {
-                modes.stream().filter(this.userContext::isValidMode).forEach(mode -> this.userContext.getGitLabAPI(mode, true));
-            }
+            this.userContext.getGitLabAPI(true);
             if (redirectUri != null)
             {
                 throw new LegendSDLCServerException(redirectUri, Status.FOUND);
@@ -120,82 +101,68 @@ public class GitLabAuthResource extends BaseResource
     @GET
     @Path("termsOfServiceAcceptance")
     @Produces(MediaType.APPLICATION_JSON)
-    public Set<String> termsOfServiceAcceptance(@QueryParam("mode")
-                                                @ApiParam("GitLab modes to accept terms of service for (defaults to all)") Set<GitLabMode> modes)
+    // NOTE: we have to return a set for backward compatibility reason
+    public Set<String> termsOfServiceAcceptance(
+        // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
+        @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
     {
         return executeWithLogging("checking acceptance of terms of service", () ->
-                this.userContext.getValidGitLabModes()
-                        .stream()
-                        .filter(m -> (modes == null) || modes.isEmpty() || modes.contains(m))
-                        .map(this.userContext::getGitLabAPI)
-                        .filter(api ->
+        {
+            GitLabApi api = this.userContext.getGitLabAPI();
+            try
+            {
+                GitLabApiTools.callWithRetries(() -> api.getUserApi().getCurrentUser(), 5, 1000);
+                // NOTE: we have to return a set for backward compatibility reason
+                return Collections.emptySet();
+            }
+            catch (Exception e)
+            {
+                Status errorStatus;
+                if (e instanceof GitLabApiException)
+                {
+                    switch (((GitLabApiException) e).getHttpStatus())
+                    {
+                        case 403:
                         {
-                            try
+                            String message = e.getMessage();
+                            if ((message != null) && TERMS_OF_SERVICE_MESSAGE_PATTERN.matcher(message).find())
                             {
-                                GitLabApiTools.callWithRetries(() -> api.getUserApi().getCurrentUser(), 5, 1000);
-                                return false;
+                                // error indicates terms of service need to be accepted
+                                // NOTE: we have to return a set for backward compatibility reason
+                                return Collections.singleton(api.getGitLabServerUrl());
                             }
-                            catch (Exception e)
-                            {
-                                Status errorStatus;
-                                if (e instanceof GitLabApiException)
-                                {
-                                    switch (((GitLabApiException) e).getHttpStatus())
-                                    {
-                                        case 403:
-                                        {
-                                            String message = e.getMessage();
-                                            if ((message != null) && TERMS_OF_SERVICE_MESSAGE_PATTERN.matcher(message).find())
-                                            {
-                                                // error indicates terms of service need to be accepted
-                                                return true;
-                                            }
-                                            errorStatus = Status.FORBIDDEN;
-                                            break;
-                                        }
-                                        case 401:
-                                        {
-                                            errorStatus = Status.FORBIDDEN;
-                                            break;
-                                        }
-                                        default:
-                                        {
-                                            errorStatus = null;
-                                        }
-                                    }
-                                }
-                                else
-                                {
-                                    errorStatus = null;
-                                }
-                                throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error checking acceptance of terms of service", e), errorStatus, e);
-                            }
-                        })
-                        .map(GitLabApi::getGitLabServerUrl)
-                        .collect(Collectors.toSet())
-        );
+                            errorStatus = Status.FORBIDDEN;
+                            break;
+                        }
+                        case 401:
+                        {
+                            errorStatus = Status.FORBIDDEN;
+                            break;
+                        }
+                        default:
+                        {
+                            errorStatus = null;
+                        }
+                    }
+                }
+                else
+                {
+                    errorStatus = null;
+                }
+                throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error checking acceptance of terms of service", e), errorStatus, e);
+            }
+        });
     }
 
     private Object processAuthCallback(String code, String state)
     {
         TokenReader reader = Token.newReader(state);
-        String gitLabModeName = reader.getString();
         String originalRequestMethod = reader.getString();
         String originalRequestURL = reader.getString();
 
-        GitLabMode mode;
         try
         {
-            mode = GitLabMode.valueOf(gitLabModeName);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new LegendSDLCServerException("Unknown GitLab mode: " + gitLabModeName, Status.INTERNAL_SERVER_ERROR);
-        }
-
-        try
-        {
-            this.userContext.gitLabAuthCallback(mode, code);
+            this.userContext.gitLabAuthCallback(code);
         }
         catch (LegendSDLCServerException e)
         {

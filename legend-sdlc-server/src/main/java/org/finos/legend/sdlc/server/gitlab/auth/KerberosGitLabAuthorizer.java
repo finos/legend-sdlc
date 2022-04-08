@@ -17,20 +17,20 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 import org.apache.http.cookie.Cookie;
 import org.finos.legend.sdlc.server.auth.KerberosSession;
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.gitlab4j.api.Constants;
 
 public class KerberosGitLabAuthorizer implements GitLabAuthorizer
 {
     @Override
-    public GitLabToken authorize(Session session, GitLabModeInfo modeInfo)
+    public GitLabToken authorize(Session session, GitLabAppInfo appInfo)
     {
         if (session instanceof KerberosSession)
         {
             KerberosSession kerberosSession = (KerberosSession) session;
-            KerberosGitLabSAMLAuthenticator kerberosGitLabSAMLAuthenticator = new KerberosGitLabSAMLAuthenticator(modeInfo, kerberosSession.getSubject());
+            KerberosGitLabSAMLAuthenticator kerberosGitLabSAMLAuthenticator = new KerberosGitLabSAMLAuthenticator(appInfo, kerberosSession.getSubject());
             Cookie sessionCookie = kerberosGitLabSAMLAuthenticator.authenticateAndGetSessionCookie();
-            String oAuthToken = GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromSessionCookie(sessionCookie);
+            String oAuthToken = GitLabOAuthAuthenticator.newAuthenticator(appInfo).getOAuthTokenFromSessionCookie(sessionCookie);
             return GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS, oAuthToken);
         }
         else

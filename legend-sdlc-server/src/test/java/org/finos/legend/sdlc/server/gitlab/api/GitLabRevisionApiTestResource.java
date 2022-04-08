@@ -19,7 +19,6 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
@@ -54,18 +53,16 @@ public class GitLabRevisionApiTestResource
     {
         String projectName = "RevisionTestProjectOne";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "revisiontestprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
         Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
@@ -92,10 +89,10 @@ public class GitLabRevisionApiTestResource
         String entityPackagePath = "test";
         String classifierPath = "meta::test::mathematicsDepartment";
         Map<String, String> entityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceOneId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceOneId).getEntities(null, null, null);
 
@@ -119,7 +116,7 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentRevision.getCommittedTimestamp());
 
         List<Revision> entityRevisions = gitLabRevisionApi.getUserWorkspaceEntityRevisionContext(projectId, workspaceOneId, entityPath).getRevisions();
-        Revision currentEntityRevision = gitLabRevisionApi.getUserWorkspaceEntityRevisionContext(projectId, workspaceOneId,entityPath).getCurrentRevision();
+        Revision currentEntityRevision = gitLabRevisionApi.getUserWorkspaceEntityRevisionContext(projectId, workspaceOneId, entityPath).getCurrentRevision();
 
         Assert.assertNotNull(entityRevisions);
         Assert.assertEquals(1, entityRevisions.size());
@@ -147,18 +144,16 @@ public class GitLabRevisionApiTestResource
     {
         String projectName = "RevisionTestProjectTwo";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "revisiontestprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
         Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
@@ -185,10 +180,10 @@ public class GitLabRevisionApiTestResource
         String entityPackagePath = "test";
         String classifierPath = "meta::test::mathematicsDepartment";
         Map<String, String> entityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceOneId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceOneId).getEntities(null, null, null);
 
@@ -212,7 +207,7 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentRevision.getCommittedTimestamp());
 
         List<Revision> entityRevisions = gitLabRevisionApi.getGroupWorkspaceEntityRevisionContext(projectId, workspaceOneId, entityPath).getRevisions();
-        Revision currentEntityRevision = gitLabRevisionApi.getGroupWorkspaceEntityRevisionContext(projectId, workspaceOneId,entityPath).getCurrentRevision();
+        Revision currentEntityRevision = gitLabRevisionApi.getGroupWorkspaceEntityRevisionContext(projectId, workspaceOneId, entityPath).getCurrentRevision();
 
         Assert.assertNotNull(entityRevisions);
         Assert.assertEquals(1, entityRevisions.size());

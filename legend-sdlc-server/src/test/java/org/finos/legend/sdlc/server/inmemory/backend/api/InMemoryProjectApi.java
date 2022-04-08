@@ -16,9 +16,8 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
-import org.finos.legend.sdlc.domain.model.project.accessRole.ProjectAuthorizationAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 
@@ -43,7 +42,7 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
+    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
     {
         List<Project> projects = Lists.mutable.withAll(this.backend.getAllProjects());
         if (limit != null && projects.size() > limit)
@@ -54,7 +53,7 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags)
+    public Project createProject(String name, String description, String groupId, String artifactId, Iterable<String> tags)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -96,19 +95,19 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public Set<ProjectAuthorizationAction> checkUserAuthorizationActions(String id, Set<ProjectAuthorizationAction> actions)
+    public Set<AuthorizableProjectAction> checkUserAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public boolean checkUserAuthorizationAction(String id, ProjectAuthorizationAction action)
+    public boolean checkUserAuthorizedAction(String id, AuthorizableProjectAction action)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
+    public ImportReport importProject(String id, String groupId, String artifactId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

@@ -30,6 +30,9 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     @JsonProperty("depot")
     private DepotConfiguration depotConfiguration;
 
+    @JsonProperty("features")
+    private LegendSDLCServerFeaturesConfiguration featuresConfiguration;
+
     public GitLabConfiguration getGitLabConfiguration()
     {
         return this.gitLabConfig;
@@ -43,5 +46,10 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     public DepotConfiguration getDepotConfiguration()
     {
         return this.depotConfiguration;
+    }
+
+    public LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
+    {
+        return this.featuresConfiguration;
     }
 }

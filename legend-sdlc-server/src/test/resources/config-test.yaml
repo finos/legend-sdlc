@@ -52,14 +52,14 @@ projectStructure:
 
 gitLab:
   projectTag: legendtest
-  uat:
-    server:
-      scheme: na
-      host: na-uat
-    app:
-      id: na
-      secret: na
-      redirectURI: na
+  projectIdPrefix: PROTOTYPE
+  server:
+    scheme: na
+    host: na-uat
+  app:
+    id: na
+    secret: na
+    redirectURI: na
 
 logging:
   # Change this to affect library class logging

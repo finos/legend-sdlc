@@ -19,11 +19,10 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -40,9 +39,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Substantial test resource class for Workspace API tests shared by the docker-based and server-based GitLab tests.
@@ -73,7 +69,6 @@ public class GitLabWorkspaceApiTestResource
     {
         String projectName = "WorkspaceTestProjectOne";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "worktestprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
@@ -81,12 +76,12 @@ public class GitLabWorkspaceApiTestResource
         String workspaceTwoId = "testworkspacetwo";
         String workspaceThreeId = "testworkspacethree";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
         Assert.assertEquals(description, createdProject.getDescription());
-        Assert.assertEquals(projectType, createdProject.getProjectType());
+        Assert.assertNull(createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
@@ -154,13 +149,12 @@ public class GitLabWorkspaceApiTestResource
         // Create new workspace from previous HEAD
         String projectName = "WorkspaceTestProjectTwo";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testworkprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
         Workspace createdWorkspace = gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName);
@@ -183,10 +177,10 @@ public class GitLabWorkspaceApiTestResource
         String entityPath = "test::entity";
         String classifierPath = "meta::test::mathematicsDepartment";
         Map<String, String> entityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceTwoId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
 
@@ -198,7 +192,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
         List<String> labels = Collections.singletonList("default");
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.USER,"Add Courses.", "add two math courses", labels);
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, workspaceTwoId, WorkspaceType.USER, "Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
         Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, reviewId);
 
@@ -207,16 +201,16 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(ReviewState.OPEN, approvedReview.getState());
 
         GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
-        MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getMergeRequestApi();
+        MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI().getMergeRequestApi();
         Integer parsedMergeRequestId = Integer.parseInt(reviewId);
         Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
 
         String requiredStatus = "can_be_merged";
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
-                () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
-                mr -> requiredStatus.equals(mr.getMergeStatus()),
-                20,
-                1000);
+            () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
+            mr -> requiredStatus.equals(mr.getMergeStatus()),
+            20,
+            1000);
         if (!callUntil.succeeded())
         {
             throw new RuntimeException("Merge request " + approvedReview.getId() + " still does not have status \"" + requiredStatus + "\" after " + callUntil.getTryCount() + " tries");
@@ -227,22 +221,22 @@ public class GitLabWorkspaceApiTestResource
 
         String requiredMergedStatus = "merged";
         CallUntil<MergeRequest, GitLabApiException> callUntilMerged = CallUntil.callUntil(
-                () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
-                mr -> requiredMergedStatus.equals(mr.getState()),
-                10,
-                500);
+            () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
+            mr -> requiredMergedStatus.equals(mr.getState()),
+            10,
+            500);
         if (!callUntilMerged.succeeded())
         {
             throw new RuntimeException("Merge request " + reviewId + " still does not have state \"" + requiredMergedStatus + "\" after " + callUntilMerged.getTryCount() + " tries");
         }
         LOGGER.info("Waited {} times for merge request to have state \"{}\"", callUntilMerged.getTryCount(), requiredMergedStatus);
 
-        RepositoryApi repositoryApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getRepositoryApi();
+        RepositoryApi repositoryApi = gitLabMemberUserContext.getGitLabAPI().getRepositoryApi();
         CallUntil<List<Branch>, GitLabApiException> callUntilBranchDeleted = CallUntil.callUntil(
-                () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
-                branches -> GitLabApiTestSetupUtil.hasOnlyBranchesWithNames(branches, Lists.mutable.of(workspaceName, "master")),
-                15,
-                1000);
+            () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
+            branches -> GitLabApiTestSetupUtil.hasOnlyBranchesWithNames(branches, Lists.mutable.of(workspaceName, "master")),
+            15,
+            1000);
         if (!callUntilBranchDeleted.succeeded())
         {
             // Warn instead of throwing exception since we cannot manage time expectation on GitLab to reflect branch deletion.
@@ -261,10 +255,10 @@ public class GitLabWorkspaceApiTestResource
 
         // Create changes and make change in workspace branch -- use workspace
         Map<String, String> currentEntityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
 
@@ -292,13 +286,12 @@ public class GitLabWorkspaceApiTestResource
         // Create new workspace from previous HEAD
         String projectName = "WorkspaceTestProjectThree";
         String description = "A test project.";
-        ProjectType projectType = ProjectType.PRODUCTION;
         String groupId = "org.finos.sdlc.test";
         String artifactId = "testworkprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, projectType, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
         Workspace createdWorkspace = gitLabWorkspaceApi.newGroupWorkspace(projectId, workspaceName);
@@ -321,10 +314,10 @@ public class GitLabWorkspaceApiTestResource
         String entityPath = "test::entity";
         String classifierPath = "meta::test::mathematicsDepartment";
         Map<String, String> entityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceTwoId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceTwoId).getEntities(null, null, null);
 
@@ -345,16 +338,16 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(ReviewState.OPEN, approvedReview.getState());
 
         GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
-        MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getMergeRequestApi();
+        MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI().getMergeRequestApi();
         Integer parsedMergeRequestId = Integer.parseInt(reviewId);
         Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
 
         String requiredStatus = "can_be_merged";
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
-                () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
-                mr -> requiredStatus.equals(mr.getMergeStatus()),
-                20,
-                1000);
+            () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
+            mr -> requiredStatus.equals(mr.getMergeStatus()),
+            20,
+            1000);
         if (!callUntil.succeeded())
         {
             throw new RuntimeException("Merge request " + approvedReview.getId() + " still does not have status \"" + requiredStatus + "\" after " + callUntil.getTryCount() + " tries");
@@ -365,22 +358,22 @@ public class GitLabWorkspaceApiTestResource
 
         String requiredMergedStatus = "merged";
         CallUntil<MergeRequest, GitLabApiException> callUntilMerged = CallUntil.callUntil(
-                () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
-                mr -> requiredMergedStatus.equals(mr.getState()),
-                10,
-                500);
+            () -> mergeRequestApi.getMergeRequest(gitlabProjectId, parsedMergeRequestId),
+            mr -> requiredMergedStatus.equals(mr.getState()),
+            10,
+            500);
         if (!callUntilMerged.succeeded())
         {
             throw new RuntimeException("Merge request " + reviewId + " still does not have state \"" + requiredMergedStatus + "\" after " + callUntilMerged.getTryCount() + " tries");
         }
         LOGGER.info("Waited {} times for merge request to have state \"{}\"", callUntilMerged.getTryCount(), requiredMergedStatus);
 
-        RepositoryApi repositoryApi = gitLabMemberUserContext.getGitLabAPI(sdlcGitLabProjectId.getGitLabMode()).getRepositoryApi();
+        RepositoryApi repositoryApi = gitLabMemberUserContext.getGitLabAPI().getRepositoryApi();
         CallUntil<List<Branch>, GitLabApiException> callUntilBranchDeleted = CallUntil.callUntil(
-                () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
-                branches -> GitLabApiTestSetupUtil.hasOnlyBranchesWithNames(branches, Lists.mutable.of(workspaceName, "master")),
-                15,
-                1000);
+            () -> repositoryApi.getBranches(sdlcGitLabProjectId.getGitLabId()),
+            branches -> GitLabApiTestSetupUtil.hasOnlyBranchesWithNames(branches, Lists.mutable.of(workspaceName, "master")),
+            15,
+            1000);
         if (!callUntilBranchDeleted.succeeded())
         {
             // Warn instead of throwing exception since we cannot manage time expectation on GitLab to reflect branch deletion.
@@ -399,10 +392,10 @@ public class GitLabWorkspaceApiTestResource
 
         // Create changes and make change in workspace branch -- use workspace
         Map<String, String> currentEntityContentMap = Maps.mutable.with(
-                "package", "test",
-                "name", "entity",
-                "math-113", "abstract-algebra",
-                "math-185", "complex-analysis");
+            "package", "test",
+            "name", "entity",
+            "math-113", "abstract-algebra",
+            "math-185", "complex-analysis");
         gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
         List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
 

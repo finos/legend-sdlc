@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -21,11 +22,12 @@ import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDepende
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
@@ -38,10 +40,10 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 
-import java.util.Collections;
-import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
+import java.util.Collections;
+import java.util.List;
 
 public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess implements ProjectConfigurationApi
 {
@@ -50,9 +52,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     @Inject
-    public GitLabProjectConfigurationApi(GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    public GitLabProjectConfigurationApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
         this.projectStructureConfig = projectStructureConfig;
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
         this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
@@ -69,9 +71,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId,
-                    () -> "Unknown project (" + projectId + ")",
-                    () -> "Failed to access project configuration for project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId,
+                () -> "Unknown project (" + projectId + ")",
+                () -> "Failed to access project configuration for project " + projectId);
         }
     }
 
@@ -88,10 +90,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " of project " + projectId,
-                    () -> "Unknown revision " + revisionId + " of project " + projectId,
-                    () -> "Failed to get revision " + revisionId + " of project " + projectId
-            );
+                () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " of project " + projectId,
+                () -> "Unknown revision " + revisionId + " of project " + projectId,
+                () -> "Failed to get revision " + revisionId + " of project " + projectId);
         }
         if (resolvedRevisionId == null)
         {
@@ -104,9 +105,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " at revision " + revisionId,
-                    () -> "Unknown project (" + projectId + ") or revision (" + revisionId + ")",
-                    () -> "Failed to access project configuration for project " + projectId + " at revision " + revisionId);
+                () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " at revision " + revisionId,
+                () -> "Unknown project (" + projectId + ") or revision (" + revisionId + ")",
+                () -> "Failed to access project configuration for project " + projectId + " at revision " + revisionId);
         }
     }
 
@@ -141,9 +142,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
-                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
+                () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
+                () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
         }
     }
 
@@ -192,10 +193,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
-                    () -> "Unknown revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
-                    () -> "Failed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId
-            );
+                () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
+                () -> "Unknown revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
+                () -> "Failed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId);
         }
         if (resolvedRevisionId == null)
         {
@@ -208,9 +208,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId,
-                    () -> "Unknown project (" + projectId + "), " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + "), or revision (" + revisionId + ")",
-                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId);
+                () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId,
+                () -> "Unknown project (" + projectId + "), " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + "), or revision (" + revisionId + ")",
+                () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId);
         }
     }
 
@@ -226,9 +226,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for version " + versionId.toVersionIdString() + " of project " + projectId,
-                    () -> "Unknown project (" + projectId + ") or version (" + versionId.toVersionIdString() + ")",
-                    () -> "Failed to access project configuration for version " + versionId.toVersionIdString() + " of project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to access project configuration for version " + versionId.toVersionIdString() + " of project " + projectId,
+                () -> "Unknown project (" + projectId + ") or version (" + versionId.toVersionIdString() + ")",
+                () -> "Failed to access project configuration for version " + versionId.toVersionIdString() + " of project " + projectId);
         }
     }
 
@@ -239,7 +239,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
@@ -261,7 +261,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
@@ -318,28 +318,28 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             {
                 throw new LegendSDLCServerException("Could not find current revision for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " may be corrupt");
             }
-            return ProjectConfigurationUpdateBuilder.newBuilder(fileAccessProvider, getProjectTypeFromMode(GitLabProjectId.getGitLabMode(projectId)), projectId)
-                    .withWorkspace(workspaceId, workspaceType, workspaceAccessType)
-                    .withRevisionId(currentRevision.getId())
-                    .withMessage(message)
-                    .withProjectStructureVersion(projectStructureVersion)
-                    .withProjectStructureExtensionVersion(projectStructureExtensionVersion)
-                    .withGroupId(groupId)
-                    .withArtifactId(artifactId)
-                    .withProjectDependenciesToAdd(projectDependenciesToAdd)
-                    .withProjectDependenciesToRemove(projectDependenciesToRemove)
-                    .withArtifactGenerationsToAdd(artifactGenerationsToAdd)
-                    .withArtifactGenerationsToRemove(artifactGenerationsToRemove)
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
-                    .updateProjectConfiguration();
+            return ProjectConfigurationUpdateBuilder.newBuilder(fileAccessProvider, projectId)
+                .withWorkspace(workspaceId, workspaceType, workspaceAccessType)
+                .withRevisionId(currentRevision.getId())
+                .withMessage(message)
+                .withProjectStructureVersion(projectStructureVersion)
+                .withProjectStructureExtensionVersion(projectStructureExtensionVersion)
+                .withGroupId(groupId)
+                .withArtifactId(artifactId)
+                .withProjectDependenciesToAdd(projectDependenciesToAdd)
+                .withProjectDependenciesToRemove(projectDependenciesToRemove)
+                .withArtifactGenerationsToAdd(artifactGenerationsToAdd)
+                .withArtifactGenerationsToRemove(artifactGenerationsToRemove)
+                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                .updateProjectConfiguration();
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
-                    () -> "Unknown project (" + projectId + ") or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ")",
-                    () -> "Failed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
+                () -> "User " + getCurrentUser() + " is not allowed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
+                () -> "Unknown project (" + projectId + ") or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ")",
+                () -> "Failed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
         }
     }
 

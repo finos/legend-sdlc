@@ -23,9 +23,8 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.sdlc.server.tools.AuthenticationTools;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.jsoup.Connection;
@@ -42,11 +41,11 @@ public abstract class GitLabSAMLAuthenticator
     private static final String SESSION_COOKIE_NAME = "_gitlab_session";
     private static final String SAML_FORM_TAG = "form";
 
-    private final GitLabModeInfo modeInfo;
+    private final GitLabAppInfo appInfo;
 
-    protected GitLabSAMLAuthenticator(GitLabModeInfo modeInfo)
+    protected GitLabSAMLAuthenticator(GitLabAppInfo appInfo)
     {
-        this.modeInfo = modeInfo;
+        this.appInfo = appInfo;
     }
 
     public Cookie authenticateAndGetSessionCookie()
@@ -73,7 +72,7 @@ public abstract class GitLabSAMLAuthenticator
                         {
                             responseString = "(error getting response)";
                         }
-                        throw new GitLabAuthFailureException(getUserId(), getGitLabMode(), "Failed to get GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        throw new GitLabAuthFailureException(getUserId(), "Failed to get GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                     }
                     case HttpStatus.SC_BAD_GATEWAY:
                     case HttpStatus.SC_SERVICE_UNAVAILABLE:
@@ -88,7 +87,7 @@ public abstract class GitLabSAMLAuthenticator
                         {
                             responseString = "(error getting response)";
                         }
-                        throw new GitLabAuthAccessException(getUserId(), getGitLabMode(), "Error accessing auth server: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                        throw new GitLabAuthAccessException(getUserId(), "Error accessing auth server: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                     }
                     default:
                     {
@@ -103,7 +102,7 @@ public abstract class GitLabSAMLAuthenticator
                             {
                                 responseString = "(error getting response)";
                             }
-                            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Error getting GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
+                            throw new GitLabAuthOtherException(getUserId(), "Error getting GitLab session token: " + response.getStatusLine() + "\nResponse:\n" + responseString);
                         }
                     }
                 }
@@ -128,19 +127,19 @@ public abstract class GitLabSAMLAuthenticator
                 {
                     builder.append("Form:\n").append(samlForm).append("\nMessage: ").append(eMessage);
                 }
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), builder.toString(), e);
+                throw new GitLabAuthOtherException(getUserId(), builder.toString(), e);
             }
             if (isNonSuccessStatusCode(formResponse.statusCode()))
             {
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Error getting token (status " + formResponse.statusCode() + "), response:\n" + formResponse.body());
+                throw new GitLabAuthOtherException(getUserId(), "Error getting token (status " + formResponse.statusCode() + "), response:\n" + formResponse.body());
             }
             String token = formResponse.cookie(SESSION_COOKIE_NAME);
             if (token == null)
             {
                 // TODO Consider what to do in this case. good response but no gitlab session token. Might have another form to execute?
-                throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Could not get token from form response:\n" + formResponse.body());
+                throw new GitLabAuthOtherException(getUserId(), "Could not get token from form response:\n" + formResponse.body());
             }
-            return makeSessionCookie(token, this.modeInfo.getServerInfo());
+            return makeSessionCookie(token, this.appInfo.getServerInfo());
         }
         catch (GitLabAuthException e)
         {
@@ -148,11 +147,11 @@ public abstract class GitLabSAMLAuthenticator
         }
         catch (IOException e)
         {
-            throw new GitLabAuthAccessException(getUserId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
+            throw new GitLabAuthAccessException(getUserId(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
         }
         catch (Exception e)
         {
-            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
+            throw new GitLabAuthOtherException(getUserId(), StringTools.appendThrowableMessageIfPresent("Error getting GitLab session token", e), e);
         }
     }
 
@@ -172,20 +171,15 @@ public abstract class GitLabSAMLAuthenticator
         }
         catch (Exception e)
         {
-            throw new GitLabAuthOtherException(getUserId(), getGitLabMode(), "Invalid SAML form, got\n" + responseString, e);
+            throw new GitLabAuthOtherException(getUserId(), "Invalid SAML form, got\n" + responseString, e);
         }
     }
 
     protected abstract String getUserId();
 
-    protected GitLabMode getGitLabMode()
+    protected GitLabAppInfo getAppInfo()
     {
-        return this.modeInfo.getMode();
-    }
-
-    protected GitLabModeInfo getModeInfo()
-    {
-        return this.modeInfo;
+        return this.appInfo;
     }
 
     static Cookie makeSessionCookie(String sessionToken, GitLabServerInfo serverInfo)

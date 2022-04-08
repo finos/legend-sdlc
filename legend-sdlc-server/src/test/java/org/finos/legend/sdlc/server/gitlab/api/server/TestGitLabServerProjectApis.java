@@ -65,15 +65,15 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
      *
-     * @throws LegendSDLCServerException if cannot authenticates to GitLab.
+     * @throws LegendSDLCServerException if cannot authenticate to GitLab.
      */
     private static void setUpProjectApi() throws LegendSDLCServerException
     {
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
+        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor, null);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, backgroundTaskProcessor, null);
         gitLabProjectApiTestResource = new GitLabProjectApiTestResource(gitLabProjectApi);
     }
 }

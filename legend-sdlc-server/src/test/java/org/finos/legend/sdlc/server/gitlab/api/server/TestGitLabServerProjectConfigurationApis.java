@@ -61,13 +61,13 @@ public class TestGitLabServerProjectConfigurationApis extends AbstractGitLabServ
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabUserContext gitLabOwnerUserContext = prepareGitLabOwnerUserContext();
-        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
+        GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
         ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, gitLabConfig, backgroundTaskProcessor, null);
-        GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabMemberUserContext, backgroundTaskProcessor);
-        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor, null);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, backgroundTaskProcessor, null);
+        GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabConfig, gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
+        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabConfig, gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor, null);
 
         gitLabProjectConfigurationApiTestResource = new GitLabProjectConfigurationApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabProjectConfigurationApi);
     }

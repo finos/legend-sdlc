@@ -16,22 +16,22 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
 import org.pac4j.core.profile.CommonProfile;
 
-import java.util.List;
 import javax.servlet.Filter;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.Cookie;
+import java.util.List;
 
 public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
 {
-    private final GitLabModeInfos gitLabModeInfos;
+    private final GitLabAppInfo appInfo;
 
-    private GitLabWebFilter(GitLabModeInfos gitLabModeInfos)
+    private GitLabWebFilter(GitLabAppInfo appInfo)
     {
-        this.gitLabModeInfos = gitLabModeInfos;
+        this.appInfo = appInfo;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
         GitLabSessionBuilder builder;
         try
         {
-            builder = GitLabSessionBuilder.newBuilder(this.gitLabModeInfos).fromToken(sessionToken);
+            builder = GitLabSessionBuilder.newBuilder(this.appInfo).fromToken(sessionToken);
         }
         catch (Exception e)
         {
@@ -108,7 +108,7 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
             {
                 try
                 {
-                    GitLabSession session = GitLabSessionBuilder.newBuilder(this.gitLabModeInfos).withProfile(profile).build();
+                    GitLabSession session = GitLabSessionBuilder.newBuilder(this.appInfo).withProfile(profile).build();
                     LOGGER.debug("session created from profile: {}", profile);
                     return session;
                 }
@@ -123,7 +123,6 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
 
     public static Filter fromConfig(GitLabConfiguration config)
     {
-        GitLabModeInfos modeInfos = GitLabModeInfos.fromConfig(config);
-        return new GitLabWebFilter(modeInfos);
+        return new GitLabWebFilter(GitLabAppInfo.newAppInfo(config));
     }
 }

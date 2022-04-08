@@ -70,9 +70,10 @@ public class InMemoryProject implements Project
     }
 
     @Override
+    @JsonIgnore
     public ProjectType getProjectType()
     {
-        return ProjectType.PRODUCTION;
+        return null;
     }
 
     @Override

@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -35,19 +36,19 @@ import org.gitlab4j.api.models.Job;
 import org.gitlab4j.api.models.JobStatus;
 import org.gitlab4j.api.models.Pipeline;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements WorkflowJobApi
 {
     @Inject
-    public GitlabWorkflowJobApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitlabWorkflowJobApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -162,7 +163,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
 
             int pipelineId = parseIntegerIdIfNotNull(workflowId);
-            GitLabApi gitLabApi = getGitLabApi(this.projectId.getGitLabMode());
+            GitLabApi gitLabApi = getGitLabApi();
             PipelineApi pipelineApi = gitLabApi.getPipelineApi();
 
             // Validate the pipeline
@@ -174,9 +175,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
             }
 
             if (!getRef().equals(pipeline.getRef()))
@@ -194,9 +195,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access jobs for workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Unknown workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Error getting jobs for workflow " + workflowId + " in " + getRefInfoForException());
             }
             MutableList<WorkflowJob> workflowJobs = ListIterate.collect(jobs, this::fromGitLabJob);
             if (statuses != null)
@@ -217,7 +218,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
 
             Job job = getJob(workflowId, workflowJobId);
-            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            JobApi jobApi = getGitLabApi().getJobApi();
             try
             {
                 return withRetries(() -> jobApi.getTrace(this.projectId.getGitLabId(), job.getId()));
@@ -225,9 +226,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflow job log for workflow job " + workflowJobId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow job log in " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error getting workflow job log for workflow job" + workflowJobId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access workflow job log for workflow job " + workflowJobId + " in " + getRefInfoForException(),
+                    () -> "Unknown workflow job log in " + getRefInfoForException() + ": " + workflowJobId,
+                    () -> "Error getting workflow job log for workflow job" + workflowJobId + " in " + getRefInfoForException());
             }
         }
 
@@ -244,7 +245,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                 throw new LegendSDLCServerException("Cannot run job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only waiting manual jobs can be run, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
             }
 
-            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            JobApi jobApi = getGitLabApi().getJobApi();
             Job result;
             try
             {
@@ -253,9 +254,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to run job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error running job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to run job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                    () -> "Error running job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
             }
             return fromGitLabJob(result);
         }
@@ -272,7 +273,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             {
                 throw new LegendSDLCServerException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only succeeded, failed, or canceled jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
             }
-            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            JobApi jobApi = getGitLabApi().getJobApi();
             Job result;
             try
             {
@@ -281,9 +282,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to retry job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error retrying job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to retry job " + workflowJobId + " for workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                    () -> "Error retrying job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
             }
             return fromGitLabJob(result);
         }
@@ -301,7 +302,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
                 throw new LegendSDLCServerException("Cannot cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException() + ": only jobs in progress can be cancelled, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
             }
 
-            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            JobApi jobApi = getGitLabApi().getJobApi();
             Job result;
             try
             {
@@ -310,9 +311,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
-                        () -> "Error canceling job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException(),
+                    () -> "Unknown job in workflow " + workflowId + " of " + getRefInfoForException() + ": " + workflowJobId,
+                    () -> "Error canceling job " + workflowJobId + " of workflow " + workflowId + " in " + getRefInfoForException());
             }
             return fromGitLabJob(result);
         }
@@ -324,7 +325,7 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
 
         protected Job getJob(int pipelineId, int jobId)
         {
-            JobApi jobApi = getGitLabApi(this.projectId.getGitLabMode()).getJobApi();
+            JobApi jobApi = getGitLabApi().getJobApi();
             Job job;
             try
             {
@@ -333,9 +334,9 @@ public class GitlabWorkflowJobApi extends GitLabApiWithFileAccess implements Wor
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException(),
-                        () -> "Unknown job in workflow " + pipelineId + " of " + getRefInfoForException() + ": " + jobId,
-                        () -> "Error getting workflow job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException(),
+                    () -> "Unknown job in workflow " + pipelineId + " of " + getRefInfoForException() + ": " + jobId,
+                    () -> "Error getting workflow job " + jobId + " of workflow " + pipelineId + " in " + getRefInfoForException());
             }
 
             if (!getRef().equals(job.getRef()) || (job.getPipeline() == null) || (job.getPipeline().getId() == null) || (pipelineId != job.getPipeline().getId()))

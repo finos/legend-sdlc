@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -34,11 +35,11 @@ import org.gitlab4j.api.models.Diff;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 public class GitLabComparisonApi extends GitLabApiWithFileAccess implements ComparisonApi
 {
@@ -46,9 +47,9 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     protected static final String FILE_PATH_DELIMITER = "/";
 
     @Inject
-    public GitLabComparisonApi(GitLabUserContext userContext, RevisionApi revisionApi, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabComparisonApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, RevisionApi revisionApi, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
         this.revisionApi = revisionApi;
     }
 
@@ -58,7 +59,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
+        RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
         String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceType, workspaceAccessType);
@@ -71,10 +72,9 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                    () -> "Could not find revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                    () -> "Failed to fetch Merged Base Information for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString()
-            );
+                () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
+                () -> "Could not find revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
+                () -> "Failed to fetch Merged Base Information for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString());
         }
         ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, workspaceCreationRevisionId, workspaceType, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, workspaceCreationRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
@@ -86,7 +86,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
+        RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
         String currentProjectRevisionId = this.revisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId();
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
 
@@ -102,8 +102,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
 
         WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         if (workspaceInfo == null)
@@ -130,8 +130,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        RepositoryApi repositoryApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getRepositoryApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi(), gitLabProjectId, reviewId);
+        RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
 
         WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         if (workspaceInfo == null)
@@ -166,10 +166,9 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get Comparison Information from revision " + fromRevisionId + "  to revision " + toRevisionId + " on project" + gitLabProjectId.toString(),
-                    () -> "Could not find revisions " + fromRevisionId + " ," + toRevisionId + " on project" + gitLabProjectId.toString(),
-                    () -> "Failed to fetch Comparison Information from revision " + fromRevisionId + "  to revision " + toRevisionId + " on project" + gitLabProjectId.toString()
-            );
+                () -> "User " + getCurrentUser() + " is not allowed to get Comparison Information from revision " + fromRevisionId + "  to revision " + toRevisionId + " on project" + gitLabProjectId.toString(),
+                () -> "Could not find revisions " + fromRevisionId + " ," + toRevisionId + " on project" + gitLabProjectId.toString(),
+                () -> "Failed to fetch Comparison Information from revision " + fromRevisionId + "  to revision " + toRevisionId + " on project" + gitLabProjectId.toString());
         }
     }
 

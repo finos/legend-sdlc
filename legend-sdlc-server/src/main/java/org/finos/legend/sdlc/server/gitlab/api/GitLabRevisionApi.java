@@ -20,13 +20,14 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
 import org.finos.legend.sdlc.domain.model.version.Version;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -42,6 +43,8 @@ import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.CommitRef.RefType;
 import org.gitlab4j.api.models.Tag;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
@@ -50,15 +53,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabRevisionApi extends GitLabApiWithFileAccess implements RevisionApi
 {
     @Inject
-    public GitLabRevisionApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabRevisionApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -193,7 +194,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         try
         {
-            GitLabApi gitLabApi = getGitLabApi(gitLabProjectId.getGitLabMode());
+            GitLabApi gitLabApi = getGitLabApi();
             CommitsApi commitsApi = gitLabApi.getCommitsApi();
             Revision revision = getProjectRevisionContext(projectId).getRevision(revisionId);
 
@@ -203,9 +204,9 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
 
             List<Version> versions;
             List<String> versionTagNames = commitRefs.stream()
-                    .filter(cr -> (RefType.TAG == cr.getType()) && isVersionTagName(cr.getName()))
-                    .map(CommitRef::getName)
-                    .collect(Collectors.toList());
+                .filter(cr -> (RefType.TAG == cr.getType()) && isVersionTagName(cr.getName()))
+                .map(CommitRef::getName)
+                .collect(Collectors.toList());
             if (versionTagNames.isEmpty())
             {
                 versions = Collections.emptyList();
@@ -231,9 +232,9 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
             {
                 // Note that here we will not account for conflict resolution or backup branch because in the model those are not real workspaces.
                 workspaces = commitRefs.stream()
-                        .filter(cr -> (RefType.BRANCH == cr.getType()) && isWorkspaceBranchName(cr.getName(), ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
-                        .map(cr -> fromWorkspaceBranchName(projectId, cr.getName(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
-                        .collect(Collectors.toList());
+                    .filter(cr -> (RefType.BRANCH == cr.getType()) && isWorkspaceBranchName(cr.getName(), ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+                    .map(cr -> fromWorkspaceBranchName(projectId, cr.getName(), WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+                    .collect(Collectors.toList());
             }
 
             return new RevisionStatus()
@@ -266,9 +267,9 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access the status for revision " + revisionId + " of project " + projectId,
-                    () -> "Unknown: revision " + revisionId + " of project " + projectId,
-                    () -> "Error getting the status for revision " + revisionId + " of project " + projectId);
+                () -> "User " + getCurrentUser() + " is not allowed to access the status for revision " + revisionId + " of project " + projectId,
+                () -> "Unknown: revision " + revisionId + " of project " + projectId,
+                () -> "Error getting the status for revision " + revisionId + " of project " + projectId);
         }
     }
 

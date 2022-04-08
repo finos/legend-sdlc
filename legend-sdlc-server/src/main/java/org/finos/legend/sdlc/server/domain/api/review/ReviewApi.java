@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.domain.api.review;
 
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
 import java.time.Instant;
 import java.util.List;
@@ -45,8 +45,8 @@ public interface ReviewApi
      * @param projectId   project id
      * @param state       review state
      * @param revisionIds a set of revision IDs, with each we will get the reviews are associated
-     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
-     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
+     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
@@ -61,17 +61,23 @@ public interface ReviewApi
      * Time filter range (since/until) is inclusive.
      * If the limit equals to 0, effectively no limit is applied.
      * if no projectType is provided the default mode of the system would be selected
-     * @param projectTypes the project type for which the reviews would be returned
+     *
      * @param assignedToMe whether to return only reviews assigned to me
      * @param authoredByMe whether to return only reviews authored by me
-     * @param labels      labels to apply, return only reviews that match all the labels
-     * @param state       review state
-     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
-     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the commited time
-     * @param limit       maximum number of reviews to get
+     * @param labels       labels to apply, return only reviews that match all the labels
+     * @param state        review state
+     * @param since        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param until        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param limit        maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels,  ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit);
+
+    @Deprecated
+    default List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
+    {
+        return this.getReviews(assignedToMe, authoredByMe, labels, state, since, until, limit);
+    }
 
     /**
      * Create a review for changes from the given workspace.
@@ -178,11 +184,12 @@ public interface ReviewApi
 
     /**
      * Edit review, update the review  title, description and labels
-     * @param projectId     project id
-     * @param reviewId      review id
-     * @param title         updated Title
-     * @param description   description
-     * @param labels        review labels
+     *
+     * @param projectId   project id
+     * @param reviewId    review id
+     * @param title       updated Title
+     * @param description description
+     * @param labels      review labels
      * @return edited review
      */
     Review editReview(String projectId, String reviewId, String title, String description, List<String> labels);

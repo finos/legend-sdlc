@@ -31,7 +31,6 @@ class SimpleProjectConfiguration implements ProjectConfiguration
 {
     private ProjectStructureVersion projectStructureVersion;
     private String projectId;
-    private ProjectType projectType;
     private String groupId;
     private String artifactId;
     private List<ProjectDependency> projectDependencies = Collections.emptyList();
@@ -39,12 +38,11 @@ class SimpleProjectConfiguration implements ProjectConfiguration
     private List<ArtifactGeneration> artifactGeneration = Collections.emptyList();
 
 
-    SimpleProjectConfiguration(String projectId, ProjectType projectType, ProjectStructureVersion projectStructureVersion,
+    SimpleProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion,
                                String groupId, String artifactId, List<ProjectDependency> projectDependencies,
                                List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGeneration)
     {
         this.projectId = projectId;
-        this.projectType = projectType;
         this.projectStructureVersion = projectStructureVersion;
         this.groupId = groupId;
         this.artifactId = artifactId;
@@ -64,10 +62,10 @@ class SimpleProjectConfiguration implements ProjectConfiguration
 
     SimpleProjectConfiguration(ProjectConfiguration projectConfiguration)
     {
-        this(projectConfiguration.getProjectId(), projectConfiguration.getProjectType(),
-                projectConfiguration.getProjectStructureVersion(), projectConfiguration.getGroupId(),
-                projectConfiguration.getArtifactId(), projectConfiguration.getProjectDependencies(),
-                projectConfiguration.getMetamodelDependencies(), projectConfiguration.getArtifactGenerations());
+        this(projectConfiguration.getProjectId(),
+            projectConfiguration.getProjectStructureVersion(), projectConfiguration.getGroupId(),
+            projectConfiguration.getArtifactId(), projectConfiguration.getProjectDependencies(),
+            projectConfiguration.getMetamodelDependencies(), projectConfiguration.getArtifactGenerations());
     }
 
     SimpleProjectConfiguration()
@@ -88,12 +86,12 @@ class SimpleProjectConfiguration implements ProjectConfiguration
     @Override
     public ProjectType getProjectType()
     {
-        return this.projectType;
+        return null;
     }
 
+    @Deprecated
     public void setProjectType(ProjectType projectType)
     {
-        this.projectType = projectType;
     }
 
     @Override

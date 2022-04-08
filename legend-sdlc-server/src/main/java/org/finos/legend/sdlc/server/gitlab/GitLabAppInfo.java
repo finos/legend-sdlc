@@ -79,9 +79,9 @@ public class GitLabAppInfo implements Serializable
         return this.appRedirectURI;
     }
 
-    public static GitLabAppInfo newAppInfo(GitLabConfiguration.ServerConfiguration serverConfig, GitLabConfiguration.AppConfiguration appConfig)
+    public static GitLabAppInfo newAppInfo(GitLabConfiguration gitLabConfiguration)
     {
-        return newAppInfo(GitLabServerInfo.newServerInfo(serverConfig), appConfig.getId(), appConfig.getSecret(), appConfig.getRedirectURI());
+        return newAppInfo(GitLabServerInfo.newServerInfo(gitLabConfiguration.getServerConfiguration()), gitLabConfiguration.getAppConfiguration().getId(), gitLabConfiguration.getAppConfiguration().getSecret(), gitLabConfiguration.getAppConfiguration().getRedirectURI());
     }
 
     public static GitLabAppInfo newAppInfo(GitLabServerInfo serverInfo, String appId, String appSecret, String appRedirectURI)

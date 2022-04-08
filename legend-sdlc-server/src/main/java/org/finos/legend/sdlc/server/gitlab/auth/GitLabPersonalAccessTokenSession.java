@@ -16,8 +16,6 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
 import org.gitlab4j.api.Constants.TokenType;
 import org.slf4j.Logger;
@@ -25,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
 
 public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<GitlabPersonalAccessTokenProfile> implements GitLabSession
 {
@@ -52,11 +49,11 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
             return false;
         }
 
-        GitLabPersonalAccessTokenSession that = (GitLabPersonalAccessTokenSession)other;
+        GitLabPersonalAccessTokenSession that = (GitLabPersonalAccessTokenSession) other;
         return Objects.equals(this.getUserId(), that.getUserId()) &&
-                Objects.equals(this.getProfile(), that.getProfile()) &&
-                this.getCreationTime().equals(that.getCreationTime()) &&
-                this.tokenManager.equals(that.tokenManager);
+            Objects.equals(this.getProfile(), that.getProfile()) &&
+            this.getCreationTime().equals(that.getCreationTime()) &&
+            this.tokenManager.equals(that.tokenManager);
     }
 
     @Override
@@ -66,45 +63,27 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public Set<GitLabMode> getValidModes()
+    public boolean gitLabOAuthCallback(String code)
     {
-        return this.tokenManager.getValidModes();
+        return this.tokenManager.gitLabOAuthCallback(code);
     }
 
     @Override
-    public boolean isValidMode(GitLabMode mode)
+    public GitLabToken getGitLabToken()
     {
-        return this.tokenManager.isValidMode(mode);
+        return this.tokenManager.getGitLabToken();
     }
 
     @Override
-    public boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    public void clearGitLabToken()
     {
-        return this.tokenManager.gitLabOAuthCallback(mode, code);
+        this.tokenManager.clearGitLabToken();
     }
 
     @Override
-    public GitLabToken getGitLabToken(GitLabMode mode)
+    public void setGitLabToken(GitLabToken token)
     {
-        return this.tokenManager.getGitLabToken(mode);
-    }
-
-    @Override
-    public void clearGitLabTokens()
-    {
-        this.tokenManager.clearGitLabTokens();
-    }
-
-    @Override
-    public void putGitLabToken(GitLabMode mode, GitLabToken token)
-    {
-        this.tokenManager.putGitLabToken(mode, token);
-    }
-
-    @Override
-    public GitLabModeInfo getModeInfo(GitLabMode mode)
-    {
-        return this.tokenManager.getModeInfo(mode);
+        this.tokenManager.setGitLabToken(token);
     }
 
     @Override
@@ -116,28 +95,22 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     @Override
     protected void writeToStringInfo(StringBuilder builder)
     {
-        this.tokenManager.appendTokenInfo(builder.append(' '));
+        this.tokenManager.appendGitLabTokenInfo(builder.append(' '));
     }
 
     private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, GitlabPersonalAccessTokenProfile profile)
     {
         if ((tokenManager != null) && (profile != null))
         {
-            LOGGER.debug("initializing with GitlabPersonalAccessTokenProfile: {}", profile);
+            LOGGER.debug("initializing with GitLab Personal Access Token (PAT) profile: {}", profile);
             String token = profile.getPersonalAccessToken();
 
-            if (token != null && profile.getGitlabHost() != null)
+            if (token != null &&
+                profile.getGitlabHost() != null &&
+                tokenManager.getAppInfo().getServerInfo().getHost().equals(profile.getGitlabHost()))
             {
-                tokenManager.getValidModes()
-                        .stream()
-                        .filter(mode -> tokenManager.getGitLabToken(mode) == null)
-                        .map(tokenManager::getModeInfo)
-                        .filter(gitLabModeInfo -> gitLabModeInfo.getServerInfo().getHost().equals(profile.getGitlabHost()))
-                        .forEach(modeInfo ->
-                        {
-                            tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.PRIVATE, token));
-                            LOGGER.debug("Storing private access token from profile for mode {}", modeInfo.getMode());
-                        });
+                tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.PRIVATE, token));
+                LOGGER.debug("Storing private access token from GitLab Personal Access Token (PAT) profile");
             }
         }
         return tokenManager;

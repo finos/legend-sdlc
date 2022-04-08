@@ -15,26 +15,22 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
-import org.gitlab4j.api.Constants.TokenType;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.gitlab4j.api.Constants;
 
 import java.io.Serializable;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.Objects;
 
 class GitLabTokenManager implements Serializable
 {
     private static final long serialVersionUID = 4579663645788521787L;
 
-    private final GitLabModeInfos modeInfos;
-    private final Map<GitLabMode, GitLabToken> tokens = new EnumMap<>(GitLabMode.class);
+    private final GitLabAppInfo appInfo;
+    private GitLabToken token;
 
-    private GitLabTokenManager(GitLabModeInfos modeInfos)
+    private GitLabTokenManager(GitLabAppInfo appInfo)
     {
-        this.modeInfos = modeInfos;
+        this.appInfo = appInfo;
     }
 
     @Override
@@ -50,60 +46,39 @@ class GitLabTokenManager implements Serializable
             return false;
         }
 
-        GitLabTokenManager that = (GitLabTokenManager)other;
-        return this.modeInfos.equals(that.modeInfos) && this.tokens.equals(that.tokens);
+        GitLabTokenManager that = (GitLabTokenManager) other;
+        return this.appInfo.equals(that.appInfo) && Objects.equals(this.token, that.token);
     }
 
     @Override
     public int hashCode()
     {
-        return this.modeInfos.hashCode() ^ this.tokens.hashCode();
+        return this.appInfo.hashCode() ^ Objects.hashCode(this.token);
     }
 
     @Override
     public String toString()
     {
-        return appendTokenInfo(new StringBuilder("<GitLabTokenManager ")).append('>').toString();
+        return this.appendGitLabTokenInfo(new StringBuilder("<GitLabTokenManager ")).append('>').toString();
     }
 
-    Set<GitLabMode> getValidModes()
+    public GitLabAppInfo getAppInfo()
     {
-        return this.modeInfos.getModes();
+        return this.appInfo;
     }
 
-    boolean isValidMode(GitLabMode mode)
+    GitLabToken getGitLabToken()
     {
-        return this.modeInfos.hasModeInfo(mode);
+        return this.token;
     }
 
-    GitLabModeInfo getModeInfo(GitLabMode mode)
+    void clearGitLabToken()
     {
-        return this.modeInfos.getModeInfo(mode);
+        this.token = null;
     }
 
-    GitLabToken getGitLabToken(GitLabMode mode)
+    void setGitLabToken(GitLabToken token)
     {
-        return this.tokens.get(mode);
-    }
-
-    void clearGitLabTokens()
-    {
-        synchronized (this.tokens)
-        {
-            this.tokens.clear();
-        }
-    }
-
-    void putGitLabToken(GitLabMode mode, GitLabToken token)
-    {
-        if (mode == null)
-        {
-            throw new IllegalArgumentException("mode may not be null");
-        }
-        if (!this.modeInfos.hasModeInfo(mode))
-        {
-            throw new IllegalArgumentException("mode has no info: " + mode);
-        }
         if (token == null)
         {
             throw new IllegalArgumentException("token may not be null");
@@ -112,107 +87,65 @@ class GitLabTokenManager implements Serializable
         {
             throw new IllegalArgumentException("token type may not be null");
         }
-        synchronized (this.tokens)
-        {
-            this.tokens.put(mode, token);
-        }
+        this.token = token;
     }
 
-    boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    boolean gitLabOAuthCallback(String code)
     {
-        GitLabModeInfo modeInfo = getModeInfo(mode);
-        if (modeInfo == null)
-        {
-            throw new IllegalStateException("Unsupported GitLab mode: " + mode);
-        }
-        synchronized (this.tokens)
-        {
-            GitLabToken token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, GitLabOAuthAuthenticator.newAuthenticator(modeInfo).getOAuthTokenFromAuthCode(code));
-            GitLabToken oldToken = this.tokens.put(mode, token);
-            return !token.equals(oldToken);
-        }
+        GitLabToken token = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,
+            GitLabOAuthAuthenticator.newAuthenticator(this.appInfo).getOAuthTokenFromAuthCode(code));
+        GitLabToken oldToken = this.token;
+        this.token = token;
+        return !token.equals(oldToken);
     }
 
-    StringBuilder appendTokenInfo(StringBuilder builder)
+    StringBuilder appendGitLabTokenInfo(StringBuilder builder)
     {
-        synchronized (this.tokens)
-        {
-            builder.append("tokens=[");
-            int startLen = builder.length();
-            for (GitLabMode mode : GitLabMode.values())
-            {
-                GitLabToken token = this.tokens.get(mode);
-                if (token != null)
-                {
-                    ((builder.length() == startLen) ? builder : builder.append(", ")).append(mode.name()).append('=').append(token.toString());
-                }
-            }
-            builder.append(']');
-            return builder;
-        }
+        return builder.append("token=").append(this.token != null ? ("'" + this.token.toString() + "'") : "null");
     }
 
     Token.TokenBuilder encode(Token.TokenBuilder builder)
     {
-        synchronized (this.tokens)
+        GitLabToken token = this.token;
+        builder.putInt(token != null ? 1 : 0);
+        if (token != null)
         {
-            builder.putInt(this.tokens.size());
-            for (GitLabMode mode : GitLabMode.values())
-            {
-                GitLabToken token = this.tokens.get(mode);
-                if (token != null)
-                {
-                    builder.putString(mode.name());
-                    builder.putString(this.modeInfos.getModeInfo(mode).getAppInfo().getAppId());
-                    builder.putString(token.getTokenType().toString());
-                    builder.putString(token.getToken());
-                }
-            }
-            return builder;
+            builder.putString(this.appInfo.getAppId());
+            builder.putString(token.getTokenType().toString());
+            builder.putString(token.getToken());
         }
+        return builder;
     }
 
-    void putAllFromToken(Token.TokenReader reader)
+    void decodeAndSetToken(Token.TokenReader reader)
     {
-        synchronized (this.tokens)
+        // even if token size is just 0 or 1, it's important to read through all tokens from the reader,
+        // so that it's in an appropriate state for whatever reads from it next.
+        for (int size = reader.getInt(); size > 0; size--)
         {
-            for (int size = reader.getInt(); size > 0; size--)
+            String appId = reader.getString();
+            String typeName = reader.getString();
+            String token = reader.getString();
+
+            if ((appId != null) && (typeName != null) && (token != null) && appId.equals(this.appInfo.getAppId()))
             {
-                // Read values
-                String modeName = reader.getString();
-                String appId = reader.getString();
-                String typeName = reader.getString();
-                String token = reader.getString();
-
-                if ((modeName != null) && (appId != null) && (typeName != null) && (token != null))
+                Constants.TokenType type;
+                try
                 {
-                    // Get mode and token type
-                    GitLabMode mode;
-                    TokenType type;
-                    try
-                    {
-                        mode = GitLabMode.valueOf(modeName);
-                        type = TokenType.valueOf(typeName);
-                    }
-                    catch (IllegalArgumentException e)
-                    {
-                        // unknown mode or token type - token will be ignored
-                        continue;
-                    }
-
-                    // Check the mode info
-                    GitLabModeInfo modeInfo = this.modeInfos.getModeInfo(mode);
-                    if ((modeInfo != null) && appId.equals(modeInfo.getAppInfo().getAppId()))
-                    {
-                        this.tokens.put(mode, GitLabToken.newGitLabToken(type, token));
-                    }
+                    type = Constants.TokenType.valueOf(typeName);
                 }
+                catch (IllegalArgumentException e)
+                {
+                    // unknown token type - token will be ignored
+                    continue;
+                }
+                this.token = GitLabToken.newGitLabToken(type, token);
             }
         }
     }
 
-    static GitLabTokenManager newTokenManager(GitLabModeInfos modeInfos)
+    static GitLabTokenManager newTokenManager(GitLabAppInfo appInfo)
     {
-        return new GitLabTokenManager(modeInfos);
+        return new GitLabTokenManager(appInfo);
     }
 }

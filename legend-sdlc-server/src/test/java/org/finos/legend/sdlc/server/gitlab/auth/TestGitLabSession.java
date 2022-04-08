@@ -14,20 +14,15 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.gitlab4j.api.Constants.TokenType;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.EnumSet;
-import java.util.Set;
 
 public class TestGitLabSession implements GitLabSession
 {
     private final String userId;
-    private GitLabToken accessToken;
-    private GitLabModeInfo gitLabModeInfo;
+
+    private GitLabToken token;
 
     public TestGitLabSession(String userId)
     {
@@ -53,55 +48,26 @@ public class TestGitLabSession implements GitLabSession
     }
 
     @Override
-    public Set<GitLabMode> getValidModes()
-    {
-        return Collections.unmodifiableSet(EnumSet.of(GitLabMode.PROD));
-    }
-
-    @Override
-    public boolean isValidMode(GitLabMode mode)
-    {
-        return GitLabMode.PROD.equals(mode);
-    }
-
-    @Override
-    public boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    public boolean gitLabOAuthCallback(String code)
     {
         return false;
     }
 
-    public void setGitLabToken(GitLabMode mode, String token, TokenType type)
+    @Override
+    public GitLabToken getGitLabToken()
     {
-        this.accessToken = GitLabToken.newGitLabToken(type, token);
+        return this.token;
     }
 
     @Override
-    public GitLabToken getGitLabToken(GitLabMode mode)
+    public void clearGitLabToken()
     {
-        return this.accessToken;
+        this.token = null;
     }
 
     @Override
-    public void clearGitLabTokens()
+    public void setGitLabToken(GitLabToken token)
     {
-
-    }
-
-
-    @Override
-    public void putGitLabToken(GitLabMode mode, GitLabToken token)
-    {
-
-    }
-
-    public void setModeInfo(GitLabModeInfo gitLabModeInfo)
-    {
-        this.gitLabModeInfo = gitLabModeInfo;
-    }
-
-    @Override
-    public GitLabModeInfo getModeInfo(GitLabMode mode)
-    {
-        return this.gitLabModeInfo;
+        this.token = token;
     }
 }

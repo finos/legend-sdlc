@@ -15,9 +15,8 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.apache.commons.codec.binary.Base64;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfos;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.gitlab4j.api.Constants.TokenType;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,9 +27,7 @@ import java.util.regex.Pattern;
 public abstract class AbstractTestGitLabSession
 {
     private static final Pattern TOKEN_PATTERN = Pattern.compile("^[-_a-zA-Z0-9]+$");
-    private static final GitLabModeInfos MODE_INFOS = GitLabModeInfos.fromInfos(
-            GitLabModeInfo.newModeInfo(GitLabMode.UAT, "https", "prod.host.name", null, "7891d9ee73e90ccb004fec490af74c5946cbaa1d73226eca81399546835fe28c", "abcdef", "http://some.url.com/uat"),
-            GitLabModeInfo.newModeInfo(GitLabMode.PROD, "https", "uat.host.name", null, "9de0524aa018f079ad594d11548294f3b9133fcc782321fcc1675956a265fd17", "fedcba", "http://some.url.com/prod"));
+    private static final GitLabAppInfo appInfo = GitLabAppInfo.newAppInfo(GitLabServerInfo.newServerInfo("https", "prod.host.name", null), "7891d9ee73e90ccb004fec490af74c5946cbaa1d73226eca81399546835fe28c", "abcdef", "http://some.url.com/uat");
 
     @Test
     public void testEncoding_Empty()
@@ -40,91 +37,47 @@ public abstract class AbstractTestGitLabSession
     }
 
     @Test
-    public void testEncoding_OneOAuthToken()
+    public void testEncoding_OAuthToken()
     {
         GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
+        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875"));
         assertEncoding(session);
     }
 
     @Test
-    public void testEncoding_OnePrivateAccessToken()
+    public void testEncoding_PrivateAccessToken()
     {
         GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
+        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.PRIVATE, "qQi7UzyxxxTtQbHhSq9"));
         assertEncoding(session);
     }
 
     @Test
-    public void testEncoding_TwoOAuthTokens()
+    public void testEncoding_Token_WithDelay()
     {
         GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
-
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
-        session.putGitLabToken(GitLabMode.PROD, prodToken);
-        assertEncoding(session);
-    }
-
-    @Test
-    public void testEncoding_TwoPrivateAccessTokens()
-    {
-        GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"zCret1-ZHonvSHQsy95s");
-
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
-        session.putGitLabToken(GitLabMode.PROD, prodToken);
-        assertEncoding(session);
-    }
-
-    @Test
-    public void testEncoding_TwoDiffAccessTokens()
-    {
-        GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
-
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
-        session.putGitLabToken(GitLabMode.PROD, prodToken);
-        assertEncoding(session);
-    }
-
-    @Test
-    public void testEncoding_TwoDiffTokens_Delay()
-    {
-        GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.PRIVATE,"qQi7UzyxxxTtQbHhSq9");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
-
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
-        session.putGitLabToken(GitLabMode.PROD, prodToken);
+        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.PRIVATE, "qQi7UzyxxxTtQbHhSq9"));
+        // NOTE: here the delay must be greater than 1 second
+        // This test is to make sure we actually get the timestamp from the token
+        // Since when we create the session, if we don't pass in the timestamp, it will use the current timestamp down to the second
+        // so if we don't put a delay, we can't be sure if the timestamp is actually extracted from the token or not.
         assertEncoding(session, 1001L);
     }
 
     @Test
-    public void testClear()
+    public void testClearGitLabToken()
     {
         GitLabSession session = newSession();
-        GitLabToken uatToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875");
-        GitLabToken prodToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,"fd223a30a565240bcb98c9db3a27c57ab3e500348ea0ba568cd374b56ddc496a");
-        session.putGitLabToken(GitLabMode.UAT, uatToken);
-        session.putGitLabToken(GitLabMode.PROD, prodToken);
-        Assert.assertEquals(uatToken, session.getGitLabToken(GitLabMode.UAT));
-        Assert.assertEquals(prodToken, session.getGitLabToken(GitLabMode.PROD));
-        session.clearGitLabTokens();
-        Assert.assertNull(session.getGitLabToken(GitLabMode.UAT));
-        Assert.assertNull(session.getGitLabToken(GitLabMode.PROD));
+        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, "6f220d4f523d89d832316b8a7052a57ce97d863c2d2a6564694561ba1af88875"));
+        session.clearGitLabToken();
+        Assert.assertNull(session.getGitLabToken());
     }
 
     protected abstract CommonProfile getProfile();
 
     private GitLabSession newSession()
     {
-        return GitLabSessionBuilder.newBuilder(MODE_INFOS).withProfile(getProfile()).build();
+        return GitLabSessionBuilder.newBuilder(appInfo).withProfile(getProfile()).build();
     }
 
     private void assertEncoding(GitLabSession session)
@@ -148,6 +101,6 @@ public abstract class AbstractTestGitLabSession
                 throw new RuntimeException("Delay interrupted", e);
             }
         }
-        Assert.assertEquals(session, GitLabSessionBuilder.newBuilder(MODE_INFOS).withProfile(getProfile()).fromToken(token).build());
+        Assert.assertEquals(session, GitLabSessionBuilder.newBuilder(appInfo).withProfile(getProfile()).fromToken(token).build());
     }
 }

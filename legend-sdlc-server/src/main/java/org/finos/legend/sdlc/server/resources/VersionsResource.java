@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
@@ -31,6 +32,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/projects/{projectId}/versions")
@@ -40,10 +42,12 @@ import java.util.List;
 public class VersionsResource extends BaseResource
 {
     private final VersionApi versionApi;
+    private final LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
     @Inject
-    public VersionsResource(VersionApi versionApi)
+    public VersionsResource(LegendSDLCServerFeaturesConfiguration featuresConfiguration, VersionApi versionApi)
     {
+        this.featuresConfiguration = featuresConfiguration;
         this.versionApi = versionApi;
     }
 
@@ -132,6 +136,10 @@ public class VersionsResource extends BaseResource
     public Version createVersion(@PathParam("projectId") String projectId, CreateVersionCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create version");
+        if (!featuresConfiguration.canCreateVersion)
+        {
+            throw new LegendSDLCServerException("Server does not support creating project version(s)", Response.Status.METHOD_NOT_ALLOWED);
+        }
         return executeWithLogging(
                 "creating new " + command.getVersionType().name().toLowerCase() + " version",
                 () -> this.versionApi.newVersion(projectId, command.getVersionType(), command.getRevisionId(), command.getNotes())

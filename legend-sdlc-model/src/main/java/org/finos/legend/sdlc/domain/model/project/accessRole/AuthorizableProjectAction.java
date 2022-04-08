@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.domain.model.project.accessRole;
 
-public enum ProjectAuthorizationAction
+public enum AuthorizableProjectAction
 {
     CREATE_WORKSPACE,
     SUBMIT_REVIEW,

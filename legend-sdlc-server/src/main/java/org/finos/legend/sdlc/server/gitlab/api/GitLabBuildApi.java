@@ -16,12 +16,13 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.build.Build;
 import org.finos.legend.sdlc.domain.model.build.BuildStatus;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -32,6 +33,8 @@ import org.gitlab4j.api.PipelineApi;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -41,15 +44,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
 {
     @Inject
-    public GitLabBuildApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabBuildApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -153,14 +154,14 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             Pipeline pipeline;
             try
             {
-                pipeline = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getPipelineApi().getPipeline(this.projectId.getGitLabId(), pipelineId));
+                pipeline = withRetries(() -> getGitLabApi().getPipelineApi().getPipeline(this.projectId.getGitLabId(), pipelineId));
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access build " + buildId + " in " + getRefInfoForException(),
-                        () -> "Unknown build in " + getRefInfoForException() + ": " + buildId,
-                        () -> "Error getting build " + buildId + " in " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access build " + buildId + " in " + getRefInfoForException(),
+                    () -> "Unknown build in " + getRefInfoForException() + ": " + buildId,
+                    () -> "Error getting build " + buildId + " in " + getRefInfoForException());
             }
 
             if (!getRef().equals(pipeline.getRef()))
@@ -176,16 +177,29 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
         {
             try
             {
-                boolean limited = (limit != null) && (limit > 0);
+                boolean limited = false;
+                if (limit != null)
+                {
+                    if (limit == 0)
+                    {
+                        return Collections.emptyList();
+                    }
+                    if (limit < 0)
+                    {
+                        throw new LegendSDLCServerException("Invalid limit: " + limit, Status.BAD_REQUEST);
+                    }
+                    limited = true;
+                }
                 int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
-                PipelineApi pipelineApi = getGitLabApi(this.projectId.getGitLabMode()).getPipelineApi();
+                PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
                 Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, itemsPerPage));
                 Stream<Pipeline> pipelineStream = PagerTools.stream(pager);
                 Set<String> revisionIdSet = (revisionIds == null)
-                        ? Collections.emptySet()
-                        : StreamSupport.stream(revisionIds.spliterator(), false)
+                    ? Collections.emptySet()
+                    : StreamSupport.stream(revisionIds.spliterator(), false)
                         // make sure various synonymous aliases are grouped together properly
-                        .filter(Objects::nonNull).map(revisionId ->
+                        .filter(Objects::nonNull)
+                        .map(revisionId ->
                         {
                             RevisionAlias alias = getRevisionAlias(revisionId);
                             return (alias == RevisionAlias.REVISION_ID) ? revisionId : alias.getValue();
@@ -210,31 +224,30 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
                     pipelineStream = pipelineStream.limit(limit);
                 }
 
-                return pipelineStream
-                        .map(p ->
+                return pipelineStream.map(p ->
+                {
+                    if (p.getCreatedAt() == null)
+                    {
+                        try
                         {
-                            if (p.getCreatedAt() == null)
-                            {
-                                try
-                                {
-                                    return withRetries(() -> pipelineApi.getPipeline(this.projectId.getGitLabId(), p.getId()));
-                                }
-                                catch (Exception ignore)
-                                {
-                                    // ignore exception
-                                }
-                            }
-                            return p;
-                        })
-                        .map(p -> fromGitLabPipeline(this.projectId, p))
-                        .collect(PagerTools.listCollector(pager, limit));
+                            return withRetries(() -> pipelineApi.getPipeline(this.projectId.getGitLabId(), p.getId()));
+                        }
+                        catch (Exception ignore)
+                        {
+                            // ignore exception
+                        }
+                    }
+                    return p;
+                })
+                .map(p -> fromGitLabPipeline(this.projectId, p))
+                .collect(PagerTools.listCollector(pager, limit));
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access builds for " + getRefInfoForException(),
-                        () -> "Unknown " + getRefInfoForException(),
-                        () -> "Error getting builds for " + getRefInfoForException());
+                    () -> "User " + getCurrentUser() + " is not allowed to access builds for " + getRefInfoForException(),
+                    () -> "Unknown " + getRefInfoForException(),
+                    () -> "Error getting builds for " + getRefInfoForException());
             }
         }
 

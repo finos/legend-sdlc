@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -26,6 +27,7 @@ import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -39,6 +41,7 @@ import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -49,9 +52,9 @@ import javax.ws.rs.core.Response;
 public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements WorkflowApi
 {
     @Inject
-    public GitlabWorkflowApi(GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitlabWorkflowApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(userContext, backgroundTaskProcessor);
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -141,7 +144,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequestApi mergeRequestApi = getGitLabApi(gitLabProjectId.getGitLabMode()).getMergeRequestApi();
+        MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
         MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId, true);
         WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         if (workspaceInfo == null)
@@ -192,7 +195,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
             Pipeline pipeline;
             try
             {
-                pipeline = withRetries(() -> getGitLabApi(this.projectId.getGitLabMode()).getPipelineApi().getPipeline(this.projectId.getGitLabId(), pipelineId));
+                pipeline = withRetries(() -> getGitLabApi().getPipelineApi().getPipeline(this.projectId.getGitLabId(), pipelineId));
             }
             catch (Exception e)
             {
@@ -215,9 +218,21 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         {
             try
             {
-                boolean limited = (limit != null) && (limit > 0);
+                boolean limited = false;
+                if (limit != null)
+                {
+                    if (limit == 0)
+                    {
+                        return Collections.emptyList();
+                    }
+                    if (limit < 0)
+                    {
+                        throw new LegendSDLCServerException("Invalid limit: " + limit, Response.Status.BAD_REQUEST);
+                    }
+                    limited = true;
+                }
                 int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
-                PipelineApi pipelineApi = getGitLabApi(this.projectId.getGitLabMode()).getPipelineApi();
+                PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
                 Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, itemsPerPage));
                 Stream<Pipeline> pipelineStream = PagerTools.stream(pager);
                 if (revisionIds != null)

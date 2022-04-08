@@ -45,7 +45,7 @@ public class TestProjectStructureV0 extends TestProjectStructure<ProjectStructur
     }
 
     @Override
-    protected void assertMultiformatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType jsonSchema)
+    protected void assertMultiFormatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType jsonSchema)
     {
     }
 

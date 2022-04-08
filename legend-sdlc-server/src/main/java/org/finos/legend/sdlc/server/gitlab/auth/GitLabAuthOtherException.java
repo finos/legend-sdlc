@@ -14,50 +14,28 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-
 /**
  * Exception for all other exceptions encountered during auth.
  */
 public class GitLabAuthOtherException extends GitLabAuthException
 {
-    GitLabAuthOtherException(String user, GitLabMode mode, String detail, Throwable cause)
+    GitLabAuthOtherException(String user, String detail, Throwable cause)
     {
-        super(user, mode, detail, cause);
-    }
-
-    GitLabAuthOtherException(String user, GitLabMode mode, String detail)
-    {
-        super(user, mode, detail);
-    }
-
-    GitLabAuthOtherException(String user, GitLabMode mode, Throwable cause)
-    {
-        super(user, mode, cause);
-    }
-
-    GitLabAuthOtherException(GitLabMode mode, String detail, Throwable cause)
-    {
-        super(mode, detail, cause);
-    }
-
-    GitLabAuthOtherException(String user, GitLabMode mode)
-    {
-        super(user, mode);
-    }
-
-    GitLabAuthOtherException(GitLabMode mode, String detail)
-    {
-        super(mode, detail);
+        super(user, detail, cause);
     }
 
     GitLabAuthOtherException(String detail, Throwable cause)
     {
-        super(detail, cause);
+        super(null, detail, cause);
+    }
+
+    GitLabAuthOtherException(String user, String detail)
+    {
+        super(user, detail);
     }
 
     GitLabAuthOtherException(String detail)
     {
-        super(detail);
+        super(null, detail);
     }
 }

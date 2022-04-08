@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab;
 
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
 import org.gitlab4j.api.models.Project;
 import org.junit.Assert;
 import org.junit.Test;
@@ -26,46 +25,40 @@ public class TestGitLabProjectId
     @Test
     public void testNewProjectId()
     {
-        for (GitLabMode mode : GitLabMode.values())
+        String prefix = "SOMEPREFIX";
+        for (int i = 0; i < 1024; i++)
         {
-            for (int i = 0; i < 1024; i++)
-            {
-                GitLabProjectId projectId = GitLabProjectId.newProjectId(mode, i);
-                Assert.assertEquals(mode, projectId.getGitLabMode());
-                Assert.assertEquals(i, projectId.getGitLabId());
-                Assert.assertEquals(mode.name() + "-" + i, projectId.toString());
-            }
+            GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
+            Assert.assertEquals(i, projectId.getGitLabId());
+            Assert.assertEquals(prefix + "-" + i, projectId.toString());
         }
     }
 
     @Test
     public void testEquality()
     {
-        GitLabMode[] modes = GitLabMode.values();
-        for (GitLabMode mode : modes)
+        String prefix = "SOMEPREIFX";
+        for (int i = 0; i < 1024; i++)
         {
-            for (int i = 0; i < 1024; i++)
-            {
-                GitLabProjectId projectId = GitLabProjectId.newProjectId(mode, i);
-                Assert.assertEquals(projectId, projectId);
-                Assert.assertEquals(projectId, GitLabProjectId.newProjectId(mode, i));
-                Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(mode, i + 1));
-                Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(mode, i - 1));
-                Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(modes[(mode.ordinal() + 1) % modes.length], i));
-            }
+            GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
+            Assert.assertEquals(projectId, projectId);
+            Assert.assertEquals(projectId, GitLabProjectId.newProjectId(prefix, i));
+            Assert.assertEquals(GitLabProjectId.newProjectId(null, i), GitLabProjectId.newProjectId(null, i));
+            Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(prefix, i + 1));
+            Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(prefix, i - 1));
+            Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId("ANOTHERPREFIX", i));
         }
     }
 
     @Test
     public void testGetProjectIdString()
     {
-        for (GitLabMode mode : GitLabMode.values())
+        String prefix = "SOMEPREFIX";
+        for (int i = 0; i < 1024; i++)
         {
-            for (int i = 0; i < 1024; i++)
-            {
-                Project project = new Project().withId(i);
-                Assert.assertEquals(mode.name() + "-" + i, GitLabProjectId.getProjectIdString(mode, project));
-            }
+            Project project = new Project().withId(i);
+            Assert.assertEquals(prefix + "-" + i, GitLabProjectId.getProjectIdString(prefix, project));
+            Assert.assertEquals("" + i, GitLabProjectId.getProjectIdString(null, project));
         }
     }
 
@@ -73,8 +66,8 @@ public class TestGitLabProjectId
     public void testParseProjectId()
     {
         Assert.assertNull(GitLabProjectId.parseProjectId(null));
-        Assert.assertEquals(GitLabProjectId.newProjectId(GitLabMode.UAT, 521), GitLabProjectId.parseProjectId("UAT-521"));
-        Assert.assertEquals(GitLabProjectId.newProjectId(GitLabMode.PROD, 99412), GitLabProjectId.parseProjectId("PROD-99412"));
+        Assert.assertEquals(GitLabProjectId.newProjectId("SOMEPREFIX", 521), GitLabProjectId.parseProjectId("SOMEPREFIX-521"));
+        Assert.assertEquals(GitLabProjectId.newProjectId(null, 99412), GitLabProjectId.parseProjectId("99412"));
 
         for (String invalidProjectId : Arrays.asList("not-a-project-id", "NoSeparator", "UAT521", "UAT/521", "UAT*521", "UAT-&&&"))
         {
@@ -86,18 +79,6 @@ public class TestGitLabProjectId
             catch (IllegalArgumentException e)
             {
                 Assert.assertEquals("Invalid project id: " + invalidProjectId, e.getMessage());
-            }
-        }
-    }
-
-    @Test
-    public void testGetGitLabMode()
-    {
-        for (GitLabMode mode : GitLabMode.values())
-        {
-            for (int i = 0; i < 1024; i++)
-            {
-                Assert.assertEquals(mode, GitLabProjectId.getGitLabMode(mode.name() + "-" + i));
             }
         }
     }

@@ -18,8 +18,6 @@ import com.nimbusds.oauth2.sdk.Scope;
 import com.nimbusds.oauth2.sdk.token.AccessToken;
 import org.finos.legend.sdlc.server.auth.BaseCommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabMode;
-import org.finos.legend.sdlc.server.gitlab.mode.GitLabModeInfo;
 import org.gitlab4j.api.Constants.TokenType;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
@@ -27,7 +25,6 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
 
 public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> implements GitLabSession
 {
@@ -55,11 +52,11 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
             return false;
         }
 
-        GitLabOidcSession that = (GitLabOidcSession)other;
+        GitLabOidcSession that = (GitLabOidcSession) other;
         return Objects.equals(this.getUserId(), that.getUserId()) &&
-                Objects.equals(this.getProfile(), that.getProfile()) &&
-                this.getCreationTime().equals(that.getCreationTime()) &&
-                this.tokenManager.equals(that.tokenManager);
+            Objects.equals(this.getProfile(), that.getProfile()) &&
+            this.getCreationTime().equals(that.getCreationTime()) &&
+            this.tokenManager.equals(that.tokenManager);
     }
 
     @Override
@@ -69,45 +66,27 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     }
 
     @Override
-    public Set<GitLabMode> getValidModes()
+    public boolean gitLabOAuthCallback(String code)
     {
-        return this.tokenManager.getValidModes();
+        return this.tokenManager.gitLabOAuthCallback(code);
     }
 
     @Override
-    public boolean isValidMode(GitLabMode mode)
+    public GitLabToken getGitLabToken()
     {
-        return this.tokenManager.isValidMode(mode);
+        return this.tokenManager.getGitLabToken();
     }
 
     @Override
-    public boolean gitLabOAuthCallback(GitLabMode mode, String code)
+    public void clearGitLabToken()
     {
-        return this.tokenManager.gitLabOAuthCallback(mode, code);
+        this.tokenManager.clearGitLabToken();
     }
 
     @Override
-    public GitLabToken getGitLabToken(GitLabMode mode)
+    public void setGitLabToken(GitLabToken token)
     {
-        return this.tokenManager.getGitLabToken(mode);
-    }
-
-    @Override
-    public void clearGitLabTokens()
-    {
-        this.tokenManager.clearGitLabTokens();
-    }
-
-    @Override
-    public void putGitLabToken(GitLabMode mode, GitLabToken token)
-    {
-        this.tokenManager.putGitLabToken(mode, token);
-    }
-
-    @Override
-    public GitLabModeInfo getModeInfo(GitLabMode mode)
-    {
-        return this.tokenManager.getModeInfo(mode);
+        this.tokenManager.setGitLabToken(token);
     }
 
     @Override
@@ -119,7 +98,7 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     @Override
     protected void writeToStringInfo(StringBuilder builder)
     {
-        this.tokenManager.appendTokenInfo(builder.append(' '));
+        this.tokenManager.appendGitLabTokenInfo(builder.append(' '));
     }
 
     private static GitLabTokenManager possiblyInitializeTokenManager(GitLabTokenManager tokenManager, OidcProfile profile)
@@ -137,16 +116,11 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
                     if (issuer != null)
                     {
                         LOGGER.debug("Found access token with appropriate scope for issuer: {}", issuer);
-                        tokenManager.getValidModes()
-                                .stream()
-                                .filter(mode -> tokenManager.getGitLabToken(mode) == null)
-                                .map(tokenManager::getModeInfo)
-                                .filter(modeInfo -> issuer.equals(modeInfo.getServerInfo().getGitLabURLString()))
-                                .forEach(modeInfo ->
-                                {
-                                    tokenManager.putGitLabToken(modeInfo.getMode(), GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken.getValue()));
-                                    LOGGER.debug("Storing access token from profile for mode {}", modeInfo.getMode());
-                                });
+                        if (issuer.equals(tokenManager.getAppInfo().getServerInfo().getGitLabURLString()))
+                        {
+                            tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken.getValue()));
+                            LOGGER.debug("Storing access token from OpenID Connect (OIDC) profile");
+                        }
                     }
                 }
             }

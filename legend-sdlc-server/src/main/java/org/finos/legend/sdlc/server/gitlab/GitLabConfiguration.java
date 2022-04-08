@@ -18,9 +18,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.gitlab4j.api.models.Visibility;
 
 import java.util.Collections;
@@ -29,25 +28,32 @@ import java.util.regex.Pattern;
 
 public class GitLabConfiguration
 {
+    private static final Pattern LEGEND_SDLC_PROJECT_ID_PREFIX_PATTERN = Pattern.compile("^\\w++$");
     private static final Pattern LEGEND_SDLC_PROJECT_TAG_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]*$");
 
     private final String projectTag;
+    private final String projectIdPrefix;
     private final AuthConfiguration authConfig;
-    private final ModeConfiguration uatConfig;
-    private final ModeConfiguration prodConfig;
+    private final ServerConfiguration serverConfig;
+    private final AppConfiguration appConfig;
     private final NewProjectVisibility newProjectVisibility;
     private final List<GitLabAuthorizer> gitLabAuthorizers;
 
-    private GitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility, List<GitLabAuthorizer> gitLabAuthorizers)
+    private GitLabConfiguration(String projectTag, String projectIdPrefix, AuthConfiguration authConfig, ServerConfiguration serverConfig, AppConfiguration appConfig, NewProjectVisibility newProjectVisibility, List<GitLabAuthorizer> gitLabAuthorizers)
     {
         if ((projectTag != null) && !LEGEND_SDLC_PROJECT_TAG_PATTERN.matcher(projectTag).matches())
         {
             throw new IllegalArgumentException("Invalid project tag: " + projectTag);
         }
+        if ((projectIdPrefix != null) && !LEGEND_SDLC_PROJECT_ID_PREFIX_PATTERN.matcher(projectIdPrefix).matches())
+        {
+            throw new IllegalArgumentException("Invalid project ID prefix: " + projectIdPrefix);
+        }
         this.projectTag = projectTag;
+        this.projectIdPrefix = projectIdPrefix;
         this.authConfig = authConfig;
-        this.uatConfig = uatConfig;
-        this.prodConfig = prodConfig;
+        this.serverConfig = serverConfig;
+        this.appConfig = appConfig;
         this.newProjectVisibility = newProjectVisibility;
         this.gitLabAuthorizers = gitLabAuthorizers == null ? Collections.emptyList() : gitLabAuthorizers;
     }
@@ -57,19 +63,24 @@ public class GitLabConfiguration
         return this.projectTag;
     }
 
+    public String getProjectIdPrefix()
+    {
+        return this.projectIdPrefix;
+    }
+
     public AuthConfiguration getAuthConfig()
     {
         return this.authConfig;
     }
 
-    public ModeConfiguration getUATConfiguration()
+    public ServerConfiguration getServerConfiguration()
     {
-        return this.uatConfig;
+        return this.serverConfig;
     }
 
-    public ModeConfiguration getProdConfiguration()
+    public AppConfiguration getAppConfiguration()
     {
-        return this.prodConfig;
+        return this.appConfig;
     }
 
     public Visibility getNewProjectVisibility()
@@ -83,14 +94,50 @@ public class GitLabConfiguration
     }
 
     @JsonCreator
-    public static GitLabConfiguration newGitLabConfiguration(@JsonProperty("projectTag") String projectTag, @JsonProperty("auth") AuthConfiguration authConfig, @JsonProperty("uat") ModeConfiguration uatConfig, @JsonProperty("prod") ModeConfiguration prodConfig, @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility, @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
+    public static GitLabConfiguration newGitLabConfiguration(
+        @JsonProperty("projectTag") String projectTag,
+        @JsonProperty("projectIdPrefix") String projectIdPrefix,
+        @JsonProperty("auth") AuthConfiguration authConfig,
+        @JsonProperty("uat") ModeConfiguration uatConfig,
+        @JsonProperty("prod") ModeConfiguration prodConfig,
+        @JsonProperty("server") ServerConfiguration serverConfig,
+        @JsonProperty("app") AppConfiguration appConfig,
+        @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility,
+        @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
     {
-        return new GitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility, gitLabAuthorizers);
+        ServerConfiguration _serverConfig = serverConfig;
+        AppConfiguration _appConfig = appConfig;
+        String _projectIdPrefix = projectIdPrefix;
+        if (uatConfig != null && prodConfig != null)
+        {
+            throw new IllegalArgumentException("Configuration with multiple Gitlab modes is no longer supported");
+        }
+        else if (uatConfig != null)
+        {
+            if (serverConfig != null || appConfig != null)
+            {
+                throw new IllegalArgumentException("Gitlab server and/or application configuration should not be specified together with Gitlab mode configuration");
+            }
+            _serverConfig = uatConfig.getServerConfiguration();
+            _appConfig = uatConfig.getAppConfiguration();
+            _projectIdPrefix = "UAT";
+        }
+        else if (prodConfig != null)
+        {
+            if (serverConfig != null || appConfig != null)
+            {
+                throw new IllegalArgumentException("Gitlab server and/or application configuration should not be specified together with Gitlab mode configuration");
+            }
+            _serverConfig = prodConfig.getServerConfiguration();
+            _appConfig = prodConfig.getAppConfiguration();
+            _projectIdPrefix = "PROD";
+        }
+        return new GitLabConfiguration(projectTag, _projectIdPrefix, authConfig, _serverConfig, _appConfig, newProjectVisibility, gitLabAuthorizers);
     }
 
-    public static GitLabConfiguration newGitLabConfiguration(String projectTag, AuthConfiguration authConfig, ModeConfiguration uatConfig, ModeConfiguration prodConfig, NewProjectVisibility newProjectVisibility)
+    public static GitLabConfiguration newGitLabConfiguration(String projectTag, String projectIdPrefix, AuthConfiguration authConfig, ServerConfiguration serverConfig, AppConfiguration appConfig, NewProjectVisibility newProjectVisibility)
     {
-        return newGitLabConfiguration(projectTag, authConfig, uatConfig, prodConfig, newProjectVisibility, Collections.emptyList());
+        return newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, null, null, serverConfig, appConfig, newProjectVisibility, Collections.emptyList());
     }
 
     public static void configureObjectMapper(ObjectMapper objectMapper)
@@ -124,6 +171,7 @@ public class GitLabConfiguration
         }
     }
 
+    @Deprecated
     public static class ModeConfiguration
     {
         private final ServerConfiguration serverConfig;
