@@ -123,11 +123,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             }
             limited = true;
         }
-        int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
         try
         {
             Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
-            Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, itemsPerPage));
+            Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, ITEMS_PER_PAGE));
             Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
             if (!tagSet.isEmpty())
             {

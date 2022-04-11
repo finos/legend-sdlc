@@ -190,9 +190,8 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
                     }
                     limited = true;
                 }
-                int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
                 PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
-                Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, itemsPerPage));
+                Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, ITEMS_PER_PAGE));
                 Stream<Pipeline> pipelineStream = PagerTools.stream(pager);
                 Set<String> revisionIdSet = (revisionIds == null)
                     ? Collections.emptySet()
