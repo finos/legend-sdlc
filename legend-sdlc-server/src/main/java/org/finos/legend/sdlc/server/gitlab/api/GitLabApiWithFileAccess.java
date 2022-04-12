@@ -731,12 +731,11 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 limited = true;
             }
-            int itemsPerPage = limited ? Math.min(limit, ITEMS_PER_PAGE) : ITEMS_PER_PAGE;
             try
             {
                 CommitsApi commitsApi = getGitLabApi().getCommitsApi();
                 String branchName = getReference();
-                Stream<Commit> commitStream = getAllCommits(commitsApi, branchName, toDateIfNotNull(since), toDateIfNotNull(until), itemsPerPage);
+                Stream<Commit> commitStream = getAllCommits(commitsApi, branchName, toDateIfNotNull(since), toDateIfNotNull(until), ITEMS_PER_PAGE);
                 if (commitStream == null)
                 {
                     if (!referenceExists())
