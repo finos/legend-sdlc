@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -33,6 +32,8 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.PipelineApi;
@@ -61,16 +62,10 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
     public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        return new GitLabWorkflowAccessContext(projectId)
+        return new RefWorkflowAccessContext(projectId, MASTER_BRANCH)
         {
             @Override
-            protected String getRef()
-            {
-                return MASTER_BRANCH;
-            }
-
-            @Override
-            protected String getRefInfoForException()
+            protected String getInfoForException()
             {
                 return "project " + projectId;
             }
@@ -88,18 +83,12 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
-        return new GitLabWorkflowAccessContext(projectId)
+        return new RefWorkflowAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType))
         {
             @Override
-            protected String getRef()
+            protected String getInfoForException()
             {
-                return getBranchName(workspaceId, workspaceType, workspaceAccessType);
-            }
-
-            @Override
-            protected String getRefInfoForException()
-            {
-                return "workspace " + workspaceId + " in project " + projectId;
+                return workspaceType.getLabel() + " workspace " + workspaceId + " in project " + projectId;
             }
 
             @Override
@@ -115,16 +104,10 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
-        return new GitLabWorkflowAccessContext(projectId)
+        return new RefWorkflowAccessContext(projectId, buildVersionTagName(versionId))
         {
             @Override
-            protected String getRef()
-            {
-                return buildVersionTagName(versionId);
-            }
-
-            @Override
-            protected String getRefInfoForException()
+            protected String getInfoForException()
             {
                 return "version " + versionId.toVersionIdString() + " of project " + projectId;
             }
@@ -155,13 +138,22 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         return new GitLabWorkflowAccessContext(gitLabProjectId)
         {
             @Override
-            protected String getRef()
+            protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
             {
-                return "refs/merge-requests/" + reviewId + "/head";
+                return PagerTools.stream(getPipelines())
+                        .filter(p -> (p.getId() != null) && (p.getId() == pipelineId))
+                        .findAny()
+                        .orElse(null);
             }
 
             @Override
-            protected String getRefInfoForException()
+            protected Pager<Pipeline> getPipelines() throws GitLabApiException
+            {
+                return withRetries(() -> mergeRequestApi.getMergeRequestPipelines(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid(), ITEMS_PER_PAGE));
+            }
+
+            @Override
+            protected String getInfoForException()
             {
                 return "review " + reviewId + " of project " + projectId;
             }
@@ -176,14 +168,14 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
 
     private abstract class GitLabWorkflowAccessContext implements WorkflowAccessContext
     {
-        private final GitLabProjectId projectId;
+        protected final GitLabProjectId gitLabProjectId;
 
-        private GitLabWorkflowAccessContext(GitLabProjectId projectId)
+        protected GitLabWorkflowAccessContext(GitLabProjectId projectId)
         {
-            this.projectId = projectId;
+            this.gitLabProjectId = projectId;
         }
 
-        private GitLabWorkflowAccessContext(String projectId)
+        protected GitLabWorkflowAccessContext(String projectId)
         {
             this(parseProjectId(projectId));
         }
@@ -195,87 +187,55 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
             Pipeline pipeline;
             try
             {
-                pipeline = withRetries(() -> getGitLabApi().getPipelineApi().getPipeline(this.projectId.getGitLabId(), pipelineId));
+                pipeline = getPipeline(pipelineId);
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflow " + workflowId + " in " + getRefInfoForException(),
-                        () -> "Unknown workflow in " + getRefInfoForException() + ": " + workflowId,
-                        () -> "Error getting workflow " + workflowId + " in " + getRefInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to access workflow " + workflowId + " in " + getInfoForException(),
+                        () -> "Unknown workflow in " + getInfoForException() + ": " + workflowId,
+                        () -> "Error getting workflow " + workflowId + " in " + getInfoForException());
             }
 
-            if (!getRef().equals(pipeline.getRef()))
+            if (pipeline == null)
             {
-                throw new LegendSDLCServerException("Unknown workflow in " + getRefInfoForException() + ": " + workflowId, Response.Status.NOT_FOUND);
+                throw new LegendSDLCServerException("Unknown workflow in " + getInfoForException() + ": " + workflowId, Response.Status.NOT_FOUND);
             }
 
-            return fromGitLabPipeline(this.projectId.toString(), pipeline);
+            return fromGitLabPipeline(this.gitLabProjectId.toString(), pipeline);
         }
 
         @Override
         public List<Workflow> getWorkflows(Iterable<String> revisionIds, Iterable<WorkflowStatus> statuses, Integer limit)
         {
+            if (limit != null)
+            {
+                if (limit == 0)
+                {
+                    return Collections.emptyList();
+                }
+                if (limit < 0)
+                {
+                    throw new LegendSDLCServerException("Invalid limit: " + limit, Response.Status.BAD_REQUEST);
+                }
+            }
             try
             {
-                boolean limited = false;
-                if (limit != null)
-                {
-                    if (limit == 0)
-                    {
-                        return Collections.emptyList();
-                    }
-                    if (limit < 0)
-                    {
-                        throw new LegendSDLCServerException("Invalid limit: " + limit, Response.Status.BAD_REQUEST);
-                    }
-                    limited = true;
-                }
-                PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
-                Pager<Pipeline> pager = withRetries(() -> pipelineApi.getPipelines(this.projectId.getGitLabId(), null, null, getRef(), false, null, null, null, null, ITEMS_PER_PAGE));
+                GitLabApi gitLabApi = getGitLabApi();
+                Pager<Pipeline> pager = getPipelines();
                 Stream<Pipeline> pipelineStream = PagerTools.stream(pager);
+
+                // Filter by revision id, if provided
                 if (revisionIds != null)
                 {
-                    Set<RevisionAlias> revisionAliases = EnumSet.noneOf(RevisionAlias.class);
-                    MutableSet<String> revisionIdSet = Sets.mutable.empty();
-                    revisionIds.forEach(revisionId ->
-                    {
-                        RevisionAlias alias = getRevisionAlias(revisionId);
-                        if (alias == RevisionAlias.REVISION_ID)
-                        {
-                            revisionIdSet.add(revisionId);
-                        }
-                        else
-                        {
-                            revisionAliases.add(alias);
-                        }
-                    });
-                    if (!revisionAliases.isEmpty())
-                    {
-                        ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext = getRevisionAccessContext();
-                        if (revisionAliases.contains(RevisionAlias.BASE))
-                        {
-                            Revision baseRevision = revisionAccessContext.getBaseRevision();
-                            if (baseRevision != null)
-                            {
-                                revisionIdSet.add(baseRevision.getId());
-                            }
-                        }
-                        if (revisionAliases.contains(RevisionAlias.HEAD) || revisionAliases.contains(RevisionAlias.CURRENT) || revisionAliases.contains(RevisionAlias.LATEST))
-                        {
-                            Revision currentRevision = revisionAccessContext.getCurrentRevision();
-                            if (currentRevision != null)
-                            {
-                                revisionIdSet.add(currentRevision.getId());
-                            }
-                        }
-                    }
+                    MutableSet<String> revisionIdSet = computeRevisionIdSet(revisionIds);
                     if (revisionIdSet.notEmpty())
                     {
                         pipelineStream = pipelineStream.filter(pipeline -> revisionIdSet.contains(pipeline.getSha()));
                     }
                 }
 
+                // Filter by status, if provided
                 if (statuses != null)
                 {
                     Set<WorkflowStatus> statusSet = (statuses instanceof Set) ? (Set<WorkflowStatus>) statuses : Iterate.addAllTo(statuses, EnumSet.noneOf(WorkflowStatus.class));
@@ -285,19 +245,21 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
                     }
                 }
 
-                if (limited)
+                // Limit results, if provided
+                if (limit != null)
                 {
                     pipelineStream = pipelineStream.limit(limit);
                 }
 
-                return pipelineStream
-                        .map(p ->
+                // Convert pipelines to workflows
+                String projectIdString = this.gitLabProjectId.toString();
+                return pipelineStream.map(p ->
                         {
                             if (p.getCreatedAt() == null)
                             {
                                 try
                                 {
-                                    return withRetries(() -> pipelineApi.getPipeline(this.projectId.getGitLabId(), p.getId()));
+                                    return withRetries(() -> gitLabApi.getPipelineApi().getPipeline(this.gitLabProjectId.getGitLabId(), p.getId()));
                                 }
                                 catch (Exception ignore)
                                 {
@@ -306,23 +268,90 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
                             }
                             return p;
                         })
-                        .map(p -> fromGitLabPipeline(this.projectId.toString(), p))
+                        .map(p -> fromGitLabPipeline(projectIdString, p))
                         .collect(PagerTools.listCollector(pager, limit));
             }
             catch (Exception e)
             {
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to access workflows for " + getRefInfoForException(),
-                        () -> "Unknown " + getRefInfoForException(),
-                        () -> "Error getting workflows for " + getRefInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to access workflows for " + getInfoForException(),
+                        () -> "Unknown " + getInfoForException(),
+                        () -> "Error getting workflows for " + getInfoForException());
             }
         }
 
-        protected abstract String getRef();
+        protected abstract Pipeline getPipeline(int pipelineId) throws GitLabApiException;
 
-        protected abstract String getRefInfoForException();
+        protected abstract Pager<Pipeline> getPipelines() throws GitLabApiException;
+
+        protected abstract String getInfoForException();
 
         protected abstract ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext();
+
+        private MutableSet<String> computeRevisionIdSet(Iterable<String> revisionIds)
+        {
+            MutableSet<String> revisionIdSet = Sets.mutable.empty();
+            Set<RevisionAlias> revisionAliases = EnumSet.noneOf(RevisionAlias.class);
+            revisionIds.forEach(revisionId ->
+            {
+                RevisionAlias alias = getRevisionAlias(revisionId);
+                if (alias == RevisionAlias.REVISION_ID)
+                {
+                    revisionIdSet.add(revisionId);
+                }
+                else
+                {
+                    revisionAliases.add(alias);
+                }
+            });
+            if (!revisionAliases.isEmpty())
+            {
+                ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext = getRevisionAccessContext();
+                if (revisionAliases.contains(RevisionAlias.BASE))
+                {
+                    Revision baseRevision = revisionAccessContext.getBaseRevision();
+                    if (baseRevision != null)
+                    {
+                        revisionIdSet.add(baseRevision.getId());
+                    }
+                }
+                if (revisionAliases.contains(RevisionAlias.HEAD) || revisionAliases.contains(RevisionAlias.CURRENT) || revisionAliases.contains(RevisionAlias.LATEST))
+                {
+                    Revision currentRevision = revisionAccessContext.getCurrentRevision();
+                    if (currentRevision != null)
+                    {
+                        revisionIdSet.add(currentRevision.getId());
+                    }
+                }
+            }
+            return revisionIdSet;
+        }
+    }
+
+    private abstract class RefWorkflowAccessContext extends GitLabWorkflowAccessContext
+    {
+        private final String ref;
+
+        private RefWorkflowAccessContext(String projectId, String ref)
+        {
+            super(projectId);
+            this.ref = ref;
+        }
+
+        @Override
+        protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
+        {
+            PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
+            Pipeline pipeline = withRetries(() -> pipelineApi.getPipeline(this.gitLabProjectId.getGitLabId(), pipelineId));
+            return ((pipeline != null) && this.ref.equals(pipeline.getRef())) ? pipeline : null;
+        }
+
+        @Override
+        protected Pager<Pipeline> getPipelines() throws GitLabApiException
+        {
+            PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
+            return withRetries(() -> pipelineApi.getPipelines(this.gitLabProjectId.getGitLabId(), null, null, this.ref, false, null, null, null, null, ITEMS_PER_PAGE));
+        }
     }
 
     private static Workflow fromGitLabPipeline(String projectId, Pipeline pipeline)
