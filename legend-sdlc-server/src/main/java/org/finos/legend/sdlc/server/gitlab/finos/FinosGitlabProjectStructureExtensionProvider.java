@@ -40,7 +40,11 @@ public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStr
     {
         if (projectStructureVersion == 11)
         {
-            return 1;
+            return 2;
+        }
+        else if (projectStructureVersion == 12)
+        {
+            return 2;
         }
         return null;
     }
@@ -70,6 +74,14 @@ public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStr
             {
                 return 1;
             }
+            else if (projectStructureExtensionVersion == 2)
+            {
+                return 2;
+            }
+        }
+        else if (projectStructureVersion == 12)
+        {
+            return 2;
         }
         throw new IllegalArgumentException("Unknown project structure extension version for project structure version " + projectStructureVersion + ": " + projectStructureExtensionVersion);
     }
