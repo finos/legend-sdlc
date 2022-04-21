@@ -34,9 +34,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.Pager;
-import org.gitlab4j.api.PipelineApi;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
@@ -50,7 +48,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
-public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements WorkflowApi
+public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements WorkflowApi
 {
     @Inject
     public GitlabWorkflowApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
@@ -127,8 +125,7 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId, true);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
         WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         if (workspaceInfo == null)
         {
@@ -140,16 +137,13 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
             @Override
             protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
             {
-                return PagerTools.stream(getPipelines())
-                        .filter(p -> (p.getId() != null) && (p.getId() == pipelineId))
-                        .findAny()
-                        .orElse(null);
+                return getMergeRequestPipeline(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid(), pipelineId);
             }
 
             @Override
             protected Pager<Pipeline> getPipelines() throws GitLabApiException
             {
-                return withRetries(() -> mergeRequestApi.getMergeRequestPipelines(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid(), ITEMS_PER_PAGE));
+                return getMergeRequestPipelines(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid());
             }
 
             @Override
@@ -341,16 +335,13 @@ public class GitlabWorkflowApi extends GitLabApiWithFileAccess implements Workfl
         @Override
         protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
         {
-            PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
-            Pipeline pipeline = withRetries(() -> pipelineApi.getPipeline(this.gitLabProjectId.getGitLabId(), pipelineId));
-            return ((pipeline != null) && this.ref.equals(pipeline.getRef())) ? pipeline : null;
+            return getRefPipeline(this.gitLabProjectId.getGitLabId(), this.ref, pipelineId);
         }
 
         @Override
         protected Pager<Pipeline> getPipelines() throws GitLabApiException
         {
-            PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
-            return withRetries(() -> pipelineApi.getPipelines(this.gitLabProjectId.getGitLabId(), null, null, this.ref, false, null, null, null, null, ITEMS_PER_PAGE));
+            return getRefPipelines(this.gitLabProjectId.getGitLabId(), this.ref);
         }
     }
 
