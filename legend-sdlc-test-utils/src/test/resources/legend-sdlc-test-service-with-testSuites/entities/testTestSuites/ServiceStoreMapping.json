@@ -1,0 +1,337 @@
+{
+  "content": {
+    "_type": "mapping",
+    "name": "ServiceStoreMapping",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 24,
+      "endColumn": 1
+    },
+    "classMappings": [
+      {
+        "_type": "serviceStore",
+        "id": "employee_set",
+        "root": true,
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 3,
+          "endLine": 7,
+          "endColumn": 3
+        },
+        "classSourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 4,
+          "endLine": 4,
+          "endColumn": 39
+        },
+        "localMappingProperties": [],
+        "servicesMapping": [
+          {
+            "service": {
+              "serviceStore": "testTestSuites::ServiceStore",
+              "service": "EmployeeService",
+              "parent": {
+                "serviceStore": "testTestSuites::ServiceStore",
+                "serviceGroup": "EmployeeServices",
+                "sourceInformation": {
+                  "sourceId": "testTestSuites::ServiceStoreMapping",
+                  "startLine": 6,
+                  "startColumn": 57,
+                  "endLine": 6,
+                  "endColumn": 72
+                }
+              },
+              "sourceInformation": {
+                "sourceId": "testTestSuites::ServiceStoreMapping",
+                "startLine": 6,
+                "startColumn": 74,
+                "endLine": 6,
+                "endColumn": 88
+              }
+            },
+            "sourceInformation": {
+              "sourceId": "testTestSuites::ServiceStoreMapping",
+              "startLine": 6,
+              "startColumn": 5,
+              "endLine": 6,
+              "endColumn": 88
+            }
+          }
+        ],
+        "class": "testTestSuites::Employee"
+      },
+      {
+        "_type": "serviceStore",
+        "id": "employee2_set",
+        "root": true,
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 8,
+          "startColumn": 3,
+          "endLine": 23,
+          "endColumn": 3
+        },
+        "classSourceInformation": {
+          "sourceId": "",
+          "startLine": 8,
+          "startColumn": 4,
+          "endLine": 8,
+          "endColumn": 40
+        },
+        "localMappingProperties": [],
+        "servicesMapping": [
+          {
+            "service": {
+              "serviceStore": "testTestSuites::ServiceStore",
+              "service": "EmployeeServiceWithParameters",
+              "parent": {
+                "serviceStore": "testTestSuites::ServiceStore",
+                "serviceGroup": "EmployeeServices",
+                "sourceInformation": {
+                  "sourceId": "testTestSuites::ServiceStoreMapping",
+                  "startLine": 10,
+                  "startColumn": 57,
+                  "endLine": 10,
+                  "endColumn": 72
+                }
+              },
+              "sourceInformation": {
+                "sourceId": "testTestSuites::ServiceStoreMapping",
+                "startLine": 10,
+                "startColumn": 74,
+                "endLine": 10,
+                "endColumn": 102
+              }
+            },
+            "requestBuildInfo": {
+              "requestParametersBuildInfo": {
+                "parameterBuildInfoList": [
+                  {
+                    "serviceParameter": "stringParam",
+                    "transform": {
+                      "_type": "lambda",
+                      "sourceInformation": {
+                        "sourceId": "testTestSuites::ServiceStoreMapping",
+                        "startLine": 16,
+                        "startColumn": 25,
+                        "endLine": 16,
+                        "endColumn": 41
+                      },
+                      "body": [
+                        {
+                          "_type": "property",
+                          "sourceInformation": {
+                            "sourceId": "testTestSuites::ServiceStoreMapping",
+                            "startLine": 16,
+                            "startColumn": 31,
+                            "endLine": 16,
+                            "endColumn": 41
+                          },
+                          "property": "stringParam",
+                          "parameters": [
+                            {
+                              "_type": "var",
+                              "sourceInformation": {
+                                "sourceId": "testTestSuites::ServiceStoreMapping",
+                                "startLine": 16,
+                                "startColumn": 25,
+                                "endLine": 16,
+                                "endColumn": 29
+                              },
+                              "name": "this"
+                            }
+                          ]
+                        }
+                      ],
+                      "parameters": []
+                    },
+                    "sourceInformation": {
+                      "sourceId": "testTestSuites::ServiceStoreMapping",
+                      "startLine": 16,
+                      "startColumn": 11,
+                      "endLine": 16,
+                      "endColumn": 41
+                    }
+                  },
+                  {
+                    "serviceParameter": "integerParam",
+                    "transform": {
+                      "_type": "lambda",
+                      "sourceInformation": {
+                        "sourceId": "testTestSuites::ServiceStoreMapping",
+                        "startLine": 17,
+                        "startColumn": 26,
+                        "endLine": 17,
+                        "endColumn": 43
+                      },
+                      "body": [
+                        {
+                          "_type": "property",
+                          "sourceInformation": {
+                            "sourceId": "testTestSuites::ServiceStoreMapping",
+                            "startLine": 17,
+                            "startColumn": 32,
+                            "endLine": 17,
+                            "endColumn": 43
+                          },
+                          "property": "integerParam",
+                          "parameters": [
+                            {
+                              "_type": "var",
+                              "sourceInformation": {
+                                "sourceId": "testTestSuites::ServiceStoreMapping",
+                                "startLine": 17,
+                                "startColumn": 26,
+                                "endLine": 17,
+                                "endColumn": 30
+                              },
+                              "name": "this"
+                            }
+                          ]
+                        }
+                      ],
+                      "parameters": []
+                    },
+                    "sourceInformation": {
+                      "sourceId": "testTestSuites::ServiceStoreMapping",
+                      "startLine": 17,
+                      "startColumn": 11,
+                      "endLine": 17,
+                      "endColumn": 43
+                    }
+                  },
+                  {
+                    "serviceParameter": "floatParam",
+                    "transform": {
+                      "_type": "lambda",
+                      "sourceInformation": {
+                        "sourceId": "testTestSuites::ServiceStoreMapping",
+                        "startLine": 18,
+                        "startColumn": 24,
+                        "endLine": 18,
+                        "endColumn": 39
+                      },
+                      "body": [
+                        {
+                          "_type": "property",
+                          "sourceInformation": {
+                            "sourceId": "testTestSuites::ServiceStoreMapping",
+                            "startLine": 18,
+                            "startColumn": 30,
+                            "endLine": 18,
+                            "endColumn": 39
+                          },
+                          "property": "floatParam",
+                          "parameters": [
+                            {
+                              "_type": "var",
+                              "sourceInformation": {
+                                "sourceId": "testTestSuites::ServiceStoreMapping",
+                                "startLine": 18,
+                                "startColumn": 24,
+                                "endLine": 18,
+                                "endColumn": 28
+                              },
+                              "name": "this"
+                            }
+                          ]
+                        }
+                      ],
+                      "parameters": []
+                    },
+                    "sourceInformation": {
+                      "sourceId": "testTestSuites::ServiceStoreMapping",
+                      "startLine": 18,
+                      "startColumn": 11,
+                      "endLine": 18,
+                      "endColumn": 39
+                    }
+                  },
+                  {
+                    "serviceParameter": "booleanParam",
+                    "transform": {
+                      "_type": "lambda",
+                      "sourceInformation": {
+                        "sourceId": "testTestSuites::ServiceStoreMapping",
+                        "startLine": 19,
+                        "startColumn": 26,
+                        "endLine": 19,
+                        "endColumn": 43
+                      },
+                      "body": [
+                        {
+                          "_type": "property",
+                          "sourceInformation": {
+                            "sourceId": "testTestSuites::ServiceStoreMapping",
+                            "startLine": 19,
+                            "startColumn": 32,
+                            "endLine": 19,
+                            "endColumn": 43
+                          },
+                          "property": "booleanParam",
+                          "parameters": [
+                            {
+                              "_type": "var",
+                              "sourceInformation": {
+                                "sourceId": "testTestSuites::ServiceStoreMapping",
+                                "startLine": 19,
+                                "startColumn": 26,
+                                "endLine": 19,
+                                "endColumn": 30
+                              },
+                              "name": "this"
+                            }
+                          ]
+                        }
+                      ],
+                      "parameters": []
+                    },
+                    "sourceInformation": {
+                      "sourceId": "testTestSuites::ServiceStoreMapping",
+                      "startLine": 19,
+                      "startColumn": 11,
+                      "endLine": 19,
+                      "endColumn": 43
+                    }
+                  }
+                ],
+                "sourceInformation": {
+                  "sourceId": "testTestSuites::ServiceStoreMapping",
+                  "startLine": 14,
+                  "startColumn": 9,
+                  "endLine": 20,
+                  "endColumn": 9
+                }
+              },
+              "sourceInformation": {
+                "sourceId": "testTestSuites::ServiceStoreMapping",
+                "startLine": 12,
+                "startColumn": 7,
+                "endLine": 21,
+                "endColumn": 7
+              }
+            },
+            "sourceInformation": {
+              "sourceId": "testTestSuites::ServiceStoreMapping",
+              "startLine": 10,
+              "startColumn": 5,
+              "endLine": 22,
+              "endColumn": 5
+            }
+          }
+        ],
+        "class": "testTestSuites::Employee2"
+      }
+    ],
+    "includedMappings": [],
+    "associationMappings": [],
+    "enumerationMappings": [],
+    "tests": [],
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::pure::mapping::Mapping"
+}

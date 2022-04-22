@@ -1,0 +1,70 @@
+{
+  "classifierPath": "meta::testable::DataElement",
+  "content": {
+    "_type": "dataElement",
+    "name": "TestData",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 24,
+      "endColumn": 1
+    },
+    "stereotypes": [],
+    "taggedValues": [],
+    "data": {
+      "_type": "serviceStore",
+      "sourceInformation": {
+        "sourceId": "",
+        "startLine": 4,
+        "startColumn": 3,
+        "endLine": 23,
+        "endColumn": 4
+      },
+      "serviceStubMappings": [
+        {
+          "requestPattern": {
+            "url": "/employees/allEmployees",
+            "method": "GET",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 7,
+              "startColumn": 9,
+              "endLine": 11,
+              "endColumn": 10
+            }
+          },
+          "responseDefinition": {
+            "body": {
+              "_type": "externalFormat",
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 15,
+                "startColumn": 13,
+                "endLine": 19,
+                "endColumn": 14
+              },
+              "contentType": "application/json",
+              "data": "[ { \"kerberos\": \"dummy kerberos\", \"employeeID\": \"dummy id\", \"title\": \"dummy title\", \"firstName\": \"dummy firstName\", \"lastName\": \"dummy lastname\", \"countryCode\": \"dummy countryCode\" } ]"
+            },
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 12,
+              "startColumn": 9,
+              "endLine": 20,
+              "endColumn": 10
+            }
+          },
+          "sourceInformation": {
+            "sourceId": "",
+            "startLine": 6,
+            "startColumn": 7,
+            "endLine": 21,
+            "endColumn": 7
+          }
+        }
+      ]
+    },
+    "package": "testTestSuites"
+  }
+}

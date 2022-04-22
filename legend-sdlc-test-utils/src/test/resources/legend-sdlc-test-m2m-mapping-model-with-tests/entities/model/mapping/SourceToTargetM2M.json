@@ -252,7 +252,92 @@
             }
           ]
         },
-        "name": "simpleTest"
+        "name": "simpleTest1"
+      },
+      {
+        "inputData": [
+          {
+            "_type": "object",
+            "inputType": "JSON",
+            "sourceClass": "model::domain::_Firm",
+            "data": "{\"name\":\"Metallurgy Inc.\", \"employees\":[{\"firstName\":\"Pierre\",\"lastName\":\"DeBelen\"}, {\"firstName\":\"Dave\",\"lastName\":\"Wathen\"}]}"
+          }
+        ],
+        "assert": {
+          "_type": "expectedOutputMappingTestAssert",
+          "expectedOutput": "{\"name\":\"Metallurgy Inc.\",\"employees\":[{\"fullName\":\"Pierre DeBelen\"},{\"fullName\":\"Dave Wathen\"}]}"
+        },
+        "query": {
+          "_type": "lambda",
+          "body": [
+            {
+              "fControl": "serialize_T_MANY__RootGraphFetchTree_1__String_1_",
+              "function": "serialize",
+              "_type": "func",
+              "parameters": [
+                {
+                  "fControl": "graphFetch_T_MANY__RootGraphFetchTree_1__T_MANY_",
+                  "function": "graphFetch",
+                  "_type": "func",
+                  "parameters": [
+                    {
+                      "fControl": "getAll_Class_1__T_MANY_",
+                      "function": "getAll",
+                      "_type": "func",
+                      "parameters": [
+                        {
+                          "fullPath": "model::domain::Firm",
+                          "_type": "class"
+                        }
+                      ]
+                    },
+                    {
+                      "subTrees": [
+                        {
+                          "_type": "propertyGraphFetchTree",
+                          "property": "name"
+                        },
+                        {
+                          "subTrees": [
+                            {
+                              "_type": "propertyGraphFetchTree",
+                              "property": "fullName"
+                            }
+                          ],
+                          "_type": "propertyGraphFetchTree",
+                          "property": "employees"
+                        }
+                      ],
+                      "_type": "rootGraphFetchTree",
+                      "class": "model::domain::Firm"
+                    }
+                  ]
+                },
+                {
+                  "subTrees": [
+                    {
+                      "_type": "propertyGraphFetchTree",
+                      "property": "name"
+                    },
+                    {
+                      "subTrees": [
+                        {
+                          "_type": "propertyGraphFetchTree",
+                          "property": "fullName"
+                        }
+                      ],
+                      "_type": "propertyGraphFetchTree",
+                      "property": "employees"
+                    }
+                  ],
+                  "_type": "rootGraphFetchTree",
+                  "class": "model::domain::Firm"
+                }
+              ]
+            }
+          ]
+        },
+        "name": "simpleTest2"
       }
     ]
   }
