@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
@@ -179,6 +180,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
         binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(configuration())).in(Scopes.SINGLETON);
+        binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(configuration().getGitLabConfiguration()));
 
         bindResources(binder);
         bindFilters(binder);
@@ -374,7 +376,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
     {
-        LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
+        LegendSDLCServerFeaturesConfiguration featuresConfiguration = configuration().getFeaturesConfiguration();
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
     }
 

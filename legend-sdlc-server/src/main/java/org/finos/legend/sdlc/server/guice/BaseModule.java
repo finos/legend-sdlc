@@ -15,9 +15,7 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
-import com.google.inject.Scopes;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
-import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.api.DepotMetadataApi;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
@@ -35,7 +33,6 @@ import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBackupApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBuildApi;
@@ -52,13 +49,8 @@ import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
-
-import java.util.Collections;
-import java.util.List;
 
 public class BaseModule extends AbstractBaseModule
 {
@@ -90,7 +82,6 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> configuration().getGitLabConfiguration());
-            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(configuration().getGitLabConfiguration()));
         }
         configureMetadataApi(binder);
     }
