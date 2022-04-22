@@ -142,7 +142,7 @@ public class LegendSDLCTestSuiteBuilder
                     List<TestSuite> eSuites = Lists.mutable.empty();
                     LOGGER.debug("Building test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
                     int totalTestCount = 0;
-                    if (genericTestBuilder.isPresent())
+                    if (genericTestBuilder.isPresent() && TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(e.getClassifierPath()))
                     {
                         TestSuiteBuilder builder = genericTestBuilder.get();
                         LOGGER.debug("  Building generic test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
@@ -150,7 +150,10 @@ public class LegendSDLCTestSuiteBuilder
                         int testCount = (eSuite == null) ? 0 : eSuite.testCount();
                         totalTestCount += testCount;
                         LOGGER.debug("  Generic Test count for {}: {}", e.getPath(), testCount);
-                        eSuites.add(eSuite);
+                        if (eSuite != null)
+                        {
+                            eSuites.add(eSuite);
+                        }
                     }
                     if (specificTestBuilder.isPresent())
                     {
@@ -160,7 +163,10 @@ public class LegendSDLCTestSuiteBuilder
                         int testCount = (eSuite == null) ? 0 : eSuite.testCount();
                         totalTestCount += testCount;
                         LOGGER.debug("  Element Specific Test count for {}: {}", e.getPath(), testCount);
-                        eSuites.add(eSuite);
+                        if (eSuite != null)
+                        {
+                            eSuites.add(eSuite);
+                        }
                     }
                     LOGGER.debug("Test count for {}: {}", e.getPath(), totalTestCount);
 

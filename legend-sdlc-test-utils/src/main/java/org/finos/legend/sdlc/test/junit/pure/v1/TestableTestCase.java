@@ -34,6 +34,7 @@ import org.finos.legend.engine.testable.model.DoTestsInput;
 import org.finos.legend.engine.testable.model.DoTestsResult;
 import org.finos.legend.engine.testable.model.DoTestsTestableInput;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_test_Testable;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -167,7 +168,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     @LegendSDLCTestCaseCollector(collectorClass = PackageableElement.class)
     public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
-        if (TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(entity.getClassifierPath()))
+        if (TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(entity.getClassifierPath()) && !((Root_meta_pure_test_Testable) pureModel.getPackageableElement(entity.getPath()))._tests().isEmpty())
         {
             testCaseConsumer.accept(new TestableTestCase(pureModel, pureModelContextData, findPackageableElement(pureModelContextData.getElements(), entity.getPath()), planTransformers, extensions, pureVersion));
         }
