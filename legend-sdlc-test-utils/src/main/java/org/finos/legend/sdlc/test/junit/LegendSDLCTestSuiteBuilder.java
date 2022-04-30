@@ -23,6 +23,7 @@ import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.testable.extension.TestableRunnerExtension;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -57,6 +58,7 @@ public class LegendSDLCTestSuiteBuilder
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCTestSuiteBuilder.class);
 
     private final String pureVersion;
+    private final Map<String, ? extends TestableRunnerExtension> classifierPathToTestableRunnerMap = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap();
 
     public LegendSDLCTestSuiteBuilder(String pureVersion)
     {
@@ -134,7 +136,7 @@ public class LegendSDLCTestSuiteBuilder
                     Optional<TestSuiteBuilder> genericTestBuilder = packageableElement.map(element -> testSuiteBuilders.get(PackageableElement.class));
                     Optional<TestSuiteBuilder> specificTestBuilder = packageableElement.map(element -> testSuiteBuilders.get(element.getClass()));
 
-                    if (!(genericTestBuilder.isPresent() && TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(e.getClassifierPath())) && !specificTestBuilder.isPresent())
+                    if (!(genericTestBuilder.isPresent() && classifierPathToTestableRunnerMap.containsKey(e.getClassifierPath())) && !specificTestBuilder.isPresent())
                     {
                         return Stream.empty();
                     }
@@ -142,7 +144,7 @@ public class LegendSDLCTestSuiteBuilder
                     List<TestSuite> eSuites = Lists.mutable.empty();
                     LOGGER.debug("Building test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
                     int totalTestCount = 0;
-                    if (genericTestBuilder.isPresent() && TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(e.getClassifierPath()))
+                    if (genericTestBuilder.isPresent() && classifierPathToTestableRunnerMap.containsKey(e.getClassifierPath()))
                     {
                         TestSuiteBuilder builder = genericTestBuilder.get();
                         LOGGER.debug("  Building generic test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());

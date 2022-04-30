@@ -39,9 +39,9 @@ public class TestLegendSDLCTestSuiteBuilder
     @Test
     public void testBuildM2MMappingWithTestsTestSuite() throws Exception
     {
-        Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.immutable.with(
+        Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
                 "legend::demo::AB { Specific }", Sets.immutable.with("legend::demo::AB Test #1").castToSet(),
-                "model::domain::inmemm2m::mapping::M2MMapping { Specific }", Sets.immutable.with("model::domain::inmemm2m::mapping::M2MMapping Test #1", "model::domain::inmemm2m::mapping::M2MMapping Test #2").castToSet()).toMap();
+                "model::domain::inmemm2m::mapping::M2MMapping { Specific }", Sets.immutable.with("model::domain::inmemm2m::mapping::M2MMapping Test #1", "model::domain::inmemm2m::mapping::M2MMapping Test #2").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-m2m-mapping-model-with-tests", 2, 3, 0, 0, expectedTestCasesByTestSuite);
 
         testTestSuiteBuilder("legend-sdlc-test-m2m-mapping-model-with-tests", expectedTestState);
@@ -50,9 +50,9 @@ public class TestLegendSDLCTestSuiteBuilder
     @Test
     public void testBuildServicesWithTestSuite() throws Exception
     {
-        Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.immutable.with(
+        Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
                 "testTestSuites::TestService { Generic }", Sets.immutable.with("testTestSuites::TestService Test #1").castToSet(),
-                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet()).toMap();
+                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 2, 2, 0, 1, expectedTestCasesByTestSuite);
 
         testTestSuiteBuilder("legend-sdlc-test-service-with-testSuites", expectedTestState);

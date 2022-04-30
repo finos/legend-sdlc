@@ -168,7 +168,14 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     @LegendSDLCTestCaseCollector(collectorClass = PackageableElement.class)
     public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
-        if (TestableRunnerExtensionLoader.isRunnerProvidedForClassifierPath(entity.getClassifierPath()) && !((Root_meta_pure_test_Testable) pureModel.getPackageableElement(entity.getPath()))._tests().isEmpty())
+        org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = pureModel.getPackageableElement(entity.getPath());
+
+        if (!(packageableElement instanceof Root_meta_pure_test_Testable))
+        {
+            throw new IllegalArgumentException("Expected '" + entity.getPath() + "' to be instance of Testable");
+        }
+
+        if (!((Root_meta_pure_test_Testable) packageableElement)._tests().isEmpty())
         {
             testCaseConsumer.accept(new TestableTestCase(pureModel, pureModelContextData, findPackageableElement(pureModelContextData.getElements(), entity.getPath()), planTransformers, extensions, pureVersion));
         }
