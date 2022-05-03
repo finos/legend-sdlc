@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
@@ -293,11 +294,11 @@ public abstract class ProjectStructure
 
     protected static ProjectStructure getProjectStructureForProjectDependency(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider)
     {
-        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectDependency.getProjectId(), projectDependency.getVersionId());
+        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId().getVersion()));
         ProjectConfiguration versionConfig = ProjectStructure.getProjectConfiguration(versionFileAccessContext);
         if (versionConfig == null)
         {
-            throw new LegendSDLCServerException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId().toVersionIdString());
+            throw new LegendSDLCServerException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId().getVersion());
         }
         return ProjectStructure.getProjectStructure(versionConfig);
     }
@@ -466,13 +467,13 @@ public abstract class ProjectStructure
         {
             validateDependencyConflicts(projectDependencies, ProjectDependency::getProjectId, (id, deps) ->
             {
-                if ((deps.size() <= 1) || deps.stream().allMatch(dep -> getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities)))
+                if ((deps.size() <= 1) || deps.stream().anyMatch(dep -> ProjectDependency.isSnapshotProjectDependency(dep)) || deps.stream().allMatch(dep -> getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId().getVersion()))).isSupportedArtifactType(ArtifactType.versioned_entities)))
                 {
                     return null;
                 }
                 List<ProjectDependency> supported = Lists.mutable.empty();
                 List<ProjectDependency> unsupported = Lists.mutable.empty();
-                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), dep.getVersionId())).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
+                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId().getVersion()))).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
                 StringBuilder message = new StringBuilder();
                 unsupported.forEach(dep -> dep.appendVersionIdString((message.length() == 0) ? message : message.append(", ")));
                 message.append((unsupported.size() == 1) ? " does" : " do").append(" not support multi-version dependency");
@@ -557,7 +558,6 @@ public abstract class ProjectStructure
 
         // Collect operations
         List<ProjectFileOperation> operations = Lists.mutable.empty();
-
         // New configuration
         SimpleProjectConfiguration newConfig = new SimpleProjectConfiguration(currentConfig);
         if (updateProjectStructureVersion)
@@ -676,6 +676,13 @@ public abstract class ProjectStructure
         return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
     }
 
+    private static ProjectConfiguration getDependencyConfiguration(ProjectFileAccessProvider projectFileAccessProvider, ProjectDependency projectDependency)
+    {
+        return (!ProjectDependency.isParsableToVersionId(projectDependency)) ?
+                getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), null, null, null, null)) :
+                getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId().getVersion())));
+    }
+
     private static void updateOrAddDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
     {
         List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
@@ -686,7 +693,7 @@ public abstract class ProjectStructure
             {
                 try
                 {
-                    ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), projectDependency.getVersionId()));
+                    ProjectConfiguration dependencyConfig =  getDependencyConfiguration(projectFileAccessProvider, projectDependency);
                     if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
                     {
                         unknownDependencies.add(projectDependency);

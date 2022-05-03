@@ -19,7 +19,7 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
@@ -252,14 +252,14 @@ public class InMemoryBackend
         {
             ProjectDependency parsedProjectDependency = ProjectDependency.parseProjectDependency(dependencyString);
             String projectDependencyId = parsedProjectDependency.getProjectId();
-            VersionId projectDependencyVersionId = parsedProjectDependency.getVersionId();
+            DependencyVersionId projectDependencyVersionId = parsedProjectDependency.getVersionId();
 
             if (!this.backend.projects.containsKey(projectDependencyId))
             {
                 if (this.metadata != null && this.metadata.getProjects().containsKey(projectDependencyId))
                 {
                     InMemoryProjectMetadata projectDependency = this.metadata.getProjects().get(projectDependencyId);
-                    InMemoryVersionMetadata projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());
+                    InMemoryVersionMetadata projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.getVersion());
                     if (projectDependencyVersion == null)
                     {
                         throw new IllegalStateException(String.format("Unknown project dependency %s", parsedProjectDependency));
@@ -273,9 +273,9 @@ public class InMemoryBackend
                         }
 
                         @Override
-                        public VersionId getVersionId()
+                        public DependencyVersionId getVersionId()
                         {
-                            return VersionId.parseVersionId(projectDependency.getCurrentVersionId());
+                            return DependencyVersionId.fromVersionString(projectDependency.getCurrentVersionId());
                         }
                     };
                 }
@@ -285,7 +285,7 @@ public class InMemoryBackend
                 }
             }
             InMemoryProject projectDependency = this.backend.projects.get(projectDependencyId);
-            InMemoryVersion projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());
+            InMemoryVersion projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.getVersion());
             if (projectDependencyVersion == null)
             {
                 throw new IllegalStateException(String.format("Unknown project dependency version %s", dependencyString));

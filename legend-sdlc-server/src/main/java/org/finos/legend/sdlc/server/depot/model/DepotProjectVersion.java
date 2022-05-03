@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.depot.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
@@ -116,6 +117,15 @@ public class DepotProjectVersion
         LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
 
         return new DepotProjectVersion(DepotProjectId.parseProjectId(projectId), versionId.toVersionIdString());
+    }
+
+
+    public static DepotProjectVersion newDepotProjectVersion(String projectId, DependencyVersionId versionId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
+
+        return new DepotProjectVersion(DepotProjectId.parseProjectId(projectId), versionId.getVersion());
     }
 
     @JsonCreator

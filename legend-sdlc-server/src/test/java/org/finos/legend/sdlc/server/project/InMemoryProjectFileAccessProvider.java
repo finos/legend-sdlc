@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.project;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
@@ -94,6 +95,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
             }
         };
     }
+
 
     // Revision Access Context
 
