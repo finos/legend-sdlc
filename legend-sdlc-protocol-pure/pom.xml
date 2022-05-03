@@ -130,7 +130,7 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-language-pure-store-relational</artifactId>
+            <artifactId>legend-engine-xt-relationalStore-grammar</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- TEST -->
