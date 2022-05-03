@@ -65,8 +65,8 @@
         <maven.compiler.release>8</maven.compiler.release>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.0.0</legend.engine.version>
-        <legend.pure.version>2.0.0</legend.pure.version>
+        <legend.engine.version>3.1.0</legend.engine.version>
+        <legend.pure.version>2.1.1</legend.pure.version>
         <legend.shared.version>0.21.0</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -577,9 +577,9 @@
                 </exclusions>
             </dependency>
             <dependency>
-                <groupId>org.finos.legend.pure</groupId>
-                <artifactId>legend-pure-code-compiled-core-relational</artifactId>
-                <version>${legend.pure.version}</version>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-relationalStore-pure</artifactId>
+                <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
@@ -719,7 +719,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-language-pure-store-relational</artifactId>
+                <artifactId>legend-engine-xt-relationalStore-grammar</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
@@ -755,7 +755,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-executionPlan-execution-store-relational</artifactId>
+                <artifactId>legend-engine-xt-relationalStore-executionPlan</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -810,7 +810,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-external-format-protobuf</artifactId>
+                <artifactId>legend-engine-xt-protobuf</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
