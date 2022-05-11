@@ -15,12 +15,20 @@
 package org.finos.legend.sdlc.server.tools;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,6 +42,9 @@ import java.util.stream.Stream;
 
 public class TestIOTools
 {
+    @ClassRule
+    public static TemporaryFolder TMP_FOLDER = new TemporaryFolder();
+
     @Test
     public void testReadAllBytes() throws IOException
     {
@@ -45,10 +56,38 @@ public class TestIOTools
             {
                 random.nextBytes(bytes);
             }
+
             Assert.assertArrayEquals("length: " + i, bytes, IOTools.readAllBytes(new ByteArrayInputStream(bytes), -1));
             Assert.assertArrayEquals("length: " + i, bytes, IOTools.readAllBytes(new ByteArrayInputStream(bytes), i / 2));
             Assert.assertArrayEquals("length: " + i, bytes, IOTools.readAllBytes(new ByteArrayInputStream(bytes), i));
             Assert.assertArrayEquals("length: " + i, bytes, IOTools.readAllBytes(new ByteArrayInputStream(bytes), i * 2));
+
+            Path file = TMP_FOLDER.newFile().toPath();
+            try
+            {
+                Files.write(file, bytes);
+                try (InputStream stream = Files.newInputStream(file))
+                {
+                    Assert.assertArrayEquals("length: " + i + "; file: " + file, bytes, IOTools.readAllBytes(stream));
+                }
+                try (InputStream stream = Files.newInputStream(file))
+                {
+                    Assert.assertArrayEquals("length: " + i + "; file: " + file, bytes, IOTools.readAllBytes(stream, i));
+                }
+                URL url = file.toUri().toURL();
+                Assert.assertArrayEquals("length: " + i + "; file: " + file + "; url: " + url, bytes, IOTools.readAllBytes(url));
+            }
+            finally
+            {
+                try
+                {
+                    Files.delete(file);
+                }
+                catch (Exception ignore)
+                {
+                    // ignore exceptions here - will be cleaned up at the end regardless
+                }
+            }
         }
     }
 
@@ -56,6 +95,7 @@ public class TestIOTools
     public void testReadAllToString() throws IOException
     {
         Random random = new Random();
+        ImmutableList<Charset> charsets = Lists.immutable.with(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1, StandardCharsets.US_ASCII, StandardCharsets.UTF_16);
         for (int i = 0; i < 65_537; i = Math.max(1, i * 2))
         {
             byte[] bytes = new byte[i];
@@ -63,11 +103,43 @@ public class TestIOTools
             {
                 random.nextBytes(bytes);
             }
-            Assert.assertEquals("length: " + i, new String(bytes, StandardCharsets.UTF_8), IOTools.readAllToString(new ByteArrayInputStream(bytes)));
-            Assert.assertEquals("length: " + i, new String(bytes, StandardCharsets.UTF_8), IOTools.readAllToString(new ByteArrayInputStream(bytes), StandardCharsets.UTF_8));
-            Assert.assertEquals("length: " + i, new String(bytes, StandardCharsets.ISO_8859_1), IOTools.readAllToString(new ByteArrayInputStream(bytes), StandardCharsets.ISO_8859_1));
-            Assert.assertEquals("length: " + i, new String(bytes, StandardCharsets.US_ASCII), IOTools.readAllToString(new ByteArrayInputStream(bytes), StandardCharsets.US_ASCII));
-            Assert.assertEquals("length: " + i, new String(bytes, StandardCharsets.UTF_16), IOTools.readAllToString(new ByteArrayInputStream(bytes), StandardCharsets.UTF_16));
+            Assert.assertEquals("length: " + i + "; charset: none", new String(bytes, StandardCharsets.UTF_8), IOTools.readAllToString(new ByteArrayInputStream(bytes)));
+            for (Charset charset : charsets)
+            {
+                Assert.assertEquals("length: " + i + "; charset: " + charset, new String(bytes, charset), IOTools.readAllToString(new ByteArrayInputStream(bytes), charset));
+            }
+
+            Path file = TMP_FOLDER.newFile().toPath();
+            try
+            {
+                Files.write(file, bytes);
+                for (Charset charset : charsets)
+                {
+                    String expectedString = new String(bytes, charset);
+                    Assert.assertEquals("length: " + i + "; file: " + file + "; charset: " + charset, expectedString, IOTools.readAllToString(file, charset));
+                    try (InputStream stream = Files.newInputStream(file))
+                    {
+                        Assert.assertEquals("length: " + i + "; file: " + file + "; charset: " + charset, expectedString, IOTools.readAllToString(stream, charset));
+                    }
+                    try (InputStream stream = Files.newInputStream(file))
+                    {
+                        Assert.assertEquals("length: " + i + "; file: " + file + "; charset: " + charset, expectedString, IOTools.readAllToString(stream, i, charset));
+                    }
+                    URL url = file.toUri().toURL();
+                    Assert.assertEquals("length: " + i + "; file: " + file + "; url: " + url + "; charset: " + charset, expectedString, IOTools.readAllToString(url, charset));
+                }
+            }
+            finally
+            {
+                try
+                {
+                    Files.delete(file);
+                }
+                catch (Exception ignore)
+                {
+                    // ignore exceptions here - will be cleaned up at the end regardless
+                }
+            }
         }
     }
 
