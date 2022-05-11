@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.project.extension;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
@@ -87,10 +88,9 @@ public class DefaultProjectStructureExtension implements ProjectStructureExtensi
                 .append(" extensionVersion=").append(this.extensionVersion);
         if (!this.projectFiles.isEmpty())
         {
-            builder.append(" projectFiles=").append(this.projectFiles.keySet());
+            Iterate.appendString(this.projectFiles.keySet(), builder, "projectFiles=[", ", ", "]");
         }
-        builder.append('>');
-        return builder.toString();
+        return builder.append('>').toString();
     }
 
     @Override
