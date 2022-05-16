@@ -37,11 +37,12 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.IOTools;
+import org.finos.legend.sdlc.server.tools.StringTools;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.Reader;
 import java.io.StringWriter;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
@@ -393,24 +394,18 @@ public abstract class MavenProjectStructure extends ProjectStructure
 
     protected static String loadTestResourceCode(String resourceName, Charset charset)
     {
-        URL url = MavenProjectStructure.class.getClassLoader().getResource(resourceName);
+        URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
         if (url == null)
         {
             throw new RuntimeException("Could not find resource: " + resourceName);
         }
-        try (InputStream stream = url.openStream())
+        try
         {
-            return IOTools.readAllToString(stream, charset);
+            return IOTools.readAllToString(url, charset);
         }
         catch (IOException e)
         {
-            StringBuilder builder = new StringBuilder("Error reading resource '").append(resourceName).append("'");
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append(": ").append(eMessage);
-            }
-            throw new RuntimeException(builder.toString(), e);
+            throw new UncheckedIOException(StringTools.appendThrowableMessageIfPresent(new StringBuilder("Error reading resource '").append(resourceName).append("'").append(" (").append(url).append(")"), e).toString(), e);
         }
     }
 

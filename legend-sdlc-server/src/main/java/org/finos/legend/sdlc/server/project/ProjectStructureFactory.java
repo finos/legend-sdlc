@@ -25,15 +25,17 @@ import java.util.ServiceLoader;
 public class ProjectStructureFactory
 {
     private final IntObjectMap<ProjectStructureVersionFactory> projectStructureFactories;
+    private final int latestVersion;
 
     private ProjectStructureFactory(IntObjectMap<ProjectStructureVersionFactory> projectStructureFactories)
     {
         this.projectStructureFactories = projectStructureFactories;
+        this.latestVersion = projectStructureFactories.keySet().max();
     }
 
     public int getLatestVersion()
     {
-        return this.projectStructureFactories.keySet().max();
+        return this.latestVersion;
     }
 
     public boolean supportsVersion(int version)
