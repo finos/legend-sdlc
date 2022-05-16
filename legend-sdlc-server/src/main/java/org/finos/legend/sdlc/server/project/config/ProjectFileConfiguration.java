@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.server.tools.IOTools;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 
 public class ProjectFileConfiguration
@@ -77,7 +78,7 @@ public class ProjectFileConfiguration
 
         if (this.path != null)
         {
-            return IOTools.readAllToString(Paths.get(this.path), charset);
+            return IOTools.readAllToString(Paths.get(this.path), resolveCharset(charset));
         }
 
         if (this.resourceName != null)
@@ -87,20 +88,45 @@ public class ProjectFileConfiguration
             {
                 throw new IOException("resource not found: " + this.resourceName);
             }
-            return IOTools.readAllToString(resourceUrl, charset);
+            return IOTools.readAllToString(resourceUrl, resolveCharset(charset));
         }
 
         if (this.url != null)
         {
-            return IOTools.readAllToString(new URL(this.url), charset);
+            return IOTools.readAllToString(new URL(this.url), resolveCharset(charset));
         }
 
         return null;
+    }
+
+    private Charset resolveCharset(Charset charset)
+    {
+        return (charset == null) ? StandardCharsets.UTF_8 : charset;
     }
 
     @JsonCreator
     public static ProjectFileConfiguration newProjectFileConfiguration(@JsonProperty("content") String content, @JsonProperty("path") String path, @JsonProperty("resourceName") String resourceName, @JsonProperty("url") String url)
     {
         return new ProjectFileConfiguration(content, path, resourceName, url);
+    }
+
+    public static ProjectFileConfiguration newContent(String content)
+    {
+        return newProjectFileConfiguration(content, null, null, null);
+    }
+
+    public static ProjectFileConfiguration newPath(String path)
+    {
+        return newProjectFileConfiguration(null, path, null, null);
+    }
+
+    public static ProjectFileConfiguration newResourceName(String resourceName)
+    {
+        return newProjectFileConfiguration(null, null, resourceName, null);
+    }
+
+    public static ProjectFileConfiguration newUrl(String url)
+    {
+        return newProjectFileConfiguration(null, null, null, url);
     }
 }
