@@ -14,96 +14,43 @@
 
 package org.finos.legend.sdlc.server.gitlab.finos;
 
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-import org.finos.legend.sdlc.server.project.extension.BaseProjectStructureExtensionProvider;
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.impl.utility.MapIterate;
+import org.finos.legend.sdlc.server.project.config.ProjectFileConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.server.project.extension.SimpleProjectStructureExtensionProvider;
 
-import java.util.Collections;
-import java.util.function.Consumer;
+import java.util.Map;
 
-public class FinosGitlabProjectStructureExtensionProvider extends BaseProjectStructureExtensionProvider
+public class FinosGitlabProjectStructureExtensionProvider extends SimpleProjectStructureExtensionProvider
 {
-    private static final String CI_CONFIG_PATH = "/.gitlab-ci.yml";
-
-    private final FinosFileLoader ciFileLoader;
-
-    protected FinosGitlabProjectStructureExtensionProvider()
+    public FinosGitlabProjectStructureExtensionProvider()
     {
-        this.ciFileLoader = new FinosFileLoader(getClass().getClassLoader(), "gitlab-ci");
+        super(newBuilder(FinosExtensionConfig.class).withConfigFromResource("org/finos/legend/sdlc/server/gitlab/finos/finos-extension.yaml"));
     }
 
-    @Override
-    public Integer getLatestVersionForProjectStructureVersion(int projectStructureVersion)
+    private static class FinosExtensionConfig implements ExtensionConfiguration
     {
-        if (projectStructureVersion == 11)
-        {
-            return 2;
-        }
-        else if (projectStructureVersion == 12)
-        {
-            return 2;
-        }
-        return null;
-    }
+        private final Map<String, String> files;
 
-    @Override
-    public ProjectStructureExtension getProjectStructureExtension(int projectStructureVersion, int projectStructureExtensionVersion)
-    {
-        Integer latestExtension = getLatestVersionForProjectStructureVersion(projectStructureVersion);
-        if ((latestExtension == null) || (projectStructureExtensionVersion > latestExtension))
+        private FinosExtensionConfig(Map<String, String> files)
         {
-            return null;
-        }
-
-        return new FinosGitlabProjectStructureExtension(projectStructureVersion, projectStructureExtensionVersion);
-    }
-
-    private String getGitLabCIFile(int projectStructureVersion, int projectStructureExtensionVersion)
-    {
-        return (this.ciFileLoader == null) ? null : this.ciFileLoader.getCIResource(getGitLabCIFileVersion(projectStructureVersion, projectStructureExtensionVersion));
-    }
-
-    protected int getGitLabCIFileVersion(int projectStructureVersion, int projectStructureExtensionVersion)
-    {
-        if (projectStructureVersion == 11)
-        {
-            if (projectStructureExtensionVersion == 1)
-            {
-                return 1;
-            }
-            else if (projectStructureExtensionVersion == 2)
-            {
-                return 2;
-            }
-        }
-        else if (projectStructureVersion == 12)
-        {
-            return 2;
-        }
-        throw new IllegalArgumentException("Unknown project structure extension version for project structure version " + projectStructureVersion + ": " + projectStructureExtensionVersion);
-    }
-
-    private class FinosGitlabProjectStructureExtension extends DefaultProjectStructureExtension
-    {
-        private FinosGitlabProjectStructureExtension(int projectStructureVersion, int extensionVersion)
-        {
-            super(projectStructureVersion, extensionVersion, Collections.emptyMap());
+            this.files = files;
         }
 
         @Override
-        public void collectUpdateProjectConfigurationOperations(ProjectConfiguration oldConfig, ProjectConfiguration newConfig, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
+        public ProjectStructureExtension build(int projectStructureVersion, int extensionVersion)
         {
-            super.collectUpdateProjectConfigurationOperations(oldConfig, newConfig, fileAccessContext, operationConsumer);
-            updateFile(CI_CONFIG_PATH, getCiConfigContent(), fileAccessContext, operationConsumer);
+            return DefaultProjectStructureExtension.newProjectStructureExtensionFromConfig(projectStructureVersion, extensionVersion, MapIterate.collect(this.files, f -> f, ProjectFileConfiguration::newResourceName, Maps.mutable.ofInitialCapacity(this.files.size())));
         }
 
-        private String getCiConfigContent()
+        @JsonCreator
+        static FinosExtensionConfig newConfig(@JsonProperty("files") Map<String, String> files)
         {
-            return getGitLabCIFile(getProjectStructureVersion(), getVersion());
+            return new FinosExtensionConfig(files);
         }
-
     }
 }
