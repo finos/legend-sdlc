@@ -20,7 +20,7 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.MapIterate;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.EmptyFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.config.ProjectFileConfiguration;
@@ -46,7 +46,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 public class TestSimpleProjectStructureExtensionProvider
 {
@@ -456,27 +455,6 @@ public class TestSimpleProjectStructureExtensionProvider
         public CustomProjectStructureExtensionProvider(String config)
         {
             super(newBuilder(CustomExtensionConfig.class).withConfigFromResource(config));
-        }
-    }
-
-    private static class EmptyFileAccessContext implements ProjectFileAccessProvider.FileAccessContext
-    {
-        @Override
-        public Stream<ProjectFileAccessProvider.ProjectFile> getFilesInDirectories(Stream<? extends String> directories)
-        {
-            return Stream.empty();
-        }
-
-        @Override
-        public Stream<ProjectFileAccessProvider.ProjectFile> getFilesInDirectories(Iterable<? extends String> directories)
-        {
-            return Stream.empty();
-        }
-
-        @Override
-        public ProjectFileAccessProvider.ProjectFile getFile(String path)
-        {
-            return null;
         }
     }
 }

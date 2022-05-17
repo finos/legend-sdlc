@@ -1,0 +1,12 @@
+- projectStructureVersion: 11
+  extensions:
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-1.yml
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
+- projectStructureVersion: 12
+  extensions:
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
