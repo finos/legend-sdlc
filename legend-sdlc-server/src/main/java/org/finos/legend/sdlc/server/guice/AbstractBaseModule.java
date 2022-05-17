@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
 import com.google.inject.Provides;
-import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import com.google.inject.Scopes;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
@@ -26,6 +26,9 @@ import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
@@ -141,9 +144,11 @@ import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
 import org.finos.legend.sdlc.server.resources.ServerResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import ru.vyarus.dropwizard.guice.module.support.DropwizardAwareModule;
 
-import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
+import javax.inject.Named;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
@@ -158,8 +163,9 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     }
 
     @Override
-    public void configure(Binder binder)
+    public void configure()
     {
+        Binder binder = binder();
         configureCommonApis(binder);
         configureApis(binder);
 
@@ -173,6 +179,8 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
+        binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(configuration())).in(Scopes.SINGLETON);
+        binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(configuration().getGitLabConfiguration()));
 
         bindResources(binder);
         bindFilters(binder);
@@ -310,7 +318,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()
     {
-        ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
+        ProjectStructureConfiguration projectStructureConfiguration = configuration().getProjectStructureConfiguration();
         return (projectStructureConfiguration == null) ? ProjectStructureConfiguration.emptyConfiguration() : projectStructureConfiguration;
     }
 
@@ -343,7 +351,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private ProjectStructureExtensionProvider resolveProjectStructureExtensionProvider()
     {
-        ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
+        ProjectStructureConfiguration projectStructureConfiguration = configuration().getProjectStructureConfiguration();
         if (projectStructureConfiguration != null)
         {
             ProjectStructureExtensionProvider configuredProvider = projectStructureConfiguration.getProjectStructureExtensionProvider();
@@ -362,13 +370,13 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private DepotConfiguration getDepotConfiguration()
     {
-        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        DepotConfiguration depotConfiguration = configuration().getDepotConfiguration();
         return (depotConfiguration == null) ? DepotConfiguration.emptyConfiguration() : depotConfiguration;
     }
 
     private LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
     {
-        LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
+        LegendSDLCServerFeaturesConfiguration featuresConfiguration = configuration().getFeaturesConfiguration();
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
     }
 
@@ -383,7 +391,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private AuthClientInjector resolveAuthClientInjector()
     {
-        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        DepotConfiguration depotConfiguration = configuration().getDepotConfiguration();
         if (depotConfiguration != null)
         {
             AuthClientInjector authClientInjector = depotConfiguration.getAuthClientInjector();
@@ -393,6 +401,19 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         return builder -> builder;
+    }
+
+    private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
+    {
+        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getGitLabConfiguration().getGitLabAuthorizers();
+        if (gitLabAuthorizers == null)
+        {
+            return GitLabAuthorizerManager.newManager(Collections.emptyList());
+        }
+        else
+        {
+            return GitLabAuthorizerManager.newManager(gitLabAuthorizers);
+        }
     }
 
     @Provides

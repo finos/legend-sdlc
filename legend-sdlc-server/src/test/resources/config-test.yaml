@@ -28,7 +28,6 @@ server:
       - POST
   requestLog:
     type: classic
-    level: OFF
     appenders:
       - type: console
         logFormat: "OFF"

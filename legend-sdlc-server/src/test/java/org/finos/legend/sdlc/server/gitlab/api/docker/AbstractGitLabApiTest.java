@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.docker;
 
-import com.squarespace.jersey2.guice.JerseyGuiceUtils;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabApiTestSetupUtil;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -66,7 +65,6 @@ public class AbstractGitLabApiTest
     @BeforeClass
     public static void suiteSetup()
     {
-        JerseyGuiceUtils.install((s, serviceLocator) -> null);
         backgroundTaskProcessor = new BackgroundTaskProcessor(1);
         prepareGitLabUser();
     }

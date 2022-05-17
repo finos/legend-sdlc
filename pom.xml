@@ -65,9 +65,9 @@
         <maven.compiler.release>8</maven.compiler.release>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.1.0</legend.engine.version>
+        <legend.engine.version>3.1.1-SNAPSHOT</legend.engine.version>
         <legend.pure.version>2.1.1</legend.pure.version>
-        <legend.shared.version>0.21.0</legend.shared.version>
+        <legend.shared.version>0.21.1-SNAPSHOT</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -75,32 +75,36 @@
         <commons-io.version>2.7</commons-io.version>
         <commons-lang.version>2.6</commons-lang.version>
         <commons-lang3.version>3.7</commons-lang3.version>
-        <dropwizard.version>1.3.29</dropwizard.version>
-        <dropwizard.metrics.version>4.1.16</dropwizard.metrics.version>
-        <dropwizard-guicier.version>1.3.5.2</dropwizard-guicier.version>
-        <dropwizard-swagger.version>1.3.17-1</dropwizard-swagger.version>
+        <dropwizard.version>2.0.28</dropwizard.version>
+        <dropwizard.metrics.version>4.2.5</dropwizard.metrics.version>
+        <dropwizard-guicey.version>5.4.2</dropwizard-guicey.version>
+        <dropwizard-swagger.version>2.0.0-1</dropwizard-swagger.version>
+        <swagger.annotation.version>1.6.5</swagger.annotation.version>
         <eclipsecollections.version>10.2.0</eclipsecollections.version>
         <findbugs.version>3.0.0</findbugs.version>
         <gitlab4j.version>4.16.0</gitlab4j.version>
         <guava.version>30.0-jre</guava.version>
-        <guice.version>4.2.1</guice.version>
+        <guice.version>5.1.0</guice.version>
         <h2.version>1.4.200</h2.version>
-        <hk2.version>2.5.0-b32</hk2.version>
-        <jackson.version>2.10.5</jackson.version>
+        <jackson.version>2.13.1</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
-        <javax.servlet.version>3.1.0</javax.servlet.version>
-        <javax.ws.rs.version>2.1.1</javax.ws.rs.version>
-        <jersey.version>2.25.1</jersey.version>
-        <jersey2-guice.version>1.0.6</jersey2-guice.version>
+        <jakarta.servlet.version>4.0.4</jakarta.servlet.version>
+        <jakarta.ws.rs.version>2.1.6</jakarta.ws.rs.version>
+        <jakarta.inject.version>1.0.5</jakarta.inject.version>
+        <jakarta.activation.version>1.2.2</jakarta.activation.version>
+        <jakarta.xml.bind.version>2.3.3</jakarta.xml.bind.version>
+        <jersey.version>2.35</jersey.version>
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
+        <javassist.version>3.28.0-GA</javassist.version>
         <junit.version>4.13.1</junit.version>
-        <apache.maven.version>3.6.2</apache.maven.version>
-        <pac4j.version>3.8.3</pac4j.version>
+        <apache.maven.version>3.8.4</apache.maven.version>
+        <pac4j.version>3.9.0</pac4j.version>
+        <pac4j.jax-rs.version>3.0.3</pac4j.jax-rs.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
         <freemarker.version>2.3.30</freemarker.version>
-        <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
+        <hibernate-validator.version>7.0.2.Final</hibernate-validator.version>
     </properties>
 
     <scm>
@@ -872,6 +876,12 @@
                 <groupId>com.google.inject</groupId>
                 <artifactId>guice</artifactId>
                 <version>${guice.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.inject</groupId>
+                        <artifactId>javax.inject</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>com.google.inject.extensions</groupId>
@@ -886,9 +896,9 @@
             </dependency>
 
             <dependency>
-                <groupId>com.hubspot.dropwizard</groupId>
-                <artifactId>dropwizard-guicier</artifactId>
-                <version>${dropwizard-guicier.version}</version>
+                <groupId>ru.vyarus</groupId>
+                <artifactId>dropwizard-guicey</artifactId>
+                <version>${dropwizard-guicey.version}</version>
             </dependency>
 
             <dependency>
@@ -906,12 +916,12 @@
                 <groupId>com.smoketurner</groupId>
                 <artifactId>dropwizard-swagger</artifactId>
                 <version>${dropwizard-swagger.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.squarespace.jersey2-guice</groupId>
-                <artifactId>jersey2-guice-impl</artifactId>
-                <version>${jersey2-guice.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.validation</groupId>
+                        <artifactId>validation-api</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -930,6 +940,13 @@
                 <version>${commons-lang.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>io.dropwizard</groupId>
+                <artifactId>dropwizard-dependencies</artifactId>
+                <version>${dropwizard.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>io.dropwizard</groupId>
                 <artifactId>dropwizard-assets</artifactId>
@@ -1021,39 +1038,33 @@
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
-                <version>1.5.20</version>
+                <version>${swagger.annotation.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>jakarta.activation</groupId>
                 <artifactId>jakarta.activation-api</artifactId>
-                <version>1.2.2</version>
-            </dependency>
-
-            <dependency>
-                <groupId>javax.activation</groupId>
-                <artifactId>activation</artifactId>
-                <version>1.1.1</version>
+                <version>${jakarta.activation.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.inject</groupId>
-                <artifactId>javax.inject</artifactId>
-                <version>1</version>
+                <groupId>jakarta.inject</groupId>
+                <artifactId>jakarta.inject-api</artifactId>
+                <version>${jakarta.inject.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.servlet</groupId>
-                <artifactId>javax.servlet-api</artifactId>
-                <version>${javax.servlet.version}</version>
+                <groupId>jakarta.servlet</groupId>
+                <artifactId>jakarta.servlet-api</artifactId>
+                <version>${jakarta.servlet.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.ws.rs</groupId>
-                <artifactId>javax.ws.rs-api</artifactId>
-                <version>${javax.ws.rs.version}</version>
+                <groupId>jakarta.ws.rs</groupId>
+                <artifactId>jakarta.ws.rs-api</artifactId>
+                <version>${jakarta.ws.rs.version}</version>
             </dependency>
             <dependency>
-                <groupId>javax.xml.bind</groupId>
-                <artifactId>jaxb-api</artifactId>
-                <version>2.3.1</version>
+                <groupId>jakarta.xml.bind</groupId>
+                <artifactId>jakarta.xml.bind-api</artifactId>
+                <version>${jakarta.xml.bind.version}</version>
             </dependency>
 
             <dependency>
@@ -1121,6 +1132,12 @@
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
                 <version>${apache.maven.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.inject</groupId>
+                        <artifactId>guice</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
@@ -1226,17 +1243,6 @@
             </dependency>
 
             <dependency>
-                <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-api</artifactId>
-                <version>${hk2.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.glassfish.hk2</groupId>
-                <artifactId>hk2-locator</artifactId>
-                <version>${hk2.version}</version>
-            </dependency>
-
-            <dependency>
                 <groupId>org.glassfish.jersey.containers</groupId>
                 <artifactId>jersey-container-servlet-core</artifactId>
                 <version>${jersey.version}</version>
@@ -1252,7 +1258,16 @@
                 <artifactId>jersey-common</artifactId>
                 <version>${jersey.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.glassfish.jersey.core</groupId>
+                <artifactId>jersey-server</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.glassfish.jersey.inject</groupId>
+                <artifactId>jersey-hk2</artifactId>
+                <version>${jersey.version}</version>
+            </dependency>
             <dependency>
                 <groupId>org.glassfish.jersey.media</groupId>
                 <artifactId>jersey-media-multipart</artifactId>
@@ -1268,7 +1283,7 @@
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.21.0-GA</version>
+                <version>${javassist.version}</version>
             </dependency>
 
             <dependency>
@@ -1286,6 +1301,12 @@
                 <groupId>org.pac4j</groupId>
                 <artifactId>pac4j-oidc</artifactId>
                 <version>${pac4j.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.pac4j.jax-rs</groupId>
+                <artifactId>core</artifactId>
+                <version>${pac4j.jax-rs.version}</version>
             </dependency>
 
             <dependency>

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.resources;
 
+import com.google.inject.servlet.RequestScoped;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenReader;
@@ -39,6 +40,7 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 @Path("/auth")
+@RequestScoped
 public class GitLabAuthResource extends BaseResource
 {
     private static final Pattern TERMS_OF_SERVICE_MESSAGE_PATTERN = Pattern.compile("terms\\s+of\\s+service", Pattern.CASE_INSENSITIVE);
