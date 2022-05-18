@@ -28,6 +28,11 @@ import java.util.stream.Stream;
 
 public class TestExtensions
 {
+    @Test
+    public void dummyTest()
+    {
+        Assert.assertEquals(true, false);
+    }
 
     @Test
     public void testPlanGeneratorExtensionArePresent()

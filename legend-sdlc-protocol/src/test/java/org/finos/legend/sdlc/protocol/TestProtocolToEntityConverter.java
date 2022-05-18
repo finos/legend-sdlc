@@ -50,6 +50,8 @@ public class TestProtocolToEntityConverter
         {
             Assert.assertEquals("Could not convert instance of " + Association.class.getName() + " to Entity: no appropriate classifier found", e.getMessage());
         }
+
+        throw new RuntimeException("Testing only");
     }
 
     @Test
