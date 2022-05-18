@@ -14,10 +14,12 @@
 
 package org.finos.legend.sdlc.server.application.project;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 
 import java.util.Collections;
 import java.util.List;
@@ -168,34 +170,41 @@ public class UpdateProjectConfigurationCommand
         }
 
         @Override
-        public VersionId getVersionId()
+        public DependencyVersionId getVersionId()
         {
             return this.versionId;
         }
     }
 
-    static class UpdateProjectConfigVersionId extends VersionId
+    static class UpdateProjectConfigVersionId extends DependencyVersionId
     {
-        int majorVersion;
-        int minorVersion;
-        int patchVersion;
+        private String version;
 
-        @Override
-        public int getMajorVersion()
+        @JsonCreator
+        public UpdateProjectConfigVersionId(@JsonProperty(value = "majorVersion") Integer majorVersion,
+                                            @JsonProperty(value = "minorVersion") Integer minorVersion,
+                                            @JsonProperty(value = "patchVersion") Integer patchVersion,
+                                            @JsonProperty(value = "version") String version)
         {
-            return this.majorVersion;
+
+            if (!(version == null || version.isEmpty()))
+            {
+                this.version = version;
+            }
+            else if ((majorVersion == null || minorVersion == null || patchVersion == null))
+            {
+                throw new IllegalArgumentException("Invalid versionId: snapshot and (majorVersion, minorVersion, patchVersion) can't be empty");
+            }
+            else
+            {
+                this.version = majorVersion + "." + minorVersion + "." + patchVersion;
+            }
         }
 
         @Override
-        public int getMinorVersion()
+        public String getVersion()
         {
-            return this.minorVersion;
-        }
-
-        @Override
-        public int getPatchVersion()
-        {
-            return this.patchVersion;
+            return this.version;
         }
     }
 }

@@ -14,17 +14,16 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.Objects;
 
 public abstract class ProjectDependency extends Dependency implements Comparable<ProjectDependency>
 {
     public abstract String getProjectId();
 
-    public abstract VersionId getVersionId();
+    public abstract DependencyVersionId getVersionId();
 
     @Override
     public boolean equals(Object other)
@@ -70,17 +69,43 @@ public abstract class ProjectDependency extends Dependency implements Comparable
     @Override
     public StringBuilder appendVersionIdString(StringBuilder builder)
     {
-        VersionId versionId = getVersionId();
-        return (versionId == null) ? builder.append("null") : versionId.appendVersionIdString(builder);
+        DependencyVersionId versionId = getVersionId();
+        return (versionId == null) ? builder.append("null") : builder.append(versionId.getVersion());
     }
 
     public static boolean isLegacyProjectDependency(ProjectDependency projectDependency)
     {
         if (projectDependency.getProjectId() == null)
         {
-            throw new IllegalArgumentException("Invalid poject id string (null) for project dependency");
+            throw new IllegalArgumentException("Invalid project id string (null) for project dependency");
         }
         return !projectDependency.getProjectId().contains(":");
+    }
+
+    public static boolean isSnapshotProjectDependency(ProjectDependency projectDependency)
+    {
+        if (projectDependency.getVersionId() == null)
+        {
+            throw new IllegalArgumentException("Invalid version id string (null) for project dependency");
+        }
+        return projectDependency.getVersionId().getVersion().toLowerCase().contains("-snapshot");
+    }
+
+    public static boolean isParsableToVersionId(ProjectDependency projectDependency)
+    {
+        if (projectDependency.getVersionId() == null)
+        {
+            throw new IllegalArgumentException("Invalid version id string (null) for project dependency");
+        }
+        try
+        {
+            VersionId.parseVersionId(projectDependency.getVersionId().getVersion());
+            return true;
+        }
+        catch (IllegalArgumentException e)
+        {
+            return false;
+        }
     }
 
     public static ProjectDependency parseProjectDependency(String string)
@@ -116,19 +141,20 @@ public abstract class ProjectDependency extends Dependency implements Comparable
         }
 
         String projectId = string.substring(start, delimiterIndex);
-        VersionId versionId;
+        DependencyVersionId dependencyVersionId;
         try
         {
-            versionId = VersionId.parseVersionId(string, delimiterIndex + 1, end);
+            VersionId versionId = VersionId.parseVersionId(string, delimiterIndex + 1, end);
+            dependencyVersionId = DependencyVersionId.fromVersionString(versionId.toVersionIdString());
         }
         catch (IllegalArgumentException e)
         {
             throw new IllegalArgumentException(new StringBuilder("Invalid project dependency string: \"").append(string, start, end).append('"').toString(), e);
         }
-        return newProjectDependency(projectId, versionId);
+        return newProjectDependency(projectId, dependencyVersionId);
     }
 
-    public static ProjectDependency newProjectDependency(String projectId, VersionId versionId)
+    public static ProjectDependency newProjectDependency(String projectId, DependencyVersionId versionId)
     {
         return new ProjectDependency()
         {
@@ -139,7 +165,7 @@ public abstract class ProjectDependency extends Dependency implements Comparable
             }
 
             @Override
-            public VersionId getVersionId()
+            public DependencyVersionId getVersionId()
             {
                 return versionId;
             }

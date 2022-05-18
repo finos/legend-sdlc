@@ -14,13 +14,15 @@
 
 package org.finos.legend.sdlc.server.jackson;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 
 public class ProjectDependencyPOJO extends ProjectDependency
 {
     private String projectId;
-    private VersionId versionId;
+    private ProjectDependencyVersionId versionId;
 
     public ProjectDependencyPOJO()
     {
@@ -33,8 +35,25 @@ public class ProjectDependencyPOJO extends ProjectDependency
     }
 
     @Override
-    public VersionId getVersionId()
+    public DependencyVersionId getVersionId()
     {
         return this.versionId;
+    }
+
+
+    static class ProjectDependencyVersionId extends DependencyVersionId
+    {
+        private String version;
+
+        public ProjectDependencyVersionId()
+        {
+
+        }
+
+        @Override
+        public String getVersion()
+        {
+            return this.version;
+        }
     }
 }

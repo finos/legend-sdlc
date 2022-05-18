@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
@@ -108,8 +109,12 @@ public class DependenciesApiImpl implements DependenciesApi
         {
             if (results.add(dependency))
             {
-                ProjectConfiguration dependencyProjectConfig = this.projectConfigurationApi.getVersionProjectConfiguration(dependency.getProjectId(), dependency.getVersionId());
-                searchUpstreamRecursive(dependencyProjectConfig, results);
+                if (ProjectDependency.isParsableToVersionId(dependency))
+                {
+                    ProjectConfiguration dependencyProjectConfig = this.projectConfigurationApi.getVersionProjectConfiguration(dependency.getProjectId(), VersionId.parseVersionId(dependency.getVersionId().getVersion()));
+                    searchUpstreamRecursive(dependencyProjectConfig, results);
+                }
+
             }
         }
     }
