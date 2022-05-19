@@ -93,10 +93,11 @@ public class TestDefaultProjectStructureExtensionProvider
         }
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testConflictingVersions()
     {
-        DefaultProjectStructureExtensionProvider.fromExtensions(newProjectStructureExtension(13, 2), newProjectStructureExtension(13, 2));
+        IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> DefaultProjectStructureExtensionProvider.fromExtensions(newProjectStructureExtension(12, 2), newProjectStructureExtension(12, 2)));
+        Assert.assertEquals("Multiple extensions for project structure version 12, extension version 2", e.getMessage());
     }
 
     private ProjectStructureExtension newProjectStructureExtension(int projectStructureVersion, int extensionVersion)

@@ -16,7 +16,9 @@ package org.finos.legend.sdlc.server.project.extension;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
@@ -30,7 +32,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 public class DefaultProjectStructureExtension implements ProjectStructureExtension
 {
@@ -87,10 +88,9 @@ public class DefaultProjectStructureExtension implements ProjectStructureExtensi
                 .append(" extensionVersion=").append(this.extensionVersion);
         if (!this.projectFiles.isEmpty())
         {
-            builder.append(" projectFiles=").append(this.projectFiles.keySet());
+            Iterate.appendString(this.projectFiles.keySet(), builder, "projectFiles=[", ", ", "]");
         }
-        builder.append('>');
-        return builder.toString();
+        return builder.append('>').toString();
     }
 
     @Override
@@ -173,7 +173,11 @@ public class DefaultProjectStructureExtension implements ProjectStructureExtensi
             {
                 throw new RuntimeException("Could not get content for file \"" + path + "\" for project structure version " + projectStructureVersion + ", extension " + extensionVersion);
             }
-            newProjectFiles.put(path, content);
+            String old = newProjectFiles.put(path, content);
+            if ((old != null) && (!old.equals(content)))
+            {
+                throw new RuntimeException("Multiple definitions for \"" + path + "\" for project structure version " + projectStructureVersion + ", extension " + extensionVersion);
+            }
         });
         return canonicalizeProjectFilesInPlace(newProjectFiles, projectStructureVersion, extensionVersion);
     }
@@ -185,27 +189,27 @@ public class DefaultProjectStructureExtension implements ProjectStructureExtensi
 
     private static Map<String, String> canonicalizeProjectFilesInPlace(Map<String, String> projectFiles, int projectStructureVersion, int extensionVersion)
     {
-        List<String> nonCanonicalPaths = projectFiles.keySet().stream().filter(p -> !isPathCanonical(p)).collect(Collectors.toList());
-        for (String path : nonCanonicalPaths)
+        List<String> nonCanonicalPaths = Iterate.reject(projectFiles.keySet(), DefaultProjectStructureExtension::isPathCanonical, Lists.mutable.empty());
+        nonCanonicalPaths.forEach(path ->
         {
             String canonicalPath = canonicalizePath(path);
             String content = projectFiles.remove(path);
             String canonicalPathContent = projectFiles.put(canonicalPath, content);
-            if (canonicalPathContent != null)
+            if ((canonicalPathContent != null) && !canonicalPathContent.equals(content))
             {
                 throw new RuntimeException("Multiple definitions for \"" + canonicalPath + "\" for project structure version " + projectStructureVersion + ", extension " + extensionVersion + ": one for \"" + canonicalPath + "\" and another for \"" + path + "\"");
             }
-        }
+        });
         return projectFiles;
     }
 
-    private static boolean isPathCanonical(String path)
+    protected static boolean isPathCanonical(String path)
     {
         return (path != null) && !path.isEmpty() && (path.charAt(0) == '/');
     }
 
-    private static String canonicalizePath(String path)
+    protected static String canonicalizePath(String path)
     {
-        return ((path == null) || path.isEmpty()) ? "/" : ("/" + path);
+        return ((path == null) || path.isEmpty()) ? "/" : ((path.charAt(0) == '/') ? path : ("/" + path));
     }
 }

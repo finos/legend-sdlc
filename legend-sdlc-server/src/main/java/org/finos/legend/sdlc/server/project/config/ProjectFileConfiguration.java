@@ -16,15 +16,12 @@ package org.finos.legend.sdlc.server.project.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.finos.legend.sdlc.server.tools.IOTools;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Paths;
 
 public class ProjectFileConfiguration
@@ -81,34 +78,30 @@ public class ProjectFileConfiguration
 
         if (this.path != null)
         {
-            try (InputStream stream = Files.newInputStream(Paths.get(this.path)))
-            {
-                return readFromStream(stream, charset);
-            }
+            return IOTools.readAllToString(Paths.get(this.path), resolveCharset(charset));
         }
 
         if (this.resourceName != null)
         {
-            URL resourceUrl = ((classLoader == null) ? getClass().getClassLoader() : classLoader).getResource(this.resourceName);
+            URL resourceUrl = ((classLoader == null) ? Thread.currentThread().getContextClassLoader() : classLoader).getResource(this.resourceName);
             if (resourceUrl == null)
             {
                 throw new IOException("resource not found: " + this.resourceName);
             }
-            try (InputStream stream = resourceUrl.openStream())
-            {
-                return readFromStream(stream, charset);
-            }
+            return IOTools.readAllToString(resourceUrl, resolveCharset(charset));
         }
 
         if (this.url != null)
         {
-            try (InputStream stream = new URL(this.url).openStream())
-            {
-                return readFromStream(stream, charset);
-            }
+            return IOTools.readAllToString(new URL(this.url), resolveCharset(charset));
         }
 
         return null;
+    }
+
+    private Charset resolveCharset(Charset charset)
+    {
+        return (charset == null) ? StandardCharsets.UTF_8 : charset;
     }
 
     @JsonCreator
@@ -117,19 +110,23 @@ public class ProjectFileConfiguration
         return new ProjectFileConfiguration(content, path, resourceName, url);
     }
 
-    private static String readFromStream(InputStream stream, Charset charset) throws IOException
+    public static ProjectFileConfiguration newContent(String content)
     {
-        int bufferSize = 4096;
-        StringBuilder builder = new StringBuilder(bufferSize);
-        try (Reader reader = new InputStreamReader(stream, (charset == null) ? StandardCharsets.UTF_8 : charset))
-        {
-            char[] buffer = new char[bufferSize];
-            int read;
-            while ((read = reader.read(buffer, 0, bufferSize)) >= 0)
-            {
-                builder.append(buffer, 0, read);
-            }
-        }
-        return builder.toString();
+        return newProjectFileConfiguration(content, null, null, null);
+    }
+
+    public static ProjectFileConfiguration newPath(String path)
+    {
+        return newProjectFileConfiguration(null, path, null, null);
+    }
+
+    public static ProjectFileConfiguration newResourceName(String resourceName)
+    {
+        return newProjectFileConfiguration(null, null, resourceName, null);
+    }
+
+    public static ProjectFileConfiguration newUrl(String url)
+    {
+        return newProjectFileConfiguration(null, null, null, url);
     }
 }

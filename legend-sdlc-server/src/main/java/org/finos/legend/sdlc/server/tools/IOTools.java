@@ -17,8 +17,14 @@ package org.finos.legend.sdlc.server.tools;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.nio.channels.Channels;
+import java.nio.channels.SeekableByteChannel;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -37,6 +43,27 @@ public class IOTools
     {
         ExtendedByteArrayOutputStream bytes = readAll(stream, estimatedSize);
         return (bytes == null) ? EMPTY_BYTE_ARRAY : bytes.getBytesUnsafe();
+    }
+
+    public static byte[] readAllBytes(URL url) throws IOException
+    {
+        // special case for file URLs
+        if ("file".equalsIgnoreCase(url.getProtocol()))
+        {
+            try
+            {
+                return Files.readAllBytes(Paths.get(url.toURI()));
+            }
+            catch (Exception ignore)
+            {
+                // ignore exceptions here and fall back to the general case
+            }
+        }
+        // general case
+        try (InputStream stream = url.openStream())
+        {
+            return readAllBytes(stream);
+        }
     }
 
     public static String readAllToString(InputStream stream) throws IOException
@@ -58,6 +85,48 @@ public class IOTools
     {
         ExtendedByteArrayOutputStream bytes = readAll(stream, estimatedSize);
         return (bytes == null) ? "" : bytes.toString((charset == null) ? StandardCharsets.UTF_8 : charset);
+    }
+
+    public static String readAllToString(URL url) throws IOException
+    {
+        return readAllToString(url, null);
+    }
+
+    public static String readAllToString(URL url, Charset charset) throws IOException
+    {
+        // special case for file URLs
+        if ("file".equalsIgnoreCase(url.getProtocol()))
+        {
+            try
+            {
+                return readAllToString(Paths.get(url.toURI()), charset);
+            }
+            catch (Exception ignore)
+            {
+                // ignore exceptions here and fall back to the general case
+            }
+        }
+        // general case
+        try (InputStream stream = url.openStream())
+        {
+            return readAllToString(stream);
+        }
+    }
+
+    public static String readAllToString(Path path) throws IOException
+    {
+        return readAllToString(path, null);
+    }
+
+    public static String readAllToString(Path path, Charset charset) throws IOException
+    {
+        try (SeekableByteChannel channel = Files.newByteChannel(path);
+             InputStream stream = Channels.newInputStream(channel))
+        {
+            long size = channel.size();
+            int estimatedSize = ((size >= 0L) && (size < Integer.MAX_VALUE)) ? (int) size : -1;
+            return readAllToString(stream, estimatedSize, charset);
+        }
     }
 
     public static <T, U extends Spliterator<T> & AutoCloseable> Stream<T> streamCloseableSpliterator(U closeableSpliterator, boolean parallel)
@@ -114,9 +183,8 @@ public class IOTools
             super(size);
         }
 
-        private synchronized int readAllFrom(InputStream stream) throws IOException
+        private synchronized void readAllFrom(InputStream stream) throws IOException
         {
-            int total = 0;
             while (true)
             {
                 // check capacity
@@ -128,12 +196,11 @@ public class IOTools
                     if (b == -1)
                     {
                         // done
-                        return total;
+                        return;
                     }
 
                     // there are more bytes; increase capacity
                     write(b);
-                    total++;
                     capacity = this.buf.length - this.count;
                 }
 
@@ -142,10 +209,9 @@ public class IOTools
                 if (n == -1)
                 {
                     // done
-                    return total;
+                    return;
                 }
                 this.count += n;
-                total += n;
             }
         }
 
