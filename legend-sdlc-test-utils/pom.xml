@@ -207,17 +207,17 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-language-external-store-service</artifactId>
+            <artifactId>legend-engine-xt-serviceStore-grammar</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-json-model</artifactId>
+            <artifactId>legend-engine-xt-json-model</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-json-runtime</artifactId>
+            <artifactId>legend-engine-xt-json-runtime</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
