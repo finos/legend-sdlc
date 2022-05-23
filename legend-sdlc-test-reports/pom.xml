@@ -23,7 +23,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>test-reports</artifactId>
+    <artifactId>legend-sdlc-test-reports</artifactId>
     <name>Legend SDLC Test Reports</name>
     <packaging>pom</packaging>
 
