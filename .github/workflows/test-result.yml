@@ -16,7 +16,7 @@ name: Publish Test Results
 
 on:
   workflow_run:
-    workflows: ["Build CI"]
+    workflows: ["Pull Request CI"]
     types:
       - completed
 permissions: {}
@@ -32,8 +32,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Debug Only
-        run: echo ${{ github.event.workflow_run.conclusion }}
       - name: Download and Extract Artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-name: Build CI
+name: CI
 
 env:
   CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
@@ -25,7 +25,8 @@ on: [push, pull_request]
 jobs:
   build:
     name: Build
-    if: "!contains(github.event.head_commit.message, '[maven-release-plugin]')"
+    # NOTE: do not run this on release commits and on PR
+    if: "!contains(github.event.head_commit.message, '[maven-release-plugin]') && ((github.repository == 'finos/legend-sdlc') || (github.ref == 'refs/heads/master'))"
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
@@ -57,23 +58,11 @@ jobs:
     - name: Download deps and plugins
       run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
     - name: Build + Test
-      if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
-      run: mvn install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -Dmaven.test.failure.ignore=true
+      if: ((github.repository != 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')) || ((github.repository != 'finos/legend-sdlc') && (github.ref == 'refs/heads/master'))
+      run: mvn install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
     - name: Build + Test + Maven Deploy + Sonar + Docker Snapshot
       if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
       env:
         DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -Dmaven.test.failure.ignore=true
-    - name: Upload Test Results
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: test-results
-        path: test-reports/surefire-reports-aggregate/*.xml
-    - name: Upload CI Event
-      if: always()
-      uses: actions/upload-artifact@v3
-      with:
-        name: event-file
-        path: ${{ github.event_path }}
+      run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
