@@ -1,0 +1,83 @@
+{
+  "content": {
+    "_type": "runtime",
+    "name": "ServiceStoreRuntime",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 15,
+      "endColumn": 1
+    },
+    "runtimeValue": {
+      "_type": "engineRuntime",
+      "sourceInformation": {
+        "sourceId": "",
+        "startLine": 2,
+        "startColumn": 1,
+        "endLine": 15,
+        "endColumn": 1
+      },
+      "mappings": [
+        {
+          "type": "MAPPING",
+          "path": "testTestSuites::ServiceStoreMapping",
+          "sourceInformation": {
+            "sourceId": "",
+            "startLine": 6,
+            "startColumn": 5,
+            "endLine": 6,
+            "endColumn": 51
+          }
+        }
+      ],
+      "connections": [
+        {
+          "store": {
+            "type": "STORE",
+            "path": "testTestSuites::ServiceStore",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 10,
+              "startColumn": 5,
+              "endLine": 10,
+              "endColumn": 44
+            }
+          },
+          "storeConnections": [
+            {
+              "id": "connection_1",
+              "connection": {
+                "_type": "connectionPointer",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 12,
+                  "startColumn": 21,
+                  "endLine": 12,
+                  "endColumn": 70
+                },
+                "connection": "testTestSuites::ServiceStoreConnection"
+              },
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 12,
+                "startColumn": 7,
+                "endLine": 12,
+                "endColumn": 70
+              }
+            }
+          ],
+          "sourceInformation": {
+            "sourceId": "",
+            "startLine": 10,
+            "startColumn": 5,
+            "endLine": 13,
+            "endColumn": 5
+          }
+        }
+      ]
+    },
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::pure::runtime::PackageableRuntime"
+}

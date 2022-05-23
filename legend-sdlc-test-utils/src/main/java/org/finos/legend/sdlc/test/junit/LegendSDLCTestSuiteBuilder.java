@@ -23,6 +23,8 @@ import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.testable.extension.TestableRunnerExtension;
+import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
@@ -30,6 +32,7 @@ import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.test.junit.pure.v1.MappingTestCase;
 import org.finos.legend.sdlc.test.junit.pure.v1.ServiceTestCase;
+import org.finos.legend.sdlc.test.junit.pure.v1.TestableTestCase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,19 +45,20 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class LegendSDLCTestSuiteBuilder
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCTestSuiteBuilder.class);
 
     private final String pureVersion;
+    private final Map<String, ? extends TestableRunnerExtension> classifierPathToTestableRunnerMap = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap();
 
     public LegendSDLCTestSuiteBuilder(String pureVersion)
     {
@@ -104,7 +108,7 @@ public class LegendSDLCTestSuiteBuilder
 
     public TestSuite buildSuite(String name, Collection<? extends Entity> entitiesForTesting, ClassLoader classLoader)
     {
-        Map<Class<? extends PackageableElement>, TestSuiteBuilder> testSuiteBuilders = getTestSuiteBuilderByTypeMap(MappingTestCase.class, ServiceTestCase.class);
+        Map<Class<? extends PackageableElement>, TestSuiteBuilder> testSuiteBuilders = getTestSuiteBuilderByTypeMap(TestableTestCase.class, MappingTestCase.class, ServiceTestCase.class);
         TestSuite suite = new TestSuite();
         suite.setName(name);
         Set<String> entitiesForTestingPaths = entitiesForTesting.stream().map(Entity::getPath).collect(Collectors.toSet());
@@ -126,21 +130,52 @@ public class LegendSDLCTestSuiteBuilder
         }
         EntityToPureConverter converter = new EntityToPureConverter();
         entitiesForTesting.stream()
-                .map(e ->
+                .flatMap(e ->
                 {
-                    Optional<TestSuiteBuilder> optionalBuilder = converter.fromEntityIfPossible(e).map(element -> testSuiteBuilders.get(element.getClass()));
-                    if (!optionalBuilder.isPresent())
+                    Optional<? extends PackageableElement> packageableElement = converter.fromEntityIfPossible(e);
+                    Optional<TestSuiteBuilder> genericTestBuilder = packageableElement.map(element -> testSuiteBuilders.get(PackageableElement.class));
+                    Optional<TestSuiteBuilder> specificTestBuilder = packageableElement.map(element -> testSuiteBuilders.get(element.getClass()));
+
+                    if (!(genericTestBuilder.isPresent() && classifierPathToTestableRunnerMap.containsKey(e.getClassifierPath())) && !specificTestBuilder.isPresent())
                     {
-                        return null;
+                        return Stream.empty();
                     }
-                    TestSuiteBuilder builder = optionalBuilder.get();
+
+                    List<TestSuite> eSuites = Lists.mutable.empty();
                     LOGGER.debug("Building test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
-                    TestSuite eSuite = builder.build(pureModel, pureModelContextData, e);
-                    LOGGER.debug("Test count for {}: {}", e.getPath(), (eSuite == null) ? 0 : eSuite.testCount());
-                    return eSuite;
+                    int totalTestCount = 0;
+                    if (genericTestBuilder.isPresent() && classifierPathToTestableRunnerMap.containsKey(e.getClassifierPath()))
+                    {
+                        TestSuiteBuilder builder = genericTestBuilder.get();
+                        LOGGER.debug("  Building generic test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
+                        TestSuite eSuite = builder.build(pureModel, pureModelContextData, e, "Generic");
+                        int testCount = (eSuite == null) ? 0 : eSuite.testCount();
+                        totalTestCount += testCount;
+                        LOGGER.debug("  Generic Test count for {}: {}", e.getPath(), testCount);
+                        if (eSuite != null)
+                        {
+                            eSuites.add(eSuite);
+                        }
+                    }
+                    if (specificTestBuilder.isPresent())
+                    {
+                        TestSuiteBuilder builder = specificTestBuilder.get();
+                        LOGGER.debug("  Building element specific test suite for {} (classifier: {})", e.getPath(), e.getClassifierPath());
+                        TestSuite eSuite = builder.build(pureModel, pureModelContextData, e, "Specific");
+                        int testCount = (eSuite == null) ? 0 : eSuite.testCount();
+                        totalTestCount += testCount;
+                        LOGGER.debug("  Element Specific Test count for {}: {}", e.getPath(), testCount);
+                        if (eSuite != null)
+                        {
+                            eSuites.add(eSuite);
+                        }
+                    }
+                    LOGGER.debug("Test count for {}: {}", e.getPath(), totalTestCount);
+
+                    return eSuites.stream();
                 })
-                .filter(Objects::nonNull)
                 .forEach(suite::addTest);
+
         if (LOGGER.isDebugEnabled())
         {
             LOGGER.debug("Entity test suite count: {}", suite.testCount());
@@ -216,7 +251,7 @@ public class LegendSDLCTestSuiteBuilder
             this.method = method;
         }
 
-        TestSuite build(PureModel pureModel, PureModelContextData pureModelContextData, Entity entity)
+        TestSuite build(PureModel pureModel, PureModelContextData pureModelContextData, Entity entity, String suiteType)
         {
             List<LegendSDLCTestCase> testCases = new ArrayList<>();
             try
@@ -236,11 +271,11 @@ public class LegendSDLCTestSuiteBuilder
             }
 
             TestSuite suite = new TestSuite();
-            suite.setName(entity.getPath());
+            suite.setName(entity.getPath() + " { " + suiteType + " }");
             int i = 1;
             for (LegendSDLCTestCase testCase : testCases)
             {
-                testCase.setName(entity.getPath() + " Test #" + i);
+                testCase.setName(entity.getPath() + " Test #" + i++);
                 suite.addTest(testCase);
             }
             return suite;
