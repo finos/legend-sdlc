@@ -24,7 +24,8 @@ permissions: {}
 jobs:
   test-results:
     name: Publish Test Results
-    if: github.event.workflow_run.conclusion != 'skipped'
+    # NOTE: only publish test result on PR builds
+    if: github.event.workflow_run.conclusion != 'skipped' && ((github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master'))
     runs-on: ubuntu-latest
     permissions:
       actions: read
@@ -32,8 +33,6 @@ jobs:
       pull-requests: write
 
     steps:
-      - name: Debug Only
-        run: echo ${{ github.event.workflow_run.conclusion }}
       - name: Download and Extract Artifacts
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
