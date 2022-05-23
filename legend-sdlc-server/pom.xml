@@ -31,6 +31,23 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <configuration>
+                    <rules>
+                        <bannedDependencies>
+                            <includes combine.children="append">
+                                <include>org.slf4j:jcl-over-slf4j:${slf4j.version}</include>
+                                <include>org.slf4j:jul-to-slf4j:${slf4j.version}</include>
+                                <include>ch.qos.logback:logback-access</include>
+                                <include>ch.qos.logback:logback-classic</include>
+                                <include>ch.qos.logback:logback-core</include>
+                            </includes>
+                        </bannedDependencies>
+                    </rules>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <executions>
                     <execution>

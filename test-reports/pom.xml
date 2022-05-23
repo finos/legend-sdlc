@@ -24,7 +24,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>test-reports</artifactId>
-    <name>Test Reports</name>
+    <name>Legend SDLC Test Reports</name>
     <packaging>pom</packaging>
 
     <build>
@@ -63,66 +63,162 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-model</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-serialization</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-protocol</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-protocol-pure</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-language-pure-compiler</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server-shared</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-file</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-service</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-model</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-model-maven-plugin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-version-package-maven-plugin</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
