@@ -90,11 +90,49 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-file</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-service</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-model-maven-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-version-package-maven-plugin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-test-utils</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- Legend dependencies -->
 
