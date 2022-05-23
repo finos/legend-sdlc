@@ -57,9 +57,7 @@
         </plugins>
     </build>
 
-
     <dependencies>
-        <!-- Legend dependencies -->
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-model</artifactId>
@@ -230,14 +228,5 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Legend dependencies -->
-
-        <!-- TEST SCOPE -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- TEST SCOPE -->
     </dependencies>
 </project>
