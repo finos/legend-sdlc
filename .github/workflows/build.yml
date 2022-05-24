@@ -66,13 +66,13 @@ jobs:
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
     - name: Upload Test Results
-      if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
+      if: always()
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: legend-sdlc-test-reports/surefire-reports-aggregate/*.xml
     - name: Upload CI Event
-      if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
+      if: always()
       uses: actions/upload-artifact@v3
       with:
         name: event-file
