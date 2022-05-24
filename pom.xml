@@ -30,7 +30,7 @@
     <packaging>pom</packaging>
 
     <modules>
-        <module>test-reports</module>
+        <module>legend-sdlc-test-reports</module>
         <module>legend-sdlc-model</module>
         <module>legend-sdlc-entity-serialization</module>
         <module>legend-sdlc-protocol</module>
@@ -366,7 +366,7 @@
                     <useSystemClassLoader>true</useSystemClassLoader>
                     <useManifestOnlyJar>false</useManifestOnlyJar>
                     <trimStackTrace>false</trimStackTrace>
-                    <reportsDirectory>${project.parent.basedir}/test-reports/surefire-reports-aggregate
+                    <reportsDirectory>${project.parent.basedir}/legend-sdlc-test-reports/surefire-reports-aggregate
                     </reportsDirectory>
                     <excludes>
                         <exclude>**/IntegrationTestGitLab*.java</exclude>

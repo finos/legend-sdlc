@@ -23,7 +23,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>test-reports</artifactId>
+    <artifactId>legend-sdlc-test-reports</artifactId>
     <name>Legend SDLC Test Reports</name>
     <packaging>pom</packaging>
 
@@ -57,9 +57,7 @@
         </plugins>
     </build>
 
-
     <dependencies>
-        <!-- Legend dependencies -->
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-model</artifactId>
@@ -230,14 +228,5 @@
                 </exclusion>
             </exclusions>
         </dependency>
-        <!-- Legend dependencies -->
-
-        <!-- TEST SCOPE -->
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <!-- TEST SCOPE -->
     </dependencies>
 </project>
