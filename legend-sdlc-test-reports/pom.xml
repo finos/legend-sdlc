@@ -30,6 +30,17 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <configuration>
+                    <rules combine.self="override">
+                        <requireJavaVersion>
+                            <version>${java.version.range}</version>
+                        </requireJavaVersion>
+                    </rules>
+                </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.sonatype.plugins</groupId>
                 <artifactId>nexus-staging-maven-plugin</artifactId>
                 <extensions>true</extensions>
