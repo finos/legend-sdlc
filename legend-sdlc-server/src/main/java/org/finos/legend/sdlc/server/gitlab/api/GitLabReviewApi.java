@@ -14,10 +14,12 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
-import org.finos.legend.sdlc.domain.model.project.Project;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -52,8 +54,6 @@ import org.gitlab4j.api.models.MergeRequestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -62,8 +62,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
 {
@@ -328,11 +331,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            if (workspaceHasSnapshotDependency(projectId, workspaceId, workspaceType))
-            {
-                throw new LegendSDLCServerException("Cant create a review with any snapshot dependency", Status.CONFLICT);
-            }
-
+            validateDependenciesForCreateReview(projectId, workspaceId, workspaceType);
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             String workspaceBranchName = getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
@@ -348,14 +347,22 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         }
     }
 
-    private boolean workspaceHasSnapshotDependency(String projectId, String workspaceId, WorkspaceType workspaceType)
+    private void validateDependenciesForCreateReview(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        ProjectConfiguration projectConfig = projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, workspaceId, workspaceType);
-        if (projectConfig == null || projectConfig.getProjectDependencies() == null)
+        ProjectConfiguration projectConfig = this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, workspaceId, workspaceType);
+        if (projectConfig != null)
         {
-            return false;
+            List<ProjectDependency> dependencies = projectConfig.getProjectDependencies();
+            if ((dependencies != null) && !dependencies.isEmpty())
+            {
+                Pattern validVersionPattern = Pattern.compile("\\d++\\.\\d++\\.\\d++");
+                MutableList<ProjectDependency> invalidDependencies = Iterate.reject(dependencies, dep -> (dep.getProjectId() != null) && (dep.getVersionId() != null) && validVersionPattern.matcher(dep.getVersionId()).matches(), Lists.mutable.empty());
+                if (invalidDependencies.notEmpty())
+                {
+                    throw new LegendSDLCServerException(invalidDependencies.makeString("Cannot create a review with the following dependencies: ", ", ", ""), Status.CONFLICT);
+                }
+            }
         }
-        return projectConfig.getProjectDependencies().stream().anyMatch(ProjectDependency::isSnapshotProjectDependency);
     }
 
     @Override

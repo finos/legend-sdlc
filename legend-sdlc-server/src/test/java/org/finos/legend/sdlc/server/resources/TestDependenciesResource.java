@@ -63,14 +63,14 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
         Set<ProjectDependency> dependencies = readProjectDependencies(this.clientFor(url).request().get());
 
         Assert.assertEquals(1, dependencies.size());
-        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId().getVersion());
+        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId());
 
         // B transitively depends on A and C
         Set<ProjectDependency> transitiveDependencies = readProjectDependencies(this.clientFor(url).queryParam("transitive", "true").request().get());
 
         Assert.assertEquals(2, transitiveDependencies.size());
-        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "A").getVersionId().getVersion());
-        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "C").getVersionId().getVersion());
+        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "A").getVersionId());
+        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "C").getVersionId());
     }
 
     @Test
@@ -105,7 +105,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
         Set<ProjectDependency> dependencies = readProjectDependencies(this.clientFor(url).request().get());
 
         Assert.assertEquals(1, dependencies.size());
-        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId().getVersion());
+        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId());
     }
 
     private ProjectDependency findDependency(Set<ProjectDependency> dependencies, String projectId)

@@ -14,16 +14,13 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
-import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-
 import java.util.Objects;
 
-public abstract class ProjectDependency extends Dependency implements Comparable<ProjectDependency>
+public abstract class ProjectDependency extends Dependency
 {
     public abstract String getProjectId();
 
-    public abstract DependencyVersionId getVersionId();
+    public abstract String getVersionId();
 
     @Override
     public boolean equals(Object other)
@@ -38,7 +35,7 @@ public abstract class ProjectDependency extends Dependency implements Comparable
             return false;
         }
 
-        ProjectDependency that = (ProjectDependency)other;
+        ProjectDependency that = (ProjectDependency) other;
         return Objects.equals(this.getProjectId(), that.getProjectId()) && Objects.equals(this.getVersionId(), that.getVersionId());
     }
 
@@ -46,18 +43,6 @@ public abstract class ProjectDependency extends Dependency implements Comparable
     public int hashCode()
     {
         return Objects.hashCode(getProjectId()) + 53 * Objects.hashCode(getVersionId());
-    }
-
-    @Override
-    public int compareTo(ProjectDependency other)
-    {
-        if (this == other)
-        {
-            return 0;
-        }
-
-        int cmp = comparePossiblyNull(this.getProjectId(), other.getProjectId());
-        return (cmp != 0) ? cmp : comparePossiblyNull(this.getVersionId(), other.getVersionId());
     }
 
     @Override
@@ -69,43 +54,7 @@ public abstract class ProjectDependency extends Dependency implements Comparable
     @Override
     public StringBuilder appendVersionIdString(StringBuilder builder)
     {
-        DependencyVersionId versionId = getVersionId();
-        return (versionId == null) ? builder.append("null") : builder.append(versionId.getVersion());
-    }
-
-    public static boolean isLegacyProjectDependency(ProjectDependency projectDependency)
-    {
-        if (projectDependency.getProjectId() == null)
-        {
-            throw new IllegalArgumentException("Invalid project id string (null) for project dependency");
-        }
-        return !projectDependency.getProjectId().contains(":");
-    }
-
-    public static boolean isSnapshotProjectDependency(ProjectDependency projectDependency)
-    {
-        if (projectDependency.getVersionId() == null)
-        {
-            throw new IllegalArgumentException("Invalid version id string (null) for project dependency");
-        }
-        return projectDependency.getVersionId().getVersion().toLowerCase().contains("-snapshot");
-    }
-
-    public static boolean isParsableToVersionId(ProjectDependency projectDependency)
-    {
-        if (projectDependency.getVersionId() == null)
-        {
-            throw new IllegalArgumentException("Invalid version id string (null) for project dependency");
-        }
-        try
-        {
-            VersionId.parseVersionId(projectDependency.getVersionId().getVersion());
-            return true;
-        }
-        catch (IllegalArgumentException e)
-        {
-            return false;
-        }
+        return builder.append(getVersionId());
     }
 
     public static ProjectDependency parseProjectDependency(String string)
@@ -137,24 +86,15 @@ public abstract class ProjectDependency extends Dependency implements Comparable
         int delimiterIndex = string.lastIndexOf(delimiter, end - 1);
         if ((delimiterIndex == -1) || (delimiterIndex < start))
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid project dependency string: \"").append(string, start, end).append('"').toString());
+            throw new IllegalArgumentException("Invalid project dependency string: \"" + string.substring(start, end) + '"');
         }
 
         String projectId = string.substring(start, delimiterIndex);
-        DependencyVersionId dependencyVersionId;
-        try
-        {
-            VersionId versionId = VersionId.parseVersionId(string, delimiterIndex + 1, end);
-            dependencyVersionId = DependencyVersionId.fromVersionString(versionId.toVersionIdString());
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new IllegalArgumentException(new StringBuilder("Invalid project dependency string: \"").append(string, start, end).append('"').toString(), e);
-        }
-        return newProjectDependency(projectId, dependencyVersionId);
+        String versionId = string.substring(delimiterIndex + 1);
+        return newProjectDependency(projectId, versionId);
     }
 
-    public static ProjectDependency newProjectDependency(String projectId, DependencyVersionId versionId)
+    public static ProjectDependency newProjectDependency(String projectId, String versionId)
     {
         return new ProjectDependency()
         {
@@ -165,7 +105,7 @@ public abstract class ProjectDependency extends Dependency implements Comparable
             }
 
             @Override
-            public DependencyVersionId getVersionId()
+            public String getVersionId()
             {
                 return versionId;
             }

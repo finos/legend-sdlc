@@ -20,22 +20,23 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
-import org.finos.legend.sdlc.domain.model.project.configuration.Dependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
@@ -45,8 +46,6 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFil
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
-import javax.lang.model.SourceVersion;
-import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.Reader;
@@ -59,15 +58,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.SortedMap;
-import java.util.SortedSet;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.lang.model.SourceVersion;
+import javax.ws.rs.core.Response.Status;
 
 public abstract class ProjectStructure
 {
@@ -294,11 +293,11 @@ public abstract class ProjectStructure
 
     protected static ProjectStructure getProjectStructureForProjectDependency(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider)
     {
-        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId().getVersion()));
+        FileAccessContext versionFileAccessContext = versionFileAccessContextProvider.apply(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId()));
         ProjectConfiguration versionConfig = ProjectStructure.getProjectConfiguration(versionFileAccessContext);
         if (versionConfig == null)
         {
-            throw new LegendSDLCServerException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId().getVersion());
+            throw new LegendSDLCServerException("Invalid version of project " + projectDependency.getProjectId() + ": " + projectDependency.getVersionId());
         }
         return ProjectStructure.getProjectStructure(versionConfig);
     }
@@ -354,7 +353,7 @@ public abstract class ProjectStructure
 
     public static ProjectConfiguration getDefaultProjectConfiguration(String projectId)
     {
-        return new SimpleProjectConfiguration(projectId, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
+        return SimpleProjectConfiguration.newConfiguration(projectId, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
     }
 
     public static boolean isValidGroupId(String groupId)
@@ -442,7 +441,7 @@ public abstract class ProjectStructure
         // find out which dependencies we need to update
         boolean updateProjectDependencies = false;
         Set<ProjectDependency> projectDependencies = Sets.mutable.withAll(currentConfig.getProjectDependencies());
-        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> ProjectDependency.isLegacyProjectDependency(dep) && !(updateBuilder.hasProjectDependenciesToRemove() && updateBuilder.getProjectDependenciesToRemove().contains(dep))).collect(Collectors.toSet());
+        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> isLegacyProjectDependency(dep) && !(updateBuilder.hasProjectDependenciesToRemove() && updateBuilder.getProjectDependenciesToRemove().contains(dep))).collect(Collectors.toSet());
 
         if (toUpdateProjectDependencies.size() > 0)
         {
@@ -467,13 +466,13 @@ public abstract class ProjectStructure
         {
             validateDependencyConflicts(projectDependencies, ProjectDependency::getProjectId, (id, deps) ->
             {
-                if ((deps.size() <= 1) || deps.stream().anyMatch(dep -> ProjectDependency.isSnapshotProjectDependency(dep)) || deps.stream().allMatch(dep -> getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId().getVersion()))).isSupportedArtifactType(ArtifactType.versioned_entities)))
+                if (deps.size() <= 1)
                 {
                     return null;
                 }
                 List<ProjectDependency> supported = Lists.mutable.empty();
                 List<ProjectDependency> unsupported = Lists.mutable.empty();
-                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId().getVersion()))).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
+                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId()))).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
                 StringBuilder message = new StringBuilder();
                 unsupported.forEach(dep -> dep.appendVersionIdString((message.length() == 0) ? message : message.append(", ")));
                 message.append((unsupported.size() == 1) ? " does" : " do").append(" not support multi-version dependency");
@@ -514,7 +513,7 @@ public abstract class ProjectStructure
             {
                 StringBuilder builder = new StringBuilder("There were issues with one or more added metamodel dependencies");
                 builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                unknownDependencies.sort(Comparator.naturalOrder());
+                unknownDependencies.sort(getMetamodelDependencyComparator());
                 unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
                 throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
             }
@@ -590,13 +589,13 @@ public abstract class ProjectStructure
         if (updateProjectDependencies)
         {
             List<ProjectDependency> projectDependencyList = Lists.mutable.withAll(projectDependencies);
-            projectDependencyList.sort(Comparator.naturalOrder());
+            projectDependencyList.sort(getProjectDependencyComparator());
             newConfig.setProjectDependencies(projectDependencyList);
         }
         if (updateMetamodelDependencies)
         {
             List<MetamodelDependency> metamodelDependencyList = Lists.mutable.withAll(metamodelDependencies);
-            metamodelDependencyList.sort(Comparator.naturalOrder());
+            metamodelDependencyList.sort(getMetamodelDependencyComparator());
             newConfig.setMetamodelDependencies(metamodelDependencyList);
         }
         if (updateGeneration)
@@ -676,25 +675,25 @@ public abstract class ProjectStructure
         return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
     }
 
-    private static ProjectConfiguration getDependencyConfiguration(ProjectFileAccessProvider projectFileAccessProvider, ProjectDependency projectDependency)
+    protected static boolean isLegacyProjectDependency(ProjectDependency projectDependency)
     {
-        return (!ProjectDependency.isParsableToVersionId(projectDependency)) ?
-                getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), null, null, null, null)) :
-                getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId().getVersion())));
+        return (projectDependency != null) &&
+                (projectDependency.getProjectId() != null) &&
+                (projectDependency.getProjectId().indexOf(':') == -1);
     }
 
     private static void updateOrAddDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
     {
         List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
-        SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>();
+        SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>(getProjectDependencyComparator());
         for (ProjectDependency projectDependency : toUpdateProjectDependencies)
         {
-            if (ProjectDependency.isLegacyProjectDependency(projectDependency))
+            if (isLegacyProjectDependency(projectDependency))
             {
                 try
                 {
-                    ProjectConfiguration dependencyConfig =  getDependencyConfiguration(projectFileAccessProvider, projectDependency);
-                    if (dependencyConfig == null || dependencyConfig.getArtifactId() == null || dependencyConfig.getGroupId() == null)
+                    ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectDependency.getProjectId(), VersionId.parseVersionId(projectDependency.getVersionId())));
+                    if ((dependencyConfig == null) || (dependencyConfig.getArtifactId() == null) || (dependencyConfig.getGroupId() == null))
                     {
                         unknownDependencies.add(projectDependency);
                     }
@@ -723,7 +722,7 @@ public abstract class ProjectStructure
             if (!unknownDependencies.isEmpty())
             {
                 builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                unknownDependencies.sort(Comparator.naturalOrder());
+                unknownDependencies.sort(getProjectDependencyComparator());
                 unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
             }
             if (!accessExceptions.isEmpty())
@@ -736,12 +735,25 @@ public abstract class ProjectStructure
         }
     }
 
-
-    protected static <T extends Dependency & Comparable<? super T>, K extends Comparable<? super K>> void validateDependencyConflicts(Collection<T> dependencies, Function<? super T, ? extends K> indexKeyFn, BiFunction<? super K, ? super SortedSet<T>, String> conflictFn, String description)
+    protected static Comparator<ProjectDependency> getProjectDependencyComparator()
     {
-        Map<K, SortedSet<T>> index = dependencies.stream().collect(Collectors.groupingBy(indexKeyFn, Collectors.toCollection(TreeSet::new)));
+        Comparator<String> nullsLastStringCmp = Comparator.nullsLast(Comparator.naturalOrder());
+        return Comparator.comparing(ProjectDependency::getProjectId, nullsLastStringCmp)
+                .thenComparing(ProjectDependency::getVersionId, nullsLastStringCmp);
+    }
+
+    protected static Comparator<MetamodelDependency> getMetamodelDependencyComparator()
+    {
+        return Comparator.comparing(MetamodelDependency::getMetamodel, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparingInt(MetamodelDependency::getVersion);
+    }
+
+    protected static <T, K extends Comparable<? super K>> void validateDependencyConflicts(Collection<T> dependencies, Function<? super T, ? extends K> indexKeyFn, BiFunction<? super K, ? super Set<T>, String> conflictFn, String description)
+    {
+        MutableMap<K, MutableSet<T>> index = Maps.mutable.empty();
+        dependencies.forEach(dep -> index.getIfAbsentPut(indexKeyFn.apply(dep), Sets.mutable::empty).add(dep));
         SortedMap<K, String> conflictMessages = new TreeMap<>();
-        index.forEach((key, deps) ->
+        index.forEachKeyValue((key, deps) ->
         {
             String conflictMessage = conflictFn.apply(key, deps);
             if (conflictMessage != null)

@@ -16,62 +16,43 @@ package org.finos.legend.sdlc.server.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import org.eclipse.collections.api.factory.Lists;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
-import org.finos.legend.sdlc.domain.model.version.DependencyVersionId;
 
 import java.util.Collections;
 import java.util.List;
 
-class SimpleProjectConfiguration implements ProjectConfiguration
+public class SimpleProjectConfiguration implements ProjectConfiguration
 {
+    private final String projectId;
     private ProjectStructureVersion projectStructureVersion;
-    private String projectId;
     private String groupId;
     private String artifactId;
-    private List<ProjectDependency> projectDependencies = Collections.emptyList();
-    private List<MetamodelDependency> metamodelDependencies = Collections.emptyList();
-    private List<ArtifactGeneration> artifactGeneration = Collections.emptyList();
+    private List<ProjectDependency> projectDependencies;
+    private List<MetamodelDependency> metamodelDependencies;
+    private List<ArtifactGeneration> artifactGeneration;
 
-
-    SimpleProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion,
-                               String groupId, String artifactId, List<ProjectDependency> projectDependencies,
-                               List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGeneration)
+    private SimpleProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId,
+                                       List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGeneration)
     {
         this.projectId = projectId;
         this.projectStructureVersion = projectStructureVersion;
         this.groupId = groupId;
         this.artifactId = artifactId;
-        if ((projectDependencies != null) && !projectDependencies.isEmpty())
-        {
-            this.projectDependencies = Lists.mutable.withAll(projectDependencies);
-        }
-        if ((metamodelDependencies != null) && !metamodelDependencies.isEmpty())
-        {
-            this.metamodelDependencies = Lists.mutable.withAll(metamodelDependencies);
-        }
-        if ((artifactGeneration != null) && !artifactGeneration.isEmpty())
-        {
-            this.artifactGeneration = Lists.mutable.withAll(artifactGeneration);
-        }
+        this.projectDependencies = (projectDependencies == null) ? Collections.emptyList() : projectDependencies;
+        this.metamodelDependencies = (metamodelDependencies == null) ? Collections.emptyList() : metamodelDependencies;
+        this.artifactGeneration = (artifactGeneration == null) ? Collections.emptyList() : artifactGeneration;
     }
 
     SimpleProjectConfiguration(ProjectConfiguration projectConfiguration)
     {
-        this(projectConfiguration.getProjectId(),
-            projectConfiguration.getProjectStructureVersion(), projectConfiguration.getGroupId(),
-            projectConfiguration.getArtifactId(), projectConfiguration.getProjectDependencies(),
-            projectConfiguration.getMetamodelDependencies(), projectConfiguration.getArtifactGenerations());
-    }
-
-    SimpleProjectConfiguration()
-    {
+        this(projectConfiguration.getProjectId(), projectConfiguration.getProjectStructureVersion(), projectConfiguration.getGroupId(), projectConfiguration.getArtifactId(),
+                projectConfiguration.getProjectDependencies(), projectConfiguration.getMetamodelDependencies(), projectConfiguration.getArtifactGenerations());
     }
 
     @Override
@@ -80,20 +61,10 @@ class SimpleProjectConfiguration implements ProjectConfiguration
         return this.projectId;
     }
 
-    public void setProjectId(String projectId)
-    {
-        this.projectId = projectId;
-    }
-
     @Override
     public ProjectType getProjectType()
     {
         return null;
-    }
-
-    @Deprecated
-    public void setProjectType(ProjectType projectType)
-    {
     }
 
     @Override
@@ -107,15 +78,9 @@ class SimpleProjectConfiguration implements ProjectConfiguration
         this.projectStructureVersion = projectStructureVersion;
     }
 
-    @JsonSetter("projectStructureVersion")
-    public void setSimpleProjectStructureVersion(SimpleProjectStructureVersion projectStructureVersion)
-    {
-        setProjectStructureVersion(projectStructureVersion);
-    }
-
     public void setProjectStructureVersion(int projectStructureVersion, Integer projectStructureExtensionVersion)
     {
-        setProjectStructureVersion(new SimpleProjectStructureVersion(projectStructureVersion, projectStructureExtensionVersion));
+        setProjectStructureVersion(ProjectStructureVersion.newProjectStructureVersion(projectStructureVersion, projectStructureExtensionVersion));
     }
 
     @Override
@@ -151,34 +116,21 @@ class SimpleProjectConfiguration implements ProjectConfiguration
         this.projectDependencies = projectDependencies;
     }
 
-    @JsonSetter("projectDependencies")
-    public void setSimpleProjectDependencies(List<SimpleProjectDependency> projectDependencies)
-    {
-        this.projectDependencies = Lists.mutable.withAll(projectDependencies);
-    }
-
     @Override
     public List<MetamodelDependency> getMetamodelDependencies()
     {
         return this.metamodelDependencies;
     }
 
-
     public void setMetamodelDependencies(List<MetamodelDependency> metamodelDependencies)
     {
         this.metamodelDependencies = metamodelDependencies;
     }
 
-    @JsonSetter("metamodelDependencies")
-    public void setSimpleMetamodelDependencies(List<SimpleMetamodelDependency> metamodelDependencies)
+    @Override
+    public List<ArtifactGeneration> getArtifactGenerations()
     {
-        this.metamodelDependencies = Lists.mutable.withAll(metamodelDependencies);
-    }
-
-    @JsonSetter("artifactGenerations")
-    public void setSimpleArtifactGenerations(List<SimpleArtifactGeneration> artifactGenerations)
-    {
-        this.artifactGeneration = (artifactGenerations == null) ? Collections.emptyList() : Lists.mutable.withAll(artifactGenerations);
+        return this.artifactGeneration;
     }
 
     public void setArtifactGeneration(List<ArtifactGeneration> artifactGeneration)
@@ -186,24 +138,35 @@ class SimpleProjectConfiguration implements ProjectConfiguration
         this.artifactGeneration = artifactGeneration;
     }
 
-    public List<ArtifactGeneration> getArtifactGenerations()
+    @JsonCreator
+    static SimpleProjectConfiguration newConfiguration(
+            @JsonProperty("projectId") String projectId,
+            @Deprecated @JsonProperty("projectType") ProjectType projectType,
+            @JsonProperty("projectStructureVersion") @JsonDeserialize(as = SimpleProjectStructureVersion.class) ProjectStructureVersion projectStructureVersion,
+            @JsonProperty("groupId") String groupId,
+            @JsonProperty("artifactId") String artifactId,
+            @JsonProperty("projectDependencies") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependencies,
+            @JsonProperty("metamodelDependencies") @JsonDeserialize(contentAs = SimpleMetamodelDependency.class) List<MetamodelDependency> metamodelDependencies,
+            @JsonProperty("artifactGenerations") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerations)
     {
-        return this.artifactGeneration;
+        return new SimpleProjectConfiguration(projectId, projectStructureVersion, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations);
     }
 
-    static class SimpleProjectStructureVersion extends ProjectStructureVersion
+    static SimpleProjectConfiguration newConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGenerations)
     {
-        private int version;
-        private Integer extensionVersion;
+        return newConfiguration(projectId, null, projectStructureVersion, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations);
+    }
 
-        private SimpleProjectStructureVersion(int version, Integer extensionVersion)
+    public static class SimpleProjectStructureVersion extends ProjectStructureVersion
+    {
+        private final int version;
+        private final Integer extensionVersion;
+
+        @JsonCreator
+        private SimpleProjectStructureVersion(@JsonProperty("version") int version, @JsonProperty("extensionVersion") Integer extensionVersion)
         {
             this.version = version;
             this.extensionVersion = extensionVersion;
-        }
-
-        SimpleProjectStructureVersion()
-        {
         }
 
         @Override
@@ -212,77 +175,24 @@ class SimpleProjectConfiguration implements ProjectConfiguration
             return this.version;
         }
 
-        public void setVersion(int version)
-        {
-            this.version = version;
-        }
-
         @Override
         public Integer getExtensionVersion()
         {
             return this.extensionVersion;
         }
-
-        public void setExtensionVersion(Integer version)
-        {
-            this.extensionVersion = version;
-        }
     }
 
-    static class SimpleProjectDependency extends ProjectDependency
+    public static class SimpleMetamodelDependency extends MetamodelDependency
     {
-        String projectId;
-        SimpleVersionId versionId;
-
-        @Override
-        public String getProjectId()
-        {
-            return this.projectId;
-        }
-
-        @Override
-        public DependencyVersionId getVersionId()
-        {
-            return this.versionId;
-        }
-    }
-
-    static class SimpleVersionId extends DependencyVersionId
-    {
-        private String version;
+        private final String metamodel;
+        private final int version;
 
         @JsonCreator
-        public SimpleVersionId(@JsonProperty(value = "majorVersion") Integer majorVersion,
-                               @JsonProperty(value = "minorVersion") Integer minorVersion,
-                               @JsonProperty(value = "patchVersion") Integer patchVersion,
-                               @JsonProperty(value = "version") String version)
+        private SimpleMetamodelDependency(@JsonProperty("metamodel") String metamodel, @JsonProperty("version") int version)
         {
-
-            if (!(version == null || version.isEmpty()))
-            {
-                this.version = version;
-            }
-            else if ((majorVersion == null || minorVersion == null || patchVersion == null))
-            {
-                throw new IllegalArgumentException("Invalid versionId: snapshot and (majorVersion, minorVersion, patchVersion) can't be empty");
-            }
-            else
-            {
-                this.version = majorVersion + "." + minorVersion + "." + patchVersion;
-            }
+            this.metamodel = metamodel;
+            this.version = version;
         }
-
-        @Override
-        public String getVersion()
-        {
-            return this.version;
-        }
-    }
-
-    static class SimpleMetamodelDependency extends MetamodelDependency
-    {
-        String metamodel;
-        int version;
 
         @Override
         public String getMetamodel()

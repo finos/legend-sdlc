@@ -79,7 +79,7 @@ public class TestProjectStructureStaticMethods
             {
                 continue;
             }
-            ProjectConfiguration projectConfig = new SimpleProjectConfiguration("ProjectId", ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id", Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            ProjectConfiguration projectConfig = SimpleProjectConfiguration.newConfiguration("ProjectId", ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id", Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
             ProjectStructure structure;
             try
             {

@@ -44,7 +44,6 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -280,7 +279,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         dependenciesById.values().stream().flatMap(dependencies ->
         {
             ArtifactType type = (dependencies.size() > 1) ? ArtifactType.versioned_entities : ArtifactType.entities;
-            dependencies.sort(Comparator.naturalOrder());
+            dependencies.sort(getProjectDependencyComparator());
             return dependencies.stream().flatMap(dep -> projectDependencyToMavenDependenciesForType(dep, versionFileAccessContextProvider, type, !this.useDependencyManagement));
         }).forEach(dependencyConsumer);
     }
