@@ -26,7 +26,6 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -34,6 +33,8 @@ import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
@@ -62,23 +63,19 @@ import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
 
-public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
+public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabReviewApi.class);
 
-    private final ProjectConfigurationApi projectConfigurationApi;
-
     @Inject
-    public GitLabReviewApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectConfigurationApi projectConfigurationApi)
+    public GitLabReviewApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
-        super(gitLabConfiguration, userContext);
-        this.projectConfigurationApi = projectConfigurationApi;
+        super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
     @Override
@@ -331,7 +328,7 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            validateDependenciesForCreateReview(projectId, workspaceId, workspaceType);
+            validateProjectConfigurationForCreateOrCommit(getProjectConfiguration(projectId, workspaceId, null, workspaceType, workspaceAccessType));
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             String workspaceBranchName = getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
@@ -344,24 +341,6 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review",
                 () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
                 () -> "Error submitting changes from " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " for review");
-        }
-    }
-
-    private void validateDependenciesForCreateReview(String projectId, String workspaceId, WorkspaceType workspaceType)
-    {
-        ProjectConfiguration projectConfig = this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, workspaceId, workspaceType);
-        if (projectConfig != null)
-        {
-            List<ProjectDependency> dependencies = projectConfig.getProjectDependencies();
-            if ((dependencies != null) && !dependencies.isEmpty())
-            {
-                Pattern validVersionPattern = Pattern.compile("\\d++\\.\\d++\\.\\d++");
-                MutableList<ProjectDependency> invalidDependencies = Iterate.reject(dependencies, dep -> (dep.getProjectId() != null) && (dep.getVersionId() != null) && validVersionPattern.matcher(dep.getVersionId()).matches(), Lists.mutable.empty());
-                if (invalidDependencies.notEmpty())
-                {
-                    throw new LegendSDLCServerException(invalidDependencies.makeString("Cannot create a review with the following dependencies: ", ", ", ""), Status.CONFLICT);
-                }
-            }
         }
     }
 
@@ -549,6 +528,15 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
             throw new LegendSDLCServerException("Review " + reviewId + " in project " + projectId + " still requires " + approvalsLeft + " approvals", Status.CONFLICT);
         }
 
+        // Validate the project configuration
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceInfo == null)
+        {
+            throw new LegendSDLCServerException("Error committing review " + reviewId + " in project " + projectId + ": could not find workspace information");
+        }
+        ProjectConfiguration projectConfig = getProjectConfiguration(projectId, workspaceInfo, null);
+        validateProjectConfigurationForCreateOrCommit(projectConfig);
+
         // TODO add more validations
 
         // Accept
@@ -702,6 +690,22 @@ public class GitLabReviewApi extends BaseGitLabApi implements ReviewApi
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error editing review " + reviewId + " in project " + projectId);
 
+        }
+    }
+
+    private void validateProjectConfigurationForCreateOrCommit(ProjectConfiguration projectConfiguration)
+    {
+        if (projectConfiguration != null)
+        {
+            List<ProjectDependency> dependencies = projectConfiguration.getProjectDependencies();
+            if ((dependencies != null) && !dependencies.isEmpty())
+            {
+                MutableList<ProjectDependency> invalidDependencies = Iterate.reject(dependencies, ProjectStructure::isProperProjectDependency, Lists.mutable.empty());
+                if (invalidDependencies.notEmpty())
+                {
+                    throw new LegendSDLCServerException(invalidDependencies.makeString("Cannot create a review with the following dependencies: ", ", ", ""), Status.CONFLICT);
+                }
+            }
         }
     }
 

@@ -80,7 +80,8 @@ public abstract class ProjectStructure
 
     private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
 
-    private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("^[a-z][a-z0-9_]*+(-[a-z][a-z0-9_]*+)*+$");
+    private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("[a-z][a-z\\d_]*+(-[a-z][a-z\\d_]*+)*+");
+    private static final Pattern STRICT_VERSION_ID_PATTERN = Pattern.compile("((0|([1-9]\\d*+))\\.){2}(0|([1-9]\\d*+))");
 
     public static final String PROJECT_CONFIG_PATH = "/project.json";
 
@@ -364,6 +365,21 @@ public abstract class ProjectStructure
     public static boolean isValidArtifactId(String artifactId)
     {
         return (artifactId != null) && !artifactId.isEmpty() && VALID_ARTIFACT_ID_PATTERN.matcher(artifactId).matches();
+    }
+
+    public static boolean isProperProjectDependency(ProjectDependency dependency)
+    {
+        return (dependency != null) && isValidProjectDependencyProjectId(dependency.getProjectId()) && isStrictVersionId(dependency.getVersionId());
+    }
+
+    private static boolean isValidProjectDependencyProjectId(String projectId)
+    {
+        return (projectId != null) && projectId.codePoints().anyMatch(c -> !Character.isWhitespace(c));
+    }
+
+    public static boolean isStrictVersionId(String versionId)
+    {
+        return (versionId != null) && (versionId.length() >= 5) && STRICT_VERSION_ID_PATTERN.matcher(versionId).matches();
     }
 
     static Revision buildProjectStructure(ProjectConfigurationUpdateBuilder configurationUpdater)
