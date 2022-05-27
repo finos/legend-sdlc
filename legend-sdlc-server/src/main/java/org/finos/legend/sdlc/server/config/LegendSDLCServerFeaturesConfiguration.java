@@ -17,18 +17,39 @@ package org.finos.legend.sdlc.server.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
+import java.util.Properties;
 import java.util.Set;
 
 public class LegendSDLCServerFeaturesConfiguration
 {
     public final boolean canCreateProject;
     public final boolean canCreateVersion;
+    public final String legendEngineVersion;
 
     private LegendSDLCServerFeaturesConfiguration(boolean canCreateProject, boolean canCreateVersion)
     {
         this.canCreateProject = canCreateProject;
         this.canCreateVersion = canCreateVersion;
+
+        this.legendEngineVersion = getLegendEngineVersion();
+    }
+
+    private String getLegendEngineVersion() {
+
+        String legendEngineVersion = "";
+
+        Properties p = new Properties();
+        try (InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.finos.legend.engine/legend-engine-protocol-pure/pom.properties");) {
+            p.load(is);
+            legendEngineVersion = p.getProperty("version", "");
+        } catch (IOException e) {
+            // ignore
+        }
+
+        return legendEngineVersion;
     }
 
     @JsonCreator
