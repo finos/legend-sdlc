@@ -20,6 +20,7 @@ import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerDependenciesConfiguration;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
@@ -171,6 +172,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
+        binder.bind(LegendSDLCServerDependenciesConfiguration.class).toProvider(this::getDependenciesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
 
@@ -370,6 +372,12 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
+    }
+
+    private LegendSDLCServerDependenciesConfiguration getDependenciesConfiguration()
+    {
+        LegendSDLCServerDependenciesConfiguration dependenciesConfiguration = getConfiguration().getDependenciesConfiguration();
+        return (dependenciesConfiguration == null) ? LegendSDLCServerDependenciesConfiguration.emptyConfiguration() : dependenciesConfiguration;
     }
 
     private AuthClientInjector getAuthClientInjector()

@@ -33,6 +33,9 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     @JsonProperty("features")
     private LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
+    @JsonProperty("dependencies")
+    private LegendSDLCServerDependenciesConfiguration dependenciesConfiguration;
+
     public GitLabConfiguration getGitLabConfiguration()
     {
         return this.gitLabConfig;
@@ -51,5 +54,10 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     public LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
     {
         return this.featuresConfiguration;
+    }
+
+    public LegendSDLCServerDependenciesConfiguration getDependenciesConfiguration()
+    {
+        return this.dependenciesConfiguration;
     }
 }

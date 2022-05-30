@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerDependenciesConfiguration;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 
 import javax.inject.Inject;
@@ -32,12 +33,18 @@ public class ServerResource
 {
     private final ServerInfo serverInfo;
     private final LegendSDLCServerFeaturesConfiguration featuresConfiguration;
+    private final LegendSDLCServerDependenciesConfiguration dependenciesConfiguration;
 
     @Inject
-    public ServerResource(ServerInfo serverInfo, LegendSDLCServerFeaturesConfiguration featuresConfiguration)
+    public ServerResource(
+            ServerInfo serverInfo,
+            LegendSDLCServerFeaturesConfiguration featuresConfiguration,
+            LegendSDLCServerDependenciesConfiguration dependenciesConfiguration
+    )
     {
         this.serverInfo = serverInfo;
         this.featuresConfiguration = featuresConfiguration;
+        this.dependenciesConfiguration = dependenciesConfiguration;
     }
 
     @GET
@@ -55,4 +62,13 @@ public class ServerResource
     {
         return this.featuresConfiguration;
     }
+
+    @GET
+    @Path("/dependencies")
+    @ApiOperation("Provides dependencies for studio project pipelines")
+    public LegendSDLCServerDependenciesConfiguration getDependenciesConfiguration()
+    {
+        return this.dependenciesConfiguration;
+    }
+
 }

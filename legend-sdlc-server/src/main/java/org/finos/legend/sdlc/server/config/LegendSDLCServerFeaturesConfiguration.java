@@ -19,9 +19,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Collections;
 import java.util.Properties;
-import java.util.Set;
 
 public class LegendSDLCServerFeaturesConfiguration
 {
