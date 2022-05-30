@@ -37,15 +37,19 @@ public class LegendSDLCServerFeaturesConfiguration
         this.legendEngineVersion = getLegendEngineVersion();
     }
 
-    private String getLegendEngineVersion() {
+    private String getLegendEngineVersion()
+    {
 
         String legendEngineVersion = "";
 
         Properties p = new Properties();
-        try (InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.finos.legend.engine/legend-engine-protocol-pure/pom.properties");) {
+        try (InputStream is = getClass().getResourceAsStream("/META-INF/maven/org.finos.legend.engine/legend-engine-protocol-pure/pom.properties");)
+        {
             p.load(is);
             legendEngineVersion = p.getProperty("version", "");
-        } catch (IOException e) {
+        }
+        catch (IOException e)
+        {
             // ignore
         }
 
