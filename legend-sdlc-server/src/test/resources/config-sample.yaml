@@ -96,3 +96,12 @@ swagger:
   resourcePackage: org.finos.legend.sdlc.server.resources
   title: Legend SDLC
   schemes: []
+
+dependencies:
+  deps:
+    - name: legend-engine
+      #version: 3.2.0
+      packageName: org.finos.legend.engine/legend-engine-protocol-pure
+    - name: legend-sdlc
+      #version: 0.76.0
+      packageName: org.finos.legend.sdlc/legend-sdlc-server
