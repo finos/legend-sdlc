@@ -477,31 +477,6 @@ public abstract class ProjectStructure
             updateOrAddDependencies(updateBuilder.getProjectDependenciesToAdd(), projectFileAccessProvider, projectDependencies, false);
         }
 
-        // validate if there are any conflicts between the dependencies
-        if (updateProjectDependencies)
-        {
-            validateDependencyConflicts(projectDependencies, ProjectDependency::getProjectId, (id, deps) ->
-            {
-                if (deps.size() <= 1)
-                {
-                    return null;
-                }
-                List<ProjectDependency> supported = Lists.mutable.empty();
-                List<ProjectDependency> unsupported = Lists.mutable.empty();
-                deps.forEach(dep -> (getProjectStructure(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId()))).isSupportedArtifactType(ArtifactType.versioned_entities) ? supported : unsupported).add(dep));
-                StringBuilder message = new StringBuilder();
-                unsupported.forEach(dep -> dep.appendVersionIdString((message.length() == 0) ? message : message.append(", ")));
-                message.append((unsupported.size() == 1) ? " does" : " do").append(" not support multi-version dependency");
-                if (!supported.isEmpty())
-                {
-                    int startLen = message.length();
-                    supported.forEach(dep -> dep.appendVersionIdString(message.append((message.length() == startLen) ? "; " : ", ")));
-                    message.append((supported.size() == 1) ? " does" : " do");
-                }
-                return message.toString();
-            }, "projects");
-        }
-
         // check if we need to update any metamodel dependencies
         boolean updateMetamodelDependencies = false;
         Set<MetamodelDependency> metamodelDependencies = Sets.mutable.withAll(currentConfig.getMetamodelDependencies());
