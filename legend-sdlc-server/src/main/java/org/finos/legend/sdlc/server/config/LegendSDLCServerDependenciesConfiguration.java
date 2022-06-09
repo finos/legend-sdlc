@@ -16,7 +16,11 @@ package org.finos.legend.sdlc.server.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -31,22 +35,46 @@ public class LegendSDLCServerDependenciesConfiguration
 
     public final Map<String, String> dependencies;
 
-    private LegendSDLCServerDependenciesConfiguration(List<ConfigurationDependency> dependencies)
+    private LegendSDLCServerDependenciesConfiguration(List<ConfigurationDependency> dependencies, String fileSource)
     {
-        this.dependencies = getDependenciesMap(dependencies);
+
+        if (fileSource != null)
+        {
+            this.dependencies = getDependenciesMapFromFile(fileSource);
+        }
+        else
+        {
+            this.dependencies = getDependenciesMap(dependencies);
+        }
     }
 
     @JsonCreator
     public static LegendSDLCServerDependenciesConfiguration newDependenciesConfiguration(
-            @JsonProperty("deps") List<ConfigurationDependency> dependencies
+            @JsonProperty("listSource") List<ConfigurationDependency> listSource,
+            @JsonProperty("fileSource") String fileSource
     )
     {
-        return new LegendSDLCServerDependenciesConfiguration(dependencies);
+        return new LegendSDLCServerDependenciesConfiguration(listSource, fileSource);
     }
 
     public static LegendSDLCServerDependenciesConfiguration emptyConfiguration()
     {
-        return new LegendSDLCServerDependenciesConfiguration(new ArrayList<>());
+        return new LegendSDLCServerDependenciesConfiguration(new ArrayList<>(), null);
+    }
+
+    private Map<String, String> getDependenciesMapFromFile(String fileSource)
+    {
+        try
+        {
+            InputStream inputStream = new FileInputStream(fileSource);
+            Yaml yaml = new Yaml(new Constructor(ConfigurationDependenciesFileSource.class));
+            ConfigurationDependenciesFileSource fileSources = yaml.load(inputStream);
+            return getDependenciesMap(fileSources.getDependencies());
+        }
+        catch (FileNotFoundException e)
+        {
+            return null;
+        }
     }
 
     private Map<String, String> getDependenciesMap(List<ConfigurationDependency> dependencies)
@@ -78,9 +106,9 @@ public class LegendSDLCServerDependenciesConfiguration
     private static class ConfigurationDependency
     {
 
-        private String name;
-        private String version;
-        private String packageName;
+        public String name;
+        public String version;
+        public String packageName;
 
         public String getName()
         {
@@ -110,6 +138,21 @@ public class LegendSDLCServerDependenciesConfiguration
         public void setPackageName(String packageName)
         {
             this.packageName = packageName;
+        }
+    }
+
+    private static class ConfigurationDependenciesFileSource
+    {
+        public List<ConfigurationDependency> dependencies;
+
+        public List<ConfigurationDependency> getDependencies()
+        {
+            return dependencies;
+        }
+
+        public void setDependencies(List<ConfigurationDependency> dependencies)
+        {
+            this.dependencies = dependencies;
         }
     }
 }
