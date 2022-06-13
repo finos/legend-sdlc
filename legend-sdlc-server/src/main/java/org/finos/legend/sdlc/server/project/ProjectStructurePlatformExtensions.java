@@ -93,6 +93,7 @@ public class ProjectStructurePlatformExtensions
         private final String name;
         private final String groupId;
         private final Map<Integer, String> projectStructureVersions;
+        //private final String platformVersion;
 
         public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap)
         {

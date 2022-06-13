@@ -50,27 +50,59 @@ public class ProjectPlatformsConfiguration
     {
         private final String groupId;
         private final Map<Integer, String> projectStructureStartingVersions;
+        private final PlatformVersion platformVersion;
 
-        public PlatformMetadata(String groupId, Map<Integer, String> startingProjectStructureVersions)
+        public PlatformMetadata(String groupId, Map<Integer, String> startingProjectStructureVersions, PlatformVersion platformVersion)
         {
             this.groupId = groupId;
             this.projectStructureStartingVersions = startingProjectStructureVersions;
+            this.platformVersion = platformVersion;
         }
 
         @JsonCreator
-        public static PlatformMetadata newConfig(@JsonProperty("groupId") String groupId, @JsonProperty("version") Map<Integer, String> version)
+        public static PlatformMetadata newConfig(@JsonProperty("groupId") String groupId,
+                                                 @JsonProperty("version") Map<Integer, String> version,
+                                                 @JsonProperty("platformVersion") PlatformVersion platformVersion)
         {
-            return new PlatformMetadata(groupId, version);
+            return new PlatformMetadata(groupId, version, platformVersion);
         }
 
         public String getGroupId()
         {
-            return groupId;
+            return this.groupId;
         }
 
         public Map<Integer, String> getProjectStructureStartingVersions()
         {
-            return projectStructureStartingVersions;
+            return this.projectStructureStartingVersions;
+        }
+    }
+
+    public static class PlatformVersion
+    {
+        private final String version;
+        private final String fromPackage;
+
+        public PlatformVersion(String version, String fromPackage)
+        {
+            this.version = version;
+            this.fromPackage = fromPackage;
+        }
+
+        public String getVersion()
+        {
+            return this.version;
+        }
+
+        public String getFromPackage()
+        {
+            return this.fromPackage;
+        }
+
+        @JsonCreator
+        public static PlatformVersion newConfig(@JsonProperty("version") String version, @JsonProperty("fromPackage") String fromPackage)
+        {
+            return new PlatformVersion(version, fromPackage);
         }
     }
 

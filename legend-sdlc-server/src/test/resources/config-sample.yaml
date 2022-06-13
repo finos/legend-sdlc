@@ -73,6 +73,11 @@ gitLab:
 projectStructure:
   extensionProvider:
     org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider: {}
+  platforms:
+    legend-engine:
+      platformVersion:
+        version: 1.2.3
+        fromPackage: org.finos.legend.engine/legend-engine-protocol-pure
 
 logging:
   # Change this to affect library class logging
