@@ -93,13 +93,14 @@ public class ProjectStructurePlatformExtensions
         private final String name;
         private final String groupId;
         private final Map<Integer, String> projectStructureVersions;
-        //private final String platformVersion;
+        private final String platformVersion;
 
-        public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap)
+        public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap, String platformVersion)
         {
             this.name = name;
             this.groupId = groupId;
             this.projectStructureVersions = projectStructureVersionsMap;
+            this.platformVersion = platformVersion;
         }
 
         public String getName()
@@ -110,6 +111,11 @@ public class ProjectStructurePlatformExtensions
         public String getGroupId()
         {
             return groupId;
+        }
+
+        public String getPlatformVersion()
+        {
+            return platformVersion;
         }
 
         public String getPublicStructureVersion(int version)

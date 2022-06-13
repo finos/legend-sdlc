@@ -19,9 +19,12 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.impl.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class ProjectPlatformsConfiguration
 {
@@ -41,7 +44,7 @@ public class ProjectPlatformsConfiguration
     {
         List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
         List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
-        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions())));
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(v.getPlatformVersion()))));
         this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
         return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
@@ -75,6 +78,32 @@ public class ProjectPlatformsConfiguration
         public Map<Integer, String> getProjectStructureStartingVersions()
         {
             return this.projectStructureStartingVersions;
+        }
+
+        public PlatformVersion getPlatformVersion()
+        {
+            return this.platformVersion;
+        }
+    }
+
+    private String getExplicitPlatformVersion(PlatformVersion platformVersion)
+    {
+        if (platformVersion.getVersion() != null)
+        {
+            return platformVersion.getVersion();
+        }
+        else
+        {
+            try (InputStream is = getClass().getResourceAsStream(String.format("/META-INF/maven/%s/pom.properties", platformVersion.getFromPackage())))
+            {
+                Properties properties = new Properties();
+                properties.load(is);
+                return properties.getProperty("version");
+            }
+            catch (IOException e)
+            {
+                return null;
+            }
         }
     }
 
