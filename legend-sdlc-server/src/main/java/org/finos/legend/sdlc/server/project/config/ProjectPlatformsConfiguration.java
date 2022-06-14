@@ -18,8 +18,9 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.impl.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +29,8 @@ import java.util.Properties;
 
 public class ProjectPlatformsConfiguration
 {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectPlatformsConfiguration.class);
 
     private final Map<String, PlatformMetadata> platformMetadata;
 
@@ -88,6 +91,11 @@ public class ProjectPlatformsConfiguration
 
     private String getExplicitPlatformVersion(PlatformVersion platformVersion, String groupId)
     {
+        if (platformVersion == null)
+        {
+            return null;
+        }
+
         if (platformVersion.getVersion() != null)
         {
             return platformVersion.getVersion();
@@ -100,8 +108,9 @@ public class ProjectPlatformsConfiguration
                 properties.load(is);
                 return properties.getProperty("version");
             }
-            catch (IOException e)
+            catch (Exception e)
             {
+                LOGGER.error("Failed to obtain version for platform with groupId \"{}\" and package name \"{}\"", groupId, platformVersion.getFromPackage(), e);
                 return null;
             }
         }
