@@ -129,13 +129,13 @@
 
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-avro</artifactId>
+            <artifactId>legend-engine-xt-avro</artifactId>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-external-format-rosetta</artifactId>
+            <artifactId>legend-engine-xt-rosetta</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>
