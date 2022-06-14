@@ -44,7 +44,7 @@ public class ProjectPlatformsConfiguration
     {
         List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
         List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
-        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(v.getPlatformVersion()))));
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(v.getPlatformVersion(), v.getGroupId()))));
         this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
         return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
@@ -86,7 +86,7 @@ public class ProjectPlatformsConfiguration
         }
     }
 
-    private String getExplicitPlatformVersion(PlatformVersion platformVersion)
+    private String getExplicitPlatformVersion(PlatformVersion platformVersion, String groupId)
     {
         if (platformVersion.getVersion() != null)
         {
@@ -94,7 +94,7 @@ public class ProjectPlatformsConfiguration
         }
         else
         {
-            try (InputStream is = getClass().getResourceAsStream(String.format("/META-INF/maven/%s/pom.properties", platformVersion.getFromPackage())))
+            try (InputStream is = getClass().getResourceAsStream(String.format("/META-INF/maven/%s/%s/pom.properties", groupId, platformVersion.getFromPackage())))
             {
                 Properties properties = new Properties();
                 properties.load(is);
