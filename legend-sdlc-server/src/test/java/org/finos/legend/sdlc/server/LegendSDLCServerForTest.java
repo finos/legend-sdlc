@@ -28,6 +28,7 @@ import org.finos.legend.sdlc.server.guice.InMemoryModule;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
+import org.finos.legend.sdlc.domain.model.review.Review;
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
@@ -49,6 +50,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
         bootstrap.getObjectMapper().addMixIn(Revision.class, InMemoryMixins.Revision.class);
         bootstrap.getObjectMapper().addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
         bootstrap.getObjectMapper().addMixIn(VersionId.class, VersionIdMixin.class);
+        bootstrap.getObjectMapper().addMixIn(Review.class, InMemoryMixins.Review.class);
     }
 
     @Override
