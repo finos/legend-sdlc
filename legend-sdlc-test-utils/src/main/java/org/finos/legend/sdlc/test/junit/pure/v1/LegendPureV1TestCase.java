@@ -39,7 +39,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.SingleExecut
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.ConnectionVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.generated.Root_meta_pure_runtime_Runtime_Impl;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.mapping.Mapping;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.LambdaFunction;
@@ -65,12 +65,12 @@ public abstract class LegendPureV1TestCase<T extends PackageableElement> extends
 
     protected final PlanExecutor planExecutor;
     protected final MutableList<PlanTransformer> planTransformers;
-    protected final RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
+    protected final RichIterable<? extends Root_meta_pure_extension_Extension> extensions;
     protected final String pureVersion;
 
     private Runtime runtime;
 
-    protected LegendPureV1TestCase(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, T entity)
+    protected LegendPureV1TestCase(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion, T entity)
     {
         super();
         this.pureModel = pureModel;

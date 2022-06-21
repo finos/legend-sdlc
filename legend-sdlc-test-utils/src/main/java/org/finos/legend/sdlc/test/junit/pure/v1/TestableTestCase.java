@@ -33,7 +33,7 @@ import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.engine.testable.model.DoTestsInput;
 import org.finos.legend.engine.testable.model.DoTestsResult;
 import org.finos.legend.engine.testable.model.DoTestsTestableInput;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.generated.Root_meta_pure_test_Testable;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
@@ -49,7 +49,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     private final DoTestsInput doTestsInput;
     private final TestableRunner testableRunner;
 
-    public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
+    public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, packageableElement);
 
@@ -166,7 +166,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     }
 
     @LegendSDLCTestCaseCollector(collectorClass = PackageableElement.class)
-    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
+    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = pureModel.getPackageableElement(entity.getPath());
 

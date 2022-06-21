@@ -25,7 +25,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping
 import org.finos.legend.engine.test.runner.mapping.MappingTestRunner;
 import org.finos.legend.engine.test.runner.mapping.RichMappingTestResult;
 import org.finos.legend.engine.test.runner.shared.TestResult;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -40,7 +40,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
 {
     private final MappingTestRunner mappingTestRunner;
 
-    private MappingTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Mapping mapping, MappingTest mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
+    private MappingTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Mapping mapping, MappingTest mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, mapping);
         this.mappingTestRunner = new MappingTestRunner(pureModel, mapping.getPath(), mappingTest, this.planExecutor, extensions, planTransformers, pureVersion);
@@ -79,7 +79,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
     }
 
     @LegendSDLCTestCaseCollector(collectorClass = Mapping.class)
-    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions,String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
+    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions,String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         Mapping mapping = findPackageableElement(pureModelContextData.getElementsOfType(Mapping.class), entity.getPath());
         Optional.ofNullable(mapping.tests)

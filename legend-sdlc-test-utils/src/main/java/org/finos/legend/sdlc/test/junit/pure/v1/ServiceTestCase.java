@@ -27,7 +27,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.SingleExecutionTest;
 import org.finos.legend.engine.test.runner.service.RichServiceTestResult;
 import org.finos.legend.engine.test.runner.service.ServiceTestRunner;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -47,7 +47,7 @@ public class ServiceTestCase extends LegendPureV1TestCase<Service>
     private final ServiceTest_Legacy serviceTest;
     private final ServiceTestRunner serviceTestRunner;
 
-    public ServiceTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Service service, ServiceTest_Legacy serviceTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
+    public ServiceTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Service service, ServiceTest_Legacy serviceTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, service);
         this.serviceTest = serviceTest;
@@ -132,7 +132,7 @@ public class ServiceTestCase extends LegendPureV1TestCase<Service>
     }
 
     @LegendSDLCTestCaseCollector(collectorClass = Service.class)
-    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
+    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         Service service = findPackageableElement(pureModelContextData.getElementsOfType(Service.class), entity.getPath());
         if (service.test != null)
