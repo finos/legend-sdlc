@@ -29,10 +29,9 @@ import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestFailed;
 import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestResult;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
-import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
-import org.finos.legend.engine.testable.model.DoTestsInput;
-import org.finos.legend.engine.testable.model.DoTestsResult;
-import org.finos.legend.engine.testable.model.DoTestsTestableInput;
+import org.finos.legend.engine.testable.model.RunTestsInput;
+import org.finos.legend.engine.testable.model.RunTestsResult;
+import org.finos.legend.engine.testable.model.RunTestsTestableInput;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.generated.Root_meta_pure_test_Testable;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -46,22 +45,22 @@ import java.util.stream.Collectors;
 
 public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
 {
-    private final DoTestsInput doTestsInput;
+    private final RunTestsInput runTestsInput;
     private final TestableRunner testableRunner;
 
     public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, packageableElement);
 
-        DoTestsTestableInput doTestsTestableInput = new DoTestsTestableInput();
-        doTestsTestableInput.testable = packageableElement.getPath();
-        doTestsTestableInput.unitTestIds = Collections.emptyList();
+        RunTestsTestableInput runTestsTestableInput = new RunTestsTestableInput();
+        runTestsTestableInput.testable = packageableElement.getPath();
+        runTestsTestableInput.unitTestIds = Collections.emptyList();
 
-        DoTestsInput doTestsInput = new DoTestsInput();
-        doTestsInput.model = pureModelContextData;
-        doTestsInput.testables = Collections.singletonList(doTestsTestableInput);
+        RunTestsInput runTestsInput = new RunTestsInput();
+        runTestsInput.model = pureModelContextData;
+        runTestsInput.testables = Collections.singletonList(runTestsTestableInput);
 
-        this.doTestsInput = doTestsInput;
+        this.runTestsInput = runTestsInput;
         this.testableRunner = new TestableRunner(new ModelManager(DeploymentMode.PROD));
     }
 
@@ -76,8 +75,8 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     {
         try
         {
-            DoTestsResult doTestsResult = testableRunner.doTests(this.doTestsInput, null);
-            handleDoTestResult(doTestsResult);
+            RunTestsResult runTestsResultResult = testableRunner.doTests(this.runTestsInput, null);
+            handleDoTestResult(runTestsResultResult);
         }
         catch (Exception e)
         {
@@ -91,7 +90,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
         }
     }
 
-    private void handleDoTestResult(DoTestsResult doTestsResult)
+    private void handleDoTestResult(RunTestsResult doTestsResult)
     {
         List<TestFailed> failedTests = doTestsResult.results.stream().filter(res -> res instanceof TestFailed).map(TestFailed.class::cast).collect(Collectors.toList());
         List<TestError> errorTests = doTestsResult.results.stream().filter(res -> res instanceof TestError).map(TestError.class::cast).collect(Collectors.toList());

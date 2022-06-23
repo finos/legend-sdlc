@@ -33,7 +33,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
-import org.finos.legend.pure.generated.core_relational_relational_extensions_router_extension;
+import org.finos.legend.pure.generated.core_relational_relational_extensions_extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -335,7 +335,7 @@ public class TestServiceExecutionGenerator
         // Generate
         for (Service service : services)
         {
-            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, core_relational_relational_extensions_router_extension.Root_meta_relational_extension_relationalExtensions__Extension_MANY_(PURE_MODEL.getExecutionSupport()), LegendPlanTransformers.transformers, "vX_X_X").generate();
+            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, core_relational_relational_extensions_extension.Root_meta_relational_extension_relationalExtensions__Extension_MANY_(PURE_MODEL.getExecutionSupport()), LegendPlanTransformers.transformers, "vX_X_X").generate();
         }
 
         // Check generated files
