@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.79.1-SNAPSHOT</version>
+    <version>0.80.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
