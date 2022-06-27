@@ -62,7 +62,7 @@ jobs:
     - name: Build + Test + Maven Deploy + Sonar + Docker Snapshot
       if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
       env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_USERNAME: finos
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
     - name: Upload Test Results
