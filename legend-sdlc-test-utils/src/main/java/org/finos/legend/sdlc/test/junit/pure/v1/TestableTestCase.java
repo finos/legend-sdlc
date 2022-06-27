@@ -18,6 +18,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.modelManager.ModelManager;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Testable;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
@@ -33,7 +34,6 @@ import org.finos.legend.engine.testable.model.RunTestsInput;
 import org.finos.legend.engine.testable.model.RunTestsResult;
 import org.finos.legend.engine.testable.model.RunTestsTestableInput;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
-import org.finos.legend.pure.generated.Root_meta_pure_test_Testable;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -169,12 +169,12 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     {
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = pureModel.getPackageableElement(entity.getPath());
 
-        if (!(packageableElement instanceof Root_meta_pure_test_Testable))
+        if (!(packageableElement instanceof Testable))
         {
             throw new IllegalArgumentException("Expected '" + entity.getPath() + "' to be instance of Testable");
         }
 
-        if (!((Root_meta_pure_test_Testable) packageableElement)._tests().isEmpty())
+        if (!((Testable) packageableElement)._tests().isEmpty())
         {
             testCaseConsumer.accept(new TestableTestCase(pureModel, pureModelContextData, findPackageableElement(pureModelContextData.getElements(), entity.getPath()), planTransformers, extensions, pureVersion));
         }
