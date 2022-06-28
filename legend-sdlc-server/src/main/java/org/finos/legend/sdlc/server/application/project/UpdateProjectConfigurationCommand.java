@@ -14,34 +14,51 @@
 
 package org.finos.legend.sdlc.server.application.project;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
-import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.project.SimpleArtifactGeneration;
+import org.finos.legend.sdlc.server.project.SimpleProjectDependency;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 public class UpdateProjectConfigurationCommand
 {
-    private String message;
-    private UpdateProjectConfigProjectStructureVersion projectStructureVersion = new UpdateProjectConfigProjectStructureVersion();
-    private String groupId;
-    private String artifactId;
-    private List<UpdateProjectConfigProjectDependency> projectDependenciesToAdd;
-    private List<UpdateProjectConfigProjectDependency> projectDependenciesToRemove;
-    private List<UpdateArtifactGeneration> artifactGenerationsToAdd;
-    private List<String> artifactGenerationsNamesToRemove;
+    private final String message;
+    private final UpdateProjectConfigProjectStructureVersion projectStructureVersion;
+    private final String groupId;
+    private final String artifactId;
+    private final List<ProjectDependency> projectDependenciesToAdd;
+    private final List<ProjectDependency> projectDependenciesToRemove;
+    private final List<ArtifactGeneration> artifactGenerationsToAdd;
+    private final List<String> artifactGenerationsNamesToRemove;
+
+    @JsonCreator
+    public UpdateProjectConfigurationCommand(
+            @JsonProperty("message") String message,
+            @JsonProperty("projectStructureVersion") UpdateProjectConfigProjectStructureVersion projectStructureVersion,
+            @JsonProperty("groupId") String groupId,
+            @JsonProperty("artifactId") String artifactId,
+            @JsonProperty("projectDependenciesToAdd") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToAdd,
+            @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
+            @JsonProperty("artifactGenerationsToAdd") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerationsToAdd,
+            @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove)
+    {
+        this.message = message;
+        this.projectStructureVersion = (projectStructureVersion == null) ? new UpdateProjectConfigProjectStructureVersion(null, null) : projectStructureVersion;
+        this.groupId = groupId;
+        this.artifactId = artifactId;
+        this.projectDependenciesToAdd = projectDependenciesToAdd;
+        this.projectDependenciesToRemove = projectDependenciesToRemove;
+        this.artifactGenerationsToAdd = artifactGenerationsToAdd;
+        this.artifactGenerationsNamesToRemove = artifactGenerationNamesToRemove;
+    }
 
     public String getMessage()
     {
         return this.message;
-    }
-
-    public void setMessage(String message)
-    {
-        this.message = message;
     }
 
     public UpdateProjectConfigProjectStructureVersion getProjectStructureVersion()
@@ -49,19 +66,9 @@ public class UpdateProjectConfigurationCommand
         return this.projectStructureVersion;
     }
 
-    public void setProjectStructureVersion(UpdateProjectConfigProjectStructureVersion projectStructureVersion)
-    {
-        this.projectStructureVersion = projectStructureVersion;
-    }
-
     public String getGroupId()
     {
         return this.groupId;
-    }
-
-    public void setGroupId(String groupId)
-    {
-        this.groupId = groupId;
     }
 
     public String getArtifactId()
@@ -69,39 +76,19 @@ public class UpdateProjectConfigurationCommand
         return this.artifactId;
     }
 
-    public void setArtifactId(String artifactId)
-    {
-        this.artifactId = artifactId;
-    }
-
-    public List<UpdateProjectConfigProjectDependency> getProjectDependenciesToAdd()
+    public List<ProjectDependency> getProjectDependenciesToAdd()
     {
         return this.projectDependenciesToAdd;
     }
 
-    public void setProjectDependenciesToAdd(List<UpdateProjectConfigProjectDependency> projectDependenciesToAdd)
-    {
-        this.projectDependenciesToAdd = projectDependenciesToAdd;
-    }
-
-    public List<UpdateProjectConfigProjectDependency> getProjectDependenciesToRemove()
+    public List<ProjectDependency> getProjectDependenciesToRemove()
     {
         return this.projectDependenciesToRemove;
     }
 
-    public void setProjectDependenciesToRemove(List<UpdateProjectConfigProjectDependency> projectDependenciesToRemove)
-    {
-        this.projectDependenciesToRemove = projectDependenciesToRemove;
-    }
-
-    public List<UpdateArtifactGeneration> getArtifactGenerationsToAdd()
+    public List<ArtifactGeneration> getArtifactGenerationsToAdd()
     {
         return artifactGenerationsToAdd;
-    }
-
-    public void setArtifactGenerationsToAdd(List<UpdateArtifactGeneration> artifactGenerationsToAdd)
-    {
-        this.artifactGenerationsToAdd = artifactGenerationsToAdd;
     }
 
     public List<String> getArtifactGenerationsNamesToRemove()
@@ -109,15 +96,17 @@ public class UpdateProjectConfigurationCommand
         return artifactGenerationsNamesToRemove;
     }
 
-    public void setArtifactGenerationsNamesToRemove(List<String> artifactGenerationsNamesToRemove)
-    {
-        this.artifactGenerationsNamesToRemove = artifactGenerationsNamesToRemove;
-    }
-
     public static class UpdateProjectConfigProjectStructureVersion
     {
-        Integer version;
-        Integer extensionVersion;
+        private final Integer version;
+        private final Integer extensionVersion;
+
+        @JsonCreator
+        private UpdateProjectConfigProjectStructureVersion(@JsonProperty("version") Integer version, @JsonProperty("extensionVersion") Integer extensionVersion)
+        {
+            this.version = version;
+            this.extensionVersion = extensionVersion;
+        }
 
         public Integer getVersion()
         {
@@ -127,75 +116,6 @@ public class UpdateProjectConfigurationCommand
         public Integer getExtensionVersion()
         {
             return this.extensionVersion;
-        }
-    }
-
-    public static class UpdateArtifactGeneration implements ArtifactGeneration
-    {
-
-        String name;
-        ArtifactType type;
-        Map<String, Object> parameters = Collections.emptyMap();
-
-        @Override
-        public String getName()
-        {
-            return this.name;
-        }
-
-        @Override
-        public ArtifactType getType()
-        {
-            return this.type;
-        }
-
-        @Override
-        public Map<String, Object> getParameters()
-        {
-            return this.parameters;
-        }
-    }
-
-    public static class UpdateProjectConfigProjectDependency extends ProjectDependency
-    {
-        String projectId;
-        UpdateProjectConfigVersionId versionId;
-
-        @Override
-        public String getProjectId()
-        {
-            return this.projectId;
-        }
-
-        @Override
-        public VersionId getVersionId()
-        {
-            return this.versionId;
-        }
-    }
-
-    static class UpdateProjectConfigVersionId extends VersionId
-    {
-        int majorVersion;
-        int minorVersion;
-        int patchVersion;
-
-        @Override
-        public int getMajorVersion()
-        {
-            return this.majorVersion;
-        }
-
-        @Override
-        public int getMinorVersion()
-        {
-            return this.minorVersion;
-        }
-
-        @Override
-        public int getPatchVersion()
-        {
-            return this.patchVersion;
         }
     }
 }

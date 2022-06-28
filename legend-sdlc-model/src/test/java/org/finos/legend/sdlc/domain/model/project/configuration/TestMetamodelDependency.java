@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
-import org.finos.legend.sdlc.domain.model.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -28,23 +27,6 @@ public class TestMetamodelDependency
         Assert.assertEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 1));
         Assert.assertNotEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 1));
         Assert.assertNotEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 2));
-    }
-
-    @Test
-    public void testCompareTo()
-    {
-        MetamodelDependency testMetamodel1 = MetamodelDependency.newMetamodelDependency("test-metamodel", 1);
-
-        TestTools.assertCompareTo(0, testMetamodel1, testMetamodel1);
-        TestTools.assertCompareTo(0, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 1));
-
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 0));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 0));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 1));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 2));
-
-        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 2));
-        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("zest-metamodel", 1));
     }
 
     @Test
