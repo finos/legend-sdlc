@@ -253,7 +253,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
             ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
             ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
-        projectDependencies.sort(Comparator.naturalOrder());
+        projectDependencies.sort(ProjectStructure.getProjectDependencyComparator());
         for (ProjectDependency projectDependency : projectDependencies)
         {
             String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);
@@ -484,7 +484,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             MetamodelDependency.parseMetamodelDependency("pure:1"),
             MetamodelDependency.parseMetamodelDependency("tds:1"),
             MetamodelDependency.parseMetamodelDependency("service:1"));
-        metamodelDependencies.sort(Comparator.naturalOrder());
+        metamodelDependencies.sort(ProjectStructure.getMetamodelDependencyComparator());
 
         ProjectStructure projectStructure = buildProjectStructure();
         List<Entity> testEntities = getTestEntities();
@@ -967,21 +967,21 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         return ProjectStructure.getProjectStructure(projectId, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
     }
 
-    private void createProjectWithVersions(String projectId, String groupId, String artifactId, VersionId... versionIds)
+    private void createProjectWithVersions(String projectId, String groupId, String artifactId, String... versionIds)
     {
         ProjectStructure projectStructure = buildProjectStructure(projectId, this.projectStructureVersion, this.projectStructureExtensionVersion, groupId, artifactId, null, null);
 
-        for (VersionId versionId : versionIds)
+        for (String versionId : versionIds)
         {
-            String workspaceId = "WS" + versionId.toVersionIdString();
-            String modelPackage = "model::" + projectId.toLowerCase().replaceAll("[^a-z0-9_]+", "_") + "::domain::v" + versionId.toVersionIdString('_');
-            String entityName = "TestClass_" + versionId.toVersionIdString('_');
+            String workspaceId = "WS" + versionId;
+            String modelPackage = "model::" + projectId.toLowerCase().replaceAll("[^a-z0-9_]+", "_") + "::domain::v" + versionId.replace(".", "_");
+            String entityName = "TestClass_" + versionId.replace(".", "_");
             this.fileAccessProvider.createWorkspace(projectId, workspaceId);
             Entity newClass = TestTools.newClassEntity(entityName, modelPackage, TestTools.newProperty("prop1", "String", 0, 1));
             ProjectFileOperation addEntityOperation = generateAddOperationForEntity(newClass, projectStructure);
             this.fileAccessProvider.getWorkspaceFileModificationContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).submit("Add " + modelPackage + "::" + entityName, Collections.singletonList(addEntityOperation));
             this.fileAccessProvider.commitWorkspace(projectId, workspaceId);
-            this.fileAccessProvider.createVersion(projectId, versionId);
+            this.fileAccessProvider.createVersion(projectId, VersionId.parseVersionId(versionId));
         }
     }
 
@@ -1398,7 +1398,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject0:0.0.1"),
                 ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject1:1.0.0"),
                 ProjectDependency.parseProjectDependency(GROUP_ID + ":testproject3:2.0.1"));
-            projectDependencies.sort(Comparator.naturalOrder());
+            projectDependencies.sort(ProjectStructure.getProjectDependencyComparator());
             for (ProjectDependency projectDependency : projectDependencies)
             {
                 String artifactId = projectDependency.getProjectId().substring(GROUP_ID.length() + 1);

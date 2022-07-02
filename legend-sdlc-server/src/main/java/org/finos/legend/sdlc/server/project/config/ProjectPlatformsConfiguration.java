@@ -18,13 +18,19 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.impl.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 public class ProjectPlatformsConfiguration
 {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectPlatformsConfiguration.class);
 
     private final Map<String, PlatformMetadata> platformMetadata;
 
@@ -41,7 +47,7 @@ public class ProjectPlatformsConfiguration
     {
         List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
         List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
-        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions())));
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(v.getPlatformVersion(), v.getGroupId()))));
         this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
         return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
@@ -50,27 +56,91 @@ public class ProjectPlatformsConfiguration
     {
         private final String groupId;
         private final Map<Integer, String> projectStructureStartingVersions;
+        private final PlatformVersion platformVersion;
 
-        public PlatformMetadata(String groupId, Map<Integer, String> startingProjectStructureVersions)
+        public PlatformMetadata(String groupId, Map<Integer, String> startingProjectStructureVersions, PlatformVersion platformVersion)
         {
             this.groupId = groupId;
             this.projectStructureStartingVersions = startingProjectStructureVersions;
+            this.platformVersion = platformVersion;
         }
 
         @JsonCreator
-        public static PlatformMetadata newConfig(@JsonProperty("groupId") String groupId, @JsonProperty("version") Map<Integer, String> version)
+        public static PlatformMetadata newConfig(@JsonProperty("groupId") String groupId,
+                                                 @JsonProperty("version") Map<Integer, String> version,
+                                                 @JsonProperty("platformVersion") PlatformVersion platformVersion)
         {
-            return new PlatformMetadata(groupId, version);
+            return new PlatformMetadata(groupId, version, platformVersion);
         }
 
         public String getGroupId()
         {
-            return groupId;
+            return this.groupId;
         }
 
         public Map<Integer, String> getProjectStructureStartingVersions()
         {
-            return projectStructureStartingVersions;
+            return this.projectStructureStartingVersions;
+        }
+
+        public PlatformVersion getPlatformVersion()
+        {
+            return this.platformVersion;
+        }
+    }
+
+    private String getExplicitPlatformVersion(PlatformVersion platformVersion, String groupId)
+    {
+        if (platformVersion == null)
+        {
+            return null;
+        }
+
+        if (platformVersion.getVersion() != null)
+        {
+            return platformVersion.getVersion();
+        }
+        else
+        {
+            try (InputStream is = getClass().getResourceAsStream(String.format("/META-INF/maven/%s/%s/pom.properties", groupId, platformVersion.getFromPackage())))
+            {
+                Properties properties = new Properties();
+                properties.load(is);
+                return properties.getProperty("version");
+            }
+            catch (Exception e)
+            {
+                LOGGER.error("Failed to obtain version for platform with groupId \"{}\" and package name \"{}\"", groupId, platformVersion.getFromPackage(), e);
+                return null;
+            }
+        }
+    }
+
+    public static class PlatformVersion
+    {
+        private final String version;
+        private final String fromPackage;
+
+        public PlatformVersion(String version, String fromPackage)
+        {
+            this.version = version;
+            this.fromPackage = fromPackage;
+        }
+
+        public String getVersion()
+        {
+            return this.version;
+        }
+
+        public String getFromPackage()
+        {
+            return this.fromPackage;
+        }
+
+        @JsonCreator
+        public static PlatformVersion newConfig(@JsonProperty("version") String version, @JsonProperty("fromPackage") String fromPackage)
+        {
+            return new PlatformVersion(version, fromPackage);
         }
     }
 

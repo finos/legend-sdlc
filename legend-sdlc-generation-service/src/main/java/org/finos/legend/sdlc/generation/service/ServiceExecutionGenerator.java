@@ -32,7 +32,7 @@ import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -51,10 +51,10 @@ public class ServiceExecutionGenerator
     private final Path resourceOutputDirectory;
     private final JsonMapper objectMapper;
     private final String clientVersion;
-    private final RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions;
+    private final RichIterable<? extends Root_meta_pure_extension_Extension> extensions;
     private final MutableList<PlanTransformer> transformers;
 
-    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
     {
         this.service = service;
         this.pureModel = pureModel;
@@ -118,7 +118,7 @@ public class ServiceExecutionGenerator
         return newGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, null, Lists.mutable.empty(), Lists.mutable.empty(), null);
     }
 
-    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
     {
         return new ServiceExecutionGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, extensions, transformers, clientVersion);
     }

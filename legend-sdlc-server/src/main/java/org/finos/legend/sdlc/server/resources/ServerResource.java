@@ -18,12 +18,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
 
 @Api("Server")
 @Path("/server")
@@ -32,12 +34,16 @@ public class ServerResource
 {
     private final ServerInfo serverInfo;
     private final LegendSDLCServerFeaturesConfiguration featuresConfiguration;
+    private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     @Inject
-    public ServerResource(ServerInfo serverInfo, LegendSDLCServerFeaturesConfiguration featuresConfiguration)
+    public ServerResource(ServerInfo serverInfo,
+                          LegendSDLCServerFeaturesConfiguration featuresConfiguration,
+                          ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         this.serverInfo = serverInfo;
         this.featuresConfiguration = featuresConfiguration;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
     }
 
     @GET
@@ -54,5 +60,13 @@ public class ServerResource
     public LegendSDLCServerFeaturesConfiguration getServerFeaturesInfo()
     {
         return this.featuresConfiguration;
+    }
+
+    @GET
+    @Path("/platforms")
+    @ApiOperation("Provides platforms information")
+    public List<ProjectStructurePlatformExtensions.Platform> getPlatformsInfo()
+    {
+        return this.projectStructurePlatformExtensions.getPlatforms();
     }
 }

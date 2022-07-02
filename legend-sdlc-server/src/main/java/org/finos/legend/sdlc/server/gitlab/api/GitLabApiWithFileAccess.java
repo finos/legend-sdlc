@@ -69,8 +69,6 @@ import org.gitlab4j.api.models.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +87,8 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 
 abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 {
@@ -103,6 +103,11 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     {
         super(gitLabConfiguration, userContext);
         this.backgroundTaskProcessor = backgroundTaskProcessor;
+    }
+
+    protected ProjectConfiguration getProjectConfiguration(String projectId, WorkspaceInfo workspaceInfo, String revisionId)
+    {
+        return getProjectConfiguration(projectId, workspaceInfo.getWorkspaceId(), revisionId, workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
     }
 
     protected ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)

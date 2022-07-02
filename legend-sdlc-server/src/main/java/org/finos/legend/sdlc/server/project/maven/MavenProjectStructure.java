@@ -282,18 +282,20 @@ public abstract class MavenProjectStructure extends ProjectStructure
 
     public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
     {
-        String versionString = setVersion ? projectDependency.getVersionId().toVersionIdString() : null;
-        if (!ProjectDependency.isLegacyProjectDependency(projectDependency))
+        String versionString = setVersion ? projectDependency.getVersionId() : null;
+
+        if (isLegacyProjectDependency(projectDependency))
         {
-            Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
-            Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
-            return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString));
+            ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
+            ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
+            String groupId = versionConfig.getGroupId();
+            Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
+            return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
         }
-        ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
-        ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
-        String groupId = versionConfig.getGroupId();
-        Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
-        return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
+
+        Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
+        Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
+        return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString));
     }
 
     private static Pair<String, String> getGroupAndArtifactIdFromProjectDependency(ProjectDependency projectDependency)

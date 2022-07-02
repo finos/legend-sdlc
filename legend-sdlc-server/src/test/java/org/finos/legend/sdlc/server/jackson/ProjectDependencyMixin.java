@@ -18,13 +18,14 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.finos.legend.sdlc.server.project.SimpleProjectDependency;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,
         include = JsonTypeInfo.As.PROPERTY,
         property = "jackson-type")
 @JsonSubTypes({
-        @JsonSubTypes.Type(value = ProjectDependencyPOJO.class, name = "ProjectDependency$1")})
+        @JsonSubTypes.Type(value = SimpleProjectDependency.class, name = "ProjectDependency$1")})
 public class ProjectDependencyMixin
 {
     @JsonCreator

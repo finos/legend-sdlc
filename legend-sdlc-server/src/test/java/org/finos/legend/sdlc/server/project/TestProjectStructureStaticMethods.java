@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
+import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.junit.Assert;
 import org.junit.Test;
@@ -63,6 +64,43 @@ public class TestProjectStructureStaticMethods
     }
 
     @Test
+    public void testIsStrictVersionId()
+    {
+        String[] strictIds = {"0.0.0", "0.0.1", "0.1.0", "1.0.0", "1.2.3", "9876543210.1234567890.1357924680"};
+        for (String id : strictIds)
+        {
+            Assert.assertTrue(id, ProjectStructure.isStrictVersionId(id));
+        }
+
+        String[] nonStrictIds = {null, "", ".", "..", "abc", "master-SNAPSHOT", "1.0.0-SNAPSHOT", "-1.2.3", "1.-2.3", "1.2.3.4.5.6.7.8.9", "5", "5.2", "5_4", "1.8.0_202"};
+        for (String id : nonStrictIds)
+        {
+            Assert.assertFalse(id, ProjectStructure.isStrictVersionId(id));
+        }
+    }
+
+    @Test
+    public void testIsProperProjectDependency()
+    {
+        ProjectDependency[] properDependencies = {ProjectDependency.newProjectDependency("project", "1.2.3"), ProjectDependency.newProjectDependency("abc", "3.5.7")};
+        for (ProjectDependency dependency : properDependencies)
+        {
+            Assert.assertTrue(String.valueOf(dependency), ProjectStructure.isProperProjectDependency(dependency));
+        }
+
+        ProjectDependency[] otherDependencies = {null,
+                ProjectDependency.newProjectDependency(null, null),
+                ProjectDependency.newProjectDependency("project", null),
+                ProjectDependency.newProjectDependency(null, "1.2.3"),
+                ProjectDependency.newProjectDependency("project", "master-SNAPSHOT"),
+                ProjectDependency.newProjectDependency("", "1.2.3")};
+        for (ProjectDependency dependency : otherDependencies)
+        {
+            Assert.assertFalse(String.valueOf(dependency), ProjectStructure.isProperProjectDependency(dependency));
+        }
+    }
+
+    @Test
     public void testGetLatestProjectStructureVersion()
     {
         Assert.assertEquals(12, ProjectStructure.getLatestProjectStructureVersion());
@@ -79,7 +117,7 @@ public class TestProjectStructureStaticMethods
             {
                 continue;
             }
-            ProjectConfiguration projectConfig = new SimpleProjectConfiguration("ProjectId", ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id", Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
+            ProjectConfiguration projectConfig = SimpleProjectConfiguration.newConfiguration("ProjectId", ProjectStructureVersion.newProjectStructureVersion(i), "some.group.id", "some-artifact-id", Collections.emptyList(), Collections.emptyList(), Collections.emptyList());
             ProjectStructure structure;
             try
             {

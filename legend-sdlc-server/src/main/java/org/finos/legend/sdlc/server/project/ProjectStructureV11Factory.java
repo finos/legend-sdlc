@@ -23,12 +23,9 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-
 import org.finos.legend.sdlc.server.project.extension.UpdateProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.maven.LegendEntityPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendFileGenerationPluginMavenHelper;
@@ -39,15 +36,14 @@ import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMave
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
 
 import java.util.Collections;
-import java.util.Map;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Map;
 import java.util.ServiceLoader;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class ProjectStructureV11Factory extends ProjectStructureVersionFactory

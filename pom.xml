@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.77.2-SNAPSHOT</version>
+    <version>0.82.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -66,8 +66,8 @@
         <java.version.range>[11.0.10,12)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.3.1</legend.engine.version>
-        <legend.pure.version>2.2.1</legend.pure.version>
+        <legend.engine.version>3.8.1</legend.engine.version>
+        <legend.pure.version>3.1.0</legend.pure.version>
         <legend.shared.version>0.22.0</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -571,9 +571,9 @@
                 <version>${legend.shared.version}</version>
             </dependency>
             <dependency>
-                <groupId>org.finos.legend.pure</groupId>
-                <artifactId>legend-pure-code-compiled-core</artifactId>
-                <version>${legend.pure.version}</version>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-code-compiled-core</artifactId>
+                <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
                         <groupId>org.antlr</groupId>
@@ -835,7 +835,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-external-format-avro</artifactId>
+                <artifactId>legend-engine-xt-avro</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -845,7 +845,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-external-format-rosetta</artifactId>
+                <artifactId>legend-engine-xt-rosetta</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>

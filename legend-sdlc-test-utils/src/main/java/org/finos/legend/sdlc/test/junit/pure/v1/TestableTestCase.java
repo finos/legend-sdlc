@@ -18,6 +18,7 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.modelManager.ModelManager;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Testable;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
@@ -29,12 +30,10 @@ import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestFailed;
 import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestResult;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
-import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
-import org.finos.legend.engine.testable.model.DoTestsInput;
-import org.finos.legend.engine.testable.model.DoTestsResult;
-import org.finos.legend.engine.testable.model.DoTestsTestableInput;
-import org.finos.legend.pure.generated.Root_meta_pure_router_extension_RouterExtension;
-import org.finos.legend.pure.generated.Root_meta_pure_test_Testable;
+import org.finos.legend.engine.testable.model.RunTestsInput;
+import org.finos.legend.engine.testable.model.RunTestsResult;
+import org.finos.legend.engine.testable.model.RunTestsTestableInput;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -46,22 +45,22 @@ import java.util.stream.Collectors;
 
 public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
 {
-    private final DoTestsInput doTestsInput;
+    private final RunTestsInput runTestsInput;
     private final TestableRunner testableRunner;
 
-    public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion)
+    public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, packageableElement);
 
-        DoTestsTestableInput doTestsTestableInput = new DoTestsTestableInput();
-        doTestsTestableInput.testable = packageableElement.getPath();
-        doTestsTestableInput.unitTestIds = Collections.emptyList();
+        RunTestsTestableInput runTestsTestableInput = new RunTestsTestableInput();
+        runTestsTestableInput.testable = packageableElement.getPath();
+        runTestsTestableInput.unitTestIds = Collections.emptyList();
 
-        DoTestsInput doTestsInput = new DoTestsInput();
-        doTestsInput.model = pureModelContextData;
-        doTestsInput.testables = Collections.singletonList(doTestsTestableInput);
+        RunTestsInput runTestsInput = new RunTestsInput();
+        runTestsInput.model = pureModelContextData;
+        runTestsInput.testables = Collections.singletonList(runTestsTestableInput);
 
-        this.doTestsInput = doTestsInput;
+        this.runTestsInput = runTestsInput;
         this.testableRunner = new TestableRunner(new ModelManager(DeploymentMode.PROD));
     }
 
@@ -76,8 +75,8 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     {
         try
         {
-            DoTestsResult doTestsResult = testableRunner.doTests(this.doTestsInput, null);
-            handleDoTestResult(doTestsResult);
+            RunTestsResult runTestsResultResult = testableRunner.doTests(this.runTestsInput, null);
+            handleDoTestResult(runTestsResultResult);
         }
         catch (Exception e)
         {
@@ -91,7 +90,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
         }
     }
 
-    private void handleDoTestResult(DoTestsResult doTestsResult)
+    private void handleDoTestResult(RunTestsResult doTestsResult)
     {
         List<TestFailed> failedTests = doTestsResult.results.stream().filter(res -> res instanceof TestFailed).map(TestFailed.class::cast).collect(Collectors.toList());
         List<TestError> errorTests = doTestsResult.results.stream().filter(res -> res instanceof TestError).map(TestError.class::cast).collect(Collectors.toList());
@@ -166,16 +165,16 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     }
 
     @LegendSDLCTestCaseCollector(collectorClass = PackageableElement.class)
-    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_router_extension_RouterExtension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
+    public static void collectTestCases(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion, Entity entity, Consumer<? super LegendSDLCTestCase> testCaseConsumer)
     {
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = pureModel.getPackageableElement(entity.getPath());
 
-        if (!(packageableElement instanceof Root_meta_pure_test_Testable))
+        if (!(packageableElement instanceof Testable))
         {
             throw new IllegalArgumentException("Expected '" + entity.getPath() + "' to be instance of Testable");
         }
 
-        if (!((Root_meta_pure_test_Testable) packageableElement)._tests().isEmpty())
+        if (!((Testable) packageableElement)._tests().isEmpty())
         {
             testCaseConsumer.accept(new TestableTestCase(pureModel, pureModelContextData, findPackageableElement(pureModelContextData.getElements(), entity.getPath()), planTransformers, extensions, pureVersion));
         }
