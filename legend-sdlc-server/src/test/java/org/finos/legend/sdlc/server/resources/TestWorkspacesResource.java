@@ -17,9 +17,11 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -38,11 +40,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER);
         this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP);
 
-        Response responseOne = this.getSuccessfulOrThrow("/api/projects/A/workspaces");
-
-        List<Workspace> allUserWorkspaces = responseOne.readEntity(new GenericType<List<Workspace>>()
-        {
-        });
+        List<Workspace> allUserWorkspaces = this.requestHelperFor("/api/projects/A/workspaces")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(allUserWorkspaces);
         Assert.assertEquals(2, allUserWorkspaces.size());
@@ -51,12 +51,10 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceTwoId, findWorkspace(allUserWorkspaces, workspaceTwoId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceTwoId).getProjectId());
 
-        Response responseTwo = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces");
+        List<Workspace> allGroupWorkspaces = this.requestHelperFor("/api/projects/A/groupWorkspaces")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
-
-        List<Workspace> allGroupWorkspaces = responseTwo.readEntity(new GenericType<List<Workspace>>()
-        {
-        });
 
         Assert.assertNotNull(allGroupWorkspaces);
         Assert.assertEquals(1, allGroupWorkspaces.size());
@@ -92,11 +90,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.USER);
 
-        Response response = this.getSuccessfulOrThrow("/api/projects/A/workspaces/userw1");
-
-        Workspace workspace = response.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/workspaces/userw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
@@ -119,11 +115,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.GROUP);
 
-        Response response = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces/groupw1");
-
-        Workspace workspace = response.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/groupWorkspaces/groupw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());

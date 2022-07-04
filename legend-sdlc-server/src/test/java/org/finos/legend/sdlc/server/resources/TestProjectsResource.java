@@ -16,9 +16,11 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.Project;
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -33,11 +35,9 @@ public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
         this.backend.project("B").addDependency("C:1.0.0");
 
-        Response response = this.getSuccessfulOrThrow("/api/projects");
-
-        List<Project> projects = response.readEntity(new GenericType<List<Project>>()
-        {
-        });
+        List<Project> projects = this.requestHelperFor("/api/projects")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertEquals(3, projects.size());
         Assert.assertEquals("project-A", findProject(projects, "A").getName());
