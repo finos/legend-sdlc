@@ -24,7 +24,9 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -42,31 +44,17 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
 
         this.backend.project(projectId).addEntities(workspaceOneId, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/workspaces/entityw1").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/workspaces/entityw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/workspaces/entityw1/entities").request().get();
-
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting entities in user workspace with status: " + responseTwo.getStatus() + ", entity: " + responseTwo.readEntity(String.class));
-        }
-
-        List<Entity> entities = responseTwo.readEntity(new GenericType<List<Entity>>()
-        {
-        });
+        List<Entity> entities = this.requestHelperFor("/api/projects/A/workspaces/entityw1/entities")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(entities);
         Assert.assertEquals(2, entities.size());
@@ -87,31 +75,17 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
 
         this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/groupWorkspaces/entityw2").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting group workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/groupWorkspaces/entityw2")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces/entityw2/entities").request().get();
-
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting entities in group workspace with status: " + responseTwo.getStatus() + ", entity: " + responseTwo.readEntity(String.class));
-        }
-
-        List<Entity> entities = responseTwo.readEntity(new GenericType<List<Entity>>()
-        {
-        });
+        List<Entity> entities = this.requestHelperFor("/api/projects/A/groupWorkspaces/entityw2/entities")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(entities);
         Assert.assertEquals(2, entities.size());
@@ -130,32 +104,17 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         String entityPackageName = "testpkg";
 
         this.backend.project(projectId).addEntities(workspaceOneId, InMemoryEntity.newEntity(entityOneName, entityPackageName));
-
-        Response responseOne = this.clientFor("/api/projects/A/workspaces/entityw3").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace  = this.requestHelperFor("/api/projects/A/workspaces/entityw3")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/workspaces/entityw3/entities/testpkg::testentityone").request().get();
-
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting entity in user workspace with status: " + responseTwo.getStatus() + ", entity: " + responseTwo.readEntity(String.class));
-        }
-
-        Entity entity = responseTwo.readEntity(new GenericType<Entity>()
-        {
-        });
+        Entity entity = this.requestHelperFor("/api/projects/A/workspaces/entityw3/entities/testpkg::testentityone")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(entity);
         Assert.assertEquals(entityPackageName + "::" + entityOneName, entity.getPath());
@@ -189,31 +148,17 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
 
         this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, InMemoryEntity.newEntity(entityOneName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/groupWorkspaces/entityw4").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting group workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/workspaces/entityw4/")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces/entityw4/entities/testpkg::testentityone").request().get();
-
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting entity in group workspace with status: " + responseTwo.getStatus() + ", entity: " + responseTwo.readEntity(String.class));
-        }
-
-        Entity entity = responseTwo.readEntity(new GenericType<Entity>()
-        {
-        });
+        Entity entity = this.requestHelperFor("/api/projects/A/groupWorkspaces/entityw4/entities/testpkg::testentityone")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(entity);
         Assert.assertEquals(entityPackageName + "::" + entityOneName, entity.getPath());

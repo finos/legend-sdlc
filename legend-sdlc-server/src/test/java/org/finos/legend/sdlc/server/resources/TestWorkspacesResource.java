@@ -17,9 +17,11 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -38,16 +40,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER);
         this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP);
 
-        Response responseOne = this.clientFor("/api/projects/A/workspaces").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspaces with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        List<Workspace> allUserWorkspaces = responseOne.readEntity(new GenericType<List<Workspace>>()
-        {
-        });
+        List<Workspace> allUserWorkspaces = this.requestHelperFor("/api/projects/A/workspaces")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(allUserWorkspaces);
         Assert.assertEquals(2, allUserWorkspaces.size());
@@ -56,16 +51,10 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceTwoId, findWorkspace(allUserWorkspaces, workspaceTwoId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceTwoId).getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces").request().get();
+        List<Workspace> allGroupWorkspaces = this.requestHelperFor("/api/projects/A/groupWorkspaces")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting group workspaces with status: " + responseTwo.getStatus() + " , entity: " + responseTwo.readEntity(String.class));
-        }
-
-        List<Workspace> allGroupWorkspaces = responseTwo.readEntity(new GenericType<List<Workspace>>()
-        {
-        });
 
         Assert.assertNotNull(allGroupWorkspaces);
         Assert.assertEquals(1, allGroupWorkspaces.size());
@@ -101,16 +90,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.USER);
 
-        Response response = this.clientFor("/api/projects/A/workspaces/userw1").request().get();
-
-        if (response.getStatus() != 200)
-        {
-            throw new HttpResponseException(response.getStatus(), "Error during getting user workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
-        }
-
-        Workspace workspace = response.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/workspaces/userw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());
@@ -133,16 +115,9 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.GROUP);
 
-        Response response = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().get();
-
-        if (response.getStatus() != 200)
-        {
-            throw new HttpResponseException(response.getStatus(), "Error during getting group workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
-        }
-
-        Workspace workspace = response.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/groupWorkspaces/groupw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceId, workspace.getWorkspaceId());

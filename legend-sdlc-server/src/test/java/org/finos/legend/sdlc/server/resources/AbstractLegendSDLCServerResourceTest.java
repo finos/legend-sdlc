@@ -16,6 +16,9 @@ package org.finos.legend.sdlc.server.resources;
 
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpResponseException;
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.LegendSDLCServerForTest;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
@@ -23,9 +26,15 @@ import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Request;
+import javax.ws.rs.core.Response;
 
 public abstract class AbstractLegendSDLCServerResourceTest
 {
@@ -68,4 +77,47 @@ public abstract class AbstractLegendSDLCServerResourceTest
     {
         return "http://localhost:" + APP_RULE.getLocalPort() + Optional.ofNullable(path).orElse("");
     }
+    public RequestHelper requestHelperFor(String url){
+        return new RequestHelper(this.clientFor(url));
+    }
+
+    static class RequestHelper {
+
+        private Optional<Set<Response.Status.Family>> acceptableResponseStatuses = Optional.empty();
+        private final WebTarget webTarget;
+
+        private RequestHelper(WebTarget webTarget){
+            this.webTarget = webTarget;
+        }
+
+        public RequestHelper withAcceptableResponseStatuses(Set<javax.ws.rs.core.Response.Status.Family> acceptableResponseStatuses){
+            this.acceptableResponseStatuses = Optional.of(new HashSet<>(acceptableResponseStatuses));
+            return this;
+        }
+
+        private Invocation.Builder request(){
+            return null;
+        }
+
+        private void checkResponseIsAcceptable(Response response) throws HttpResponseException{
+            if(this.acceptableResponseStatuses.isPresent()) {
+                Set<javax.ws.rs.core.Response.Status.Family> acceptableResponseStatuses = this.acceptableResponseStatuses.get();
+                if (!acceptableResponseStatuses.contains(response.getStatusInfo().getFamily())) {
+                    throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+                }
+            }
+        }
+
+        public Response get() throws HttpResponseException{
+            Response response = this.request().get();
+            checkResponseIsAcceptable(response);
+            return response;
+        }
+        public <T> T getTyped() throws HttpResponseException{
+            Response response = this.get();
+            return response.readEntity(new GenericType<T>(){});
+        }
+    }
+
+
 }

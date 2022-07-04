@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -23,6 +24,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.List;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
@@ -40,31 +42,17 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
 
         this.backend.project(projectId).addEntities(workspaceOneId, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/workspaces/revisionw1").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/workspaces/revisionw1")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseThree = this.clientFor("/api/projects/A/workspaces/revisionw1/revisions").request().get();
-
-        if (responseThree.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseThree.getStatus(), "Error during getting revisions in user workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
-        }
-
-        List<Revision> revisions = responseThree.readEntity(new GenericType<List<Revision>>()
-        {
-        });
+        List<Revision> revisions = this.requestHelperFor("/api/projects/A/workspaces/revisionw1/revisions")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(revisions);
         Assert.assertEquals(1, revisions.size());
@@ -82,39 +70,21 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
 
         this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/groupWorkspaces/revisionw2").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting group workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
-
-        Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
-        {
-        });
+        Workspace workspace = this.requestHelperFor("/api/projects/A/groupWorkspaces/revisionw2")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(workspace);
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces/revisionw2/revisions").request().get();
-
-        if (responseThree.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseThree.getStatus(), "Error during getting revisions in group workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
-        }
-
-        List<Revision> revisions = responseThree.readEntity(new GenericType<List<Revision>>()
-        {
-        });
+        List<Revision> revisions = this.requestHelperFor("/api/projects/A/groupWorkspaces/revisionw2/revisions")
+                .withAcceptableResponseStatuses(Collections.singleton(Response.Status.Family.SUCCESSFUL))
+                .getTyped();
 
         Assert.assertNotNull(revisions);
         Assert.assertEquals(1, revisions.size());
         Assert.assertNotNull(revisions.get(0).getId());
     }
 
-    private Entity findEntity(List<Entity> entities, String entityName, String entityPackageName)
-    {
-        return entities.stream().filter(entity -> entity.getContent().get("name").equals(entityName) && entity.getContent().get("package").equals(entityPackageName)).findFirst().get();
-    }
 }
