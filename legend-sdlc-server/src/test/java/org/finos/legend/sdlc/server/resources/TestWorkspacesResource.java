@@ -38,12 +38,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER);
         this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP);
 
-        Response responseOne = this.clientFor("/api/projects/A/workspaces").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspaces with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
+        Response responseOne = this.getSuccessfulOrThrow("/api/projects/A/workspaces");
 
         List<Workspace> allUserWorkspaces = responseOne.readEntity(new GenericType<List<Workspace>>()
         {
@@ -56,12 +51,8 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceTwoId, findWorkspace(allUserWorkspaces, workspaceTwoId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceTwoId).getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces").request().get();
+        Response responseTwo = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces");
 
-        if (responseTwo.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseTwo.getStatus(), "Error during getting group workspaces with status: " + responseTwo.getStatus() + " , entity: " + responseTwo.readEntity(String.class));
-        }
 
         List<Workspace> allGroupWorkspaces = responseTwo.readEntity(new GenericType<List<Workspace>>()
         {
@@ -101,12 +92,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.USER);
 
-        Response response = this.clientFor("/api/projects/A/workspaces/userw1").request().get();
-
-        if (response.getStatus() != 200)
-        {
-            throw new HttpResponseException(response.getStatus(), "Error during getting user workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
-        }
+        Response response = this.getSuccessfulOrThrow("/api/projects/A/workspaces/userw1");
 
         Workspace workspace = response.readEntity(new GenericType<Workspace>()
         {
@@ -133,12 +119,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
 
         this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.GROUP);
 
-        Response response = this.clientFor("/api/projects/A/groupWorkspaces/groupw1").request().get();
-
-        if (response.getStatus() != 200)
-        {
-            throw new HttpResponseException(response.getStatus(), "Error during getting group workspace with status: " + response.getStatus() + ", entity: " + response.readEntity(String.class));
-        }
+        Response response = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces/groupw1");
 
         Workspace workspace = response.readEntity(new GenericType<Workspace>()
         {

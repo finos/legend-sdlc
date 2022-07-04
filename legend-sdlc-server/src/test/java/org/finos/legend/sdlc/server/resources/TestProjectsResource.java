@@ -33,12 +33,7 @@ public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
         this.backend.project("B").addDependency("C:1.0.0");
 
-        Response response = this.clientFor("/api/projects").request().get();
-
-        if (response.getStatus() != 200)
-        {
-            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
-        }
+        Response response = this.getSuccessfulOrThrow("/api/projects");
 
         List<Project> projects = response.readEntity(new GenericType<List<Project>>()
         {

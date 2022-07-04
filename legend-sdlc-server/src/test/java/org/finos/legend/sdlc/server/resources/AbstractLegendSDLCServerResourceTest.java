@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.resources;
 
 import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit.DropwizardAppRule;
+import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.server.LegendSDLCServerForTest;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
@@ -26,6 +27,7 @@ import org.junit.Rule;
 import java.util.Optional;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
 
 public abstract class AbstractLegendSDLCServerResourceTest
 {
@@ -68,4 +70,13 @@ public abstract class AbstractLegendSDLCServerResourceTest
     {
         return "http://localhost:" + APP_RULE.getLocalPort() + Optional.ofNullable(path).orElse("");
     }
+
+    protected Response getSuccessfulOrThrow(String url) throws HttpResponseException{
+        javax.ws.rs.core.Response response = this.clientFor(url).request().get();
+        if (response.getStatusInfo().getFamily() == javax.ws.rs.core.Response.Status.Family.SUCCESSFUL) {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+        return response;
+    }
+
 }

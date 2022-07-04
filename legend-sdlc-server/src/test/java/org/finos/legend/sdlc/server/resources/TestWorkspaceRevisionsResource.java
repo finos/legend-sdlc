@@ -40,12 +40,7 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
 
         this.backend.project(projectId).addEntities(workspaceOneId, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/workspaces/revisionw1").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting user workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
+        Response responseOne = this.getSuccessfulOrThrow("/api/projects/A/workspaces/revisionw1");
 
         Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
         {
@@ -55,12 +50,7 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseThree = this.clientFor("/api/projects/A/workspaces/revisionw1/revisions").request().get();
-
-        if (responseThree.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseThree.getStatus(), "Error during getting revisions in user workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
-        }
+        Response responseThree = this.getSuccessfulOrThrow("/api/projects/A/workspaces/revisionw1/revisions");
 
         List<Revision> revisions = responseThree.readEntity(new GenericType<List<Revision>>()
         {
@@ -82,12 +72,7 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
 
         this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
 
-        Response responseOne = this.clientFor("/api/projects/A/groupWorkspaces/revisionw2").request().get();
-
-        if (responseOne.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseOne.getStatus(), "Error during getting group workspace with status: " + responseOne.getStatus() + ", entity: " + responseOne.readEntity(String.class));
-        }
+        Response responseOne = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces/revisionw2");
 
         Workspace workspace = responseOne.readEntity(new GenericType<Workspace>()
         {
@@ -97,12 +82,7 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
         Assert.assertEquals(workspaceOneId, workspace.getWorkspaceId());
         Assert.assertEquals(projectId, workspace.getProjectId());
 
-        Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces/revisionw2/revisions").request().get();
-
-        if (responseThree.getStatus() != 200)
-        {
-            throw new HttpResponseException(responseThree.getStatus(), "Error during getting revisions in group workspace with status: " + responseThree.getStatus() + ", entity: " + responseThree.readEntity(String.class));
-        }
+        Response responseThree = this.getSuccessfulOrThrow("/api/projects/A/groupWorkspaces/revisionw2/revisions");
 
         List<Revision> revisions = responseThree.readEntity(new GenericType<List<Revision>>()
         {
