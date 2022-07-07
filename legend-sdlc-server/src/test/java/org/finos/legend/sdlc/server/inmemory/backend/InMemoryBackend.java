@@ -41,8 +41,6 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryReview;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryReviewApi;
 
-
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;

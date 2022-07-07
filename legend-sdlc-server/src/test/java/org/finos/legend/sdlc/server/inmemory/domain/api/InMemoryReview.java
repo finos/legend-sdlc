@@ -191,7 +191,8 @@ public class InMemoryReview implements Review
     @Override
     public ReviewState getState()
     {
-        if (this.reviewId.equals("1")) {
+        if (this.reviewId.equals("1"))
+        {
             return ReviewState.OPEN;
         }  
         

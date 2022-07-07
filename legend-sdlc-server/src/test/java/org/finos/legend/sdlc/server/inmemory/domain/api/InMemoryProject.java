@@ -24,7 +24,6 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
-
 import javax.inject.Inject;
 import java.util.List;
 import java.time.Instant;
