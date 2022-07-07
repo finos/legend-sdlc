@@ -18,6 +18,9 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
+import org.eclipse.collections.api.factory.Lists;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -25,21 +28,29 @@ import java.util.List;
 
 public class InMemoryReviewApi implements ReviewApi
 {
+    private final InMemoryBackend backend;
+    
     @Inject
-    public InMemoryReviewApi()
+    public InMemoryReviewApi(InMemoryBackend backend)
     {
+        this.backend = backend;
     }
 
     @Override
     public Review getReview(String projectId, String reviewId)
     {
-        throw new UnsupportedOperationException("Not implemented");
-    }
+        InMemoryProject inMemoryProject = this.backend.getProject(projectId);
+        Review result = inMemoryProject.getReview(reviewId);
 
+        return result;
+    }
+    
     @Override
     public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
-        throw new UnsupportedOperationException("Not implemented");
+        InMemoryProject inMemoryProject = this.backend.getProject(projectId);
+
+        return Lists.mutable.withAll(inMemoryProject.getReviews(state, revisionIds, since, until, limit));
     }
 
     @Override

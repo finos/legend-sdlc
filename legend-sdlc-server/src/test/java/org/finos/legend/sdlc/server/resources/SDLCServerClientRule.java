@@ -25,6 +25,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
+import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
@@ -65,6 +66,7 @@ public class SDLCServerClientRule implements TestRule
         this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
         this.objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
         this.objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
+        this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
         this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
         this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
         this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
