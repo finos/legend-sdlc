@@ -25,7 +25,9 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.list.mutable.ListAdapter;
+import org.eclipse.collections.impl.tuple.Tuples;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
@@ -456,10 +458,10 @@ public abstract class ProjectStructure
 
         // find out which dependencies we need to update
         boolean updateProjectDependencies = false;
-        Set<ProjectDependency> projectDependencies = Sets.mutable.withAll(currentConfig.getProjectDependencies());
-        Set<ProjectDependency> toUpdateProjectDependencies = projectDependencies.stream().filter(dep -> isLegacyProjectDependency(dep) && !(updateBuilder.hasProjectDependenciesToRemove() && updateBuilder.getProjectDependenciesToRemove().contains(dep))).collect(Collectors.toSet());
+        MutableSet<ProjectDependency> projectDependencies = Sets.mutable.withAll(currentConfig.getProjectDependencies());
+        MutableSet<ProjectDependency> toUpdateProjectDependencies = projectDependencies.select(dep -> isLegacyProjectDependency(dep) && !(updateBuilder.hasProjectDependenciesToRemove() && updateBuilder.getProjectDependenciesToRemove().contains(dep)));
 
-        if (toUpdateProjectDependencies.size() > 0)
+        if (toUpdateProjectDependencies.notEmpty())
         {
             updateProjectDependencies = true;
             updateOrAddDependencies(toUpdateProjectDependencies, projectFileAccessProvider, projectDependencies, true);
@@ -673,11 +675,11 @@ public abstract class ProjectStructure
                 (projectDependency.getProjectId().indexOf(':') == -1);
     }
 
-    private static void updateOrAddDependencies(Set<ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
+    private static void updateOrAddDependencies(Iterable<? extends ProjectDependency> toUpdateProjectDependencies, ProjectFileAccessProvider projectFileAccessProvider, Set<ProjectDependency> projectDependencies, boolean purgeOldDependency)
     {
-        List<ProjectDependency> unknownDependencies = Lists.mutable.empty();
-        SortedMap<ProjectDependency, Exception> accessExceptions = new TreeMap<>(getProjectDependencyComparator());
-        for (ProjectDependency projectDependency : toUpdateProjectDependencies)
+        MutableList<ProjectDependency> unknownDependencies = Lists.mutable.empty();
+        MutableList<Pair<ProjectDependency, Exception>> accessExceptions = Lists.mutable.empty();
+        toUpdateProjectDependencies.forEach(projectDependency ->
         {
             if (isLegacyProjectDependency(projectDependency))
             {
@@ -699,28 +701,27 @@ public abstract class ProjectStructure
                 }
                 catch (Exception e)
                 {
-                    accessExceptions.put(projectDependency, e);
+                    accessExceptions.add(Tuples.pair(projectDependency, e));
                 }
             }
-            else
+            else if (projectDependency != null)
             {
                 projectDependencies.add(ProjectDependency.newProjectDependency(projectDependency.getProjectId(), projectDependency.getVersionId()));
             }
-        }
-        if (!unknownDependencies.isEmpty() || !accessExceptions.isEmpty())
+        });
+        if (unknownDependencies.notEmpty() || accessExceptions.notEmpty())
         {
+            Comparator<ProjectDependency> comparator = getProjectDependencyComparator();
             StringBuilder builder = new StringBuilder("There were issues with one or more added project dependencies");
-            if (!unknownDependencies.isEmpty())
+            if (unknownDependencies.notEmpty())
             {
                 builder.append("; unknown ").append((unknownDependencies.size() == 1) ? "dependency" : "dependencies").append(": ");
-                unknownDependencies.sort(getProjectDependencyComparator());
-                unknownDependencies.forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
+                unknownDependencies.sortThis(comparator).forEach(d -> d.appendDependencyString((d == unknownDependencies.get(0)) ? builder : builder.append(", ")));
             }
-            if (!accessExceptions.isEmpty())
+            if (accessExceptions.notEmpty())
             {
                 builder.append("; access ").append((accessExceptions.size() == 1) ? "exception" : "exceptions").append(": ");
-                ProjectDependency first = accessExceptions.firstKey();
-                accessExceptions.forEach((d, e) -> d.appendDependencyString((d == first) ? builder : builder.append(", ")).append(" (").append(e.getMessage()).append(')'));
+                accessExceptions.sortThis(Comparator.comparing(Pair::getOne, comparator)).forEach(p -> p.getOne().appendDependencyString((p == accessExceptions.get(0)) ? builder : builder.append(", ")).append(" (").append(p.getTwo().getMessage()).append(')'));
             }
             throw new LegendSDLCServerException(builder.toString(), Status.BAD_REQUEST);
         }
