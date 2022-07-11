@@ -47,6 +47,7 @@ import java.lang.reflect.Method;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.SortedMap;
@@ -213,7 +214,9 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
 
     public List<ProjectStructurePlatformExtensions.Platform> getPlatforms()
     {
-        return this.projectStructurePlatformExtensions != null ? this.projectStructurePlatformExtensions.getPlatforms() : null;
+        return Optional.ofNullable(this.projectStructurePlatformExtensions)
+                .map(ProjectStructurePlatformExtensions::getPlatforms)
+                .orElse(Lists.fixedSize.empty());
     }
 
     public String getPlatformPropertyReference(String platform)

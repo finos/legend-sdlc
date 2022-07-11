@@ -14,78 +14,82 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.factory.Maps;
 
 import java.util.List;
 import java.util.Map;
 
 public class ProjectStructurePlatformExtensions
 {
-    private final Map<String, Platform> platforms;
+    private final MapIterable<String, Platform> platformsByName;
+    private final ImmutableList<Platform> platforms;
+    private final MapIterable<String, ExtensionsCollection> extensionsCollections;
 
-    private final Map<String, ExtensionsCollection> extensionsCollections;
-
-    private ProjectStructurePlatformExtensions(Map<String, Platform> platformExtensions, Map<String, ExtensionsCollection> collectionExtensions)
+    private ProjectStructurePlatformExtensions(MapIterable<String, Platform> platformsByName, MapIterable<String, ExtensionsCollection> collectionExtensions)
     {
-        this.platforms = platformExtensions;
+        this.platformsByName = platformsByName;
+        this.platforms = this.platformsByName.valuesView().toSortedListBy(Platform::getName).toImmutable();
         this.extensionsCollections = collectionExtensions;
-    }
-
-    public static ProjectStructurePlatformExtensions newPlatformExtensions(Iterable<Platform> platforms, Iterable<ExtensionsCollection> collections)
-    {
-        MutableMap<String, Platform> platformsMap = Maps.mutable.empty();
-        platforms.forEach(platform ->
-        {
-            if (platformsMap.containsKey(platform.name))
-            {
-                throw new IllegalArgumentException("Multiple platforms defined for platform '" + platform.name + "'");
-            }
-            platformsMap.put(platform.name, platform);
-        });
-        MutableMap<String, ExtensionsCollection> extensionsCollectionsMap = Maps.mutable.empty();
-        collections.forEach(collection ->
-        {
-            if (!platformsMap.containsKey(collection.platform))
-            {
-                throw new IllegalArgumentException("No platform metadata found for platform '" + collection.platform + "'");
-            }
-            if (extensionsCollectionsMap.containsKey(collection.name))
-            {
-                throw new IllegalArgumentException("Multiple extensions collection defined for extension '" + collection.name + "'");
-            }
-            extensionsCollectionsMap.put(collection.name, collection);
-        });
-        return new ProjectStructurePlatformExtensions(platformsMap, extensionsCollectionsMap);
     }
 
     public List<Platform> getPlatforms()
     {
-        return Lists.mutable.withAll(this.platforms.values());
+        return this.platforms.castToList();
     }
 
-    public Platform getPlatform(String platform)
+    public Platform getPlatform(String platformName)
     {
-        if (!this.platforms.containsKey(platform))
+        Platform platform = this.platformsByName.get(platformName);
+        if (platform == null)
         {
-            throw new IllegalArgumentException("No platform metadata found for platform '" + platform + "'");
+            throw new IllegalArgumentException("No platform metadata found for platform '" + platformName + "'");
         }
-        return this.platforms.get(platform);
+        return platform;
     }
 
     public ExtensionsCollection getExtensionsCollection(String extension)
     {
-        if (!this.containsExtension(extension))
+        ExtensionsCollection collection = this.extensionsCollections.get(extension);
+        if (collection == null)
         {
             throw new IllegalArgumentException("No extension collection found for extension name '" + extension + "'");
         }
-        return this.extensionsCollections.get(extension);
+        return collection;
     }
 
     public boolean containsExtension(String extension)
     {
         return this.extensionsCollections.containsKey(extension);
+    }
+
+    public static ProjectStructurePlatformExtensions newPlatformExtensions(Iterable<? extends Platform> platforms, Iterable<? extends ExtensionsCollection> collections)
+    {
+        MutableMap<String, Platform> platformsMap = Maps.mutable.empty();
+        platforms.forEach(platform ->
+        {
+            Platform old = platformsMap.put(platform.getName(), platform);
+            if ((old != null) && (old != platform))
+            {
+                throw new IllegalArgumentException("Multiple platforms defined for platform '" + platform.getName() + "'");
+            }
+        });
+        MutableMap<String, ExtensionsCollection> extensionsCollectionsMap = Maps.mutable.empty();
+        collections.forEach(collection ->
+        {
+            if (!platformsMap.containsKey(collection.getPlatform()))
+            {
+                throw new IllegalArgumentException("No platform metadata found for platform '" + collection.getPlatform() + "'");
+            }
+            ExtensionsCollection old = extensionsCollectionsMap.put(collection.getName(), collection);
+            if ((old != null) && (old != collection))
+            {
+                throw new IllegalArgumentException("Multiple extensions collection defined for extension '" + collection.getName() + "'");
+            }
+        });
+        return new ProjectStructurePlatformExtensions(platformsMap, extensionsCollectionsMap);
     }
 
     public static class Platform
@@ -105,28 +109,32 @@ public class ProjectStructurePlatformExtensions
 
         public String getName()
         {
-            return name;
+            return this.name;
         }
 
         public String getGroupId()
         {
-            return groupId;
+            return this.groupId;
         }
 
         public String getPlatformVersion()
         {
-            return platformVersion;
+            return this.platformVersion;
         }
 
         public String getPublicStructureVersion(int version)
         {
-            if (!this.projectStructureVersions.containsKey(version))
+            if (this.projectStructureVersions != null)
             {
-                throw new IllegalArgumentException("No platform version given for project structure '" + version + "'");
+                String platformVersion = this.projectStructureVersions.get(version);
+                if (platformVersion != null)
+                {
+                    return platformVersion;
+                }
             }
-            return this.projectStructureVersions.get(version);
-        }
 
+            return getPlatformVersion();
+        }
     }
 
     public static class ExtensionsCollection
@@ -144,19 +152,17 @@ public class ProjectStructurePlatformExtensions
 
         public String getName()
         {
-            return name;
+            return this.name;
         }
 
         public String getArtifactId()
         {
-            return artifactId;
+            return this.artifactId;
         }
 
         public String getPlatform()
         {
-            return platform;
+            return this.platform;
         }
-
     }
-
 }

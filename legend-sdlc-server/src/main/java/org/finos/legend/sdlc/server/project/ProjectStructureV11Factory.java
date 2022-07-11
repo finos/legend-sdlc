@@ -93,11 +93,11 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         private static final String DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID = "legend-engine-extensions-collection-execution";
         private static final String DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID = "legend-sdlc-extensions-collection-entity-serializer";
 
-        private static final Map<String, MavenCoordinates> DEFAULT_EXTENSIONS_COLLECTION =
-                Maps.immutable.with(GENERATION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_GENERATION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
-                        EXECUTION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
-                        SERIALIZER_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_SDLC_GROUP_ID, DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID, LEGEND_SDLC_PROPERTY_REFERENCE))
-                        .toMap();
+        private static final ImmutableMap<String, MavenCoordinates> DEFAULT_EXTENSIONS_COLLECTION = Maps.immutable.with(
+                GENERATION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_GENERATION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
+                EXECUTION_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_ENGINE_GROUP_ID, DEFAULT_EXECUTION_EXTENSION_ARTIFACT_ID, LEGEND_ENGINE_PROPERTY_REFERENCE),
+                SERIALIZER_EXTENSIONS_COLLECTION_KEY, new MavenCoordinates(LEGEND_SDLC_GROUP_ID, DEFAULT_SERIALIZER_EXTENSION_ARTIFACT_ID, LEGEND_SDLC_PROPERTY_REFERENCE)
+        );
 
         // Plugin Helpers
         private final LegendEntityPluginMavenHelper legendEntityPluginMavenHelper;
@@ -220,7 +220,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                     break;
                 }
                 default:
-                    break;
+                {
+                    // do nothing
+                }
             }
         }
 
@@ -258,13 +260,14 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             super.addMavenProjectProperties(propertySetter);
             propertySetter.accept(LEGEND_SDLC_PROPERTY, LEGEND_SDLC_VERSION);
             propertySetter.accept(LEGEND_ENGINE_PROPERTY, LEGEND_ENGINE_VERSION);
-            if (this.getPlatforms() != null)
+            getPlatforms().forEach(platform ->
             {
-                this.getPlatforms().forEach((platform) ->
+                String version = platform.getPublicStructureVersion(this.version);
+                if (version != null)
                 {
-                    propertySetter.accept(this.getPlatformPropertyName(platform.getName()), platform.getPublicStructureVersion(this.version));
-                });
-            }
+                    propertySetter.accept(getPlatformPropertyName(platform.getName()), version);
+                }
+            });
         }
 
         private Dependency getLegendTestUtilsDependencyWithExclusion()
@@ -365,10 +368,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private static class MavenCoordinates
         {
-            private String groupId;
-            private String artifactId;
-            private String version;
-
+            private final String groupId;
+            private final String artifactId;
+            private final String version;
 
             public MavenCoordinates(String groupdId, String artifactId, String version)
             {
@@ -392,6 +394,5 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
                 return groupId;
             }
         }
-
     }
 }
