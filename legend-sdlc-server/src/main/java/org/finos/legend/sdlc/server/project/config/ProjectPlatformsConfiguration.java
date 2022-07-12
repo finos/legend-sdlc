@@ -16,12 +16,12 @@ package org.finos.legend.sdlc.server.project.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.eclipse.collections.impl.factory.Lists;
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.finos.legend.sdlc.server.tools.StringTools;
 
 import java.io.InputStream;
+import java.net.URL;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -29,16 +29,11 @@ import java.util.Properties;
 
 public class ProjectPlatformsConfiguration
 {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProjectPlatformsConfiguration.class);
-
     private final Map<String, PlatformMetadata> platformMetadata;
-
     private final Map<String, ExtensionsCollectionMetadata> extensionsCollectionMetadata;
 
     public ProjectPlatformsConfiguration(Map<String, PlatformMetadata> platformMetadata, Map<String, ExtensionsCollectionMetadata> collections)
     {
-
         this.platformMetadata = (platformMetadata == null || platformMetadata.isEmpty()) ? Collections.emptyMap() : platformMetadata;
         this.extensionsCollectionMetadata = (collections == null || collections.isEmpty()) ? Collections.emptyMap() : collections;
     }
@@ -47,7 +42,7 @@ public class ProjectPlatformsConfiguration
     {
         List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
         List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
-        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(v.getPlatformVersion(), v.getGroupId()))));
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(k, v))));
         this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
         return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
@@ -89,8 +84,14 @@ public class ProjectPlatformsConfiguration
         }
     }
 
-    private String getExplicitPlatformVersion(PlatformVersion platformVersion, String groupId)
+    private static String getExplicitPlatformVersion(String platformName, PlatformMetadata platformMetadata)
     {
+        if (platformMetadata == null)
+        {
+            return null;
+        }
+
+        PlatformVersion platformVersion = platformMetadata.getPlatformVersion();
         if (platformVersion == null)
         {
             return null;
@@ -100,9 +101,25 @@ public class ProjectPlatformsConfiguration
         {
             return platformVersion.getVersion();
         }
-        else
+
+        String packageName = platformVersion.getFromPackage();
+        if (packageName != null)
         {
-            try (InputStream is = getClass().getResourceAsStream(String.format("/META-INF/maven/%s/%s/pom.properties", groupId, platformVersion.getFromPackage())))
+            String groupdId = platformMetadata.getGroupId();
+            if (groupdId == null)
+            {
+                throw new RuntimeException("Cannot get version of platform '" + platformName + "' from package '" + packageName + "' without a group id");
+            }
+
+            ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+            String resourceName = "/META-INF/maven/" + groupdId + "/" + packageName + "/pom.properties";
+            URL resourceURL = classLoader.getResource(resourceName);
+            if (resourceURL == null)
+            {
+                throw new RuntimeException("Error loading version for platform '" + platformName + "' from groupId '" + groupdId + "' and package '" + packageName + "': could not find resource '" + resourceName + "'");
+            }
+
+            try (InputStream is = resourceURL.openStream())
             {
                 Properties properties = new Properties();
                 properties.load(is);
@@ -110,10 +127,15 @@ public class ProjectPlatformsConfiguration
             }
             catch (Exception e)
             {
-                LOGGER.error("Failed to obtain version for platform with groupId \"{}\" and package name \"{}\"", groupId, platformVersion.getFromPackage(), e);
-                return null;
+                StringBuilder builder = new StringBuilder("Error loading version for platform '").append(platformName)
+                        .append("' from groupId '").append(groupdId)
+                        .append("' and package '").append(packageName).append("'");
+                StringTools.appendThrowableMessageIfPresent(builder, e);
+                throw new RuntimeException(builder.toString(), e);
             }
         }
+
+        return null;
     }
 
     public static class PlatformVersion
@@ -162,5 +184,4 @@ public class ProjectPlatformsConfiguration
             return new ExtensionsCollectionMetadata(platform, artifactId);
         }
     }
-
 }
