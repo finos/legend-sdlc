@@ -314,6 +314,7 @@
               "endLine": 50,
               "endColumn": 9
             },
+            "serializationFormat": "PURE",
             "assertions": [
               {
                 "_type": "equalToJson",
