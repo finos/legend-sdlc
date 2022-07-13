@@ -41,8 +41,6 @@ import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response.Status;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
@@ -55,6 +53,8 @@ import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
 {
@@ -90,7 +90,7 @@ abstract class BaseGitLabApi
     protected static final char BRANCH_DELIMITER = '/';
 
     protected static final String RELEASE_TAG_PREFIX = "release-";
-    protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile("^" + RELEASE_TAG_PREFIX + "\\d+\\.\\d+\\.\\d+$");
+    protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile(RELEASE_TAG_PREFIX + "\\d++\\.\\d++\\.\\d++");
 
     private final GitLabConfiguration gitLabConfiguration;
     private final GitLabUserContext userContext;
@@ -383,12 +383,6 @@ abstract class BaseGitLabApi
     protected static boolean isWorkspaceBranchName(String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), (String[]) null);
-    }
-
-    protected boolean isUserOrGroupWorkspaceBranchName(String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        String[] extraArgument = workspaceType == WorkspaceType.GROUP ? (String[]) null : new String[]{getCurrentUser()};
-        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), extraArgument);
     }
 
     protected static boolean branchNameStartsWith(String branchName, String first, String... more)
