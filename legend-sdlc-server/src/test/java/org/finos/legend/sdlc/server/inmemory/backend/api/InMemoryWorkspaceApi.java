@@ -15,17 +15,16 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
-import javax.inject.Inject;
-import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 public class InMemoryWorkspaceApi implements WorkspaceApi
 {
@@ -38,29 +37,17 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getUserWorkspaces(String projectId)
-    {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.USER)));
-    }
-
-    @Override
-    public List<Workspace> getGroupWorkspaces(String projectId)
-    {
-        return this.getWorkspaces(projectId, Collections.unmodifiableSet(EnumSet.of(WorkspaceType.GROUP)));
-    }
-
-    @Override
     public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        List<Workspace> result = Lists.mutable.empty();
+        MutableList<Workspace> result = Lists.mutable.empty();
         if (workspaceTypes.contains(WorkspaceType.GROUP))
         {
-            result.addAll(Lists.mutable.withAll(inMemoryProject.getGroupWorkspaces()));
+            result.addAllIterable(inMemoryProject.getGroupWorkspaces());
         }
         if (workspaceTypes.contains(WorkspaceType.USER))
         {
-            result.addAll(Lists.mutable.withAll(inMemoryProject.getUserWorkspaces()));
+            result.addAllIterable(inMemoryProject.getUserWorkspaces());
         }
         return result;
     }
@@ -80,7 +67,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     @Override
     public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
     {
-        return this.getWorkspaces(projectId, workspaceTypes);
+        return getWorkspaces(projectId, workspaceTypes);
     }
 
     @Override
