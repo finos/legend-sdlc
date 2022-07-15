@@ -65,7 +65,7 @@ public class TestPureEntitySerializer
     public void testSerializeClass()
     {
         testSerialize("class", "TestClass");
-        testPureSyntaxError("PARSER error at [5:3]: Unexpected token", "class", "TestBadClass");
+        testPureSyntaxError("PARSER error at [5:3]: Unexpected token '{'", "class", "TestBadClass");
     }
 
     @Test
