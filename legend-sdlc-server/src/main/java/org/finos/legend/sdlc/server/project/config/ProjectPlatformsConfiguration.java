@@ -112,7 +112,7 @@ public class ProjectPlatformsConfiguration
             }
 
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            String resourceName = "/META-INF/maven/" + groupdId + "/" + packageName + "/pom.properties";
+            String resourceName = "META-INF/maven/" + groupdId + "/" + packageName + "/pom.properties";
             URL resourceURL = classLoader.getResource(resourceName);
             if (resourceURL == null)
             {
