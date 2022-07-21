@@ -548,27 +548,46 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         {
             switch (e.getHttpStatus())
             {
-                // Status 401 (Unauthorized) can indicate either that the user is not properly authenticated or that the user is not allowed to merge the request.
                 case 401:
                 case 403:
                 {
-                    // This shouldn't happen, but just in case ...
-                    throw new LegendSDLCServerException("User " + getCurrentUser() + " is not allowed to commit changes from review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
+                    // Status 401 (Unauthorized) can indicate either that the user is not properly authenticated or that the user does not have permission to merge (which can be for lack of entitlements or for other reasons)
+                    // Status 403 (Forbidden) should not occur, but if it does it likely indicates the user does not have permission to merge
+                    StringBuilder builder = new StringBuilder("User ").append(getCurrentUser()).append(" is not allowed to commit changes from review ").append(reviewId).append(" in project ").append(projectId);
+                    String url = mergeRequest.getWebUrl();
+                    if (url != null)
+                    {
+                        builder.append(" (see ").append(url).append(" for more details)");
+                    }
+                    StringTools.appendThrowableMessageIfPresent(builder, e);
+                    throw new LegendSDLCServerException(builder.toString(), Status.FORBIDDEN, e);
                 }
                 case 404:
                 {
-                    // This shouldn't happen, as we already verified the review exists
+                    // This shouldn't happen, as we already verified the merge request exists
                     throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND, e);
                 }
                 case 405:
                 {
                     // Status 405 (Method Not Allowed) indicates the merge request could not be accepted because it's not in an appropriate state (i.e., work in progress, closed, pipeline pending completion, or failed while requiring success)
-                    throw new LegendSDLCServerException("Review " + reviewId + " in project " + projectId + " is not in a committable state; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
+                    StringBuilder builder = new StringBuilder("Review ").append(reviewId).append(" in project ").append(projectId).append(" is not in a committable state");
+                    String url = mergeRequest.getWebUrl();
+                    if (url != null)
+                    {
+                        builder.append(" (see ").append(url).append(" for more details)");
+                    }
+                    throw new LegendSDLCServerException(builder.toString(), Status.CONFLICT, e);
                 }
                 case 406:
                 {
                     // Status 406 (Not Acceptable) indicates the merge could not occur because of a conflict
-                    throw new LegendSDLCServerException("Could not commit review " + reviewId + " in project " + projectId + " because of a conflict; for more details, see: " + mergeRequest.getWebUrl(), Status.CONFLICT, e);
+                    StringBuilder builder = new StringBuilder("Could not commit review ").append(reviewId).append(" in project ").append(projectId).append(" because of a conflict");
+                    String url = mergeRequest.getWebUrl();
+                    if (url != null)
+                    {
+                        builder.append(" (see ").append(url).append(" for more details)");
+                    }
+                    throw new LegendSDLCServerException(builder.toString(), Status.CONFLICT, e);
                 }
                 default:
                 {
