@@ -14,20 +14,6 @@
         "stereotypes": [
           {
             "profile": "model::domain::TestProfile",
-            "profileSourceInformation": {
-              "endColumn": 30,
-              "endLine": 3,
-              "sourceId": "",
-              "startColumn": 5,
-              "startLine": 3
-            },
-            "sourceInformation": {
-              "endColumn": 41,
-              "endLine": 3,
-              "sourceId": "",
-              "startColumn": 5,
-              "startLine": 3
-            },
             "value": "identifier"
           }
         ],
