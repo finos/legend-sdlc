@@ -40,10 +40,12 @@ public class ProjectPlatformsConfiguration
 
     public ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
     {
-        List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.empty();
-        List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.empty();
-        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), getExplicitPlatformVersion(k, v))));
+        List<ProjectStructurePlatformExtensions.Platform> platforms = Lists.mutable.ofInitialCapacity(this.platformMetadata.size());
+        this.platformMetadata.forEach((k, v) -> platforms.add(new ProjectStructurePlatformExtensions.Platform(k, v.getGroupId(), v.getProjectStructureStartingVersions(), resolvePlatformVersion(k, v))));
+
+        List<ProjectStructurePlatformExtensions.ExtensionsCollection> collections = Lists.mutable.ofInitialCapacity(this.extensionsCollectionMetadata.size());
         this.extensionsCollectionMetadata.forEach((k, v) -> collections.add(new ProjectStructurePlatformExtensions.ExtensionsCollection(k, v.platform, v.artifactId)));
+
         return ProjectStructurePlatformExtensions.newPlatformExtensions(platforms, collections);
     }
 
@@ -84,7 +86,8 @@ public class ProjectPlatformsConfiguration
         }
     }
 
-    private static String getExplicitPlatformVersion(String platformName, PlatformMetadata platformMetadata)
+    // package private for testing
+    static String resolvePlatformVersion(String platformName, PlatformMetadata platformMetadata)
     {
         if (platformMetadata == null)
         {
@@ -105,18 +108,18 @@ public class ProjectPlatformsConfiguration
         String packageName = platformVersion.getFromPackage();
         if (packageName != null)
         {
-            String groupdId = platformMetadata.getGroupId();
-            if (groupdId == null)
+            String groupId = platformMetadata.getGroupId();
+            if (groupId == null)
             {
                 throw new RuntimeException("Cannot get version of platform '" + platformName + "' from package '" + packageName + "' without a group id");
             }
 
             ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
-            String resourceName = "META-INF/maven/" + groupdId + "/" + packageName + "/pom.properties";
+            String resourceName = "META-INF/maven/" + groupId + "/" + packageName + "/pom.properties";
             URL resourceURL = classLoader.getResource(resourceName);
             if (resourceURL == null)
             {
-                throw new RuntimeException("Error loading version for platform '" + platformName + "' from groupId '" + groupdId + "' and package '" + packageName + "': could not find resource '" + resourceName + "'");
+                throw new RuntimeException("Error loading version for platform '" + platformName + "' from groupId '" + groupId + "' and package '" + packageName + "': could not find resource '" + resourceName + "'");
             }
 
             try (InputStream is = resourceURL.openStream())
@@ -128,7 +131,7 @@ public class ProjectPlatformsConfiguration
             catch (Exception e)
             {
                 StringBuilder builder = new StringBuilder("Error loading version for platform '").append(platformName)
-                        .append("' from groupId '").append(groupdId)
+                        .append("' from groupId '").append(groupId)
                         .append("' and package '").append(packageName).append("'");
                 StringTools.appendThrowableMessageIfPresent(builder, e);
                 throw new RuntimeException(builder.toString(), e);
@@ -165,7 +168,6 @@ public class ProjectPlatformsConfiguration
             return new PlatformVersion(version, fromPackage);
         }
     }
-
 
     public static class ExtensionsCollectionMetadata
     {
