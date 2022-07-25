@@ -21,6 +21,7 @@ import org.eclipse.collections.api.map.MutableMap;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ProjectStructurePlatformExtensions
 {
@@ -33,6 +34,49 @@ public class ProjectStructurePlatformExtensions
         this.platformsByName = platformsByName;
         this.platforms = this.platformsByName.valuesView().toSortedListBy(Platform::getName).toImmutable();
         this.extensionsCollections = collectionExtensions;
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+
+        if (!(other instanceof ProjectStructurePlatformExtensions))
+        {
+            return false;
+        }
+
+        ProjectStructurePlatformExtensions that = (ProjectStructurePlatformExtensions) other;
+        return this.platformsByName.equals(that.platformsByName) && this.extensionsCollections.equals(that.extensionsCollections);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.platforms.hashCode() ^ this.extensionsCollections.size();
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder(getClass().getSimpleName()).append('{');
+        this.platforms.forEachWithIndex((p, i) ->
+        {
+            if (i > 0)
+            {
+                builder.append(", ");
+            }
+            builder.append(p);
+            ExtensionsCollection extensionsCollection = this.extensionsCollections.get(p.getName());
+            if (extensionsCollection != null)
+            {
+                builder.append(" (").append(extensionsCollection).append(")");
+            }
+        });
+        return builder.append('}').toString();
     }
 
     public List<Platform> getPlatforms()
@@ -96,15 +140,52 @@ public class ProjectStructurePlatformExtensions
     {
         private final String name;
         private final String groupId;
-        private final Map<Integer, String> projectStructureVersions;
         private final String platformVersion;
+        private final Map<Integer, String> projectStructureVersions;
 
         public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap, String platformVersion)
         {
             this.name = name;
             this.groupId = groupId;
-            this.projectStructureVersions = projectStructureVersionsMap;
             this.platformVersion = platformVersion;
+            this.projectStructureVersions = projectStructureVersionsMap;
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            if (this == other)
+            {
+                return true;
+            }
+
+            if (!(other instanceof Platform))
+            {
+                return false;
+            }
+
+            Platform that = (Platform) other;
+            return Objects.equals(this.name, that.name) &&
+                    Objects.equals(this.groupId, that.groupId) &&
+                    Objects.equals(this.platformVersion, that.platformVersion) &&
+                    Objects.equals(this.projectStructureVersions, that.projectStructureVersions);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(this.name, this.groupId, this.platformVersion);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+            appendPossiblyNullString(builder.append("{name="), this.name);
+            appendPossiblyNullString(builder.append(", groupId="), this.groupId);
+            appendPossiblyNullString(builder.append(", platformVersion="), this.platformVersion);
+            builder.append(", projectStructureVersions=").append(this.projectStructureVersions).append('}');
+            return builder.toString();
         }
 
         public String getName()
@@ -150,6 +231,41 @@ public class ProjectStructurePlatformExtensions
             this.artifactId = artifactId;
         }
 
+        @Override
+        public boolean equals(Object other)
+        {
+            if (this == other)
+            {
+                return true;
+            }
+
+            if (!(other instanceof ExtensionsCollection))
+            {
+                return false;
+            }
+
+            ExtensionsCollection that = (ExtensionsCollection) other;
+            return Objects.equals(this.name, that.name) &&
+                    Objects.equals(this.platform, that.platform) &&
+                    Objects.equals(this.artifactId, that.artifactId);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(this.name, this.platform, this.artifactId);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+            appendPossiblyNullString(builder.append("{name="), this.name);
+            appendPossiblyNullString(builder.append(", platform="), this.platform);
+            appendPossiblyNullString(builder.append(", artifactId="), this.artifactId).append('}');
+            return builder.toString();
+        }
+
         public String getName()
         {
             return this.name;
@@ -164,5 +280,12 @@ public class ProjectStructurePlatformExtensions
         {
             return this.platform;
         }
+    }
+
+    private static StringBuilder appendPossiblyNullString(StringBuilder builder, String string)
+    {
+        return (string == null) ?
+                builder.append((String) null) :
+                builder.append("'").append(string).append("'");
     }
 }
