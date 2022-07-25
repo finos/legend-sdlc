@@ -27,6 +27,7 @@ import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
@@ -113,6 +114,7 @@ import org.finos.legend.sdlc.server.resources.ReviewWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.ReviewWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.ReviewsOnlyResource;
 import org.finos.legend.sdlc.server.resources.ReviewsResource;
+import org.finos.legend.sdlc.server.resources.ServerResource;
 import org.finos.legend.sdlc.server.resources.UsersResource;
 import org.finos.legend.sdlc.server.resources.VersionBuildsResource;
 import org.finos.legend.sdlc.server.resources.VersionEntitiesResource;
@@ -139,17 +141,17 @@ import org.finos.legend.sdlc.server.resources.WorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.WorkspacesResource;
-import org.finos.legend.sdlc.server.resources.ServerResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
-import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import javax.inject.Named;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
-    protected ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
     private AuthClientInjector authClientInjector;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
@@ -172,7 +174,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
-        binder.bind(ProjectStructurePlatformExtensions.class).toProvider(this::getProjectStructurePlatformExtensions);
+        binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
 
         bindResources(binder);
         bindFilters(binder);
@@ -314,22 +316,12 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         return (projectStructureConfiguration == null) ? ProjectStructureConfiguration.emptyConfiguration() : projectStructureConfiguration;
     }
 
-    private ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions()
-    {
-        if (this.projectStructurePlatformExtensions == null)
-        {
-            this.projectStructurePlatformExtensions = buildProjectStructurePlatformExtensions();
-        }
-        return this.projectStructurePlatformExtensions;
-    }
-
     private ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
     {
-        if (this.getProjectStructureConfiguration().getProjectPlatformsConfiguration() == null)
-        {
-            return null;
-        }
-        return this.getProjectStructureConfiguration().getProjectPlatformsConfiguration().buildProjectStructurePlatformExtensions();
+        return Optional.ofNullable(getConfiguration().getProjectStructureConfiguration())
+                .map(ProjectStructureConfiguration::getProjectPlatformsConfiguration)
+                .map(ProjectPlatformsConfiguration::buildProjectStructurePlatformExtensions)
+                .orElseGet(() -> ProjectStructurePlatformExtensions.newPlatformExtensions(Collections.emptyList(), Collections.emptyList()));
     }
 
     private ProjectStructureExtensionProvider getProjectStructureExtensionProvider()
