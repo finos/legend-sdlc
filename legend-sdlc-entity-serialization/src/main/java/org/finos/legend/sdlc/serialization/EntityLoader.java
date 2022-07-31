@@ -109,6 +109,7 @@ public class EntityLoader implements AutoCloseable
     }
 
     @Override
+    @SuppressWarnings({"PMD.EmptyCatchBlock"})
     public synchronized void close() throws Exception
     {
         Exception exception = null;
