@@ -31,6 +31,11 @@ public final class GitLabProjectId
         this.gitLabId = gitLabId;
     }
 
+    public String getPrefix()
+    {
+        return this.prefix;
+    }
+
     public int getGitLabId()
     {
         return this.gitLabId;
@@ -77,27 +82,33 @@ public final class GitLabProjectId
     {
         if (projectId == null)
         {
-            return null;
+            throw new IllegalArgumentException("Invalid project id: null");
+        }
+        if (projectId.isEmpty())
+        {
+            throw new IllegalArgumentException("Invalid project id: \"\"");
         }
 
         int separatorIndex = projectId.indexOf(DELIMITER);
-        return newProjectId(separatorIndex == -1 ? null : projectId.substring(0, separatorIndex), parseGitLabId(projectId, separatorIndex));
+        String prefix = (separatorIndex == -1) ? null : projectId.substring(0, separatorIndex);
+        int gitLabId = parseGitLabId(projectId, separatorIndex + 1);
+        return newProjectId(prefix, gitLabId);
     }
 
-    private static int parseGitLabId(String projectId, int separatorIndex)
+    private static int parseGitLabId(String projectId, int start)
     {
         try
         {
-            return Integer.parseInt(projectId.substring(separatorIndex + 1));
+            return Integer.parseInt(projectId.substring(start));
         }
         catch (NumberFormatException e)
         {
-            throw new IllegalArgumentException("Invalid project id: " + projectId);
+            throw new IllegalArgumentException("Invalid project id: \"" + projectId + "\"");
         }
     }
 
     private static String getProjectIdString(String prefix, int gitLabId)
     {
-        return (prefix != null ? (prefix + DELIMITER) : "") + gitLabId;
+        return (prefix == null) ? Integer.toString(gitLabId) : (prefix + DELIMITER + gitLabId);
     }
 }
