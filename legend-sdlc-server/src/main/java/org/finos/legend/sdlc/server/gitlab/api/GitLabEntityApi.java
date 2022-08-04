@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
@@ -33,6 +34,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
@@ -42,8 +44,6 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -52,6 +52,8 @@ import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
@@ -88,7 +90,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        validateRevision(projectId, null, revisionId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        validateRevision(projectId, null, revisionId, null, null);
         return new GitLabEntityAccessContext()
         {
             @Override
@@ -102,9 +104,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 catch (Exception e)
                 {
                     throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
-                        () -> "Unknown " + getInfoForException(),
-                        () -> "Failed to get " + getInfoForException());
+                            () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
+                            () -> "Unknown " + getInfoForException(),
+                            () -> "Failed to get " + getInfoForException());
                 }
                 if (resolvedRevisionId == null)
                 {
@@ -201,22 +203,22 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
     public EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, WorkspaceAccessType.BACKUP);
     }
 
     @Override
     public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
-    private EntityAccessContext getWorkspaceEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private EntityAccessContext getWorkspaceEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -241,22 +243,22 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
     public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP);
+        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, WorkspaceAccessType.BACKUP);
     }
 
     @Override
     public EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(projectId, workspaceId, revisionId, workspaceType, WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
-    private EntityAccessContext getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private EntityAccessContext getWorkspaceRevisionEntityAccessContextByWorkspaceAccessType(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -277,9 +279,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 catch (Exception e)
                 {
                     throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
-                        () -> "Unknown " + getInfoForException(),
-                        () -> "Failed to get " + getInfoForException());
+                            () -> "User " + getCurrentUser() + " is not allowed to get " + getInfoForException(),
+                            () -> "Unknown " + getInfoForException(),
+                            () -> "Failed to get " + getInfoForException());
                 }
                 if (resolvedRevisionId == null)
                 {
@@ -320,16 +322,16 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, WorkspaceAccessType.WORKSPACE);
     }
 
     @Override
     public EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
-    private EntityModificationContext getWorkspaceEntityModificationContextByWorkspaceAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private EntityModificationContext getWorkspaceEntityModificationContextByWorkspaceAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -338,12 +340,14 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         return new GitLabEntityModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType);
     }
 
-    private void validateRevision(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private void validateRevision(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         Revision revision = getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType).getRevision(revisionId);
         if (revision == null)
         {
-            throw new LegendSDLCServerException("Revision " + revisionId + " is unknown for " + getReferenceInfo(projectId, workspaceId, null), Status.NOT_FOUND);
+            StringBuilder builder = new StringBuilder("Revision ").append(revisionId).append(" is unknown for ");
+            appendReferenceInfo(builder, projectId, workspaceId, workspaceType, workspaceAccessType, null);
+            throw new LegendSDLCServerException(builder.toString(), Status.NOT_FOUND);
         }
     }
 
@@ -378,9 +382,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get entity " + path + " for " + getInfoForException(),
-                    () -> "Unknown entity " + path + " for " + getInfoForException(),
-                    () -> "Failed to get entity " + path + " for " + getInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to get entity " + path + " for " + getInfoForException(),
+                        () -> "Unknown entity " + path + " for " + getInfoForException(),
+                        () -> "Failed to get entity " + path + " for " + getInfoForException());
             }
             throw new LegendSDLCServerException("Unknown entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
         }
@@ -395,9 +399,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get entities for " + getInfoForException(),
-                    () -> "Unknown entities for " + getInfoForException(),
-                    () -> "Failed to get entities for " + getInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to get entities for " + getInfoForException(),
+                        () -> "Unknown entities for " + getInfoForException(),
+                        () -> "Failed to get entities for " + getInfoForException());
             }
         }
 
@@ -411,9 +415,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             catch (Exception e)
             {
                 throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get entity paths for " + getInfoForException(),
-                    () -> "Unknown entity paths for " + getInfoForException(),
-                    () -> "Failed to get entity paths for " + getInfoForException());
+                        () -> "User " + getCurrentUser() + " is not allowed to get entity paths for " + getInfoForException(),
+                        () -> "Unknown entity paths for " + getInfoForException(),
+                        () -> "Failed to get entity paths for " + getInfoForException());
             }
         }
 
@@ -427,17 +431,17 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         private final String projectId;
         private final String workspaceId;
         private final WorkspaceType workspaceType;
-        private final ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
+        private final WorkspaceAccessType workspaceAccessType;
 
-        private GitLabEntityModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+        private GitLabEntityModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
         {
             this.projectId = projectId;
             this.workspaceId = workspaceId;
             this.workspaceType = workspaceType;
             this.workspaceAccessType = workspaceAccessType;
-            if (this.workspaceId != null && this.workspaceAccessType == null)
+            if ((this.workspaceId != null) && ((this.workspaceType == null) || (this.workspaceAccessType == null)))
             {
-                throw new RuntimeException("workspace access type is required when workspace ID is specified");
+                throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
         }
 
@@ -459,23 +463,23 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
     }
 
-    private Revision updateEntities(String projectId, String workspaceId, Iterable<? extends Entity> newEntities, boolean replace, String message, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private Revision updateEntities(String projectId, String workspaceId, Iterable<? extends Entity> newEntities, boolean replace, String message, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        Map<String, Entity> newEntityDefinitions = Maps.mutable.empty();
-        List<String> errorMessages = Lists.mutable.empty();
-        for (Entity entity : newEntities)
+        MutableMap<String, Entity> newEntityDefinitions = Maps.mutable.empty();
+        MutableList<String> errorMessages = Lists.mutable.empty();
+        newEntities.forEach(entity ->
         {
             if (entity == null)
             {
                 errorMessages.add("Invalid entity: null");
-                continue;
+                return;
             }
 
             String path = entity.getPath();
             if (!isValidEntityPath(path))
             {
                 errorMessages.add("Invalid entity path: \"" + path + "\"");
-                continue;
+                return;
             }
 
             String classifierPath = entity.getClassifierPath();
@@ -523,8 +527,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             {
                 errorMessages.add("Entity: " + path + "; error: multiple definitions");
             }
-        }
-        if (!errorMessages.isEmpty())
+        });
+        if (errorMessages.notEmpty())
         {
             throw new LegendSDLCServerException((errorMessages.size() == 1) ? errorMessages.get(0) : "There are errors with entity definitions:\n\t" + String.join("\n\t", errorMessages), Status.BAD_REQUEST);
         }
@@ -535,7 +539,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             throw new LegendSDLCServerException("Could not find current revision for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " may be corrupt");
         }
         String revisionId = currentWorkspaceRevision.getId();
-        LOGGER.debug("Using revision {} for reference in entity update in {} {} in project {}", revisionId, workspaceType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId);
+        LOGGER.debug("Using revision {} for reference in entity update in {} {} {} in project {}", revisionId, workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
         List<EntityChange> entityChanges = Lists.mutable.ofInitialCapacity(newEntityDefinitions.size());
         if (newEntityDefinitions.isEmpty())
         {
@@ -574,21 +578,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     }
                 });
             }
-            newEntityDefinitions.values().forEach(definition -> entityChanges.add(EntityChange.newCreateEntity(definition.getPath(), definition.getClassifierPath(), definition.getContent())));
+            newEntityDefinitions.forEachValue(definition -> entityChanges.add(EntityChange.newCreateEntity(definition.getPath(), definition.getClassifierPath(), definition.getContent())));
         }
 
         return performChanges(projectId, workspaceId, revisionId, message, entityChanges, workspaceType, workspaceAccessType);
     }
 
-    private Revision performChanges(String projectId, String workspaceId, String referenceRevisionId, String message, List<? extends EntityChange> changes, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private Revision performChanges(String projectId, String workspaceId, String referenceRevisionId, String message, List<? extends EntityChange> changes, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         int changeCount = changes.size();
         if (changeCount == 0)
         {
-            LOGGER.debug("No changes for {} {} in project {}", workspaceType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId);
+            LOGGER.debug("No changes for {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
             return null;
         }
-        LOGGER.debug("Committing {} changes to {} {} in project {}: {}", changeCount, workspaceType.getLabel() + " " + workspaceAccessType.getLabel(), workspaceId, projectId, message);
+        LOGGER.debug("Committing {} changes to {} {} {} in project {}: {}", changeCount, workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId, message);
         try
         {
             ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, referenceRevisionId);
@@ -605,9 +609,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
-                () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                () -> "Failed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " (message: " + message + ")");
+                    () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId,
+                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Failed to perform changes on " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " (message: " + message + ")");
         }
     }
 
@@ -696,7 +700,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
     }
 
-    private Stream<EntityProjectFile> getEntityProjectFiles(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    private Stream<EntityProjectFile> getEntityProjectFiles(String projectId, String workspaceId, String revisionId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         return getEntityProjectFiles(getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }
@@ -730,8 +734,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, ProjectStructure.EntitySourceDirectory sourceDirectory)
     {
         return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
-            .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
-            .map(f -> new EntityProjectFile(sourceDirectory, f));
+                .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
+                .map(f -> new EntityProjectFile(sourceDirectory, f));
     }
 
     private static void validateEntityChanges(List<? extends EntityChange> entityChanges)

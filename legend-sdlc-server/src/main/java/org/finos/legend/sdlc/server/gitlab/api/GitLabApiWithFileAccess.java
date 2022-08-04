@@ -439,9 +439,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             this.revisionId = revisionId;
             this.workspaceType = workspaceType;
             this.workspaceAccessType = workspaceAccessType;
-            if (this.workspaceId != null && this.workspaceAccessType == null)
+            if ((this.workspaceId != null) && ((this.workspaceType == null) || (this.workspaceAccessType == null)))
             {
-                throw new RuntimeException("workspace access type is required when workspace ID is specified");
+                throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
         }
 
@@ -454,7 +454,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected String getDescriptionForExceptionMessage()
         {
-            return BaseGitLabApi.getReferenceInfo(this.projectId, this.workspaceId, this.revisionId);
+            return BaseGitLabApi.getReferenceInfo(this.projectId, this.workspaceId, this.workspaceType, this.workspaceAccessType, this.revisionId);
         }
     }
 
@@ -843,9 +843,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             this.workspaceId = workspaceId;
             this.workspaceType = workspaceType;
             this.workspaceAccessType = workspaceAccessType;
-            if ((this.workspaceId != null) && (this.workspaceAccessType == null))
+            if ((this.workspaceId != null) && ((this.workspaceType == null) || (this.workspaceAccessType == null)))
             {
-                throw new RuntimeException("workspace access type is required when workspace ID is specified");
+                throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
         }
 

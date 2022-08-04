@@ -439,26 +439,26 @@ abstract class BaseGitLabApi
         return isVersionTagName(tag.getName());
     }
 
-    protected static String getReferenceInfo(GitLabProjectId projectId, String workspaceId, String revisionId)
+    protected static String getReferenceInfo(GitLabProjectId projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
-        return getReferenceInfo(projectId.toString(), workspaceId, revisionId);
+        return getReferenceInfo(projectId.toString(), workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
-    protected static String getReferenceInfo(String projectId, String workspaceId, String revisionId)
+    protected static String getReferenceInfo(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         int messageLength = projectId.length() + 8;
         if (workspaceId != null)
         {
-            messageLength += workspaceId.length() + 14;
+            messageLength += workspaceId.length() + 20;
         }
         if (revisionId != null)
         {
             messageLength += revisionId.length() + 13;
         }
-        return appendReferenceInfo(new StringBuilder(messageLength), projectId, workspaceId, revisionId).toString();
+        return appendReferenceInfo(new StringBuilder(messageLength), projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).toString();
     }
 
-    protected static StringBuilder appendReferenceInfo(StringBuilder builder, String projectId, String workspaceId, String revisionId)
+    protected static StringBuilder appendReferenceInfo(StringBuilder builder, String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         if (revisionId != null)
         {
@@ -466,7 +466,7 @@ abstract class BaseGitLabApi
         }
         if (workspaceId != null)
         {
-            builder.append("workspace ").append(workspaceId).append(" of ");
+            builder.append(workspaceType.getLabel()).append(' ').append(workspaceAccessType.getLabel()).append(' ').append(workspaceId).append(" of ");
         }
         builder.append("project ").append(projectId);
         return builder;
