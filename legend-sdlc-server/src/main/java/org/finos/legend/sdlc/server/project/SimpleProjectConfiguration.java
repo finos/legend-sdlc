@@ -62,12 +62,6 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     }
 
     @Override
-    public ProjectType getProjectType()
-    {
-        return null;
-    }
-
-    @Override
     public ProjectStructureVersion getProjectStructureVersion()
     {
         return this.projectStructureVersion;

@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
@@ -40,10 +38,10 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Collections;
 import java.util.List;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess implements ProjectConfigurationApi
 {
@@ -395,12 +393,6 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             }
 
             @Override
-            public ProjectType getProjectType()
-            {
-                return null;
-            }
-
-            @Override
             public ProjectStructureVersion getProjectStructureVersion()
             {
                 return getLatestProjectStructureVersion();
@@ -426,12 +418,6 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
 
             @Override
             public List<MetamodelDependency> getMetamodelDependencies()
-            {
-                return Collections.emptyList();
-            }
-
-            @Override
-            public List<ArtifactGeneration> getArtifactGenerations()
             {
                 return Collections.emptyList();
             }

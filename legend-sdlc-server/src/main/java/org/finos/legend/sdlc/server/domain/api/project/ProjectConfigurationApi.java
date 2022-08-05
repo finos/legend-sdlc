@@ -19,13 +19,14 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
-import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
+import javax.ws.rs.core.Response;
 
 public interface ProjectConfigurationApi
 {
@@ -171,6 +172,9 @@ public interface ProjectConfigurationApi
 
     ProjectStructureVersion getLatestProjectStructureVersion();
 
-    List<ArtifactTypeGenerationConfiguration> getLatestAvailableArtifactGenerations();
-
+    @Deprecated
+    default List<ArtifactTypeGenerationConfiguration> getLatestAvailableArtifactGenerations()
+    {
+        return Collections.emptyList();
+    }
 }

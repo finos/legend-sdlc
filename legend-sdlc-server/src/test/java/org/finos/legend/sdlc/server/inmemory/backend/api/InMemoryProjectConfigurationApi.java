@@ -28,8 +28,8 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
 
-import javax.inject.Inject;
 import java.util.List;
+import javax.inject.Inject;
 
 public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
 {
@@ -168,12 +168,6 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
 
     @Override
     public ProjectStructureVersion getLatestProjectStructureVersion()
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public List<ArtifactTypeGenerationConfiguration> getLatestAvailableArtifactGenerations()
     {
         throw new UnsupportedOperationException("Not implemented");
     }

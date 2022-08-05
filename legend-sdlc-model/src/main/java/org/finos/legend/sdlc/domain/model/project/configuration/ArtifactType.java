@@ -16,12 +16,25 @@ package org.finos.legend.sdlc.domain.model.project.configuration;
 
 public enum ArtifactType
 {
+    @Deprecated
     avro("Avro"),
+
+    @Deprecated
     java("Java"),
+
+    @Deprecated
     jsonSchema("JSON Schema"),
+
+    @Deprecated
     protobuf("Protobuf"),
+
+    @Deprecated
     slang("Slang"),
+
+    @Deprecated
     javaCode("Java Code"),
+
+    @Deprecated
     cdm("Rosetta"),
 
     entities("Entity"),
