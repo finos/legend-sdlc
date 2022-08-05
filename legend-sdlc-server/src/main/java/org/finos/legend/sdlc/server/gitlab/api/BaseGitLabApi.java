@@ -47,6 +47,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
@@ -120,7 +121,11 @@ abstract class BaseGitLabApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Invalid project id: " + projectId, Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException("Invalid project id: \"" + projectId + "\"", Status.BAD_REQUEST, e);
+        }
+        if (!Objects.equals(this.gitLabConfiguration.getProjectIdPrefix(), gitLabProjectId.getPrefix()))
+        {
+            throw new LegendSDLCServerException("Invalid project id: \"" + projectId + "\"", Status.BAD_REQUEST);
         }
         return gitLabProjectId;
     }

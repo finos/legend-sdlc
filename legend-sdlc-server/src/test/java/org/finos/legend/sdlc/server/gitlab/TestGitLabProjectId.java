@@ -18,27 +18,32 @@ import org.gitlab4j.api.models.Project;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
-
 public class TestGitLabProjectId
 {
     @Test
     public void testNewProjectId()
     {
-        String prefix = "SOMEPREFIX";
-        for (int i = 0; i < 1024; i++)
+        for (int i : getGitLabIdsForTest())
         {
-            GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
-            Assert.assertEquals(i, projectId.getGitLabId());
-            Assert.assertEquals(prefix + "-" + i, projectId.toString());
+            testNewProjectId("SOMEPREFIX", i);
+            testNewProjectId(null, i);
         }
+    }
+
+    private void testNewProjectId(String prefix, int i)
+    {
+        GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
+        String projectIdString = projectId.toString();
+        Assert.assertEquals((prefix == null) ? Integer.toString(i) : (prefix + "-" + i), projectIdString);
+        Assert.assertEquals(projectIdString, i, projectId.getGitLabId());
+        Assert.assertEquals(projectIdString, prefix, projectId.getPrefix());
     }
 
     @Test
     public void testEquality()
     {
-        String prefix = "SOMEPREIFX";
-        for (int i = 0; i < 1024; i++)
+        String prefix = "SOMEPREFIX";
+        for (int i : getGitLabIdsForTest())
         {
             GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
             Assert.assertEquals(projectId, projectId);
@@ -47,6 +52,7 @@ public class TestGitLabProjectId
             Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(prefix, i + 1));
             Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(prefix, i - 1));
             Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId("ANOTHERPREFIX", i));
+            Assert.assertNotEquals(projectId, GitLabProjectId.newProjectId(null, i));
         }
     }
 
@@ -54,32 +60,33 @@ public class TestGitLabProjectId
     public void testGetProjectIdString()
     {
         String prefix = "SOMEPREFIX";
-        for (int i = 0; i < 1024; i++)
+        for (int i : getGitLabIdsForTest())
         {
             Project project = new Project().withId(i);
             Assert.assertEquals(prefix + "-" + i, GitLabProjectId.getProjectIdString(prefix, project));
-            Assert.assertEquals("" + i, GitLabProjectId.getProjectIdString(null, project));
+            Assert.assertEquals(Integer.toString(i), GitLabProjectId.getProjectIdString(null, project));
         }
     }
 
     @Test
     public void testParseProjectId()
     {
-        Assert.assertNull(GitLabProjectId.parseProjectId(null));
         Assert.assertEquals(GitLabProjectId.newProjectId("SOMEPREFIX", 521), GitLabProjectId.parseProjectId("SOMEPREFIX-521"));
+        Assert.assertEquals(GitLabProjectId.newProjectId("ANOTHER_PREFIX", 1923521), GitLabProjectId.parseProjectId("ANOTHER_PREFIX-1923521"));
+        Assert.assertEquals(GitLabProjectId.newProjectId("54321", 12345), GitLabProjectId.parseProjectId("54321-12345"));
+        Assert.assertEquals(GitLabProjectId.newProjectId("", 3332), GitLabProjectId.parseProjectId("-3332"));
         Assert.assertEquals(GitLabProjectId.newProjectId(null, 99412), GitLabProjectId.parseProjectId("99412"));
 
-        for (String invalidProjectId : Arrays.asList("not-a-project-id", "NoSeparator", "UAT521", "UAT/521", "UAT*521", "UAT-&&&"))
+        for (String invalidProjectId : new String []{null, "", "not-a-project-id", "NoDigits", "SeparatorAtEnd-", "UAT521", "UAT/521", "UAT*521", "UAT-&&&"})
         {
-            try
-            {
-                GitLabProjectId.parseProjectId(invalidProjectId);
-                Assert.fail("Expected exception parsing: " + invalidProjectId);
-            }
-            catch (IllegalArgumentException e)
-            {
-                Assert.assertEquals("Invalid project id: " + invalidProjectId, e.getMessage());
-            }
+            IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> GitLabProjectId.parseProjectId(invalidProjectId));
+            String expectedMessage = (invalidProjectId == null) ? "Invalid project id: null" : ("Invalid project id: \"" + invalidProjectId + "\"");
+            Assert.assertEquals(expectedMessage, e.getMessage());
         }
+    }
+
+    private int[] getGitLabIdsForTest()
+    {
+        return new int[]{0, 1, 2, 3, 4, 5, 64, 127, 511, 1024, 17_560_438, 1_030_991_200, Integer.MAX_VALUE};
     }
 }

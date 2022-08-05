@@ -18,7 +18,6 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
 import org.gitlab4j.api.models.Visibility;
 
@@ -28,8 +27,8 @@ import java.util.regex.Pattern;
 
 public class GitLabConfiguration
 {
-    private static final Pattern LEGEND_SDLC_PROJECT_ID_PREFIX_PATTERN = Pattern.compile("^\\w++$");
-    private static final Pattern LEGEND_SDLC_PROJECT_TAG_PATTERN = Pattern.compile("^[a-zA-Z][a-zA-Z0-9]*$");
+    private static final Pattern LEGEND_SDLC_PROJECT_ID_PREFIX_PATTERN = Pattern.compile("\\w++");
+    private static final Pattern LEGEND_SDLC_PROJECT_TAG_PATTERN = Pattern.compile("[a-zA-Z][a-zA-Z0-9]*+");
 
     private final String projectTag;
     private final String projectIdPrefix;
@@ -95,49 +94,43 @@ public class GitLabConfiguration
 
     @JsonCreator
     public static GitLabConfiguration newGitLabConfiguration(
-        @JsonProperty("projectTag") String projectTag,
-        @JsonProperty("projectIdPrefix") String projectIdPrefix,
-        @JsonProperty("auth") AuthConfiguration authConfig,
-        @JsonProperty("uat") ModeConfiguration uatConfig,
-        @JsonProperty("prod") ModeConfiguration prodConfig,
-        @JsonProperty("server") ServerConfiguration serverConfig,
-        @JsonProperty("app") AppConfiguration appConfig,
-        @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility,
-        @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
+            @JsonProperty("projectTag") String projectTag,
+            @JsonProperty("projectIdPrefix") String projectIdPrefix,
+            @JsonProperty("auth") AuthConfiguration authConfig,
+            @JsonProperty("uat") ModeConfiguration uatConfig,
+            @JsonProperty("prod") ModeConfiguration prodConfig,
+            @JsonProperty("server") ServerConfiguration serverConfig,
+            @JsonProperty("app") AppConfiguration appConfig,
+            @JsonProperty("newProjectVisibility") NewProjectVisibility newProjectVisibility,
+            @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
     {
-        ServerConfiguration _serverConfig = serverConfig;
-        AppConfiguration _appConfig = appConfig;
-        String _projectIdPrefix = projectIdPrefix;
-        if (uatConfig != null && prodConfig != null)
+        // Legacy configuration case
+        if ((uatConfig != null) || (prodConfig != null))
         {
-            throw new IllegalArgumentException("Configuration with multiple Gitlab modes is no longer supported");
-        }
-        else if (uatConfig != null)
-        {
-            if (serverConfig != null || appConfig != null)
+            if ((uatConfig != null) && (prodConfig != null))
+            {
+                throw new IllegalArgumentException("Configuration with multiple Gitlab modes is no longer supported");
+            }
+            if ((serverConfig != null) || (appConfig != null) || (projectIdPrefix != null))
             {
                 throw new IllegalArgumentException("Gitlab server and/or application configuration should not be specified together with Gitlab mode configuration");
             }
-            _serverConfig = uatConfig.getServerConfiguration();
-            _appConfig = uatConfig.getAppConfiguration();
-            _projectIdPrefix = "UAT";
+
+            ModeConfiguration modeConfig = (uatConfig == null) ? prodConfig : uatConfig;
+            return newGitLabConfiguration(projectTag, (uatConfig == null) ? "PROD" : "UAT", authConfig, modeConfig.getServerConfiguration(), modeConfig.getAppConfiguration(), newProjectVisibility, gitLabAuthorizers);
         }
-        else if (prodConfig != null)
-        {
-            if (serverConfig != null || appConfig != null)
-            {
-                throw new IllegalArgumentException("Gitlab server and/or application configuration should not be specified together with Gitlab mode configuration");
-            }
-            _serverConfig = prodConfig.getServerConfiguration();
-            _appConfig = prodConfig.getAppConfiguration();
-            _projectIdPrefix = "PROD";
-        }
-        return new GitLabConfiguration(projectTag, _projectIdPrefix, authConfig, _serverConfig, _appConfig, newProjectVisibility, gitLabAuthorizers);
+
+        return newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, serverConfig, appConfig, newProjectVisibility, gitLabAuthorizers);
     }
 
     public static GitLabConfiguration newGitLabConfiguration(String projectTag, String projectIdPrefix, AuthConfiguration authConfig, ServerConfiguration serverConfig, AppConfiguration appConfig, NewProjectVisibility newProjectVisibility)
     {
-        return newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, null, null, serverConfig, appConfig, newProjectVisibility, Collections.emptyList());
+        return newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, serverConfig, appConfig, newProjectVisibility, null);
+    }
+
+    public static GitLabConfiguration newGitLabConfiguration(String projectTag, String projectIdPrefix, AuthConfiguration authConfig, ServerConfiguration serverConfig, AppConfiguration appConfig, NewProjectVisibility newProjectVisibility, List<GitLabAuthorizer> gitLabAuthorizers)
+    {
+        return new GitLabConfiguration(projectTag, projectIdPrefix, authConfig, serverConfig, appConfig, newProjectVisibility, gitLabAuthorizers);
     }
 
     public static void configureObjectMapper(ObjectMapper objectMapper)
