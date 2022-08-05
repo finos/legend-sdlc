@@ -20,13 +20,13 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @Api("Project Configuration")
 @Path("/configuration")
@@ -53,6 +53,7 @@ public class ConfigurationResource extends BaseResource
     @GET
     @Path("/latestAvailableGenerations")
     @ApiOperation("Get available generations for the latest version")
+    @Deprecated
     public List<ArtifactTypeGenerationConfiguration> getLatestAvailableGenerations()
     {
         return this.projectConfigurationApi.getLatestAvailableArtifactGenerations();

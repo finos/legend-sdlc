@@ -285,11 +285,13 @@ public abstract class ProjectStructure
         ProjectConfiguration projectConfig = getProjectConfiguration();
         if (projectConfig != null)
         {
-            List<ArtifactGeneration> unsupportedGenerations = projectConfig.getArtifactGenerations().stream().filter(g -> !isSupportedArtifactType(g.getType())).collect(Collectors.toList());
-            if (!unsupportedGenerations.isEmpty())
+            MutableList<ArtifactGeneration> unsupportedGenerations = Iterate.select(projectConfig.getArtifactGenerations(), g -> !isSupportedArtifactType(g.getType()), Lists.mutable.empty());
+            if (unsupportedGenerations.notEmpty())
             {
-                unsupportedGenerations.sort(Comparator.comparing(ArtifactGeneration::getName));
-                throw new IllegalStateException(unsupportedGenerations.stream().map(g -> g.getName() + " (" + g.getType() + ")").collect(Collectors.joining(", ", "Unsupported artifact generations: ", "")));
+                StringBuilder builder = new StringBuilder("Unsupported artifact generations: ");
+                unsupportedGenerations.sortThis(Comparator.comparing(ArtifactGeneration::getName))
+                        .forEachWithIndex((g, i) -> ((i == 0) ? builder : builder.append(", ")).append(g.getName()).append(" (").append(g.getType()).append(")"));
+                throw new IllegalStateException(builder.toString());
             }
         }
     }
@@ -524,21 +526,16 @@ public abstract class ProjectStructure
 
 
         boolean updateGeneration = false;
-
-        Map<String, ArtifactGeneration> generationsByName = currentConfig.getArtifactGenerations().stream().collect(Collectors.toMap(ArtifactGeneration::getName, Function.identity()));
-
+        MutableMap<String, ArtifactGeneration> generationsByName = Iterate.groupByUniqueKey(currentConfig.getArtifactGenerations(), ArtifactGeneration::getName);
         if (updateBuilder.hasArtifactGenerationsToRemove())
         {
-            updateGeneration = generationsByName.keySet().stream().anyMatch(updateBuilder.getArtifactGenerationToRemove()::contains);
-            updateBuilder.getArtifactGenerationToRemove().forEach(generationsByName::remove);
+            updateGeneration = generationsByName.removeAllKeys(updateBuilder.getArtifactGenerationToRemove());
         }
 
         if (updateBuilder.hasArtifactGenerationsToAdd())
         {
             validateArtifactGenerations(generationsByName, updateBuilder.getArtifactGenerationToAdd());
-
-            updateGeneration = updateBuilder.getArtifactGenerationToAdd().stream().noneMatch(generationsByName.values()::contains);
-
+            updateGeneration |= Iterate.anySatisfy(updateBuilder.getArtifactGenerationToAdd(), g -> !g.equals(generationsByName.get(g.getName())));
             updateBuilder.getArtifactGenerationToAdd().forEach(art -> generationsByName.put(art.getName(), art));
         }
 

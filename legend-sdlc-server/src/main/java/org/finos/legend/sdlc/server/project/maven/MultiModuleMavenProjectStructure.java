@@ -58,7 +58,6 @@ import java.util.function.Consumer;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
-
 public abstract class MultiModuleMavenProjectStructure extends MavenProjectStructure
 {
     private static final Pattern VALID_MODULE_NAME = Pattern.compile("\\w++(-\\w++)*+");
@@ -94,6 +93,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         this(projectConfiguration, entitiesModuleName, sourceDirectories, otherModules, useDependencyManagement, null);
     }
 
+    @Deprecated
     protected Stream<String> getGenerationModuleNames(ArtifactType type)
     {
         return getProjectConfiguration().getArtifactGenerations().stream().filter(art -> type == art.getType()).map(ArtifactGeneration::getName);
@@ -296,7 +296,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     {
         Model mavenModel = createMavenModuleModel(otherModuleName);
 
-        ArtifactType typeForConfig = otherModules.get(otherModuleName);
+        ArtifactType typeForConfig = this.otherModules.get(otherModuleName);
         Map<ModuleConfigType, Method> otherModuleConfigMethods = this.moduleConfigMethods.get(getModuleConfigName(typeForConfig));
         if (otherModuleConfigMethods != null)
         {

@@ -16,8 +16,6 @@ package org.finos.legend.sdlc.server.inmemory.domain.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
-import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -39,12 +37,6 @@ public class InMemoryProjectConfiguration implements ProjectConfiguration
 
     @Override
     public String getProjectId()
-    {
-        return null;
-    }
-
-    @Override
-    public ProjectType getProjectType()
     {
         return null;
     }
@@ -84,12 +76,6 @@ public class InMemoryProjectConfiguration implements ProjectConfiguration
 
     @Override
     public List<MetamodelDependency> getMetamodelDependencies()
-    {
-        return null;
-    }
-
-    @Override
-    public List<ArtifactGeneration> getArtifactGenerations()
     {
         return null;
     }

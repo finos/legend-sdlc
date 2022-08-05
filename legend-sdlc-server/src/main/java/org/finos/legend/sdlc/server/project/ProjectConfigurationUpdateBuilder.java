@@ -385,35 +385,41 @@ public class ProjectConfigurationUpdateBuilder
         return this;
     }
 
+    @Deprecated
     public ProjectConfigurationUpdateBuilder withArtifactGenerationToAdd(ArtifactGeneration generation)
     {
         addArtifactGenerationToAdd(generation);
         return this;
     }
 
+    @Deprecated
     public ProjectConfigurationUpdateBuilder withArtifactGenerationsToAdd(Iterable<? extends ArtifactGeneration> generations)
     {
         addArtifactGenerationsToAdd(generations);
         return this;
     }
 
+    @Deprecated
     public ProjectConfigurationUpdateBuilder withArtifactGenerationToRemove(String generationName)
     {
         addArtifactGenerationToRemove(generationName);
         return this;
     }
 
+    @Deprecated
     public ProjectConfigurationUpdateBuilder withArtifactGenerationsToRemove(Iterable<String> generationName)
     {
         addArtifactGenerationsToRemove(generationName);
         return this;
     }
 
+    @Deprecated
     public void addArtifactGenerationToAdd(ArtifactGeneration generation)
     {
         this.generationsToAdd.add(generation);
     }
 
+    @Deprecated
     public void addArtifactGenerationsToAdd(Iterable<? extends ArtifactGeneration> generations)
     {
         if (generations != null)
@@ -422,11 +428,13 @@ public class ProjectConfigurationUpdateBuilder
         }
     }
 
+    @Deprecated
     public void addArtifactGenerationToRemove(String generationName)
     {
         this.generationNamesToRemove.add(generationName);
     }
 
+    @Deprecated
     public void addArtifactGenerationsToRemove(Iterable<String> generationNames)
     {
         if (generationNames != null)
@@ -435,16 +443,19 @@ public class ProjectConfigurationUpdateBuilder
         }
     }
 
+    @Deprecated
     public List<ArtifactGeneration> getArtifactGenerationToAdd()
     {
         return this.generationsToAdd;
     }
 
+    @Deprecated
     public boolean hasArtifactGenerationsToAdd()
     {
         return !this.generationsToAdd.isEmpty();
     }
 
+    @Deprecated
     public Set<String> getArtifactGenerationToRemove()
     {
         return this.generationNamesToRemove;
