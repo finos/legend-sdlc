@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import ch.qos.logback.core.joran.util.PropertySetter;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;

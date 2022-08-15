@@ -77,7 +77,6 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
         Assert.assertNotNull(configuration);
 
         T projectStructure = (T) ProjectStructure.getProjectStructure(configuration);
-        Assert.assertNotNull(projectStructure.getModuleConfig(artifactType));
         List<String> generationModuleName = projectStructure.getModuleNamesForType(artifactType).collect(Collectors.toList());
         Assert.assertFalse(artifactType.name() + " module does not exists", generationModuleName.isEmpty());
         Assert.assertTrue(generationModuleName.stream().allMatch(name -> projectStructure.getOtherModulesNames().contains(name)));
