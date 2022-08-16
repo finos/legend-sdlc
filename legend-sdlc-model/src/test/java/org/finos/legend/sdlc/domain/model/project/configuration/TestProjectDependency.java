@@ -14,8 +14,11 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import org.finos.legend.sdlc.domain.model.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.Comparator;
 
 public class TestProjectDependency
 {
@@ -51,5 +54,26 @@ public class TestProjectDependency
         Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", "0.0.1"), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0:0.0.1"));
         Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", "0.0.1"), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0_0.0.1", '_'));
         Assert.assertEquals(ProjectDependency.newProjectDependency("org.finos.legend.sdlc.test:testproject0", "0.0.1"), ProjectDependency.parseProjectDependency("org.finos.legend.sdlc.test:testproject0/0.0.1", '/'));
+    }
+
+    @Test
+    public void testDefaultComparator()
+    {
+        Comparator<ProjectDependency> comparator = ProjectDependency.getDefaultComparator();
+        ProjectDependency testProject123 = ProjectDependency.newProjectDependency("test-project", "1.2.3");
+
+        TestTools.assertCompareTo(0, testProject123, testProject123, comparator);
+        TestTools.assertCompareTo(0, testProject123, ProjectDependency.newProjectDependency("test-project", "1.2.3"), comparator);
+
+        TestTools.assertCompareTo(1, testProject123, ProjectDependency.newProjectDependency("test-project", "1.2.2"), comparator);
+        TestTools.assertCompareTo(1, testProject123, ProjectDependency.newProjectDependency("other-project", "1.2.2"), comparator);
+        TestTools.assertCompareTo(1, testProject123, ProjectDependency.newProjectDependency("other-project", "1.2.3"), comparator);
+        TestTools.assertCompareTo(1, testProject123, ProjectDependency.newProjectDependency("other-project", "9.10.11"), comparator);
+
+        TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency("test-project", "2.0.0"), comparator);
+        TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency("zest-project", "1.2.3"), comparator);
+
+        TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency(null, "1.2.3"), comparator);
+        TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency("test-project", null), comparator);
     }
 }
