@@ -111,7 +111,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
             List<ProjectDependency> projectDependencies = projectConfig.getProjectDependencies();
             if (projectDependencies != null)
             {
-                projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToAllMavenDependencies(pd, this.fileAccessProvider::getFileAccessContext, true)).forEach(dependencyManagementConsumer);
+                projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToAllMavenDependencies(pd, true)).forEach(dependencyManagementConsumer);
             }
             projectStructure.addJunitDependency(dependencyManagementConsumer, true);
             projectStructure.addJacksonDependency(dependencyManagementConsumer, true);
@@ -177,7 +177,7 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         List<ProjectDependency> projectDependencies = projectStructure.getProjectConfiguration().getProjectDependencies();
         if (projectDependencies != null)
         {
-            projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToMavenDependenciesForType(pd, this.fileAccessProvider::getFileAccessContext, ArtifactType.entities, includeVersions)).forEach(dependencyConsumer);
+            projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToMavenDependenciesForType(pd, ArtifactType.entities, includeVersions)).forEach(dependencyConsumer);
         }
     }
 

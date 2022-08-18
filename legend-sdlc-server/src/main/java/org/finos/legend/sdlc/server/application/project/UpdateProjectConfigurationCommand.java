@@ -18,8 +18,11 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
+import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.project.SimpleArtifactGeneration;
+import org.finos.legend.sdlc.server.project.SimpleProjectConfiguration;
 import org.finos.legend.sdlc.server.project.SimpleProjectDependency;
 
 import java.util.List;
@@ -30,6 +33,7 @@ public class UpdateProjectConfigurationCommand
     private final UpdateProjectConfigProjectStructureVersion projectStructureVersion;
     private final String groupId;
     private final String artifactId;
+    private final UpdatePlatformConfigurationsCommand platformConfigurations;
     private final List<ProjectDependency> projectDependenciesToAdd;
     private final List<ProjectDependency> projectDependenciesToRemove;
     private final List<ArtifactGeneration> artifactGenerationsToAdd;
@@ -41,15 +45,17 @@ public class UpdateProjectConfigurationCommand
             @JsonProperty("projectStructureVersion") UpdateProjectConfigProjectStructureVersion projectStructureVersion,
             @JsonProperty("groupId") String groupId,
             @JsonProperty("artifactId") String artifactId,
+            @JsonProperty("platformConfigurations") UpdatePlatformConfigurationsCommand platformConfigurations,
             @JsonProperty("projectDependenciesToAdd") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToAdd,
             @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
             @JsonProperty("artifactGenerationsToAdd") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerationsToAdd,
             @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove)
     {
         this.message = message;
-        this.projectStructureVersion = (projectStructureVersion == null) ? new UpdateProjectConfigProjectStructureVersion(null, null) : projectStructureVersion;
+        this.projectStructureVersion = projectStructureVersion;
         this.groupId = groupId;
         this.artifactId = artifactId;
+        this.platformConfigurations = platformConfigurations;
         this.projectDependenciesToAdd = projectDependenciesToAdd;
         this.projectDependenciesToRemove = projectDependenciesToRemove;
         this.artifactGenerationsToAdd = artifactGenerationsToAdd;
@@ -61,42 +67,28 @@ public class UpdateProjectConfigurationCommand
         return this.message;
     }
 
-    public UpdateProjectConfigProjectStructureVersion getProjectStructureVersion()
+    public ProjectConfigurationUpdater getProjectConfigurationUpdater()
     {
-        return this.projectStructureVersion;
+        ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                .withGroupId(this.groupId)
+                .withArtifactId(this.artifactId)
+                .withProjectDependenciesToAdd(this.projectDependenciesToAdd)
+                .withProjectDependenciesToRemove(this.projectDependenciesToRemove)
+                .withArtifactGenerationsToAdd(this.artifactGenerationsToAdd)
+                .withArtifactGenerationsToRemove(this.artifactGenerationsNamesToRemove);
+        if (this.projectStructureVersion != null)
+        {
+            configUpdater.withProjectStructureVersion(this.projectStructureVersion.getVersion())
+                    .withProjectStructureExtensionVersion(this.projectStructureVersion.getExtensionVersion());
+        }
+        if (this.platformConfigurations != null)
+        {
+            configUpdater.setPlatformConfigurations(this.platformConfigurations.getPlatformConfigurations());
+        }
+        return configUpdater;
     }
 
-    public String getGroupId()
-    {
-        return this.groupId;
-    }
-
-    public String getArtifactId()
-    {
-        return this.artifactId;
-    }
-
-    public List<ProjectDependency> getProjectDependenciesToAdd()
-    {
-        return this.projectDependenciesToAdd;
-    }
-
-    public List<ProjectDependency> getProjectDependenciesToRemove()
-    {
-        return this.projectDependenciesToRemove;
-    }
-
-    public List<ArtifactGeneration> getArtifactGenerationsToAdd()
-    {
-        return artifactGenerationsToAdd;
-    }
-
-    public List<String> getArtifactGenerationsNamesToRemove()
-    {
-        return artifactGenerationsNamesToRemove;
-    }
-
-    public static class UpdateProjectConfigProjectStructureVersion
+    private static class UpdateProjectConfigProjectStructureVersion
     {
         private final Integer version;
         private final Integer extensionVersion;
@@ -116,6 +108,22 @@ public class UpdateProjectConfigurationCommand
         public Integer getExtensionVersion()
         {
             return this.extensionVersion;
+        }
+    }
+
+    private static class UpdatePlatformConfigurationsCommand
+    {
+        private final List<PlatformConfiguration> platformConfigurations;
+
+        @JsonCreator
+        private UpdatePlatformConfigurationsCommand(@JsonProperty("platformConfigurations") @JsonDeserialize(contentAs = SimpleProjectConfiguration.SimplePlatformConfiguration.class) List<PlatformConfiguration> platformConfigurations)
+        {
+            this.platformConfigurations = platformConfigurations;
+        }
+
+        public List<PlatformConfiguration> getPlatformConfigurations()
+        {
+            return this.platformConfigurations;
         }
     }
 }

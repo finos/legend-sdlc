@@ -103,7 +103,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     protected void collectExpectedVersionPackageModulePlugins(String name, T projectStructure, Consumer<Plugin> pluginConsumer)
     {
         String entitiesDirectory = "${project.parent.basedir}" + projectStructure.getModuleFullName(projectStructure.getEntitiesModuleName()) + "/target/classes";
-        pluginConsumer.accept(new LegendVersionPackagePluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-version-package-maven-plugin","${platform.legend-engine.version}", Collections.singletonList(entitiesDirectory), null).getPlugin(projectStructure, this.fileAccessProvider::getFileAccessContext));
+        pluginConsumer.accept(new LegendVersionPackagePluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-version-package-maven-plugin","${platform.legend-engine.version}", Collections.singletonList(entitiesDirectory), null).getPlugin(projectStructure));
     }
 
     @ModuleConfig(artifactType = ArtifactType.versioned_entities, type = MultiModuleMavenProjectStructure.ModuleConfigType.DEPENDENCIES)
@@ -112,7 +112,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
         List<ProjectDependency> projectDependencies = projectStructure.getProjectConfiguration().getProjectDependencies();
         if (projectDependencies != null)
         {
-            projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToMavenDependenciesForType(pd, this.fileAccessProvider::getFileAccessContext, ArtifactType.versioned_entities, !projectStructure.usesDependencyManagement())).forEach(dependencyConsumer);
+            projectDependencies.stream().flatMap(pd -> MavenProjectStructure.projectDependencyToMavenDependenciesForType(pd, ArtifactType.versioned_entities, !projectStructure.usesDependencyManagement())).forEach(dependencyConsumer);
         }
     }
 

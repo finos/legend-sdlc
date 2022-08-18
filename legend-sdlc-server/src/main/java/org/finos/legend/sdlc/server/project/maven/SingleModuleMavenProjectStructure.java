@@ -17,12 +17,9 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
 import java.util.Collection;
-import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 public abstract class SingleModuleMavenProjectStructure extends MavenProjectStructure
@@ -45,9 +42,9 @@ public abstract class SingleModuleMavenProjectStructure extends MavenProjectStru
     }
 
     @Override
-    protected void configureMavenProjectModel(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    protected void configureMavenProjectModel(MavenModelConfiguration configuration)
     {
-        super.configureMavenProjectModel(versionFileAccessContextProvider, configuration);
+        super.configureMavenProjectModel(configuration);
 
         // Dependencies
         addJunitDependency(configuration::addDependency);
@@ -56,7 +53,7 @@ public abstract class SingleModuleMavenProjectStructure extends MavenProjectStru
                 ProjectDependency::getProjectId,
                 (id, deps) -> (deps.size() > 1) ? deps.stream().collect(StringBuilder::new, (builder, dep) -> dep.appendVersionIdString(builder.append((builder.length() == 0) ? "multiple versions not allowed: " : ", ")), StringBuilder::append).toString() : null,
                 "projects");
-        getProjectDependenciesAsMavenDependencies(getSupportedArtifactTypes(), versionFileAccessContextProvider, true).forEach(configuration::addDependency);
+        getProjectDependenciesAsMavenDependencies(getSupportedArtifactTypes(), true).forEach(configuration::addDependency);
     }
 
     @Override

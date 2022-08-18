@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
@@ -126,25 +127,26 @@ public abstract class MavenProjectStructure extends ProjectStructure
     }
 
     @Override
-    public void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<ProjectFileOperation> operationConsumer)
+    protected void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
     {
-        Model mavenModel = createAndConfigureMavenProjectModel(versionFileAccessContextProvider);
+        super.collectUpdateProjectConfigurationOperations(oldStructure, fileAccessContext, operationConsumer);
+        Model mavenModel = createAndConfigureMavenProjectModel();
         String serializedMavenModel = serializeMavenModel(mavenModel);
         addOrModifyFile(MAVEN_MODEL_PATH, serializedMavenModel, fileAccessContext, operationConsumer);
     }
 
-    private Model createAndConfigureMavenProjectModel(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    private Model createAndConfigureMavenProjectModel()
     {
         // Collect model configuration
         MavenModelConfiguration mavenModelConfig = new MavenModelConfiguration();
-        configureMavenProjectModel(versionFileAccessContextProvider, mavenModelConfig);
+        configureMavenProjectModel(mavenModelConfig);
 
         // Call legacy methods for backward compatibility
         addMavenProjectProperties(mavenModelConfig::setProperty);
-        addMavenProjectDependencyManagement(versionFileAccessContextProvider, mavenModelConfig::addDependencyManagement);
-        addMavenProjectDependencies(versionFileAccessContextProvider, mavenModelConfig::addDependency);
-        addMavenProjectPluginManagement(versionFileAccessContextProvider, mavenModelConfig::addPluginManagement);
-        addMavenProjectPlugins(versionFileAccessContextProvider, mavenModelConfig::addPlugin);
+        addMavenProjectDependencyManagement(null, mavenModelConfig::addDependencyManagement);
+        addMavenProjectDependencies(null, mavenModelConfig::addDependency);
+        addMavenProjectPluginManagement(null, mavenModelConfig::addPluginManagement);
+        addMavenProjectPlugins(null, mavenModelConfig::addPlugin);
 
         // Create maven model
         Model mavenModel = new Model();
@@ -164,7 +166,7 @@ public abstract class MavenProjectStructure extends ProjectStructure
         return mavenModel;
     }
 
-    protected void configureMavenProjectModel(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    protected void configureMavenProjectModel(MavenModelConfiguration configuration)
     {
         // Properties
         configuration.setProperty("project.build.sourceEncoding", getMavenModelSourceEncoding());
@@ -221,25 +223,25 @@ public abstract class MavenProjectStructure extends ProjectStructure
     }
 
     @Deprecated
-    protected void addMavenProjectDependencyManagement(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
+    protected void addMavenProjectDependencyManagement(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
     {
         // retained for backward compatibility
     }
 
     @Deprecated
-    protected void addMavenProjectDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
+    protected void addMavenProjectDependencies(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
     {
         // retained for backward compatibility
     }
 
     @Deprecated
-    protected void addMavenProjectPluginManagement(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
+    protected void addMavenProjectPluginManagement(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
     {
         // retained for backward compatibility
     }
 
     @Deprecated
-    protected void addMavenProjectPlugins(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
+    protected void addMavenProjectPlugins(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
     {
         // retained for backward compatibility
     }
@@ -326,47 +328,73 @@ public abstract class MavenProjectStructure extends ProjectStructure
         }
     }
 
-    protected Stream<Dependency> getAllProjectDependenciesAsMavenDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
+    protected Stream<Dependency> getAllProjectDependenciesAsMavenDependencies(boolean withVersions)
     {
-        return getProjectDependencies().stream().flatMap(pd -> projectDependencyToAllMavenDependencies(pd, versionFileAccessContextProvider, withVersions));
+        return getProjectDependencies().stream().flatMap(pd -> projectDependencyToAllMavenDependencies(pd, withVersions));
     }
 
-    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(ArtifactType artifactType, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
+    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(ArtifactType artifactType, boolean withVersions)
     {
-        return getProjectDependenciesAsMavenDependencies(Collections.singletonList(artifactType), versionFileAccessContextProvider, withVersions);
+        return getProjectDependenciesAsMavenDependencies(Collections.singletonList(artifactType), withVersions);
     }
 
-    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(Collection<? extends ArtifactType> artifactTypes, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
+    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(Collection<? extends ArtifactType> artifactTypes, boolean withVersions)
     {
-        return getProjectDependencies().stream().flatMap(pd -> projectDependencyToMavenDependencies(pd, versionFileAccessContextProvider, artifactTypes, withVersions));
+        return getProjectDependencies().stream().flatMap(pd -> projectDependencyToMavenDependencies(pd, artifactTypes, withVersions));
     }
 
-    public static Stream<Dependency> projectDependencyToMavenDependenciesForType(ProjectDependency projectDependency, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, ArtifactType artifactType, boolean setVersion)
+    @Deprecated
+    protected Stream<Dependency> getAllProjectDependenciesAsMavenDependencies(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
     {
-        return projectDependencyToMavenDependencies(projectDependency, versionFileAccessContextProvider, Collections.singletonList(artifactType), setVersion);
+        return getAllProjectDependenciesAsMavenDependencies(withVersions);
     }
 
-    public static Stream<Dependency> projectDependencyToAllMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, boolean setVersion)
+    @Deprecated
+    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(ArtifactType artifactType, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
     {
-        return projectDependencyToMavenDependencies(projectDependency, versionFileAccessContextProvider, null, setVersion);
+        return getProjectDependenciesAsMavenDependencies(artifactType, withVersions);
     }
 
-    public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
+    @Deprecated
+    public Stream<Dependency> getProjectDependenciesAsMavenDependencies(Collection<? extends ArtifactType> artifactTypes, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, boolean withVersions)
+    {
+        return getProjectDependenciesAsMavenDependencies(artifactTypes, withVersions);
+    }
+
+    public static Stream<Dependency> projectDependencyToMavenDependenciesForType(ProjectDependency projectDependency, ArtifactType artifactType, boolean setVersion)
+    {
+        return projectDependencyToMavenDependencies(projectDependency, Collections.singletonList(artifactType), setVersion);
+    }
+
+    public static Stream<Dependency> projectDependencyToAllMavenDependencies(ProjectDependency projectDependency, boolean setVersion)
+    {
+        return projectDependencyToMavenDependencies(projectDependency, null, setVersion);
+    }
+
+    public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
     {
         String versionString = setVersion ? projectDependency.getVersionId() : null;
-
-        if (isLegacyProjectDependency(projectDependency))
-        {
-            ProjectStructure versionStructure = getProjectStructureForProjectDependency(projectDependency, versionFileAccessContextProvider);
-            ProjectConfiguration versionConfig = versionStructure.getProjectConfiguration();
-            String groupId = versionConfig.getGroupId();
-            Stream<String> stream = ((artifactTypes == null) || artifactTypes.isEmpty()) ? versionStructure.getAllArtifactIds() : versionStructure.getArtifactIds(artifactTypes);
-            return stream.map(aid -> newMavenDependency(groupId, aid, versionString));
-        }
-
         Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
         Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
         return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString));
+    }
+
+    @Deprecated
+    public static Stream<Dependency> projectDependencyToMavenDependenciesForType(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, ArtifactType artifactType, boolean setVersion)
+    {
+        return projectDependencyToMavenDependenciesForType(projectDependency, artifactType, setVersion);
+    }
+
+    @Deprecated
+    public static Stream<Dependency> projectDependencyToAllMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, boolean setVersion)
+    {
+        return projectDependencyToAllMavenDependencies(projectDependency, setVersion);
+    }
+
+    @Deprecated
+    public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
+    {
+        return projectDependencyToMavenDependencies(projectDependency, artifactTypes, setVersion);
     }
 
     private static Pair<String, String> getGroupAndArtifactIdFromProjectDependency(ProjectDependency projectDependency)
@@ -414,7 +442,7 @@ public abstract class MavenProjectStructure extends ProjectStructure
         return dependency;
     }
 
-    public static Model getProjectMavenModel(ProjectFileAccessProvider.FileAccessContext accessContext)
+    public static Model getProjectMavenModel(FileAccessContext accessContext)
     {
         return deserializeMavenModel(accessContext.getFile(MAVEN_MODEL_PATH));
     }
@@ -640,6 +668,7 @@ public abstract class MavenProjectStructure extends ProjectStructure
                 {
                     PluginManagement pluginManagement = new PluginManagement();
                     pluginManagement.setPlugins(this.pluginManagement);
+                    build.setPluginManagement(pluginManagement);
                 }
                 if (this.plugins.notEmpty())
                 {

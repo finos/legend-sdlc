@@ -17,11 +17,8 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPluginHelper
@@ -36,10 +33,8 @@ public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPl
         this.outputDirectory = outputDirectory;
     }
 
-
-
     @Override
-    protected void configurePlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Xpp3Dom> configConsumer)
+    protected void configurePlugin(MavenProjectStructure projectStructure, Consumer<? super Xpp3Dom> configConsumer)
     {
         if ((this.entitySourceDirectories != null) && !this.entitySourceDirectories.isEmpty())
         {
@@ -53,9 +48,9 @@ public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPl
     }
 
     @Override
-    protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
+    protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
     {
-        super.addDependencies(projectStructure, versionFileAccessContextProvider, dependencyConsumer);
-        projectStructure.getProjectDependenciesAsMavenDependencies(ArtifactType.versioned_entities, versionFileAccessContextProvider, true).forEach(dependencyConsumer);
+        super.addDependencies(projectStructure, dependencyConsumer);
+        projectStructure.getProjectDependenciesAsMavenDependencies(ArtifactType.versioned_entities, true).forEach(dependencyConsumer);
     }
 }

@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
@@ -97,23 +98,23 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         return getProjectConfiguration().getArtifactGenerations().stream().filter(art -> type == art.getType()).map(ArtifactGeneration::getName);
     }
 
-    public Model getModuleMavenModel(String moduleName, ProjectFileAccessProvider.FileAccessContext accessContext)
+    public Model getModuleMavenModel(String moduleName, FileAccessContext accessContext)
     {
         String path = getModuleMavenModelPath(moduleName);
         return deserializeMavenModel(accessContext.getFile(path));
     }
 
     @Override
-    public void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<ProjectFileOperation> operationConsumer)
+    protected void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
     {
-        super.collectUpdateProjectConfigurationOperations(oldStructure, fileAccessContext, versionFileAccessContextProvider, operationConsumer);
+        super.collectUpdateProjectConfigurationOperations(oldStructure, fileAccessContext, operationConsumer);
 
         if (oldStructure instanceof MultiModuleMavenProjectStructure)
         {
             MultiModuleMavenProjectStructure oldMultiStructure = (MultiModuleMavenProjectStructure) oldStructure;
 
             // entities module
-            Model entitiesModel = createMavenEntitiesModuleModel(versionFileAccessContextProvider);
+            Model entitiesModel = createMavenEntitiesModuleModel();
             String serializedEntitiesModel = serializeMavenModel(entitiesModel);
             moveOrAddOrModifyModuleFile(oldMultiStructure, oldMultiStructure.entitiesModuleName, MAVEN_MODEL_PATH, this.entitiesModuleName, MAVEN_MODEL_PATH, serializedEntitiesModel, fileAccessContext, operationConsumer);
 
@@ -121,7 +122,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
             MutableSet<String> oldOtherModuleNames = Sets.mutable.withAll(oldMultiStructure.otherModules.keySet());
             MapIterate.forEachKey(this.otherModules, otherModuleName ->
             {
-                Model otherModuleModel = createMavenOtherModuleModel(otherModuleName, versionFileAccessContextProvider);
+                Model otherModuleModel = createMavenOtherModuleModel(otherModuleName);
                 String serializedOtherModuleModel = serializeMavenModel(otherModuleModel);
                 if (oldOtherModuleNames.remove(otherModuleName))
                 {
@@ -141,13 +142,13 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         else
         {
             // entities module
-            Model entitiesModel = createMavenEntitiesModuleModel(versionFileAccessContextProvider);
+            Model entitiesModel = createMavenEntitiesModuleModel();
             addOrModifyFile(getModuleMavenModelPath(this.entitiesModuleName), serializeMavenModel(entitiesModel), fileAccessContext, operationConsumer);
 
             // other modules
             MapIterate.forEachKey(this.otherModules, otherModuleName ->
             {
-                Model otherModuleModel = createMavenOtherModuleModel(otherModuleName, versionFileAccessContextProvider);
+                Model otherModuleModel = createMavenOtherModuleModel(otherModuleName);
                 addOrModifyFile(getModuleMavenModelPath(otherModuleName), serializeMavenModel(otherModuleModel), fileAccessContext, operationConsumer);
             });
         }
@@ -160,9 +161,9 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     }
 
     @Override
-    protected void configureMavenProjectModel(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    protected void configureMavenProjectModel(MavenModelConfiguration configuration)
     {
-        super.configureMavenProjectModel(versionFileAccessContextProvider, configuration);
+        super.configureMavenProjectModel(configuration);
 
         // Modules
         configuration.addModule(getModuleFullName(this.entitiesModuleName));
@@ -176,7 +177,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         {
             addJunitDependency(configuration::addDependencyManagement, true);
             addJacksonDependency(configuration::addDependencyManagement, true);
-            getAllProjectDependenciesAsMavenDependencies(versionFileAccessContextProvider, true).forEach(configuration::addDependencyManagement);
+            getAllProjectDependenciesAsMavenDependencies(true).forEach(configuration::addDependencyManagement);
         }
     }
 
@@ -210,16 +211,16 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         return this.useDependencyManagement;
     }
 
-    protected Model createMavenEntitiesModuleModel(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    protected Model createMavenEntitiesModuleModel()
     {
         // Module configuration
         MavenModelConfiguration mavenModelConfig = new MavenModelConfiguration();
-        configureEntitiesModule(versionFileAccessContextProvider, mavenModelConfig);
+        configureEntitiesModule(mavenModelConfig);
 
         // Call legacy configuration methods for backward compatibility
         addEntitiesModuleProperties(mavenModelConfig::setProperty);
-        addEntitiesModuleDependencies(versionFileAccessContextProvider, mavenModelConfig::addDependency);
-        addEntitiesModulePlugins(versionFileAccessContextProvider, mavenModelConfig::addPlugin);
+        addEntitiesModuleDependencies(null, mavenModelConfig::addDependency);
+        addEntitiesModulePlugins(null, mavenModelConfig::addPlugin);
 
         // Create and configure module
         Model mavenModel = createMavenModuleModel(this.entitiesModuleName);
@@ -228,7 +229,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         return mavenModel;
     }
 
-    protected void configureEntitiesModule(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    protected void configureEntitiesModule(MavenModelConfiguration configuration)
     {
         // Dependencies
         addJunitDependency(configuration::addDependency, !this.useDependencyManagement);
@@ -241,7 +242,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         {
             dependencies.sort(comparator);
             ArtifactType type = (dependencies.size() > 1) ? ArtifactType.versioned_entities : ArtifactType.entities;
-            dependencies.forEach(dep -> projectDependencyToMavenDependenciesForType(dep, versionFileAccessContextProvider, type, !this.useDependencyManagement).forEach(configuration::addDependency));
+            dependencies.forEach(dep -> projectDependencyToMavenDependenciesForType(dep, type, !this.useDependencyManagement).forEach(configuration::addDependency));
         });
     }
 
@@ -252,35 +253,35 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
     }
 
     @Deprecated
-    protected void addEntitiesModuleDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
+    protected void addEntitiesModuleDependencies(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
     {
         // retained for backward compatibility
     }
 
     @Deprecated
-    protected void addEntitiesModulePlugins(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
+    protected void addEntitiesModulePlugins(BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<Plugin> pluginConsumer)
     {
         // retained for backward compatibility
     }
 
-    protected Model createMavenOtherModuleModel(String otherModuleName, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    protected Model createMavenOtherModuleModel(String otherModuleName)
     {
         MavenModelConfiguration mavenModelConfiguration = new MavenModelConfiguration();
         ArtifactType typeForConfig = this.otherModules.get(otherModuleName);
-        configureOtherModule(typeForConfig, otherModuleName, versionFileAccessContextProvider, mavenModelConfiguration);
-        legacyConfigureOtherModule(typeForConfig, otherModuleName, versionFileAccessContextProvider, mavenModelConfiguration);
+        configureOtherModule(typeForConfig, otherModuleName, mavenModelConfiguration);
+        legacyConfigureOtherModule(typeForConfig, otherModuleName, mavenModelConfiguration);
 
         Model mavenModel = createMavenModuleModel(otherModuleName);
         mavenModelConfiguration.configureModel(mavenModel);
         return mavenModel;
     }
 
-    protected void configureOtherModule(ArtifactType type, String name, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    protected void configureOtherModule(ArtifactType type, String name, MavenModelConfiguration configuration)
     {
         // Do nothing by default
     }
 
-    private void legacyConfigureOtherModule(ArtifactType type, String name, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, MavenModelConfiguration configuration)
+    private void legacyConfigureOtherModule(ArtifactType type, String name, MavenModelConfiguration configuration)
     {
         Map<ModuleConfigType, Method> otherModuleConfigMethods = this.moduleConfigMethods.get(getModuleConfigName(type));
         if (otherModuleConfigMethods != null)
@@ -327,7 +328,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
             {
                 try
                 {
-                    invokeConfigMethod(dependenciesMethod, versionFileAccessContextProvider, (Consumer<Dependency>) configuration::addDependency);
+                    invokeConfigMethod(dependenciesMethod, null, (Consumer<Dependency>) configuration::addDependency);
                 }
                 catch (LegendSDLCServerException e)
                 {
@@ -345,7 +346,7 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
             {
                 try
                 {
-                    invokeConfigMethod(pluginsMethod, name, versionFileAccessContextProvider, (Consumer<Plugin>) configuration::addPlugin);
+                    invokeConfigMethod(pluginsMethod, name, null, (Consumer<Plugin>) configuration::addPlugin);
                 }
                 catch (LegendSDLCServerException e)
                 {
@@ -381,12 +382,12 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         }
     }
 
-    protected void addOrModifyModuleFile(String moduleName, String pathWithinModule, String newContent, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
+    protected void addOrModifyModuleFile(String moduleName, String pathWithinModule, String newContent, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
     {
         addOrModifyFile(getModuleFilePath(moduleName, pathWithinModule), newContent, fileAccessContext, operationConsumer);
     }
 
-    protected void moveOrAddOrModifyModuleFile(ProjectStructure oldStructure, String oldModule, String oldPath, String newModule, String newPath, String newContent, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
+    protected void moveOrAddOrModifyModuleFile(ProjectStructure oldStructure, String oldModule, String oldPath, String newModule, String newPath, String newContent, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
     {
         String oldFullPath = (oldStructure instanceof MultiModuleMavenProjectStructure) ? ((MultiModuleMavenProjectStructure) oldStructure).getModuleFilePath(oldModule, oldPath) : oldPath;
         String newFullPath = getModuleFilePath(newModule, newPath);

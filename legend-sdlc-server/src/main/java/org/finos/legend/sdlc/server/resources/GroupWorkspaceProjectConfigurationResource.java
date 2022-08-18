@@ -18,11 +18,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectConfigurationCommand;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -31,7 +33,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/configuration")
 @Api("Project Configuration")
@@ -64,18 +65,7 @@ public class GroupWorkspaceProjectConfigurationResource extends BaseResource
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
         return executeWithLogging(
                 "updating configuration for project " + projectId + " in group workspace " + workspaceId,
-                () -> this.projectConfigurationApi.updateProjectConfigurationForGroupWorkspace(
-                        projectId,
-                        workspaceId,
-                        command.getMessage(),
-                        command.getProjectStructureVersion().getVersion(),
-                        command.getProjectStructureVersion().getExtensionVersion(),
-                        command.getGroupId(),
-                        command.getArtifactId(),
-                        command.getProjectDependenciesToAdd(),
-                        command.getProjectDependenciesToRemove(),
-                        command.getArtifactGenerationsToAdd(),
-                        command.getArtifactGenerationsNamesToRemove())
+                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, workspaceId, WorkspaceType.GROUP, command.getMessage(), command.getProjectConfigurationUpdater())
         );
     }
 
