@@ -326,9 +326,9 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     }
 
     @Override
-    public EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, String workspaceId)
+    public EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceEntityModificationContextByWorkspaceAccessType(projectId, workspaceId, workspaceType, WorkspaceAccessType.CONFLICT_RESOLUTION);
     }
 
     private EntityModificationContext getWorkspaceEntityModificationContextByWorkspaceAccessType(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)

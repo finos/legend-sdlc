@@ -246,7 +246,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         // Perform entity changes to resolve conflicts
         try
         {
-            this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage());
+            this.entityApi.getWorkspaceWithConflictResolutionEntityModificationContext(projectId, workspaceId, workspaceType).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage());
         }
         catch (Exception e)
         {
