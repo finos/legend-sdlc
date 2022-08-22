@@ -559,8 +559,8 @@ abstract class BaseGitLabApi
                     case 401:
                     {
                         // this means the access token is invalid
-                        BaseGitLabApi.this.userContext.clearAccessToken();
-                        HttpServletRequest httpRequest = BaseGitLabApi.this.userContext.getHttpRequest();
+                        this.userContext.clearAccessToken();
+                        HttpServletRequest httpRequest = this.userContext.getHttpRequest();
                         StringBuffer urlBuilder = httpRequest.getRequestURL();
                         String requestQueryString = httpRequest.getQueryString();
                         if (requestQueryString != null)

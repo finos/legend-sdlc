@@ -177,8 +177,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
 
         bindResources(binder);
-        bindFilters(binder);
-        bindExceptionMappers(binder);
     }
 
     private void bindResources(Binder binder)
@@ -299,16 +297,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     }
 
     protected abstract void configureApis(Binder binder);
-
-    private void bindFilters(Binder binder)
-    {
-
-    }
-
-    private void bindExceptionMappers(Binder binder)
-    {
-
-    }
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()
     {

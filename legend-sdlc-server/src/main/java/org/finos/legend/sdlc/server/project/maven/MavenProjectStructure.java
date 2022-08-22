@@ -726,6 +726,12 @@ public abstract class MavenProjectStructure extends ProjectStructure
                 }
 
                 @Override
+                public boolean equals(Object other)
+                {
+                    return set.equals(other);
+                }
+
+                @Override
                 public Iterator<T> iterator()
                 {
                     return sort.apply(set).iterator();

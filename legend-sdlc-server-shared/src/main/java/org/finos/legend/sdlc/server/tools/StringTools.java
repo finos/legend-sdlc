@@ -84,12 +84,9 @@ public class StringTools
                 {
                     builder.append(separator);
                 }
-                if (t instanceof UnknownHostException)
+                if ((t instanceof UnknownHostException) && ((messageFunc == null) || Objects.equals(message, t.getMessage())))
                 {
-                    if ((messageFunc == null) || Objects.equals(message, t.getMessage()))
-                    {
-                        builder.append("unknown host - ");
-                    }
+                    builder.append("unknown host - ");
                 }
                 builder.append(message);
             }
