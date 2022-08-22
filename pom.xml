@@ -380,32 +380,29 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
                 <version>3.17.0</version>
-                <inherited>false</inherited>
-                <!-- aggregate configuration, parent build-->
                 <configuration>
                     <printFailingErrors>true</printFailingErrors>
                     <rulesets>
-                        <ruleset>${project.basedir}/pmd/legend-ruleset.xml</ruleset>
+                        <ruleset>${project.parent.basedir}/pmd/legend-ruleset.xml</ruleset>
                     </rulesets>
                     <rules>
                         <requireFilesExist>
                             <files>
-                                <file>${project.basedir}/pmd/legend-ruleset.xml</file>
+                                <file>${project.parent.basedir}/pmd/legend-ruleset.xml</file>
                             </files>
                         </requireFilesExist>
                     </rules>
                 </configuration>
                 <executions>
                     <execution>
-                        <id>pmd-check-aggregate</id>
+                        <id>pmd-check</id>
                         <phase>validate</phase>
                         <goals>
-                            <goal>aggregate-pmd-check</goal>
+                            <goal>check</goal>
                         </goals>
-                    </execution>                    
+                    </execution>
                 </executions>
             </plugin>
-
         </plugins>
     </build>
 
