@@ -20,11 +20,8 @@ import org.apache.maven.model.PluginExecution;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import java.util.Collections;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
 public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
@@ -61,7 +58,7 @@ public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractL
     }
 
     @Override
-    protected void configurePlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Xpp3Dom> configConsumer)
+    protected void configurePlugin(MavenProjectStructure projectStructure, Consumer<? super Xpp3Dom> configConsumer)
     {
         configConsumer.accept(MavenPluginTools.newDom("packagePrefix", getPackagePrefix(projectStructure.getProjectConfiguration())));
 
@@ -79,9 +76,9 @@ public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractL
     }
 
     @Override
-    protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
+    protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
     {
-        super.addDependencies(projectStructure, versionFileAccessContextProvider, dependencyConsumer);
+        super.addDependencies(projectStructure, dependencyConsumer);
         if (projectStructure instanceof MultiModuleMavenProjectStructure)
         {
             MultiModuleMavenProjectStructure multiModuleProjectStructure = (MultiModuleMavenProjectStructure) projectStructure;

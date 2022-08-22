@@ -19,6 +19,7 @@ import org.junit.Assert;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,6 +37,11 @@ public class TestTools
     public static <T extends Comparable<? super T>> void assertCompareTo(int expected, T obj1, T obj2)
     {
         Assert.assertEquals(Integer.signum(expected), Integer.signum(obj1.compareTo(obj2)));
+    }
+
+    public static <T> void assertCompareTo(int expected, T obj1, T obj2, Comparator<? super T> comparator)
+    {
+        Assert.assertEquals(Integer.signum(expected), Integer.signum(comparator.compare(obj1, obj2)));
     }
 
     public static void assertEntitiesEquivalent(Entity expected, Entity actual)

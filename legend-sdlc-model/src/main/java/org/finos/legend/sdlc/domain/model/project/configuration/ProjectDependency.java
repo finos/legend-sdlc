@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 public abstract class ProjectDependency extends Dependency
@@ -110,5 +111,12 @@ public abstract class ProjectDependency extends Dependency
                 return versionId;
             }
         };
+    }
+
+    public static Comparator<ProjectDependency> getDefaultComparator()
+    {
+        Comparator<String> nullsLastStringCmp = Comparator.nullsLast(Comparator.naturalOrder());
+        return Comparator.comparing(ProjectDependency::getProjectId, nullsLastStringCmp)
+                .thenComparing(ProjectDependency::getVersionId, nullsLastStringCmp);
     }
 }

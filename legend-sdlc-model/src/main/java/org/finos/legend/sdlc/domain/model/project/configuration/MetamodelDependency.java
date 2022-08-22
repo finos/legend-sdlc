@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 public abstract class MetamodelDependency extends Dependency
@@ -126,5 +127,11 @@ public abstract class MetamodelDependency extends Dependency
                 return version;
             }
         };
+    }
+
+    public static Comparator<MetamodelDependency> getDefaultComparator()
+    {
+        return Comparator.comparing(MetamodelDependency::getMetamodel, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparingInt(MetamodelDependency::getVersion);
     }
 }

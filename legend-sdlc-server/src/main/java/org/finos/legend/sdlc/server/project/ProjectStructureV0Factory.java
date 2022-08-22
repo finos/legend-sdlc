@@ -16,13 +16,11 @@ package org.finos.legend.sdlc.server.project;
 
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -62,7 +60,7 @@ public class ProjectStructureV0Factory extends ProjectStructureVersionFactory
         }
 
         @Override
-        public void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, FileAccessContext fileAccessContext, BiFunction<String, VersionId, FileAccessContext> versionFileAccessContextProvider, Consumer<ProjectFileOperation> operationConsumer)
+        public void collectUpdateProjectConfigurationOperations(ProjectStructure oldStructure, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
         {
             if (oldStructure.getVersion() != 0)
             {

@@ -31,6 +31,11 @@ public interface ProjectConfiguration
 
     ProjectStructureVersion getProjectStructureVersion();
 
+    default List<PlatformConfiguration> getPlatformConfigurations()
+    {
+        return null;
+    }
+
     String getGroupId();
 
     String getArtifactId();
