@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
@@ -109,25 +110,7 @@ public class ProjectConfigurationUpdater
     public void setPlatformConfigurations(Iterable<? extends PlatformConfiguration> platformConfigurations)
     {
         this.platformConfigurationsIsSet = true;
-        if (platformConfigurations == null)
-        {
-            this.platformConfigurations = null;
-        }
-        else
-        {
-            this.platformConfigurations = Lists.mutable.<PlatformConfiguration>withAll(platformConfigurations).sortThisBy(PlatformConfiguration::getName);
-            if (this.platformConfigurations.notEmpty())
-            {
-                MutableSet<String> names = Sets.mutable.ofInitialCapacity(this.platformConfigurations.size());
-                this.platformConfigurations.forEach(pc ->
-                {
-                    if (!names.add(pc.getName()))
-                    {
-                        throw new IllegalArgumentException("Multiple configurations for platform: \"" + pc.getName() + "\"");
-                    }
-                });
-            }
-        }
+        this.platformConfigurations = (platformConfigurations == null) ? null : Lists.mutable.<PlatformConfiguration>withAll(platformConfigurations).sortThisBy(PlatformConfiguration::getName);
     }
 
     public ProjectConfigurationUpdater withPlatformConfigurations(Iterable<? extends PlatformConfiguration> platformConfigurations)
@@ -204,6 +187,11 @@ public class ProjectConfigurationUpdater
         return this;
     }
 
+    public ProjectConfigurationUpdater withProjectDependenciesToAdd(ProjectDependency... projectDependencies)
+    {
+        return withProjectDependenciesToAdd((projectDependencies == null) ? null : ArrayAdapter.adapt(projectDependencies));
+    }
+
     // Project dependencies to remove
 
     public Set<ProjectDependency> getProjectDependenciesToRemove()
@@ -235,6 +223,12 @@ public class ProjectConfigurationUpdater
         addProjectDependenciesToRemove(projectDependencies);
         return this;
     }
+
+    public ProjectConfigurationUpdater withProjectDependenciesToRemove(ProjectDependency... projectDependencies)
+    {
+        return withProjectDependenciesToRemove((projectDependencies == null) ? null : ArrayAdapter.adapt(projectDependencies));
+    }
+
 
     // Metamodel dependencies to add
 
@@ -268,6 +262,12 @@ public class ProjectConfigurationUpdater
         return this;
     }
 
+    public ProjectConfigurationUpdater withMetamodelDependenciesToAdd(MetamodelDependency... metamodelDependencies)
+    {
+        return withMetamodelDependenciesToAdd((metamodelDependencies == null) ? null : ArrayAdapter.adapt(metamodelDependencies));
+    }
+
+
     // Metamodel dependencies to remove
 
     public Set<MetamodelDependency> getMetamodelDependenciesToRemove()
@@ -298,6 +298,11 @@ public class ProjectConfigurationUpdater
     {
         addMetamodelDependenciesToRemove(metamodelDependencies);
         return this;
+    }
+
+    public ProjectConfigurationUpdater withMetamodelDependenciesToRemove(MetamodelDependency... metamodelDependencies)
+    {
+        return withMetamodelDependenciesToRemove((metamodelDependencies == null) ? null : ArrayAdapter.adapt(metamodelDependencies));
     }
 
     // Artifact generations to add
@@ -374,16 +379,12 @@ public class ProjectConfigurationUpdater
         List<PlatformConfiguration> newPlatformConfigurations;
         if (this.platformConfigurationsIsSet)
         {
-            newPlatformConfigurations = (this.platformConfigurations == null) ?
-                    null :
-                    this.platformConfigurations.toList();
+            newPlatformConfigurations = (this.platformConfigurations == null) ? null : this.platformConfigurations.toList();
         }
         else
         {
             List<PlatformConfiguration> currentPlatformConfigurations = configuration.getPlatformConfigurations();
-            newPlatformConfigurations = (currentPlatformConfigurations == null) ?
-                    null :
-                    Lists.mutable.withAll(currentPlatformConfigurations);
+            newPlatformConfigurations = (currentPlatformConfigurations == null) ? null : Lists.mutable.withAll(currentPlatformConfigurations);
         }
 
         // Group id
