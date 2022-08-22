@@ -55,7 +55,6 @@ import java.util.stream.Collectors;
 public class FileGenerationMojo extends AbstractMojo
 {
     private static final String GENERATION_SPECIFICATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationSpecification";
-    private static final String FILE_GENERATION_CLASSIFIER_PATH = "meta::pure::generation::metamodel::GenerationConfiguration";
 
     @Parameter
     private GenerationSpecificationFilter inclusions;

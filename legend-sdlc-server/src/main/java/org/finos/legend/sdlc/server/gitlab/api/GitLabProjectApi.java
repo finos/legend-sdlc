@@ -180,7 +180,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
 
-        validateProjectCreation(name, description, groupId, artifactId);
+        validateProjectCreation(groupId, artifactId);
 
         try
         {
@@ -680,11 +680,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             case CREATE_VERSION:
             {
-                return checkUserReleasePermission(projectId, action, accessLevel);
+                return checkUserReleasePermission(projectId, accessLevel);
             }
             case COMMIT_REVIEW:
             {
-                return checkUserMergeReviewPermission(projectId, action, accessLevel);
+                return defaultMergeReviewAccess(accessLevel);
             }
             case SUBMIT_REVIEW:
             {
@@ -701,12 +701,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
-    private boolean checkUserMergeReviewPermission(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
-    {
-        return defaultMergeReviewAccess(accessLevel);
-    }
-
-    private boolean checkUserReleasePermission(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
+    private boolean checkUserReleasePermission(GitLabProjectId projectId, AccessLevel accessLevel)
     {
         try
         {
@@ -798,7 +793,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         return ProjectStructure.getLatestProjectStructureVersion();
     }
 
-    private void validateProjectCreation(String name, String description, String groupId, String artifactId)
+    private void validateProjectCreation(String groupId, String artifactId)
     {
         ProjectCreationConfiguration projectCreationConfig = getProjectCreationConfiguration();
         if (projectCreationConfig != null)

@@ -308,11 +308,6 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         }
     }
 
-    private static String getPackagePrefix(String groupId, String artifactId, String version)
-    {
-        return getPackagePrefix(groupId, artifactId, version, null);
-    }
-
     private static String getPackagePrefix(String groupId, String artifactId, String version, String versionAlias)
     {
         StringBuilder builder = new StringBuilder(groupId.length() + artifactId.length() + ((versionAlias == null) ? version : versionAlias).length() + 16);
