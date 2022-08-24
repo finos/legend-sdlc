@@ -96,7 +96,7 @@
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
         <junit.version>4.13.1</junit.version>
-        <apache.maven.version>3.6.2</apache.maven.version>
+        <apache.maven.version>3.8.6</apache.maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
