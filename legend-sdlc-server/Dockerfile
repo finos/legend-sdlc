@@ -1,4 +1,4 @@
-FROM openjdk:11.0.15-bullseye
+FROM openjdk:11.0.16-bullseye
 COPY target/legend-sdlc-server-*-shaded.jar /app/bin/
 CMD java -cp /app/bin/*.jar \
 -XX:+ExitOnOutOfMemoryError \
