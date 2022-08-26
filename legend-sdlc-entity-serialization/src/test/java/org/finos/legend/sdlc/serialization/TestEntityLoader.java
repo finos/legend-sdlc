@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.junit.After;
@@ -24,8 +22,10 @@ import org.junit.Before;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,13 +34,13 @@ abstract class TestEntityLoader
 {
     private List<Entity> testEntities;
     private EntityLoader entityLoader;
-    private final List<AutoCloseable> closeables = Lists.mutable.empty();
+    private final List<AutoCloseable> closeables = new ArrayList<>();
 
     @Before
     public void setUp() throws IOException
     {
         this.testEntities = getTestEntities();
-        Map<String, byte[]> filesByPath = Maps.mutable.ofInitialCapacity(this.testEntities.size());
+        Map<String, byte[]> filesByPath = new HashMap<>(this.testEntities.size());
         EntitySerializer entitySerializer = EntitySerializers.getDefaultJsonSerializer();
         for (Entity entity : this.testEntities)
         {
@@ -115,13 +115,13 @@ abstract class TestEntityLoader
     @Test
     public void testGetEntitiesInPackage()
     {
-        Map<String, List<Entity>> entitiesByPackage = Maps.mutable.empty();
+        Map<String, List<Entity>> entitiesByPackage = new HashMap<>();
         for (Entity entity : this.testEntities)
         {
             String path = entity.getPath();
             for (int index = path.indexOf(':'); index != -1; index = path.indexOf(':', index + 2))
             {
-                entitiesByPackage.computeIfAbsent(path.substring(0, index), k -> Lists.mutable.empty()).add(entity);
+                entitiesByPackage.computeIfAbsent(path.substring(0, index), k -> new ArrayList<>()).add(entity);
             }
         }
 

@@ -14,12 +14,11 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Maps;
-
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 
 public class TestJarDirectoriesEntityLoader extends TestEntityLoaderWithZipFile
@@ -42,7 +41,7 @@ public class TestJarDirectoriesEntityLoader extends TestEntityLoaderWithZipFile
 
     private Map<String, byte[]> addDirectories(Map<String, byte[]> fileContentByPath)
     {
-        Map<String, byte[]> fileContentInDirectories = Maps.mutable.ofInitialCapacity(fileContentByPath.size());
+        Map<String, byte[]> fileContentInDirectories = new HashMap<>(fileContentByPath.size());
         int i = 0;
         for (Map.Entry<String, byte[]> entry : fileContentByPath.entrySet())
         {
