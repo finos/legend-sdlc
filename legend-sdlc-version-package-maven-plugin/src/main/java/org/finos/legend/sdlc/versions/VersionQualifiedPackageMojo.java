@@ -31,8 +31,6 @@ import org.finos.legend.sdlc.serialization.EntitySerializers;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -210,17 +208,10 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         getLog().info(String.format("Serializing %,d entities to %s", entities.size(), this.outputDirectory));
         Path outputDirPath = this.outputDirectory.toPath();
         Path entitiesDir = outputDirPath.resolve("entities");
-        Pattern pkgSepPattern = Pattern.compile("::", Pattern.LITERAL);
-        String replacement = Matcher.quoteReplacement(outputDirPath.getFileSystem().getSeparator());
         EntitySerializer entitySerializer = EntitySerializers.getDefaultJsonSerializer();
         for (Entity entity : entities)
         {
-            Path entityFilePath = entitiesDir.resolve(pkgSepPattern.matcher(entity.getPath()).replaceAll(replacement) + "." + entitySerializer.getDefaultFileExtension());
-            Files.createDirectories(entityFilePath.getParent());
-            try (OutputStream stream = Files.newOutputStream(entityFilePath))
-            {
-                entitySerializer.serialize(entity, stream);
-            }
+            entitySerializer.serializeToFile(entity, entitiesDir);
         }
         getLog().info(String.format("Done serializing %,d entities to %s (%.9fs)", entities.size(), this.outputDirectory, (System.nanoTime() - serializeStart) / 1_000_000_000.0));
     }

@@ -69,6 +69,8 @@ public class EntityReserializer
             return Collections.emptyList();
         }
 
+        Path targetEntitiesDirectory = targetDirectory.resolve("entities");
+
         List<String> entityPaths = Lists.mutable.empty();
         Deque<Path> directories = new ArrayDeque<>();
         directories.add(sourceDirectory);
@@ -85,7 +87,7 @@ public class EntityReserializer
                     }
                     else if ((filter == null) || filter.test(entry))
                     {
-                        entityPaths.add(reserializeFile(entry, targetDirectory));
+                        entityPaths.add(reserializeFile(entry, targetEntitiesDirectory));
                     }
                 }
             }
@@ -125,7 +127,7 @@ public class EntityReserializer
         }
         LOGGER.debug("Finished reading {} from {}", entity.getPath(), sourceFile);
 
-        Path targetFile = generateTargetFilePath(targetDirectory, entity);
+        Path targetFile = this.targetSerializer.filePathForEntity(entity, targetDirectory, this.targetFileExtension);
         LOGGER.debug("Writing {} to {}", entity.getPath(), targetFile);
         Files.createDirectories(targetFile.getParent());
         try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE_NEW)))
@@ -157,18 +159,6 @@ public class EntityReserializer
         }
         LOGGER.debug("Finished writing {} to {}", entity.getPath(), targetFile);
         return entity.getPath();
-    }
-
-    private Path generateTargetFilePath(Path targetDirectory, Entity entity)
-    {
-        return generateTargetFilePath(targetDirectory, entity.getPath());
-    }
-
-    private Path generateTargetFilePath(Path targetDirectory, String entityPath)
-    {
-        String separator = targetDirectory.getFileSystem().getSeparator();
-        String relativePath = "entities" + separator + entityPath.replace("::", separator) + "." + this.targetFileExtension;
-        return targetDirectory.resolve(relativePath);
     }
 
     public static EntityReserializer newReserializer(EntitySerializer sourceSerializer, EntitySerializer targetSerializer, String targetFileExtension)
