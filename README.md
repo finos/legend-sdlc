@@ -18,8 +18,8 @@ To this end, the Legend SDLC enables:
 
 ## Usage example
 
-Start by creating a configuration file based on your particular environment. This can be JSON or YAML. A
-[sample configuration file](https://github.com/finos/legend-sdlc/blob/master/legend-sdlc-server/src/test/resources/config-sample.yaml)
+Start by creating a configuration file based on your particular environment, which can be either JSON or YAML. 
+[A sample configuration file](https://github.com/finos/legend-sdlc/blob/master/legend-sdlc-server/src/test/resources/config-sample.yaml)
 is included to help you get started. You will need to supply some information, such as the host your server is running
 on.
 
