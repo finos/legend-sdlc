@@ -989,9 +989,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             this.revisionId = revisionId;
             this.workspaceType = workspaceType;
             this.workspaceAccessType = workspaceAccessType;
-            if ((this.workspaceId != null) && (this.workspaceAccessType == null))
+            if ((this.workspaceId != null) && ((this.workspaceType == null) || (this.workspaceAccessType == null)))
             {
-                throw new RuntimeException("workspace access type is required when workspace ID is specified");
+                throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
         }
 
