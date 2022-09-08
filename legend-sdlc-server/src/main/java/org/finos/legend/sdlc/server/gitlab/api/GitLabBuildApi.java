@@ -57,12 +57,13 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     public BuildAccessContext getProjectBuildAccessContext(String projectId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
             protected String getRef()
             {
-                return MASTER_BRANCH;
+                return getDefaultBranch(gitLabProjectId); //MASTER_BRANCH;
             }
 
             @Override
@@ -84,12 +85,13 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceType, workspaceAccessType);
+                return getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId);
             }
 
             @Override

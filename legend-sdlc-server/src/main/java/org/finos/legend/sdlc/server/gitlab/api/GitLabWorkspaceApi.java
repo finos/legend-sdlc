@@ -205,7 +205,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType);
+        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId);
         GitLabApi gitLabApi = getGitLabApi();
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
 
@@ -379,7 +379,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            branch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), MASTER_BRANCH, 30, 1_000);
+            branch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(gitLabProjectId), 30, 1_000);
         }
         catch (Exception e)
         {
@@ -483,7 +483,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         LOGGER.info("Updating workspace {} in project {} to latest revision", workspaceId, projectId);
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
-        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType);
+        String workspaceBranchName = getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId);
         GitLabApi gitLabApi = getGitLabApi();
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
 
@@ -507,7 +507,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         Branch masterBranch;
         try
         {
-            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), MASTER_BRANCH));
+            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getDefaultBranch(gitLabProjectId)));
         }
         catch (Exception e)
         {
@@ -585,7 +585,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             String workspaceCreationRevisionId;
             try
             {
-                workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, currentWorkspaceRevisionId)).getId());
+                workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(getDefaultBranch(gitLabProjectId), currentWorkspaceRevisionId)).getId());
             }
             catch (Exception e)
             {
@@ -779,7 +779,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         MergeRequest mergeRequest;
         try
         {
-            mergeRequest = mergeRequestApi.createMergeRequest(gitLabProjectId.getGitLabId(), tempBranchName, MASTER_BRANCH, title, message, null, null, null, null, false, false);
+            mergeRequest = mergeRequestApi.createMergeRequest(gitLabProjectId.getGitLabId(), tempBranchName, getDefaultBranch(gitLabProjectId), title, message, null, null, null, null, false, false);
         }
         catch (Exception e)
         {
@@ -963,7 +963,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         Branch conflictResolutionBranch;
         try
         {
-            conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), MASTER_BRANCH, 30, 1_000);
+            conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), getDefaultBranch(gitLabProjectId), 30, 1_000);
         }
         catch (Exception e)
         {
@@ -981,14 +981,14 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         String workspaceCreationRevisionId;
         try
         {
-            workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, currentWorkspaceRevisionId)).getId());
+            workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(getDefaultBranch(gitLabProjectId), currentWorkspaceRevisionId)).getId());
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get merged base revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + projectId,
-                    () -> "Could not find revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + projectId,
-                    () -> "Failed to fetch merged base information for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get merged base revision for revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId,
+                    () -> "Could not find revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId,
+                    () -> "Failed to fetch merged base information for revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId);
         }
         CompareResults comparisonResult;
         try

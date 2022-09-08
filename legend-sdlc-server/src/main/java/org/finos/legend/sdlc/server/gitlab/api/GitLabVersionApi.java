@@ -255,7 +255,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             Commit referenceCommit;
             if (revisionId == null)
             {
-                referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), MASTER_BRANCH);
+                referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), getDefaultBranch(projectId));
                 if (referenceCommit == null)
                 {
                     throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);

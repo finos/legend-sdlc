@@ -60,6 +60,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -208,8 +209,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 throw new LegendSDLCServerException("Failed to create project: " + name);
             }
 
-            // protect from commits on master
-            gitLabApi.getProtectedBranchesApi().protectBranch(gitLabProject.getId(), MASTER_BRANCH, AccessLevel.NONE, AccessLevel.MAINTAINER);
+            // protect from commits on protected default branch or master by default
+            String defaultBranch = Optional.ofNullable(gitLabProject.getDefaultBranch()).orElse(MASTER_BRANCH);
+            gitLabApi.getProtectedBranchesApi().protectBranch(gitLabProject.getId(), defaultBranch, AccessLevel.NONE, AccessLevel.MAINTAINER);
 
             // build project structure
             String projectId = GitLabProjectId.getProjectIdString(getGitLabConfiguration().getProjectIdPrefix(), gitLabProject);
@@ -276,7 +278,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         Branch workspaceBranch;
         try
         {
-            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), MASTER_BRANCH, 30, 1_000);
+            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(projectId), 30, 1_000);
         }
         catch (Exception e)
         {
@@ -350,7 +352,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             MergeRequest mergeRequest;
             try
             {
-                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), MASTER_BRANCH, "Project structure", "Set up project structure", null, null, null, null, true, false);
+                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(projectId), "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
             {
