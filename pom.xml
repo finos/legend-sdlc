@@ -376,6 +376,33 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.17.0</version>
+                <configuration>
+                    <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>${project.parent.basedir}/pmd/legend-ruleset.xml</ruleset>
+                    </rulesets>
+                    <rules>
+                        <requireFilesExist>
+                            <files>
+                                <file>${project.parent.basedir}/pmd/legend-ruleset.xml</file>
+                            </files>
+                        </requireFilesExist>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -1365,4 +1392,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>
