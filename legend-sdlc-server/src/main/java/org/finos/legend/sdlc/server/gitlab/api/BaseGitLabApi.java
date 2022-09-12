@@ -334,7 +334,7 @@ abstract class BaseGitLabApi
             throw buildException(e, () -> "Error getting default branch for " + projectId);
         }
 
-        return (null == project) ? MASTER_BRANCH :  project.getDefaultBranch();
+        return Optional.ofNullable(project).map(Project::getDefaultBranch).orElse(MASTER_BRANCH);
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
