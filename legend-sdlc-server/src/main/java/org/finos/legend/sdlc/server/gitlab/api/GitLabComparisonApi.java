@@ -73,9 +73,9 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                () -> "Could not find revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                () -> "Failed to fetch Merged Base Information for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString());
+                () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId,
+                () -> "Could not find revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId,
+                () -> "Failed to fetch Merged Base Information for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId);
         }
         ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, workspaceCreationRevisionId, workspaceType, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, workspaceCreationRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
