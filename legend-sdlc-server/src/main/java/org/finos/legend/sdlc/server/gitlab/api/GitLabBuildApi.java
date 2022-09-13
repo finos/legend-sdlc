@@ -63,7 +63,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected String getRef()
             {
-                return getDefaultBranch(gitLabProjectId); //MASTER_BRANCH;
+                return getDefaultBranch(gitLabProjectId);
             }
 
             @Override

@@ -64,14 +64,14 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceType, workspaceAccessType);
         String workspaceCreationRevisionId;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
         try
         {
-            Commit commit = repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, currentWorkspaceRevisionId));
+            Commit commit = repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(defaultBranch, currentWorkspaceRevisionId));
             workspaceCreationRevisionId = commit.getId();
         }
         catch (Exception e)
         {
-            String defaultBranch = getDefaultBranch(gitLabProjectId);
             throw buildException(e,
                 () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
                 () -> "Could not find revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
