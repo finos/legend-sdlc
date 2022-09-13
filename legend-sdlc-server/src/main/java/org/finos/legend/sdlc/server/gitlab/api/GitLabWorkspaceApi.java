@@ -49,13 +49,13 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements WorkspaceApi
 {
@@ -225,12 +225,12 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         String workspaceRevisionId = workspaceBranch.getCommit().getId();
 
         // Get HEAD of master
-        Branch masterBranch;
-        String defaultBranch = getDefaultBranch(gitLabProjectId);
+        Branch defaultBranch;
+        String defaultBranchName = getDefaultBranch(gitLabProjectId);
 
         try
         {
-            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), defaultBranch));
+            defaultBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), defaultBranchName));
         }
         catch (Exception e)
         {
@@ -239,26 +239,26 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                     () -> "Unknown project: " + projectId,
                     () -> "Error accessing latest revision for project " + projectId);
         }
-        String masterRevisionId = masterBranch.getCommit().getId();
+        String defaultBranchRevisionId = defaultBranch.getCommit().getId();
         CommitsApi commitsApi = gitLabApi.getCommitsApi();
 
         // Check if the workspace does not have the latest revision of the project, i.e. it is outdated
         try
         {
-            if (masterRevisionId.equals(workspaceRevisionId))
+            if (defaultBranchRevisionId.equals(workspaceRevisionId))
             {
                 return false;
             }
-            Pager<CommitRef> masterHeadCommitRefsPager = withRetries(() -> commitsApi.getCommitRefs(gitLabProjectId.getGitLabId(), masterRevisionId, RefType.BRANCH, ITEMS_PER_PAGE));
-            Stream<CommitRef> masterHeadCommitRefs = PagerTools.stream(masterHeadCommitRefsPager);
+            Pager<CommitRef> headCommitRefsPager = withRetries(() -> commitsApi.getCommitRefs(gitLabProjectId.getGitLabId(), defaultBranchRevisionId, RefType.BRANCH, ITEMS_PER_PAGE));
+            Stream<CommitRef> headCommitRefs = PagerTools.stream(headCommitRefsPager);
             // This will check if the branch contains the master HEAD commit by looking up the list of references the commit is pushed to
-            return masterHeadCommitRefs.noneMatch(cr -> workspaceBranchName.equals(cr.getName()));
+            return headCommitRefs.noneMatch(cr -> workspaceBranchName.equals(cr.getName()));
         }
         catch (Exception e)
         {
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to check if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + " is outdated",
-                    () -> "Unknown revision (" + masterRevisionId + "), or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
+                    () -> "Unknown revision (" + defaultBranchRevisionId + "), or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
                     () -> "Error checking if " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId + " is outdated");
         }
     }
@@ -964,9 +964,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         // Create conflict resolution workspace
         Branch conflictResolutionBranch;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
         try
         {
-            conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), getDefaultBranch(gitLabProjectId), 30, 1_000);
+            conflictResolutionBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, conflictResolutionWorkspaceType), defaultBranch, 30, 1_000);
         }
         catch (Exception e)
         {
@@ -982,7 +983,6 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         // Get the changes of the current workspace
         String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         String workspaceCreationRevisionId;
-        String defaultBranch = getDefaultBranch(gitLabProjectId);
 
         try
         {
