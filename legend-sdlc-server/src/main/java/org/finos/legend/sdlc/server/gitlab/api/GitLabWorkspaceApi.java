@@ -226,10 +226,11 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
         // Get HEAD of master
         Branch masterBranch;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
 
         try
         {
-            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getDefaultBranch(gitLabProjectId)));
+            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), defaultBranch));
         }
         catch (Exception e)
         {
@@ -506,9 +507,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
         // Determine the revision to update to
         Branch masterBranch;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
         try
         {
-            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getDefaultBranch(gitLabProjectId)));
+            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), defaultBranch));
         }
         catch (Exception e)
         {
@@ -586,7 +588,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             String workspaceCreationRevisionId;
             try
             {
-                workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(getDefaultBranch(gitLabProjectId), currentWorkspaceRevisionId)).getId());
+                workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(defaultBranch, currentWorkspaceRevisionId)).getId());
             }
             catch (Exception e)
             {

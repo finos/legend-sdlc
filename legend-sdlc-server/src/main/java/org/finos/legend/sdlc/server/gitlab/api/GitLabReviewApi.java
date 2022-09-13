@@ -139,8 +139,8 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
                 mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            String tb = getDefaultBranch(gitLabProjectId);
-            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, tb)).map(mr -> fromGitLabMergeRequest(projectId, mr));
+            String targetBranch = getDefaultBranch(gitLabProjectId);
+            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch)).map(mr -> fromGitLabMergeRequest(projectId, mr));
             return addReviewFilters(stream, state, since, until, limit).collect(Collectors.toList());
         }
         catch (Exception e)
