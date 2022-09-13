@@ -226,9 +226,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
         // Get HEAD of master
         Branch masterBranch;
+
         try
         {
-            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), MASTER_BRANCH));
+            masterBranch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), getDefaultBranch(gitLabProjectId)));
         }
         catch (Exception e)
         {
@@ -979,16 +980,18 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         // Get the changes of the current workspace
         String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         String workspaceCreationRevisionId;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
+
         try
         {
-            workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(getDefaultBranch(gitLabProjectId), currentWorkspaceRevisionId)).getId());
+            workspaceCreationRevisionId = withRetries(() -> repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(defaultBranch, currentWorkspaceRevisionId)).getId());
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get merged base revision for revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId,
-                    () -> "Could not find revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId,
-                    () -> "Failed to fetch merged base information for revisions " + getDefaultBranch(gitLabProjectId) + ", " + currentWorkspaceRevisionId + " from project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get merged base revision for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + projectId,
+                    () -> "Could not find revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + projectId,
+                    () -> "Failed to fetch merged base information for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + projectId);
         }
         CompareResults comparisonResult;
         try
