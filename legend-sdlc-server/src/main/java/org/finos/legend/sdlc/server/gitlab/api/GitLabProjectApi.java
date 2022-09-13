@@ -276,9 +276,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         WorkspaceType workspaceType = WorkspaceType.USER;
         WorkspaceAccessType workspaceAccessType = WorkspaceAccessType.WORKSPACE;
         Branch workspaceBranch;
+        String defaultBranch = getDefaultBranch(projectId);
         try
         {
-            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(projectId), 30, 1_000);
+            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, 30, 1_000);
         }
         catch (Exception e)
         {
@@ -352,7 +353,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             MergeRequest mergeRequest;
             try
             {
-                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(projectId), "Project structure", "Set up project structure", null, null, null, null, true, false);
+                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
             {
