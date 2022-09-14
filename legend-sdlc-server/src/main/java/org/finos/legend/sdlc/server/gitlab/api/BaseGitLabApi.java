@@ -37,6 +37,7 @@ import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -316,9 +317,24 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, GitLabProjectId projectId)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+        return (workspaceId == null) ? getDefaultBranch(projectId) : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+    }
+
+    protected String getDefaultBranch(GitLabProjectId projectId)
+    {
+        Project project;
+        try
+        {
+            project = withRetries(() -> getGitLabApi().getProjectApi().getProject(projectId.getGitLabId()));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Error getting default branch for " + projectId);
+        }
+
+        return Optional.ofNullable(project).map(Project::getDefaultBranch).orElse(MASTER_BRANCH);
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
@@ -782,16 +798,18 @@ abstract class BaseGitLabApi
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
-        if (!isReviewMergeRequest(mergeRequest))
+
+        if (!isReviewMergeRequest(mergeRequest, getDefaultBranch(projectId)))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }
 
-    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
+    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch)
     {
-        if ((mergeRequest == null) || !MASTER_BRANCH.equals(mergeRequest.getTargetBranch()))
+
+        if ((mergeRequest == null) || !targetBranch.equals(mergeRequest.getTargetBranch()))
         {
             return false;
         }

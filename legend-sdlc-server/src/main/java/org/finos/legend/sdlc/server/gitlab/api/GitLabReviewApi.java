@@ -17,7 +17,9 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
@@ -55,6 +57,8 @@ import org.gitlab4j.api.models.MergeRequestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,8 +69,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewApi
 {
@@ -134,7 +136,8 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
                 mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(projectId, mr));
+            String targetBranch = getDefaultBranch(gitLabProjectId);
+            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch)).map(mr -> fromGitLabMergeRequest(projectId, mr));
             return addReviewFilters(stream, state, since, until, limit).collect(Collectors.toList());
         }
         catch (Exception e)
@@ -160,9 +163,17 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
 
     private Stream<Review> getReviewStream(MergeRequestFilter mergeRequestFilter)
     {
+        MutableIntObjectMap<String> pIdTodefaultBranch = IntObjectMaps.mutable.empty();
+
         try
         {
-            return PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE))).filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), mr.getProjectId()).toString(), mr));
+            return PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)))
+                    .filter(mr ->
+                    {
+                        String defaultBranch = pIdTodefaultBranch.getIfAbsentPutWithKey(mr.getProjectId(), pid -> getDefaultBranch(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), pid)));
+                        return isReviewMergeRequest(mr, defaultBranch);
+                    })
+                      .map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), mr.getProjectId()).toString(), mr));
         }
         catch (Exception e)
         {
@@ -332,7 +343,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             String workspaceBranchName = getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
-            MergeRequest mergeRequest = getGitLabApi().getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, MASTER_BRANCH, title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
+            MergeRequest mergeRequest = getGitLabApi().getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, getDefaultBranch(gitLabProjectId), title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
             return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (Exception e)

@@ -162,7 +162,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         Branch newWorkspaceBranch;
         try
         {
-            newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), MASTER_BRANCH, 30, 1_000);
+            newWorkspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), getDefaultBranch(gitLabProjectId), 30, 1_000);
         }
         catch (Exception e)
         {

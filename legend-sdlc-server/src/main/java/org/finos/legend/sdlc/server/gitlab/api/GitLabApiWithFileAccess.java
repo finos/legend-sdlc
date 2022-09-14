@@ -448,7 +448,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected String getReference()
         {
-            return this.revisionId == null ? getBranchName(workspaceId, workspaceType, workspaceAccessType) : this.revisionId;
+            return this.revisionId == null ? getBranchName(workspaceId, workspaceType, workspaceAccessType, projectId) : this.revisionId;
         }
 
         @Override
@@ -852,7 +852,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected String getReference()
         {
-            return getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType);
+            return getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType, this.projectId);
         }
 
         @Override
@@ -899,7 +899,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             try
             {
                 RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
-                Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Lists.fixedSize.with(MASTER_BRANCH, getReference()))));
+                Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Lists.fixedSize.with(getDefaultBranch(projectId), getReference()))));
                 if (this.paths == null)
                 {
                     return workspaceBaseRevision;
@@ -1031,7 +1031,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                             throw new LegendSDLCServerException(msg, Status.CONFLICT);
                         }
                     }
-                    String branchName = getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType);
+                    String branchName = getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType, this.projectId);
                     commit = getGitLabApi().getCommitsApi().createCommit(this.projectId.getGitLabId(), branchName, message, null, null, null, commitActions);
                 }
                 if (LOGGER.isDebugEnabled())
@@ -1424,7 +1424,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 throw new IllegalStateException("No commits on temporary branch " + this.tempBranchName + " in project " + this.projectId);
             }
 
-            String targetBranchName = GitLabApiWithFileAccess.this.getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType);
+            String targetBranchName = GitLabApiWithFileAccess.this.getBranchName(this.workspaceId, this.workspaceType, this.workspaceAccessType, this.projectId);
             LOGGER.debug("Replacing target branch {} with temporary branch {} in project {}", targetBranchName, this.tempBranchName, this.projectId);
 
             RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
