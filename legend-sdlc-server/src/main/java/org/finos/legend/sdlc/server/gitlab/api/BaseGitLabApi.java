@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
@@ -84,8 +85,9 @@ abstract class BaseGitLabApi
     private static final String MR_STATE_LOCKED = "locked";
     private static final String MR_STATE_MERGED = "merged";
 
+    private static final String MASTER_BRANCH = "master";
+
     protected static final int ITEMS_PER_PAGE = 100;
-    protected static final String MASTER_BRANCH = "master";
 
     protected static final String PACKAGE_SEPARATOR = "::";
 
@@ -324,17 +326,21 @@ abstract class BaseGitLabApi
 
     protected String getDefaultBranch(GitLabProjectId projectId)
     {
-        Project project;
         try
         {
-            project = withRetries(() -> getGitLabApi().getProjectApi().getProject(projectId.getGitLabId()));
+            ProjectApi projectApi = getGitLabApi().getProjectApi();
+            return getDefaultBranch(withRetries(() -> projectApi.getProject(projectId.getGitLabId())));
         }
         catch (Exception e)
         {
             throw buildException(e, () -> "Error getting default branch for " + projectId);
         }
+    }
 
-        return Optional.ofNullable(project).map(Project::getDefaultBranch).orElse(MASTER_BRANCH);
+    protected String getDefaultBranch(Project project)
+    {
+        String defaultBranch = project.getDefaultBranch();
+        return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
