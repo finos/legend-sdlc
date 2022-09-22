@@ -115,33 +115,34 @@ public class FileGenerationMojo extends AbstractMojo
 
         Set<String> fileOutputPaths = Sets.mutable.empty();
         // Generation Specification
-        Map<String, GenerationSpecification> generationSpecificationMap = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), GenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
+        MutableMap<String, GenerationSpecification> generationSpecificationMap = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), GenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
         filterPackageableElementsByIncludes(generationSpecificationMap);
         filterPackageableElementsByExcludes(generationSpecificationMap);
-        if (generationSpecificationMap.isEmpty())
-        {
-            getLog().info("No generation specification found, nothing to generate");
-            return;
-        }
         if (generationSpecificationMap.size() > 1)
         {
             throw new MojoExecutionException(Iterate.toSortedList(generationSpecificationMap.keySet()).makeString("Only 1 generation specification allowed, found " + generationSpecificationMap.size() + ": ", ", ", ""));
         }
+        if (generationSpecificationMap.size() == 1)
+        {
+            try
+            {
+                GenerationSpecification generationSpecification = generationSpecificationMap.valuesView().getAny();
+                getLog().info(String.format("Start generating file generations for generation specification '%s', %,d file generations found", generationSpecification.getPath(), generationSpecification.fileGenerations.size()));
+                FileGenerationFactory fileGenerationFactory = FileGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
+                MutableMap<FileGenerationSpecification, List<GenerationOutput>> outputs = fileGenerationFactory.generateFiles();
+                serializeOutput(outputs, fileOutputPaths);
+                getLog().info(String.format("Done (%.9fs)", (System.nanoTime() - generateStart) / 1_000_000_000.0));
+            }
+            catch (Exception e)
+            {
+                throw new MojoExecutionException("Error generating files: " + e.getMessage(), e);
+            }
+        }
+        else
+        {
+            getLog().info("No generation specification found.");
+        }
 
-        try
-        {
-            // Start generating
-            GenerationSpecification generationSpecification = generationSpecificationMap.values().iterator().next();
-            getLog().info(String.format("Start generating file generations for generation specification '%s', %,d file generations found", generationSpecification.getPath(), generationSpecification.fileGenerations.size()));
-            FileGenerationFactory fileGenerationFactory = FileGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
-            MutableMap<FileGenerationSpecification, List<GenerationOutput>> outputs = fileGenerationFactory.generateFiles();
-            serializeOutput(outputs, fileOutputPaths);
-            getLog().info(String.format("Done (%.9fs)", (System.nanoTime() - generateStart) / 1_000_000_000.0));
-        }
-        catch (Exception e)
-        {
-            throw new MojoExecutionException("Error generating files: " + e.getMessage(), e);
-        }
         // Artifact Generations
         Map<String, PackageableElement> elementsMap = LazyIterate.adapt(pureModelContextData.getElements()).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
         filterPackageableElementsByIncludes(elementsMap);
