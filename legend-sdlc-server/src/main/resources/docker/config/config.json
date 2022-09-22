@@ -12,7 +12,7 @@
     "adminConnectors": [
       {
         "type": "http",
-        "port": 7071
+        "port": ${SDLC_ADMIN_PORT}
       }
     ],
     "gzip": {
@@ -35,10 +35,23 @@
   },
   "projectStructure": {
     "projectCreation": {
-      "groupIdPattern": "^org\\.finos\\.legend\\..+"
     },
     "extensionProvider": {
       "org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider": {}
+    },
+    "platforms": {
+       "legend-engine": {
+           "groupId": "org.finos.legend.engine",
+           "platformVersion": {
+              "version": "${ENGINE_MAVEN_VERSION}"
+           }
+       },
+       "legend-sdlc": {
+          "groupId": "org.finos.legend.sdlc",
+          "platformVersion":{
+              "version": "${SDLC_MAVEN_VERSION}"
+          } 
+       }
     }
   },
   "filterPriorities": {
@@ -76,8 +89,7 @@
   },
   "gitLab": {
     "newProjectVisibility": "public",
-    "projectTag": "pure",
-    "projectIdPrefix": "UAT",
+    "projectTag": "${SDLC_PROJECT_TAG}",
     "server": {
       "scheme": "https",
       "host": "${GITLAB_HOST}"
@@ -85,7 +97,7 @@
     "app": {
       "id": "${GITLAB_APP_ID}",
       "secret": "${GITLAB_APP_SECRET}",
-      "redirectURI": "http://localhost:7070/api/auth/callback"
+      "redirectURI": "${SDLC_REDIRECT_URI}"
     }
   },
   "logging": {
