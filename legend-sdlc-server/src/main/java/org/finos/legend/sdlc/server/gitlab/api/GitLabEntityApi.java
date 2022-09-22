@@ -961,9 +961,41 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 Entity localEntity = this.sourceDirectory.deserialize(this.file);
                 if (!Objects.equals(localEntity.getPath(), getEntityPath()))
                 {
-                    throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    /**
+                     *  In gitlab, each entity will be stored as a file of which file name is built upon entity's path.
+                     *  for now, the file name of function is functionName, which doesn't contain function signature.
+                     *  To support function overloading, Engine is updated to store function signature as the name of
+                     *  PackageableElement, which updates PackageableElement's path at the same time since path is
+                     *  built upon PackageableElement's name. Any new function entity will be stored in a file whose
+                     *  name is the full function signature in gitlab. However, existing functions need to be updated
+                     *  to be consistent.
+                     *
+                     *  getEntityPath() is from file name in gitlab
+                     *  localEntity is computed from Engine, once Engine is updated, it will contain the whole function signature.
+                     *  For existing functions in gitlab, localEntity.getPath() and getEntityPath() won't match anymore.
+                     *  However, they are related. localEntity.getPath() must contain getEntityPath() if everything is correct
+                     *  for these cases. If condition below is true, a new entity will be created using the short version
+                     *  of the path (functionName only) as a flag for Studio to trigger a `delete` and `create` actions.
+                     *  Users have to push local changes computed automatically for functions above, which will delete old files
+                     *  and create corresponding new files for functions. Therefore, gitlab will keep clean and consistent.
+                     */
+                    if ((localEntity.getPath() != null) && (getEntityPath() != null) &&
+                            localEntity.getPath().contains(getEntityPath()) &&
+                            "meta::pure::metamodel::function::ConcreteFunctionDefinition".equals(localEntity.getClassifierPath()))
+                    {
+                        // getEntityPath() only contains functionName.
+                        this.entity = Entity.newEntity(getEntityPath(), localEntity.getClassifierPath(), localEntity.getContent());
+                    }
+                    else
+                    {
+                        throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    }
                 }
-                this.entity = localEntity;
+                else
+                {
+
+                    this.entity = localEntity;
+                }
             }
             return this.entity;
         }
