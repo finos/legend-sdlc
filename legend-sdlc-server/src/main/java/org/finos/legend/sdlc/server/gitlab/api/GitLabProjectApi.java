@@ -43,15 +43,21 @@ import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.ProtectedBranchesApi;
 import org.gitlab4j.api.RepositoryApi;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.ProjectAccess;
 import org.gitlab4j.api.models.ProtectedTag;
+import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +66,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -184,10 +189,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
         validateProjectCreation(groupId, artifactId);
 
+        GitLabApi gitLabApi = getGitLabApi();
+
+        // Create project
+        org.gitlab4j.api.models.Project gitLabProject;
         try
         {
-            GitLabApi gitLabApi = getGitLabApi();
-
+            org.gitlab4j.api.ProjectApi projectApi = gitLabApi.getProjectApi();
             List<String> tagList = Lists.mutable.empty();
             tagList.add(getLegendSDLCProjectTag());
             if (tags != null)
@@ -203,35 +211,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withIssuesEnabled(true)
                     .withWikiEnabled(false)
                     .withSnippetsEnabled(false);
-            org.gitlab4j.api.models.Project gitLabProject = gitLabApi.getProjectApi().createProject(gitLabProjectSpec);
-            if (gitLabProject == null)
-            {
-                throw new LegendSDLCServerException("Failed to create project: " + name);
-            }
-
-            // protect from commits on protected default branch or master by default
-            String defaultBranch = Optional.ofNullable(gitLabProject.getDefaultBranch()).orElse(MASTER_BRANCH);
-            gitLabApi.getProtectedBranchesApi().protectBranch(gitLabProject.getId(), defaultBranch, AccessLevel.NONE, AccessLevel.MAINTAINER);
-
-            // build project structure
-            String projectId = GitLabProjectId.getProjectIdString(getGitLabConfiguration().getProjectIdPrefix(), gitLabProject);
-            int projectStructureVersion = getDefaultProjectStructureVersion();
-            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
-                    .withProjectId(projectId)
-                    .withGroupId(groupId)
-                    .withArtifactId(artifactId)
-                    .withProjectStructureVersion(projectStructureVersion);
-            if (this.projectStructurePlatformExtensions != null)
-            {
-                configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
-            }
-            ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), projectId, configUpdater)
-                    .withMessage("Build project structure")
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
-                    .build();
-
-            return fromGitLabProject(gitLabProject);
+            gitLabProject = projectApi.createProject(gitLabProjectSpec);
         }
         catch (Exception e)
         {
@@ -240,6 +220,121 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     () -> "Failed to create project: " + name,
                     () -> "Failed to create project: " + name);
         }
+        if (gitLabProject == null)
+        {
+            throw new LegendSDLCServerException("Failed to create project: " + name);
+        }
+        Project project = fromGitLabProject(gitLabProject);
+
+        // try to ensure current user is a maintainer (or higher), but proceed even if we fail
+        AccessLevel minUserAccessLevel = AccessLevel.MAINTAINER;
+        if (!tryEnsureMinAccessLevel(gitLabApi, gitLabProject, minUserAccessLevel))
+        {
+            LOGGER.warn("Created project {} but could not set access level for {} to {} - trying to proceed anyway", project.getProjectId(), getCurrentUser(), minUserAccessLevel);
+        }
+
+        // protect default branch
+        AccessLevel pushAccessLevel = AccessLevel.NONE;
+        AccessLevel mergeAccessLevel = AccessLevel.MAINTAINER;
+        String defaultBranchName = getDefaultBranch(gitLabProject);
+        try
+        {
+            ProtectedBranchesApi protectedBranchesApi = gitLabApi.getProtectedBranchesApi();
+            withRetries(() -> protectedBranchesApi.protectBranch(gitLabProject.getId(), defaultBranchName, pushAccessLevel, mergeAccessLevel));
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error trying to protect branch {} in project {} (push: {}, merge: {}) - trying to proceed anyway", defaultBranchName, project.getProjectId(), pushAccessLevel, mergeAccessLevel, e);
+        }
+
+        // build project structure
+        try
+        {
+            int projectStructureVersion = getDefaultProjectStructureVersion();
+            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectId(project.getProjectId())
+                    .withGroupId(groupId)
+                    .withArtifactId(artifactId)
+                    .withProjectStructureVersion(projectStructureVersion);
+            if (this.projectStructurePlatformExtensions != null)
+            {
+                configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
+            }
+            ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+                    .withMessage("Build project structure")
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                    .build();
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to set up project structure for newly created project " + project.getProjectId(),
+                    () -> "Error setting up project structure for newly created project " + project.getProjectId(),
+                    () -> "Error setting up project structure for newly created project " + project.getProjectId());
+        }
+
+        return project;
+    }
+
+    private boolean tryEnsureMinAccessLevel(GitLabApi gitLabApi, org.gitlab4j.api.models.Project project, AccessLevel accessLevel)
+    {
+        int projectId = project.getId();
+
+        User currentUser;
+        try
+        {
+            UserApi userApi = gitLabApi.getUserApi();
+            currentUser = withRetries(userApi::getCurrentUser);
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error trying to set access level for {} in project {} to {}: could not get current user", getCurrentUser(), projectId, accessLevel.name(), e);
+            return false;
+        }
+
+        org.gitlab4j.api.ProjectApi projectApi = gitLabApi.getProjectApi();
+        int userId = currentUser.getId();
+        CallUntil<AccessLevel, ?> callUntil = CallUntil.callUntil(() ->
+        {
+            try
+            {
+                Member member;
+                try
+                {
+                    member = withRetries(() -> projectApi.getMember(projectId, userId));
+                }
+                catch (GitLabApiException e)
+                {
+                    if (!GitLabApiTools.isNotFoundGitLabApiException(e))
+                    {
+                        throw e;
+                    }
+                    return projectApi.addMember(projectId, userId, accessLevel).getAccessLevel();
+                }
+                return accessLevelAtLeast(member.getAccessLevel(), accessLevel) ?
+                        member.getAccessLevel() :
+                        projectApi.updateMember(projectId, userId, accessLevel).getAccessLevel();
+            }
+            catch (Exception e)
+            {
+                LOGGER.warn("Error trying to set access level for {} in project {} to {}", getCurrentUser(), projectId, accessLevel.name(), e);
+                return null;
+            }
+        }, al -> accessLevelAtLeast(al, accessLevel), 10, 500);
+        if (!callUntil.succeeded())
+        {
+            AccessLevel result = callUntil.getResult();
+            LOGGER.warn("Failed to set access level for {} in project {} to {} after {} attempts: access level {}", getCurrentUser(), projectId, accessLevel.name(), callUntil.getTryCount(), (result == null) ? null : result.name());
+            return false;
+        }
+        LOGGER.debug("Set access level for {} in project {} to {} after {} attempts", getCurrentUser(), projectId, accessLevel.name(), callUntil.getTryCount());
+        return true;
+    }
+
+    private boolean accessLevelAtLeast(AccessLevel accessLevel, AccessLevel minAccessLevel)
+    {
+        return (accessLevel != null) && (accessLevel.toValue() >= minAccessLevel.toValue());
     }
 
     @Override
