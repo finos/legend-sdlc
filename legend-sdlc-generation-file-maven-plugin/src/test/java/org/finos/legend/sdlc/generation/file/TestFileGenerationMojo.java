@@ -102,6 +102,7 @@ public class TestFileGenerationMojo
     @Test
     public void testNoGenerationSpecification() throws Exception
     {
+        Path expectedPath = getPath("org/finos/legend/sdlc/generation/file/allFormats/outputsNoGenerationSpecification");
         File entitiesDir = this.tempFolder.newFolder("testEntities");
         List<Entity> entities;
         try (EntityLoader testEntities = getEntities("org/finos/legend/sdlc/generation/file/allFormats"))
@@ -115,9 +116,10 @@ public class TestFileGenerationMojo
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
+        Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
-        assertDirectoryEmpty(outputDir);
+        verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
 
     @Test
@@ -204,7 +206,7 @@ public class TestFileGenerationMojo
         });
         if (fileDiffs.size() > 0)
         {
-            throw new Error("Found " + fileDiffs.size() + " differences in files: " + ListIterate.collect(fileDiffs, FileDiff::getErrorMessage).makeString(","));
+            Assert.fail("Found " + fileDiffs.size() + " differences in files: " + ListIterate.collect(fileDiffs, FileDiff::getErrorMessage).makeString(","));
         }
     }
 
