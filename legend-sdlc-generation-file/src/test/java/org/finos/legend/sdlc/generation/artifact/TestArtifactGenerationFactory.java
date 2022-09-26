@@ -31,7 +31,6 @@ import org.junit.Test;
 
 public class TestArtifactGenerationFactory
 {
-
     private PureModelContextData getPureModelContextDataFromPath(String path)
     {
         URL url = Objects.requireNonNull(getClass().getClassLoader().getResource(path), "Can't find resource '" + path + "'");
