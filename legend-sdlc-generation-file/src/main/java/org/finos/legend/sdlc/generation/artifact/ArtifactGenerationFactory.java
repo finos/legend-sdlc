@@ -15,10 +15,12 @@
 
 package org.finos.legend.sdlc.generation.artifact;
 
+import java.util.Collections;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.ListIterate;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.HelperModelBuilder;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.generation.extension.Artifact;
 import org.finos.legend.engine.language.pure.dsl.generation.extension.ArtifactGenerationExtension;
@@ -26,6 +28,7 @@ import org.finos.legend.engine.language.pure.dsl.generation.extension.ArtifactGe
 import org.finos.legend.engine.protocol.pure.PureClientVersions;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Function;
 import org.finos.legend.sdlc.generation.file.GenerationOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,6 +56,11 @@ public class ArtifactGenerationFactory
         this.extensions = ArtifactGenerationExtensionLoader.extensions();
     }
 
+    public List<ArtifactGenerationExtension> getExtensions()
+    {
+        return Collections.unmodifiableList(this.extensions);
+    }
+
     public static ArtifactGenerationFactory newFactory(PureModel pureModel, PureModelContextData data, List<PackageableElement> elements)
     {
         return new ArtifactGenerationFactory(pureModel, data, elements);
@@ -67,19 +75,42 @@ public class ArtifactGenerationFactory
         MutableMap<ArtifactGenerationExtension, List<ArtifactGenerationResult>> results = Maps.mutable.empty();
         for (PackageableElement element : this.elements)
         {
-            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = pureModel.getPackageableElement(element.getPath());
-            for (ArtifactGenerationExtension extension : this.extensions)
+            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement = this.findPackageableElement(pureModel, element);
+            if (packageableElement != null)
             {
-                if (extension.canGenerate(packageableElement))
+                for (ArtifactGenerationExtension extension : this.extensions)
                 {
-                    List<Artifact> artifacts = this.generateArtifacts(packageableElement, element, extension);
-                    List<GenerationOutput> outputs = ListIterate.collect(artifacts, artifact -> new GenerationOutput(artifact.content, artifact.path, artifact.format));
-                    ArtifactGenerationResult result = new ArtifactGenerationResult(packageableElement, outputs, extension);
-                    results.getIfAbsentPut(result.getGenerator(), Lists.mutable::empty).add(result);
+                    if (extension.canGenerate(packageableElement))
+                    {
+                        List<Artifact> artifacts = this.generateArtifacts(packageableElement, element, extension);
+                        List<GenerationOutput> outputs = ListIterate.collect(artifacts, artifact -> new GenerationOutput(artifact.content, artifact.path, artifact.format));
+                        ArtifactGenerationResult result = new ArtifactGenerationResult(packageableElement, outputs, extension);
+                        results.getIfAbsentPut(result.getGenerator(), Lists.mutable::empty).add(result);
+                    }
                 }
             }
         }
         return results;
+    }
+
+    private org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement findPackageableElement(PureModel pureModel, PackageableElement packageableElement)
+    {
+        org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement element = pureModel.getPackageableElement_safe(packageableElement.getPath());
+        if (element != null)
+        {
+            return element;
+        }
+        if (packageableElement instanceof Function)
+        {
+            Function elementFunc = (Function) packageableElement;
+            String fullPath = pureModel.buildPackageString(packageableElement._package, HelperModelBuilder.getSignature(elementFunc));
+            element = pureModel.getPackageableElement_safe(fullPath);
+        }
+        if (element == null)
+        {
+            LOGGER.debug("Unable to find element '{}' in Pure Model", packageableElement.getPath());
+        }
+        return element;
     }
 
     private List<Artifact> generateArtifacts(org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement packageableElement, PackageableElement element, ArtifactGenerationExtension extension)
