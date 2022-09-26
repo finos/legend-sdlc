@@ -68,6 +68,7 @@ public class TestArtifactGenerationFactory
         Assert.assertEquals("Some output for enumeration 'MyEnum'", enumOutput.getContent());
         Assert.assertEquals("txt", enumOutput.getFormat());
         Assert.assertEquals("SomeTestOutput.txt", enumOutput.getFileName());
+        
         // check function generation results
         List<ArtifactGenerationResult> functionResults =  results.get(functionArtifactGenerationExtension);
         Assert.assertEquals(1, functionResults.size());
