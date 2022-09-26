@@ -49,7 +49,7 @@ public class TestArtifactGenerationFactory
     public void testArtifactGenerationFactory()
     {
         PureModelContextData data = getPureModelContextDataFromPath("ArtifactGenerationFactoryTestData.json");
-        PureModel pureModel = new PureModel(data, null, DeploymentMode.TEST);
+        PureModel pureModel = new PureModel(data, null, DeploymentMode.PROD);
         ArtifactGenerationFactory factory = new ArtifactGenerationFactory(pureModel, data, data.getElements());
         Assert.assertEquals(2, factory.getExtensions().size());
         TestSimpleFunctionArtifactGenerationExtension functionArtifactGenerationExtension = LazyIterate.selectInstancesOf(factory.getExtensions(), TestSimpleFunctionArtifactGenerationExtension.class).getFirst();
