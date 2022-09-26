@@ -57,7 +57,7 @@ public class ArtifactGenerationFactory
 
     public List<ArtifactGenerationExtension> getExtensions()
     {
-        return extensions;
+        return Collections.unmodifiableList(this.extensions);
     }
 
     public static ArtifactGenerationFactory newFactory(PureModel pureModel, PureModelContextData data, List<PackageableElement> elements)
