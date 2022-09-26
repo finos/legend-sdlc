@@ -81,5 +81,4 @@ public class TestArtifactGenerationFactory
         Assert.assertEquals("txt", functionOutput.getFormat());
         Assert.assertEquals("MyFunction.txt", functionOutput.getFileName());
     }
-
 }
