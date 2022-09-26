@@ -15,6 +15,7 @@
 
 package org.finos.legend.sdlc.generation.artifact;
 
+import java.util.Collections;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
