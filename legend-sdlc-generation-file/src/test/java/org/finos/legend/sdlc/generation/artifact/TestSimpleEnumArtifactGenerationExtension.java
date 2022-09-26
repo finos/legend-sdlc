@@ -45,5 +45,4 @@ public class TestSimpleEnumArtifactGenerationExtension implements ArtifactGenera
         Artifact artifact = new Artifact(content, "SomeTestOutput.txt", "txt");
         return Lists.mutable.with(artifact);
     }
-
 }
