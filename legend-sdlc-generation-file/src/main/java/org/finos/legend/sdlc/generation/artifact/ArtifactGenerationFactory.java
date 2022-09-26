@@ -107,7 +107,7 @@ public class ArtifactGenerationFactory
         }
         if (element == null)
         {
-            LOGGER.info("Unable to find element '" + packageableElement.getPath() + "' in Pure Model");
+            LOGGER.debug("Unable to find element '{}' in Pure Model", packageableElement.getPath());
         }
         return element;
     }
