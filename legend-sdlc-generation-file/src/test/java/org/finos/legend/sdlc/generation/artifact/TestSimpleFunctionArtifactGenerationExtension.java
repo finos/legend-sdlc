@@ -44,5 +44,4 @@ public class TestSimpleFunctionArtifactGenerationExtension implements ArtifactGe
         Artifact artifact = new Artifact(content, "MyFunction.txt", "txt");
         return Lists.mutable.with(artifact);
     }
-
 }
