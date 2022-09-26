@@ -57,6 +57,7 @@ public class TestArtifactGenerationFactory
         TestSimpleEnumArtifactGenerationExtension enumArtifactGenerationExtension =  LazyIterate.selectInstancesOf(factory.getExtensions(), TestSimpleEnumArtifactGenerationExtension.class).getFirst();
         MutableMap<ArtifactGenerationExtension, List<ArtifactGenerationResult>> results = factory.generate();
         Assert.assertEquals(2, results.size());
+        
         // check enum generation extension
         List<ArtifactGenerationResult> enumFullResults =  results.get(enumArtifactGenerationExtension);
         Assert.assertEquals(1, enumFullResults.size());
