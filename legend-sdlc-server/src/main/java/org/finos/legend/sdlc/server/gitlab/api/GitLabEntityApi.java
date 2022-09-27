@@ -47,6 +47,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -983,8 +984,12 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                             localEntity.getPath().contains(getEntityPath()) &&
                             "meta::pure::metamodel::function::ConcreteFunctionDefinition".equals(localEntity.getClassifierPath()))
                     {
-                        // getEntityPath() only contains functionName.
-                        this.entity = Entity.newEntity(getEntityPath(), localEntity.getClassifierPath(), localEntity.getContent());
+                        // getEntityPath() only contains functionName
+                        // update content's name to obey the rule that the entity path must equal package + "::" + name.
+                        Map<String, Object> newContent = new HashMap<>(localEntity.getContent().size());
+                        localEntity.getContent().forEach((k, v) -> newContent.put(k, v));
+                        newContent.put("name", getEntityPath().substring(getEntityPath().lastIndexOf(":") + 1));
+                        this.entity = Entity.newEntity(getEntityPath(), localEntity.getClassifierPath(), newContent);
                     }
                     else
                     {
