@@ -66,7 +66,7 @@ abstract class BaseGitLabApi
     private static final Random RANDOM = new Random();
     private static final Encoder RANDOM_ID_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
-    private static final Pattern PACKAGEABLE_ELEMENT_PATH_PATTERN = Pattern.compile("^\\w++(::\\w++)*+(\\w*+\\$\\w++\\$\\w*+)*+$");
+    private static final Pattern PACKAGEABLE_ELEMENT_PATH_PATTERN = Pattern.compile("^\\w++(::\\w++)*+[\\w$]*+$");
 
     private static final int MAX_RETRIES = 5;
     private static final long INITIAL_RETRY_WAIT_INTERVAL_MILLIS = 1000L;

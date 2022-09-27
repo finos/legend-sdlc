@@ -981,7 +981,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                      *  and create corresponding new files for functions. Therefore, gitlab will keep clean and consistent.
                      */
                     if ((localEntity.getPath() != null) && (getEntityPath() != null) &&
-                            localEntity.getPath().contains(getEntityPath()) &&
+                            localEntity.getPath().startsWith(getEntityPath()) &&
                             "meta::pure::metamodel::function::ConcreteFunctionDefinition".equals(localEntity.getClassifierPath()))
                     {
                         // getEntityPath() only contains functionName
