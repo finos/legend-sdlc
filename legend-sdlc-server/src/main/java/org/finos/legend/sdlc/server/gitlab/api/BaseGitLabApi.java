@@ -157,7 +157,7 @@ abstract class BaseGitLabApi
 
     protected static boolean isValidEntityName(String string)
     {
-        return (string != null) && !string.isEmpty() && string.chars().allMatch(c -> (c == '_') || Character.isLetterOrDigit(c));
+        return (string != null) && !string.isEmpty() && string.chars().allMatch(c -> (c == '_')  || (c == '$') || Character.isLetterOrDigit(c));
     }
 
     protected static boolean isValidEntityPath(String string)
@@ -167,7 +167,7 @@ abstract class BaseGitLabApi
 
     protected static boolean isValidPackagePath(String string)
     {
-        return isValidPackageableElementPath(string);
+        return isValidPackageableElementPath(string) && !string.contains("$");
     }
 
     protected static boolean isValidClassifierPath(String string)
