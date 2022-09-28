@@ -150,7 +150,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
             @JsonProperty("projectId") String projectId,
             @Deprecated @JsonProperty("projectType") ProjectType projectType,
             @JsonProperty("projectStructureVersion") @JsonDeserialize(as = SimpleProjectStructureVersion.class) ProjectStructureVersion projectStructureVersion,
-            @JsonProperty("platforms") @JsonDeserialize(contentAs = SimplePlatformConfiguration.class) List<PlatformConfiguration> platforms,
+            @JsonProperty("platformConfigurations") @JsonDeserialize(contentAs = SimplePlatformConfiguration.class) List<PlatformConfiguration> platforms,
             @JsonProperty("groupId") String groupId,
             @JsonProperty("artifactId") String artifactId,
             @JsonProperty("projectDependencies") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependencies,
