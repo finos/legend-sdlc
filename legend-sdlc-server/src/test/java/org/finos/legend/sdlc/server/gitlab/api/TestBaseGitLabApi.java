@@ -55,6 +55,8 @@ public class TestBaseGitLabApi
     {
         Assert.assertTrue(BaseGitLabApi.isValidPackagePath("model"));
         Assert.assertTrue(BaseGitLabApi.isValidPackagePath("random::entity::path"));
+        Assert.assertTrue(BaseGitLabApi.isValidPackagePath("meta"));
+        Assert.assertTrue(BaseGitLabApi.isValidPackagePath("meta::entity::path"));
 
         Assert.assertFalse(BaseGitLabApi.isValidPackagePath("model::"));
         Assert.assertFalse(BaseGitLabApi.isValidPackagePath("model::*"));
@@ -85,6 +87,8 @@ public class TestBaseGitLabApi
 
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::"));
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::*"));
+        Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("random"));
+        Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("random::entity::path"));
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::$test::$function"));
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::has::other::characters::test_String_$1_10$__String_$1_*$_&"));
     }
