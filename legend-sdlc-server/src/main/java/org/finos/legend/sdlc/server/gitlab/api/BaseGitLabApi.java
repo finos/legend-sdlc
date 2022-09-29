@@ -35,26 +35,29 @@ import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response.Status;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Base64.Encoder;
 import java.util.Date;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
 {
@@ -82,15 +85,16 @@ abstract class BaseGitLabApi
     private static final String MR_STATE_LOCKED = "locked";
     private static final String MR_STATE_MERGED = "merged";
 
+    private static final String MASTER_BRANCH = "master";
+
     protected static final int ITEMS_PER_PAGE = 100;
-    protected static final String MASTER_BRANCH = "master";
 
     protected static final String PACKAGE_SEPARATOR = "::";
 
     protected static final char BRANCH_DELIMITER = '/';
 
     protected static final String RELEASE_TAG_PREFIX = "release-";
-    protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile("^" + RELEASE_TAG_PREFIX + "\\d+\\.\\d+\\.\\d+$");
+    protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile(RELEASE_TAG_PREFIX + "\\d++\\.\\d++\\.\\d++");
 
     private final GitLabConfiguration gitLabConfiguration;
     private final GitLabUserContext userContext;
@@ -120,7 +124,11 @@ abstract class BaseGitLabApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Invalid project id: " + projectId, Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException("Invalid project id: \"" + projectId + "\"", Status.BAD_REQUEST, e);
+        }
+        if (!Objects.equals(this.gitLabConfiguration.getProjectIdPrefix(), gitLabProjectId.getPrefix()))
+        {
+            throw new LegendSDLCServerException("Invalid project id: \"" + projectId + "\"", Status.BAD_REQUEST);
         }
         return gitLabProjectId;
     }
@@ -311,9 +319,28 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, GitLabProjectId projectId)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+        return (workspaceId == null) ? getDefaultBranch(projectId) : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+    }
+
+    protected String getDefaultBranch(GitLabProjectId projectId)
+    {
+        try
+        {
+            ProjectApi projectApi = getGitLabApi().getProjectApi();
+            return getDefaultBranch(withRetries(() -> projectApi.getProject(projectId.getGitLabId())));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Error getting default branch for " + projectId);
+        }
+    }
+
+    protected String getDefaultBranch(Project project)
+    {
+        String defaultBranch = project.getDefaultBranch();
+        return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
@@ -385,12 +412,6 @@ abstract class BaseGitLabApi
         return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), (String[]) null);
     }
 
-    protected boolean isUserOrGroupWorkspaceBranchName(String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        String[] extraArgument = workspaceType == WorkspaceType.GROUP ? (String[]) null : new String[]{getCurrentUser()};
-        return branchNameStartsWith(branchName, getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType), extraArgument);
-    }
-
     protected static boolean branchNameStartsWith(String branchName, String first, String... more)
     {
         if (branchName == null)
@@ -445,26 +466,26 @@ abstract class BaseGitLabApi
         return isVersionTagName(tag.getName());
     }
 
-    protected static String getReferenceInfo(GitLabProjectId projectId, String workspaceId, String revisionId)
+    protected static String getReferenceInfo(GitLabProjectId projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
-        return getReferenceInfo(projectId.toString(), workspaceId, revisionId);
+        return getReferenceInfo(projectId.toString(), workspaceId, workspaceType, workspaceAccessType, revisionId);
     }
 
-    protected static String getReferenceInfo(String projectId, String workspaceId, String revisionId)
+    protected static String getReferenceInfo(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         int messageLength = projectId.length() + 8;
         if (workspaceId != null)
         {
-            messageLength += workspaceId.length() + 14;
+            messageLength += workspaceId.length() + 20;
         }
         if (revisionId != null)
         {
             messageLength += revisionId.length() + 13;
         }
-        return appendReferenceInfo(new StringBuilder(messageLength), projectId, workspaceId, revisionId).toString();
+        return appendReferenceInfo(new StringBuilder(messageLength), projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).toString();
     }
 
-    protected static StringBuilder appendReferenceInfo(StringBuilder builder, String projectId, String workspaceId, String revisionId)
+    protected static StringBuilder appendReferenceInfo(StringBuilder builder, String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         if (revisionId != null)
         {
@@ -472,7 +493,7 @@ abstract class BaseGitLabApi
         }
         if (workspaceId != null)
         {
-            builder.append("workspace ").append(workspaceId).append(" of ");
+            builder.append(workspaceType.getLabel()).append(' ').append(workspaceAccessType.getLabel()).append(' ').append(workspaceId).append(" of ");
         }
         builder.append("project ").append(projectId);
         return builder;
@@ -560,8 +581,8 @@ abstract class BaseGitLabApi
                     case 401:
                     {
                         // this means the access token is invalid
-                        BaseGitLabApi.this.userContext.clearAccessToken();
-                        HttpServletRequest httpRequest = BaseGitLabApi.this.userContext.getHttpRequest();
+                        this.userContext.clearAccessToken();
+                        HttpServletRequest httpRequest = this.userContext.getHttpRequest();
                         StringBuffer urlBuilder = httpRequest.getRequestURL();
                         String requestQueryString = httpRequest.getQueryString();
                         if (requestQueryString != null)
@@ -783,16 +804,18 @@ abstract class BaseGitLabApi
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
-        if (!isReviewMergeRequest(mergeRequest))
+
+        if (!isReviewMergeRequest(mergeRequest, getDefaultBranch(projectId)))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }
 
-    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
+    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch)
     {
-        if ((mergeRequest == null) || !MASTER_BRANCH.equals(mergeRequest.getTargetBranch()))
+
+        if ((mergeRequest == null) || !targetBranch.equals(mergeRequest.getTargetBranch()))
         {
             return false;
         }

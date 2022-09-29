@@ -28,35 +28,40 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructure
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
-import org.finos.legend.sdlc.server.project.ProjectConfigurationUpdateBuilder;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApi;
+import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.Pager;
+import org.gitlab4j.api.ProtectedBranchesApi;
 import org.gitlab4j.api.RepositoryApi;
+import org.gitlab4j.api.UserApi;
 import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
+import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.ProjectAccess;
 import org.gitlab4j.api.models.ProtectedTag;
+import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -66,6 +71,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabProjectApi extends GitLabApiWithFileAccess implements ProjectApi
 {
@@ -180,12 +187,15 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
 
-        validateProjectCreation(name, description, groupId, artifactId);
+        validateProjectCreation(groupId, artifactId);
 
+        GitLabApi gitLabApi = getGitLabApi();
+
+        // Create project
+        org.gitlab4j.api.models.Project gitLabProject;
         try
         {
-            GitLabApi gitLabApi = getGitLabApi();
-
+            org.gitlab4j.api.ProjectApi projectApi = gitLabApi.getProjectApi();
             List<String> tagList = Lists.mutable.empty();
             tagList.add(getLegendSDLCProjectTag());
             if (tags != null)
@@ -193,42 +203,138 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 tagList.addAll(toLegendSDLCTagSet(tags));
             }
             org.gitlab4j.api.models.Project gitLabProjectSpec = new org.gitlab4j.api.models.Project()
-                .withName(name)
-                .withDescription(description)
-                .withTagList(tagList)
-                .withVisibility(getNewProjectVisibility())
-                .withMergeRequestsEnabled(true)
-                .withIssuesEnabled(true)
-                .withWikiEnabled(false)
-                .withSnippetsEnabled(false);
-            org.gitlab4j.api.models.Project gitLabProject = gitLabApi.getProjectApi().createProject(gitLabProjectSpec);
-            if (gitLabProject == null)
-            {
-                throw new LegendSDLCServerException("Failed to create project: " + name);
-            }
-
-            // protect from commits on master
-            gitLabApi.getProtectedBranchesApi().protectBranch(gitLabProject.getId(), MASTER_BRANCH, AccessLevel.NONE, AccessLevel.MAINTAINER);
-
-            // build project structure
-            ProjectConfigurationUpdateBuilder.newBuilder(getProjectFileAccessProvider(), GitLabProjectId.getProjectIdString(this.getGitLabConfiguration().getProjectIdPrefix(), gitLabProject))
-                .withMessage("Build project structure")
-                .withGroupId(groupId)
-                .withArtifactId(artifactId)
-                .withProjectStructureVersion(getDefaultProjectStructureVersion())
-                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
-                .buildProjectStructure();
-
-            return fromGitLabProject(gitLabProject);
+                    .withName(name)
+                    .withDescription(description)
+                    .withTagList(tagList)
+                    .withVisibility(getNewProjectVisibility())
+                    .withMergeRequestsEnabled(true)
+                    .withIssuesEnabled(true)
+                    .withWikiEnabled(false)
+                    .withSnippetsEnabled(false);
+            gitLabProject = projectApi.createProject(gitLabProjectSpec);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to create project " + name,
-                () -> "Failed to create project: " + name,
-                () -> "Failed to create project: " + name);
+                    () -> "User " + getCurrentUser() + " is not allowed to create project " + name,
+                    () -> "Failed to create project: " + name,
+                    () -> "Failed to create project: " + name);
         }
+        if (gitLabProject == null)
+        {
+            throw new LegendSDLCServerException("Failed to create project: " + name);
+        }
+        Project project = fromGitLabProject(gitLabProject);
+
+        // try to ensure current user is a maintainer (or higher), but proceed even if we fail
+        AccessLevel minUserAccessLevel = AccessLevel.MAINTAINER;
+        if (!tryEnsureMinAccessLevel(gitLabApi, gitLabProject, minUserAccessLevel))
+        {
+            LOGGER.warn("Created project {} but could not set access level for {} to {} - trying to proceed anyway", project.getProjectId(), getCurrentUser(), minUserAccessLevel);
+        }
+
+        // protect default branch
+        AccessLevel pushAccessLevel = AccessLevel.NONE;
+        AccessLevel mergeAccessLevel = AccessLevel.MAINTAINER;
+        String defaultBranchName = getDefaultBranch(gitLabProject);
+        try
+        {
+            ProtectedBranchesApi protectedBranchesApi = gitLabApi.getProtectedBranchesApi();
+            withRetries(() -> protectedBranchesApi.protectBranch(gitLabProject.getId(), defaultBranchName, pushAccessLevel, mergeAccessLevel));
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error trying to protect branch {} in project {} (push: {}, merge: {}) - trying to proceed anyway", defaultBranchName, project.getProjectId(), pushAccessLevel, mergeAccessLevel, e);
+        }
+
+        // build project structure
+        try
+        {
+            int projectStructureVersion = getDefaultProjectStructureVersion();
+            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectId(project.getProjectId())
+                    .withGroupId(groupId)
+                    .withArtifactId(artifactId)
+                    .withProjectStructureVersion(projectStructureVersion);
+            if (this.projectStructurePlatformExtensions != null)
+            {
+                configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
+            }
+            ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+                    .withMessage("Build project structure")
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                    .build();
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to set up project structure for newly created project " + project.getProjectId(),
+                    () -> "Error setting up project structure for newly created project " + project.getProjectId(),
+                    () -> "Error setting up project structure for newly created project " + project.getProjectId());
+        }
+
+        return project;
+    }
+
+    private boolean tryEnsureMinAccessLevel(GitLabApi gitLabApi, org.gitlab4j.api.models.Project project, AccessLevel accessLevel)
+    {
+        int projectId = project.getId();
+
+        User currentUser;
+        try
+        {
+            UserApi userApi = gitLabApi.getUserApi();
+            currentUser = withRetries(userApi::getCurrentUser);
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error trying to set access level for {} in project {} to {}: could not get current user", getCurrentUser(), projectId, accessLevel.name(), e);
+            return false;
+        }
+
+        org.gitlab4j.api.ProjectApi projectApi = gitLabApi.getProjectApi();
+        int userId = currentUser.getId();
+        CallUntil<AccessLevel, ?> callUntil = CallUntil.callUntil(() ->
+        {
+            try
+            {
+                Member member;
+                try
+                {
+                    member = withRetries(() -> projectApi.getMember(projectId, userId));
+                }
+                catch (GitLabApiException e)
+                {
+                    if (!GitLabApiTools.isNotFoundGitLabApiException(e))
+                    {
+                        throw e;
+                    }
+                    return projectApi.addMember(projectId, userId, accessLevel).getAccessLevel();
+                }
+                return accessLevelAtLeast(member.getAccessLevel(), accessLevel) ?
+                        member.getAccessLevel() :
+                        projectApi.updateMember(projectId, userId, accessLevel).getAccessLevel();
+            }
+            catch (Exception e)
+            {
+                LOGGER.warn("Error trying to set access level for {} in project {} to {}", getCurrentUser(), projectId, accessLevel.name(), e);
+                return null;
+            }
+        }, al -> accessLevelAtLeast(al, accessLevel), 10, 500);
+        if (!callUntil.succeeded())
+        {
+            AccessLevel result = callUntil.getResult();
+            LOGGER.warn("Failed to set access level for {} in project {} to {} after {} attempts: access level {}", getCurrentUser(), projectId, accessLevel.name(), callUntil.getTryCount(), (result == null) ? null : result.name());
+            return false;
+        }
+        LOGGER.debug("Set access level for {} in project {} to {} after {} attempts", getCurrentUser(), projectId, accessLevel.name(), callUntil.getTryCount());
+        return true;
+    }
+
+    private boolean accessLevelAtLeast(AccessLevel accessLevel, AccessLevel minAccessLevel)
+    {
+        return (accessLevel != null) && (accessLevel.toValue() >= minAccessLevel.toValue());
     }
 
     @Override
@@ -239,15 +345,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
 
         // Get project ID
-        GitLabProjectId projectId;
-        if (id.chars().allMatch(Character::isDigit))
-        {
-            projectId = GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), Integer.parseInt(id));
-        }
-        else
-        {
-            projectId = parseProjectId(id);
-        }
+        GitLabProjectId projectId = id.chars().allMatch(Character::isDigit) ?
+                GitLabProjectId.newProjectId(getGitLabConfiguration().getProjectIdPrefix(), Integer.parseInt(id)) :
+                parseProjectId(id);
 
         // Find project
         GitLabApi gitLabApi = getGitLabApi();
@@ -260,25 +360,28 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to access project " + id,
-                () -> "Could not find project " + id,
-                () -> "Failed to access project " + id);
+                    () -> "User " + getCurrentUser() + " is not allowed to access project " + id,
+                    () -> "Could not find project " + id,
+                    () -> "Failed to access project " + id);
         }
 
         // Create a workspace for project configuration
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
         String workspaceId = "ProjectConfiguration_" + getRandomIdString();
+        WorkspaceType workspaceType = WorkspaceType.USER;
+        WorkspaceAccessType workspaceAccessType = WorkspaceAccessType.WORKSPACE;
         Branch workspaceBranch;
+        String defaultBranch = getDefaultBranch(projectId);
         try
         {
-            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), MASTER_BRANCH, 30, 1_000);
+            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, 30, 1_000);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to create a workspace for initial configuration of project " + id,
-                () -> "Could not find project " + id,
-                () -> "Failed to create workspace for initial configuration of project " + id);
+                    () -> "User " + getCurrentUser() + " is not allowed to create a workspace for initial configuration of project " + id,
+                    () -> "Could not find project " + id,
+                    () -> "Failed to create workspace for initial configuration of project " + id);
         }
         if (workspaceBranch == null)
         {
@@ -290,35 +393,43 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         Revision configRevision;
         try
         {
-            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), null, null, projectFileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
-            ProjectConfigurationUpdateBuilder builder = ProjectConfigurationUpdateBuilder.newBuilder(projectFileAccessProvider, projectId.toString())
-                .withWorkspace(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
-                .withGroupId(groupId)
-                .withArtifactId(artifactId)
-                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
+            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), null, null, projectFileAccessProvider, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
+            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withGroupId(groupId)
+                    .withArtifactId(artifactId);
+            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
+                    .withWorkspace(workspaceId, workspaceType, workspaceAccessType)
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
             int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
             if (currentConfig == null)
             {
                 // No current project structure: build a new one
-                configRevision = builder.withProjectStructureVersion(defaultProjectStructureVersion)
-                    .withMessage("Build project structure")
-                    .buildProjectStructure();
+                configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                if (this.projectStructureExtensionProvider != null)
+                {
+                    configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                }
+                configRevision = builder.withMessage("Build project structure").build();
             }
             else
             {
                 ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
                 if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
                 {
-                    builder.withProjectStructureVersion(defaultProjectStructureVersion).withProjectStructureExtensionVersion(null);
+                    configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                    if (this.projectStructureExtensionProvider != null)
+                    {
+                        configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                    }
                 }
-                configRevision = builder.withMessage("Update project structure").updateProjectConfiguration();
+                configRevision = builder.withMessage("Update project structure").update();
             }
         }
         catch (Exception e)
         {
             // Try to delete the branch in case of exception
-            deleteWorkspace(projectId, repositoryApi, workspaceId);
+            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
             throw e;
         }
 
@@ -330,23 +441,23 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             reviewId = null;
 
             // Try to delete the branch
-            deleteWorkspace(projectId, repositoryApi, workspaceId);
+            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
         }
         else
         {
             MergeRequest mergeRequest;
             try
             {
-                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), MASTER_BRANCH, "Project structure", "Set up project structure", null, null, null, null, true, false);
+                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId);
+                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
                 throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id,
-                    () -> "Could not find workspace " + workspaceId + " project " + id,
-                    () -> "Failed to create a review for configuration of project " + id);
+                        () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id,
+                        () -> "Could not find " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + id,
+                        () -> "Failed to create a review for configuration of project " + id);
             }
             reviewId = toStringIfNotNull(mergeRequest.getIid());
         }
@@ -375,11 +486,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId);
+                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
                 throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to import project " + id,
-                    () -> "Could not find project " + id,
-                    () -> "Failed to import project " + id);
+                        () -> "User " + getCurrentUser() + " is not allowed to import project " + id,
+                        () -> "Could not find project " + id,
+                        () -> "Failed to import project " + id);
             }
             finalProject = fromGitLabProject(updatedProject);
         }
@@ -399,21 +510,20 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         };
     }
 
-    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, String workspaceId)
+    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         try
         {
-            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(),
-                    getWorkspaceBranchName(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), 30, 1_000);
+            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 30, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete workspace {} in project {}", workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
             }
         }
-        catch (Exception ex)
+        catch (Exception e)
         {
             // Possibly failed to delete branch - unfortunate, but ignore it
-            LOGGER.error("Error deleting workspace {} in project {}", workspaceId, projectId, ex);
+            LOGGER.error("Error deleting {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId, e);
         }
     }
 
@@ -430,9 +540,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to delete project " + id,
-                () -> "Unknown project: " + id,
-                () -> "Failed to delete project " + id);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete project " + id,
+                    () -> "Unknown project: " + id,
+                    () -> "Failed to delete project " + id);
         }
     }
 
@@ -455,9 +565,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to change name of project " + id + " to \"" + newName + "\"",
-                () -> "Unknown project: " + id,
-                () -> "Failed to change name of project " + id + " to \"" + newName + "\"");
+                    () -> "User " + getCurrentUser() + " is not allowed to change name of project " + id + " to \"" + newName + "\"",
+                    () -> "Unknown project: " + id,
+                    () -> "Failed to change name of project " + id + " to \"" + newName + "\"");
         }
     }
 
@@ -480,9 +590,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to change the description of project " + id + " to \"" + newDescription + "\"",
-                () -> "Unknown project: " + id,
-                () -> "Failed to change the description of project " + id + " to \"" + newDescription + "\"");
+                    () -> "User " + getCurrentUser() + " is not allowed to change the description of project " + id + " to \"" + newDescription + "\"",
+                    () -> "Unknown project: " + id,
+                    () -> "Failed to change the description of project " + id + " to \"" + newDescription + "\"");
         }
     }
 
@@ -517,9 +627,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to update tags for project " + id,
-                () -> "Unknown project: " + id,
-                () -> "Failed to update tags for project " + id);
+                    () -> "User " + getCurrentUser() + " is not allowed to update tags for project " + id,
+                    () -> "Unknown project: " + id,
+                    () -> "Failed to update tags for project " + id);
         }
     }
 
@@ -554,9 +664,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to set tags for project " + id,
-                () -> "Unknown project: " + id,
-                () -> "Failed to set tags for project " + id);
+                    () -> "User " + getCurrentUser() + " is not allowed to set tags for project " + id,
+                    () -> "Unknown project: " + id,
+                    () -> "Failed to set tags for project " + id);
         }
     }
 
@@ -671,11 +781,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             case CREATE_VERSION:
             {
-                return checkUserReleasePermission(projectId, action, accessLevel);
+                return checkUserReleasePermission(projectId, accessLevel);
             }
             case COMMIT_REVIEW:
             {
-                return checkUserMergeReviewPermission(projectId, action, accessLevel);
+                return defaultMergeReviewAccess(accessLevel);
             }
             case SUBMIT_REVIEW:
             {
@@ -692,12 +802,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
-    private boolean checkUserMergeReviewPermission(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
-    {
-        return defaultMergeReviewAccess(accessLevel);
-    }
-
-    private boolean checkUserReleasePermission(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
+    private boolean checkUserReleasePermission(GitLabProjectId projectId, AccessLevel accessLevel)
     {
         try
         {
@@ -789,7 +894,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         return ProjectStructure.getLatestProjectStructureVersion();
     }
 
-    private void validateProjectCreation(String name, String description, String groupId, String artifactId)
+    private void validateProjectCreation(String groupId, String artifactId)
     {
         ProjectCreationConfiguration projectCreationConfig = getProjectCreationConfiguration();
         if (projectCreationConfig != null)
@@ -834,9 +939,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get project " + projectId,
-                () -> "Unknown project: " + projectId,
-                () -> "Failed to get project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get project " + projectId,
+                    () -> "Unknown project: " + projectId,
+                    () -> "Failed to get project " + projectId);
         }
     }
 

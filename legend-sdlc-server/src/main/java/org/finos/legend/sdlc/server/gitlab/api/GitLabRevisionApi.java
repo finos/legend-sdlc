@@ -200,7 +200,8 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
 
             Pager<CommitRef> commitRefPager = withRetries(() -> commitsApi.getCommitRefs(gitLabProjectId.getGitLabId(), revision.getId(), RefType.ALL, ITEMS_PER_PAGE));
             List<CommitRef> commitRefs = PagerTools.stream(commitRefPager).collect(Collectors.toList());
-            boolean isCommitted = commitRefs.stream().anyMatch(cr -> MASTER_BRANCH.equals(cr.getName()));
+            String defaultBranch = getDefaultBranch(gitLabProjectId);
+            boolean isCommitted = commitRefs.stream().anyMatch(cr -> defaultBranch.equals(cr.getName()));
 
             List<Version> versions;
             List<String> versionTagNames = commitRefs.stream()

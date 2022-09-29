@@ -1,4 +1,5 @@
 [![FINOS - Incubating](https://cdn.jsdelivr.net/gh/finos/contrib-toolbox@master/images/badge-incubating.svg)](https://finosfoundation.atlassian.net/wiki/display/FINOS/Incubating)
+[![Maven Central](https://img.shields.io/maven-central/v/org.finos.legend.sdlc/legend-sdlc.svg?maxAge=2592000)](http://search.maven.org/#search%7Cga%7C1%7Ca%3A%22legend-sdlc)
 ![Build CI](https://github.com/finos/legend-sdlc/workflows/Build%20CI/badge.svg)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=legend-sdlc&metric=security_rating&token=69394360757d5e1356312ddfee658a6b205e2c97)](https://sonarcloud.io/dashboard?id=legend-sdlc)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=legend-sdlc&metric=bugs&token=69394360757d5e1356312ddfee658a6b205e2c97)](https://sonarcloud.io/dashboard?id=legend-sdlc)
@@ -17,8 +18,8 @@ To this end, the Legend SDLC enables:
 
 ## Usage example
 
-Start by creating a configuration file based on your particular environment. This can be JSON or YAML. A
-[sample configuration file](https://github.com/finos/legend-sdlc/blob/master/legend-sdlc-server/src/test/resources/config-sample.yaml)
+Start by creating a configuration file based on your particular environment, which can be either JSON or YAML. 
+[A sample configuration file](https://github.com/finos/legend-sdlc/blob/master/legend-sdlc-server/src/test/resources/config-sample.yaml)
 is included to help you get started. You will need to supply some information, such as the host your server is running
 on.
 

@@ -57,7 +57,7 @@ public class TestFileGenerationFactory
         fileGenerationSpecification.type = UNSUPPORTED;
         fileGenerationSpecification.name = "MyFileGeneration";
         fileGenerationSpecification._package = "package";
-        FileGenerator fileGenerator = FileGenerator.newGenerator(new PureModel(PureModelContextData.newBuilder().build(), null, DeploymentMode.TEST), fileGenerationSpecification);
+        FileGenerator fileGenerator = FileGenerator.newGenerator(new PureModel(PureModelContextData.newBuilder().build(), null, DeploymentMode.PROD), fileGenerationSpecification);
         EngineException handlerException = Assert.assertThrows(EngineException.class, fileGenerator::generate);
         Assert.assertEquals("Can't find a handler for the file generation type '" + UNSUPPORTED.toLowerCase() + "'", handlerException.getMessage());
     }
@@ -76,7 +76,7 @@ public class TestFileGenerationFactory
     {
         PureModelContextData pureModelContextData = getPureModelContextDataFromPath("FileGenerationFactoryTestData.json");
         MapIterable<String, FileGenerationSpecification> specifications = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), FileGenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath);
-        FileGenerator fileGenerator = FileGenerator.newGenerator(new PureModel(pureModelContextData, null, DeploymentMode.TEST), specifications.get("generation::MyAvro"));
+        FileGenerator fileGenerator = FileGenerator.newGenerator(new PureModel(pureModelContextData, null, DeploymentMode.PROD), specifications.get("generation::MyAvro"));
         List<GenerationOutput> avroResult = fileGenerator.generate();
         testAvroOutput(avroResult);
     }

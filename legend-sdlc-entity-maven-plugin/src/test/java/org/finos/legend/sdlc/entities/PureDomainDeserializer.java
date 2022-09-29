@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.entities;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParser;
@@ -38,7 +39,7 @@ import java.util.Map;
 public class PureDomainDeserializer implements EntityTextSerializer
 {
     private final PureGrammarParser pureParser = PureGrammarParser.newInstance();
-    private final ObjectMapper jsonMapper = PureProtocolObjectMapperFactory.getNewObjectMapper();
+    private final ObjectMapper jsonMapper = PureProtocolObjectMapperFactory.getNewObjectMapper().setSerializationInclusion(JsonInclude.Include.NON_NULL);
 
     @Override
     public String getName()
@@ -83,7 +84,11 @@ public class PureDomainDeserializer implements EntityTextSerializer
         PureModelContextData pureModelContextData;
         try
         {
-            pureModelContextData = this.pureParser.parseModel(content);
+            pureModelContextData = this.pureParser.parseModel(
+                    content,
+                    // NOTE: remove source information to optimize model size for storage
+                    false
+            );
         }
         catch (EngineException e)
         {
@@ -97,7 +102,7 @@ public class PureDomainDeserializer implements EntityTextSerializer
         PackageableElement element = elements.get((elements.get(0) instanceof SectionIndex) ? 1 : 0);
         String classifierPath = getClassifierPath(element);
         String intermediateJson = this.jsonMapper.writeValueAsString(element);
-        Map<String, Object> entityContent =  this.jsonMapper.readValue(intermediateJson, this.jsonMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class));
+        Map<String, Object> entityContent = this.jsonMapper.readValue(intermediateJson, this.jsonMapper.getTypeFactory().constructMapType(Map.class, String.class, Object.class));
         return Entity.newEntity(element.getPath(), classifierPath, entityContent);
     }
 

@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryReview;
 
 public class InMemoryMixins
 {
@@ -63,6 +64,17 @@ public class InMemoryMixins
     @JsonSubTypes({
             @JsonSubTypes.Type(value = InMemoryRevision.class, name = "InMemoryRevision")})
     public abstract class Revision
+    {
+
+    }
+
+    @JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "jackson-type")
+    @JsonSubTypes({
+        @JsonSubTypes.Type(value = InMemoryReview.class, name = "InMemoryReview")})
+    public abstract class Review
     {
 
     }

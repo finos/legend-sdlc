@@ -19,12 +19,12 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryEntityApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryProjectApi;
@@ -38,12 +38,14 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryReview;
+import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryReviewApi;
 
-import javax.inject.Inject;
-import javax.inject.Singleton;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.inject.Singleton;
 
 @Singleton
 public class InMemoryBackend
@@ -53,10 +55,12 @@ public class InMemoryBackend
     private final ProjectConfigurationApi projectConfigurationApi = new InMemoryProjectConfigurationApi(this);
     private final VersionApi versionApi = new InMemoryVersionApi(this);
     private final ProjectApi projectApi = new InMemoryProjectApi(this);
+    private final ReviewApi reviewApi = new InMemoryReviewApi(this);
 
     private InMemoryMetadataBackend metadata = null;
 
     private final MutableMap<String, InMemoryProject> projects = Maps.mutable.empty();
+    private final MutableMap<String, InMemoryReview> reviews = Maps.mutable.empty();
 
     @Inject
     public InMemoryBackend(InMemoryMetadataBackend metadata)
@@ -252,14 +256,14 @@ public class InMemoryBackend
         {
             ProjectDependency parsedProjectDependency = ProjectDependency.parseProjectDependency(dependencyString);
             String projectDependencyId = parsedProjectDependency.getProjectId();
-            VersionId projectDependencyVersionId = parsedProjectDependency.getVersionId();
+            String projectDependencyVersionId = parsedProjectDependency.getVersionId();
 
             if (!this.backend.projects.containsKey(projectDependencyId))
             {
                 if (this.metadata != null && this.metadata.getProjects().containsKey(projectDependencyId))
                 {
                     InMemoryProjectMetadata projectDependency = this.metadata.getProjects().get(projectDependencyId);
-                    InMemoryVersionMetadata projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());
+                    InMemoryVersionMetadata projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId);
                     if (projectDependencyVersion == null)
                     {
                         throw new IllegalStateException(String.format("Unknown project dependency %s", parsedProjectDependency));
@@ -273,9 +277,9 @@ public class InMemoryBackend
                         }
 
                         @Override
-                        public VersionId getVersionId()
+                        public String getVersionId()
                         {
-                            return VersionId.parseVersionId(projectDependency.getCurrentVersionId());
+                            return projectDependency.getCurrentVersionId();
                         }
                     };
                 }
@@ -285,12 +289,22 @@ public class InMemoryBackend
                 }
             }
             InMemoryProject projectDependency = this.backend.projects.get(projectDependencyId);
-            InMemoryVersion projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId.toVersionIdString());
+            InMemoryVersion projectDependencyVersion = projectDependency.getVersion(projectDependencyVersionId);
             if (projectDependencyVersion == null)
             {
                 throw new IllegalStateException(String.format("Unknown project dependency version %s", dependencyString));
             }
             return parsedProjectDependency;
+        }
+
+        public InMemoryReview getReview(String reviewId)
+        {
+            return this.project.getReview(reviewId);
+        }
+    
+        public InMemoryReview addReview(String reviewId)
+        {
+            return this.project.addReview(reviewId);
         }
     }
 
@@ -302,6 +316,11 @@ public class InMemoryBackend
     public RevisionApi getRevisionApi()
     {
         return revisionApi;
+    }
+
+    public ReviewApi getReviewApi()
+    {
+        return reviewApi;
     }
 
     public ProjectConfigurationApi getProjectConfigurationApi()
@@ -318,4 +337,6 @@ public class InMemoryBackend
     {
         return projectApi;
     }
+
+
 }

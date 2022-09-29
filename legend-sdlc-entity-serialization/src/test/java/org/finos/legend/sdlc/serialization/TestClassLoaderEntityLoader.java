@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Sets;
 import org.junit.Rule;
 import org.junit.rules.TemporaryFolder;
 
@@ -24,6 +22,8 @@ import java.net.URL;
 import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -49,7 +49,7 @@ public class TestClassLoaderEntityLoader extends TestEntityLoader
         Path root = this.tempFolder.getRoot().toPath();
         URL[] urls = new URL[TOTAL_COUNT];
         JarOutputStream[] jarStreams = new JarOutputStream[JAR_COUNT];
-        List<Set<String>> addedDirs = Lists.mutable.ofInitialCapacity(JAR_COUNT);
+        List<Set<String>> addedDirs = new ArrayList<>(JAR_COUNT);
         try (JarOutputStream jarStream0 = new JarOutputStream(Files.newOutputStream(root.resolve(String.format(JAR_NAME_FORMAT_STRING, 0))), new Manifest());
              JarOutputStream jarStream1 = new JarOutputStream(Files.newOutputStream(root.resolve(String.format(JAR_NAME_FORMAT_STRING, 1))), new Manifest()))
         {
@@ -59,7 +59,7 @@ public class TestClassLoaderEntityLoader extends TestEntityLoader
             {
                 Path jarPath = root.resolve(String.format(JAR_NAME_FORMAT_STRING, i));
                 urls[i] = jarPath.toUri().toURL();
-                addedDirs.add(Sets.mutable.empty());
+                addedDirs.add(new HashSet<>());
             }
             for (int i = JAR_COUNT; i < TOTAL_COUNT; i++)
             {

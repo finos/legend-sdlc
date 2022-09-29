@@ -127,7 +127,8 @@ public class ProjectPaths
                 String directory = canonicalDirectories.get(i);
                 if (canonicalDirectories.subList(0, i).noneSatisfy(directory::startsWith))
                 {
-                    if (++lastKept != i)
+                    lastKept++;
+                    if (lastKept != i)
                     {
                         canonicalDirectories.set(lastKept, directory);
                     }

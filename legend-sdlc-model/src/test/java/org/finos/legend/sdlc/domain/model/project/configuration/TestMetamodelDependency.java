@@ -18,6 +18,8 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Comparator;
+
 public class TestMetamodelDependency
 {
     @Test
@@ -28,23 +30,6 @@ public class TestMetamodelDependency
         Assert.assertEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 1));
         Assert.assertNotEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 1));
         Assert.assertNotEquals(testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 2));
-    }
-
-    @Test
-    public void testCompareTo()
-    {
-        MetamodelDependency testMetamodel1 = MetamodelDependency.newMetamodelDependency("test-metamodel", 1);
-
-        TestTools.assertCompareTo(0, testMetamodel1, testMetamodel1);
-        TestTools.assertCompareTo(0, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 1));
-
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 0));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 0));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 1));
-        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 2));
-
-        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 2));
-        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("zest-metamodel", 1));
     }
 
     @Test
@@ -63,5 +48,23 @@ public class TestMetamodelDependency
         Assert.assertEquals(MetamodelDependency.newMetamodelDependency("test-metamodel", 1), MetamodelDependency.parseMetamodelDependency("test-metamodel:1", ':'));
         Assert.assertEquals(MetamodelDependency.newMetamodelDependency("test-metamodel", 1), MetamodelDependency.parseMetamodelDependency("test-metamodel/1", '/'));
         Assert.assertEquals(MetamodelDependency.newMetamodelDependency("other-metamodel", 0), MetamodelDependency.parseMetamodelDependency("other-metamodel_0", '_'));
+    }
+
+    @Test
+    public void testCompareTo()
+    {
+        Comparator<MetamodelDependency> comparator = MetamodelDependency.getDefaultComparator();
+        MetamodelDependency testMetamodel1 = MetamodelDependency.newMetamodelDependency("test-metamodel", 1);
+
+        TestTools.assertCompareTo(0, testMetamodel1, testMetamodel1, comparator);
+        TestTools.assertCompareTo(0, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 1), comparator);
+
+        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 0), comparator);
+        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 0), comparator);
+        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 1), comparator);
+        TestTools.assertCompareTo(1, testMetamodel1, MetamodelDependency.newMetamodelDependency("other-metamodel", 2), comparator);
+
+        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("test-metamodel", 2), comparator);
+        TestTools.assertCompareTo(-1, testMetamodel1, MetamodelDependency.newMetamodelDependency("zest-metamodel", 1), comparator);
     }
 }

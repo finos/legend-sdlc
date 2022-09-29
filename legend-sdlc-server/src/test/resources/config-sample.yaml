@@ -40,6 +40,10 @@ server:
         timeZone: UTC
   rootPath: /api
 
+#features:
+#  canCreateProject: true
+#  canCreateVersion: true
+
 filterPriorities:
   GitLab: 1
   org.pac4j.j2e.filter.CallbackFilter: 2

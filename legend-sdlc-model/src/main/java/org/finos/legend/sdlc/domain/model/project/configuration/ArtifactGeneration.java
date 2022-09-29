@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.domain.model.project.configuration;
 
 import java.util.Map;
 
+@Deprecated
 public interface ArtifactGeneration
 {
     String getName();

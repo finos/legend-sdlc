@@ -58,6 +58,16 @@ public class TestLegendSDLCTestSuiteBuilder
         testTestSuiteBuilder("legend-sdlc-test-service-with-testSuites", expectedTestState);
     }
 
+    @Test
+    public void testBuildMappingWithTestSuite() throws Exception
+    {
+        Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
+                "execution::RelationalMapping { Generic }", Sets.immutable.with("execution::RelationalMapping Test #1").castToSet());
+        ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-mapping-with-testTestSuites", 1, 1, 0, 0, expectedTestCasesByTestSuite);
+
+        testTestSuiteBuilder("legend-sdlc-test-mapping-with-testTestSuites", expectedTestState);
+    }
+
     protected void testTestSuiteBuilder(String entitiesResourceName, ExpectedTestState expectedTestState) throws Exception
     {
         TestSuite suite;

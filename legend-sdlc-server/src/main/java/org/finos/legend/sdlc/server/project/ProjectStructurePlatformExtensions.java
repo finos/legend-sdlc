@@ -14,73 +14,94 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.factory.Lists;
-import org.eclipse.collections.impl.factory.Maps;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class ProjectStructurePlatformExtensions
 {
-    private final Map<String, Platform> platforms;
+    private final MapIterable<String, Platform> platformsByName;
+    private final ImmutableList<Platform> platforms;
+    private final MapIterable<String, ExtensionsCollection> extensionsCollections;
 
-    private final Map<String, ExtensionsCollection> extensionsCollections;
-
-    private ProjectStructurePlatformExtensions(Map<String, Platform> platformExtensions, Map<String, ExtensionsCollection> collectionExtensions)
+    private ProjectStructurePlatformExtensions(MapIterable<String, Platform> platformsByName, MapIterable<String, ExtensionsCollection> collectionExtensions)
     {
-        this.platforms = platformExtensions;
+        this.platformsByName = platformsByName;
+        this.platforms = this.platformsByName.valuesView().toSortedListBy(Platform::getName).toImmutable();
         this.extensionsCollections = collectionExtensions;
     }
 
-    public static ProjectStructurePlatformExtensions newPlatformExtensions(Iterable<Platform> platforms, Iterable<ExtensionsCollection> collections)
+    @Override
+    public boolean equals(Object other)
     {
-        MutableMap<String, Platform> platformsMap = Maps.mutable.empty();
-        platforms.forEach(platform ->
+        if (this == other)
         {
-            if (platformsMap.containsKey(platform.name))
-            {
-                throw new IllegalArgumentException("Multiple platforms defined for platform '" + platform.name + "'");
-            }
-            platformsMap.put(platform.name, platform);
-        });
-        MutableMap<String, ExtensionsCollection> extensionsCollectionsMap = Maps.mutable.empty();
-        collections.forEach(collection ->
+            return true;
+        }
+
+        if (!(other instanceof ProjectStructurePlatformExtensions))
         {
-            if (!platformsMap.containsKey(collection.platform))
+            return false;
+        }
+
+        ProjectStructurePlatformExtensions that = (ProjectStructurePlatformExtensions) other;
+        return this.platformsByName.equals(that.platformsByName) && this.extensionsCollections.equals(that.extensionsCollections);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return this.platforms.hashCode() ^ this.extensionsCollections.size();
+    }
+
+    @Override
+    public String toString()
+    {
+        StringBuilder builder = new StringBuilder(getClass().getSimpleName()).append('{');
+        this.platforms.forEachWithIndex((p, i) ->
+        {
+            if (i > 0)
             {
-                throw new IllegalArgumentException("No platform metadata found for platform '" + collection.platform + "'");
+                builder.append(", ");
             }
-            if (extensionsCollectionsMap.containsKey(collection.name))
+            builder.append(p);
+            ExtensionsCollection extensionsCollection = this.extensionsCollections.get(p.getName());
+            if (extensionsCollection != null)
             {
-                throw new IllegalArgumentException("Multiple extensions collection defined for extension '" + collection.name + "'");
+                builder.append(" (").append(extensionsCollection).append(")");
             }
-            extensionsCollectionsMap.put(collection.name, collection);
         });
-        return new ProjectStructurePlatformExtensions(platformsMap, extensionsCollectionsMap);
+        return builder.append('}').toString();
     }
 
     public List<Platform> getPlatforms()
     {
-        return Lists.mutable.withAll(this.platforms.values());
+        return this.platforms.castToList();
     }
 
-    public Platform getPlatform(String platform)
+    public Platform getPlatform(String platformName)
     {
-        if (!this.platforms.containsKey(platform))
+        Platform platform = this.platformsByName.get(platformName);
+        if (platform == null)
         {
-            throw new IllegalArgumentException("No platform metadata found for platform '" + platform + "'");
+            throw new IllegalArgumentException("No platform metadata found for platform '" + platformName + "'");
         }
-        return this.platforms.get(platform);
+        return platform;
     }
 
     public ExtensionsCollection getExtensionsCollection(String extension)
     {
-        if (!this.containsExtension(extension))
+        ExtensionsCollection collection = this.extensionsCollections.get(extension);
+        if (collection == null)
         {
             throw new IllegalArgumentException("No extension collection found for extension name '" + extension + "'");
         }
-        return this.extensionsCollections.get(extension);
+        return collection;
     }
 
     public boolean containsExtension(String extension)
@@ -88,45 +109,113 @@ public class ProjectStructurePlatformExtensions
         return this.extensionsCollections.containsKey(extension);
     }
 
+    public static ProjectStructurePlatformExtensions newPlatformExtensions(Iterable<? extends Platform> platforms, Iterable<? extends ExtensionsCollection> collections)
+    {
+        MutableMap<String, Platform> platformsMap = Maps.mutable.empty();
+        platforms.forEach(platform ->
+        {
+            Platform old = platformsMap.put(platform.getName(), platform);
+            if ((old != null) && (old != platform))
+            {
+                throw new IllegalArgumentException("Multiple platforms defined for platform '" + platform.getName() + "'");
+            }
+        });
+        MutableMap<String, ExtensionsCollection> extensionsCollectionsMap = Maps.mutable.empty();
+        collections.forEach(collection ->
+        {
+            if (!platformsMap.containsKey(collection.getPlatform()))
+            {
+                throw new IllegalArgumentException("No platform metadata found for platform '" + collection.getPlatform() + "'");
+            }
+            ExtensionsCollection old = extensionsCollectionsMap.put(collection.getName(), collection);
+            if ((old != null) && (old != collection))
+            {
+                throw new IllegalArgumentException("Multiple extensions collection defined for extension '" + collection.getName() + "'");
+            }
+        });
+        return new ProjectStructurePlatformExtensions(platformsMap, extensionsCollectionsMap);
+    }
+
     public static class Platform
     {
         private final String name;
         private final String groupId;
-        private final Map<Integer, String> projectStructureVersions;
         private final String platformVersion;
+        private final Map<Integer, String> projectStructureVersions;
 
         public Platform(String name, String groupId, Map<Integer, String> projectStructureVersionsMap, String platformVersion)
         {
             this.name = name;
             this.groupId = groupId;
-            this.projectStructureVersions = projectStructureVersionsMap;
             this.platformVersion = platformVersion;
+            this.projectStructureVersions = projectStructureVersionsMap;
+        }
+
+        @Override
+        public boolean equals(Object other)
+        {
+            if (this == other)
+            {
+                return true;
+            }
+
+            if (!(other instanceof Platform))
+            {
+                return false;
+            }
+
+            Platform that = (Platform) other;
+            return Objects.equals(this.name, that.name) &&
+                    Objects.equals(this.groupId, that.groupId) &&
+                    Objects.equals(this.platformVersion, that.platformVersion) &&
+                    Objects.equals(this.projectStructureVersions, that.projectStructureVersions);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(this.name, this.groupId, this.platformVersion);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+            appendPossiblyNullString(builder.append("{name="), this.name);
+            appendPossiblyNullString(builder.append(", groupId="), this.groupId);
+            appendPossiblyNullString(builder.append(", platformVersion="), this.platformVersion);
+            builder.append(", projectStructureVersions=").append(this.projectStructureVersions).append('}');
+            return builder.toString();
         }
 
         public String getName()
         {
-            return name;
+            return this.name;
         }
 
         public String getGroupId()
         {
-            return groupId;
+            return this.groupId;
         }
 
         public String getPlatformVersion()
         {
-            return platformVersion;
+            return this.platformVersion;
         }
 
         public String getPublicStructureVersion(int version)
         {
-            if (!this.projectStructureVersions.containsKey(version))
+            if (this.projectStructureVersions != null)
             {
-                throw new IllegalArgumentException("No platform version given for project structure '" + version + "'");
+                String platformVersion = this.projectStructureVersions.get(version);
+                if (platformVersion != null)
+                {
+                    return platformVersion;
+                }
             }
-            return this.projectStructureVersions.get(version);
-        }
 
+            return getPlatformVersion();
+        }
     }
 
     public static class ExtensionsCollection
@@ -142,21 +231,61 @@ public class ProjectStructurePlatformExtensions
             this.artifactId = artifactId;
         }
 
+        @Override
+        public boolean equals(Object other)
+        {
+            if (this == other)
+            {
+                return true;
+            }
+
+            if (!(other instanceof ExtensionsCollection))
+            {
+                return false;
+            }
+
+            ExtensionsCollection that = (ExtensionsCollection) other;
+            return Objects.equals(this.name, that.name) &&
+                    Objects.equals(this.platform, that.platform) &&
+                    Objects.equals(this.artifactId, that.artifactId);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return Objects.hash(this.name, this.platform, this.artifactId);
+        }
+
+        @Override
+        public String toString()
+        {
+            StringBuilder builder = new StringBuilder(getClass().getSimpleName());
+            appendPossiblyNullString(builder.append("{name="), this.name);
+            appendPossiblyNullString(builder.append(", platform="), this.platform);
+            appendPossiblyNullString(builder.append(", artifactId="), this.artifactId).append('}');
+            return builder.toString();
+        }
+
         public String getName()
         {
-            return name;
+            return this.name;
         }
 
         public String getArtifactId()
         {
-            return artifactId;
+            return this.artifactId;
         }
 
         public String getPlatform()
         {
-            return platform;
+            return this.platform;
         }
-
     }
 
+    private static StringBuilder appendPossiblyNullString(StringBuilder builder, String string)
+    {
+        return (string == null) ?
+                builder.append((String) null) :
+                builder.append("'").append(string).append("'");
+    }
 }

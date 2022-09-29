@@ -17,9 +17,6 @@ package org.finos.legend.sdlc.server.config;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.Collections;
-import java.util.Set;
-
 public class LegendSDLCServerFeaturesConfiguration
 {
     public final boolean canCreateProject;

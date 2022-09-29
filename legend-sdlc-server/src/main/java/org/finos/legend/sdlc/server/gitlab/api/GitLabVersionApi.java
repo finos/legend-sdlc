@@ -255,7 +255,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             Commit referenceCommit;
             if (revisionId == null)
             {
-                referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), MASTER_BRANCH);
+                referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), getDefaultBranch(projectId));
                 if (referenceCommit == null)
                 {
                     throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
@@ -278,7 +278,8 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
 
                 Pager<CommitRef> referenceCommitBranchPager = withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), referenceCommit.getId(), RefType.BRANCH, ITEMS_PER_PAGE));
                 Stream<CommitRef> referenceCommitBranches = PagerTools.stream(referenceCommitBranchPager);
-                if (referenceCommitBranches.noneMatch(ref -> MASTER_BRANCH.equals(ref.getName())))
+                String defaultBranch = getDefaultBranch(projectId);
+                if (referenceCommitBranches.noneMatch(ref -> defaultBranch.equals(ref.getName())))
                 {
                     throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
                 }

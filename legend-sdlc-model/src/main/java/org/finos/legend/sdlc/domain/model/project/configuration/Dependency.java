@@ -47,9 +47,4 @@ public abstract class Dependency
     public abstract StringBuilder appendDependencyIdString(StringBuilder builder);
 
     public abstract StringBuilder appendVersionIdString(StringBuilder builder);
-
-    static <T extends Comparable<? super T>> int comparePossiblyNull(T obj1, T obj2)
-    {
-        return (obj1 == obj2) ? 0 : ((obj1 == null) ? 1 : ((obj2 == null) ? -1 : obj1.compareTo(obj2)));
-    }
 }

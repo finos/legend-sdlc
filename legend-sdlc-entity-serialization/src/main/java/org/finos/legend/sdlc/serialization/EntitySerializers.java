@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.impl.utility.LazyIterate;
-
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -33,36 +33,54 @@ public class EntitySerializers
 
     public static Iterable<EntitySerializer> getAvailableSerializers()
     {
-        return ServiceLoader.load(EntitySerializer.class);
+        List<EntitySerializer> serializers = new ArrayList<>();
+        ServiceLoader.load(EntitySerializer.class).forEach(serializers::add);
+        return serializers;
     }
 
     public static Iterable<EntityTextSerializer> getAvailableTextSerializers()
     {
-        return LazyIterate.selectInstancesOf(getAvailableSerializers(), EntityTextSerializer.class);
+        List<EntityTextSerializer> serializers = new ArrayList<>();
+        ServiceLoader.load(EntitySerializer.class).forEach(s ->
+        {
+            if (s instanceof EntityTextSerializer)
+            {
+                serializers.add((EntityTextSerializer) s);
+            }
+        });
+        return serializers;
     }
 
     public static Map<String, EntitySerializer> getAvailableSerializersByName()
     {
-        return indexByName(getAvailableSerializers());
-    }
-
-    public static Map<String, EntityTextSerializer> getAvailableTextSerializersByName()
-    {
-        return indexByName(getAvailableTextSerializers());
-    }
-
-    private static <T extends EntitySerializer> Map<String, T> indexByName(Iterable<T> serializers)
-    {
-        Map<String, T> result = Maps.mutable.empty();
-        for (T serializer : serializers)
+        Map<String, EntitySerializer> result = new HashMap<>();
+        ServiceLoader.load(EntitySerializer.class).forEach(s ->
         {
-            String name = serializer.getName();
-            T old = result.put(name, serializer);
+            String name = s.getName();
+            EntitySerializer old = result.put(name, s);
             if (old != null)
             {
                 throw new IllegalArgumentException("Multiple serializers named \"" + name + "\"");
             }
-        }
+        });
+        return result;
+    }
+
+    public static Map<String, EntityTextSerializer> getAvailableTextSerializersByName()
+    {
+        Map<String, EntityTextSerializer> result = new HashMap<>();
+        ServiceLoader.load(EntitySerializer.class).forEach(s ->
+        {
+            if (s instanceof EntityTextSerializer)
+            {
+                String name = s.getName();
+                EntitySerializer old = result.put(name, (EntityTextSerializer) s);
+                if (old != null)
+                {
+                    throw new IllegalArgumentException("Multiple serializers named \"" + name + "\"");
+                }
+            }
+        });
         return result;
     }
 }

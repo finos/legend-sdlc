@@ -55,7 +55,7 @@ public class IntegrationTestGitLabProjectConfigurationApis extends AbstractGitLa
         GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabOwnerUserContext, projectStructureConfig, null, backgroundTaskProcessor, null);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabConfig, gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
-        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabConfig, gitLabMemberUserContext, projectStructureConfig, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor, null);
+        GitLabProjectConfigurationApi gitLabProjectConfigurationApi = new GitLabProjectConfigurationApi(gitLabConfig, gitLabMemberUserContext, projectStructureConfig.getProjectStructureExtensionProvider(), backgroundTaskProcessor, null);
 
         gitLabProjectConfigurationApiTestResource = new GitLabProjectConfigurationApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabProjectConfigurationApi);
     }

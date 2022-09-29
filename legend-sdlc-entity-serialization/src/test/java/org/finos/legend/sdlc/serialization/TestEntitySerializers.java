@@ -14,12 +14,12 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.MutableList;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 public class TestEntitySerializers
@@ -33,7 +33,8 @@ public class TestEntitySerializers
     @Test
     public void testGetAvailableSerializers()
     {
-        MutableList<EntitySerializer> serializers = Lists.mutable.withAll(EntitySerializers.getAvailableSerializers());
+        List<EntitySerializer> serializers = new ArrayList<>();
+        EntitySerializers.getAvailableSerializers().forEach(serializers::add);
         Assert.assertEquals(1, serializers.size());
         Assert.assertTrue(serializers.get(0) instanceof DefaultJsonEntitySerializer);
     }
@@ -41,7 +42,8 @@ public class TestEntitySerializers
     @Test
     public void testGetAvailableTextSerializers()
     {
-        MutableList<EntityTextSerializer> serializers = Lists.mutable.withAll(EntitySerializers.getAvailableTextSerializers());
+        List<EntityTextSerializer> serializers = new ArrayList<>();
+        EntitySerializers.getAvailableTextSerializers().forEach(serializers::add);
         Assert.assertEquals(1, serializers.size());
         Assert.assertTrue(serializers.get(0) instanceof DefaultJsonEntitySerializer);
     }

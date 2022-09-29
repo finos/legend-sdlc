@@ -83,7 +83,7 @@ public abstract class LegendSDLCTestCase extends TestCase
                 t.addSuppressed(suppress);
             }
             long end = System.nanoTime();
-            this.logger.error("Error setting up (" + formatNanosDuration(end - start) + "s)", t);
+            this.logger.error("Error setting up ({}s)", formatNanosDuration(end - start), t);
             throw t;
         }
     }
@@ -128,7 +128,7 @@ public abstract class LegendSDLCTestCase extends TestCase
         catch (Throwable t)
         {
             long end = System.nanoTime();
-            this.logger.error("Error tearing down (" + formatNanosDuration(end - start) + "s)", t);
+            this.logger.error("Error tearing down ({}s)", formatNanosDuration(end - start), t);
             throw t;
         }
     }
@@ -261,7 +261,7 @@ public abstract class LegendSDLCTestCase extends TestCase
         catch (IOException e)
         {
             // Path does not exist or is not accessible - give up
-            this.logger.debug("Could not get attributes for " + path + " - giving up trying to delete it", e);
+            this.logger.debug("Could not get attributes for {} - giving up trying to delete it", path, e);
             return;
         }
 
@@ -286,10 +286,11 @@ public abstract class LegendSDLCTestCase extends TestCase
         catch (Exception e)
         {
             // Try to make it writable, and then try again to delete
-            this.logger.debug("Error deleting " + path + " - will try again", e);
+            this.logger.debug("Error deleting {} - will try again", path, e);
             if (!Files.isWritable(path))
             {
-                if (!path.toFile().setWritable(true, false))
+                boolean setToWritable = path.toFile().setWritable(true, false);
+                if (!setToWritable)
                 {
                     this.logger.debug("Failed to make {} writable", path);
                 }
@@ -301,7 +302,7 @@ public abstract class LegendSDLCTestCase extends TestCase
             catch (Exception ee)
             {
                 // Give up
-                this.logger.debug("Error deleting " + path + " - giving up", ee);
+                this.logger.debug("Error deleting {} - giving up", path, ee);
             }
         }
     }

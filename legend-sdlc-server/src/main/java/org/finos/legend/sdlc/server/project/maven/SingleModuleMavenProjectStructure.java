@@ -14,23 +14,25 @@
 
 package org.finos.legend.sdlc.server.project.maven;
 
-import org.apache.maven.model.Dependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 
 import java.util.Collection;
-import java.util.function.BiFunction;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public abstract class SingleModuleMavenProjectStructure extends MavenProjectStructure
 {
+    protected SingleModuleMavenProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    {
+        super(projectConfiguration, "/src/main/resources/entities", projectStructurePlatformExtensions);
+    }
+
+    @Deprecated
     protected SingleModuleMavenProjectStructure(ProjectConfiguration projectConfiguration)
     {
-        super(projectConfiguration, "/src/main/resources/entities");
+        this(projectConfiguration, null);
     }
 
     @Override
@@ -40,15 +42,18 @@ public abstract class SingleModuleMavenProjectStructure extends MavenProjectStru
     }
 
     @Override
-    protected void addMavenProjectDependencies(BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<Dependency> dependencyConsumer)
+    protected void configureMavenProjectModel(MavenModelConfiguration configuration)
     {
-        addJunitDependency(dependencyConsumer);
-        addJacksonDependency(dependencyConsumer);
+        super.configureMavenProjectModel(configuration);
+
+        // Dependencies
+        addJunitDependency(configuration::addDependency);
+        addJacksonDependency(configuration::addDependency);
         validateDependencyConflicts(getProjectDependencies(),
                 ProjectDependency::getProjectId,
                 (id, deps) -> (deps.size() > 1) ? deps.stream().collect(StringBuilder::new, (builder, dep) -> dep.appendVersionIdString(builder.append((builder.length() == 0) ? "multiple versions not allowed: " : ", ")), StringBuilder::append).toString() : null,
                 "projects");
-        getProjectDependenciesAsMavenDependencies(getSupportedArtifactTypes(), versionFileAccessContextProvider, true).forEach(dependencyConsumer);
+        getProjectDependenciesAsMavenDependencies(getSupportedArtifactTypes(), true).forEach(configuration::addDependency);
     }
 
     @Override

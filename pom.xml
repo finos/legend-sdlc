@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.80.1-SNAPSHOT</version>
+    <version>0.93.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -66,9 +66,9 @@
         <java.version.range>[11.0.10,12)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.7.0</legend.engine.version>
-        <legend.pure.version>3.0.0</legend.pure.version>
-        <legend.shared.version>0.22.0</legend.shared.version>
+        <legend.engine.version>3.17.0</legend.engine.version>
+        <legend.pure.version>3.6.2</legend.pure.version>
+        <legend.shared.version>0.22.5</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -96,7 +96,7 @@
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
         <junit.version>4.13.1</junit.version>
-        <apache.maven.version>3.6.2</apache.maven.version>
+        <apache.maven.version>3.8.6</apache.maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.27</snakeyaml.version>
@@ -106,7 +106,7 @@
 
     <scm>
         <developerConnection>scm:git:https://github.com/finos/legend-sdlc</developerConnection>
-        <tag>legend-sdlc-0.71.2</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <build>
@@ -186,11 +186,6 @@
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-release-plugin</artifactId>
-                    <version>3.0.0-M1</version>
-                </plugin>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
                     <version>3.2.1</version>
                 </plugin>
@@ -215,12 +210,6 @@
                     <configuration>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
-                </plugin>
-
-                <plugin>
-                    <groupId>org.codehaus.mojo</groupId>
-                    <artifactId>exec-maven-plugin</artifactId>
-                    <version>3.0.0</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
@@ -345,19 +334,6 @@
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-release-plugin</artifactId>
-                <configuration>
-                    <pushChanges>false</pushChanges>
-                    <arguments>-DskipTests</arguments>
-                    <autoVersionSubmodules>true</autoVersionSubmodules>
-                    <useReleaseProfile>false</useReleaseProfile>
-                    <releaseProfiles>release</releaseProfiles>
-                    <completionGoals>-DreleaseTag=${tag} -N exec:exec@git-push exec:exec@git-push-tag</completionGoals>
-                    <goals>deploy exec:exec@git-push</goals>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
             </plugin>
             <plugin>
@@ -376,35 +352,6 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <!-- Push new poms to release branch after release.
-                     Ideally we'd use maven-scm-plugin for this, but it doesn't support force pushing to a branch
-                -->
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <id>git-push</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>git</executable>
-                            <commandlineArgs>push -f origin HEAD:release</commandlineArgs>
-                        </configuration>
-                    </execution>
-                    <execution>
-                        <id>git-push-tag</id>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <configuration>
-                            <executable>git</executable>
-                            <commandlineArgs>push origin ${releaseTag}</commandlineArgs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>versions-maven-plugin</artifactId>
@@ -425,6 +372,33 @@
                         <phase>test</phase>
                         <goals>
                             <goal>report</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-pmd-plugin</artifactId>
+                <version>3.17.0</version>
+                <configuration>
+                    <printFailingErrors>true</printFailingErrors>
+                    <rulesets>
+                        <ruleset>${project.parent.basedir}/pmd/legend-ruleset.xml</ruleset>
+                    </rulesets>
+                    <rules>
+                        <requireFilesExist>
+                            <files>
+                                <file>${project.parent.basedir}/pmd/legend-ruleset.xml</file>
+                            </files>
+                        </requireFilesExist>
+                    </rules>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>pmd-check</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -1309,7 +1283,7 @@
             <dependency>
                 <groupId>org.jsoup</groupId>
                 <artifactId>jsoup</artifactId>
-                <version>1.14.2</version>
+                <version>1.15.3</version>
             </dependency>
 
             <dependency>
@@ -1418,4 +1392,5 @@
             </build>
         </profile>
     </profiles>
+
 </project>

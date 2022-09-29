@@ -43,24 +43,36 @@ public abstract class AbstractLegendMavenPluginHelper
         this.extensionsCollections = extensionsCollections;
     }
 
-    public final Plugin getPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    public final Plugin getPlugin(MavenProjectStructure projectStructure)
     {
         Plugin plugin = MavenPluginTools.newPlugin(this.groupId, this.artifactId, null);
         MavenPluginTools.addPluginExecution(plugin, this.phase, this.goal);
-        configurePlugin(projectStructure, versionFileAccessContextProvider, c -> MavenPluginTools.addConfiguration(plugin, c));
+        configurePlugin(projectStructure, c -> MavenPluginTools.addConfiguration(plugin, c));
         return plugin;
     }
 
-    public final Plugin getPluginManagementPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    public final Plugin getPluginManagementPlugin(MavenProjectStructure projectStructure)
     {
         Plugin plugin = MavenPluginTools.newPlugin(this.groupId, this.artifactId, this.version);
-        addDependencies(projectStructure, versionFileAccessContextProvider, plugin::addDependency);
+        addDependencies(projectStructure, plugin::addDependency);
         return plugin;
     }
 
-    protected abstract void configurePlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Xpp3Dom> configConsumer);
+    @Deprecated
+    public final Plugin getPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    {
+        return getPlugin(projectStructure);
+    }
 
-    protected void addDependencies(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider, Consumer<? super Dependency> dependencyConsumer)
+    @Deprecated
+    public final Plugin getPluginManagementPlugin(MavenProjectStructure projectStructure, BiFunction<String, VersionId, ProjectFileAccessProvider.FileAccessContext> versionFileAccessContextProvider)
+    {
+        return getPluginManagementPlugin(projectStructure);
+    }
+
+    protected abstract void configurePlugin(MavenProjectStructure projectStructure, Consumer<? super Xpp3Dom> configConsumer);
+
+    protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
     {
         if (this.extensionsCollections != null && !this.extensionsCollections.isEmpty())
         {

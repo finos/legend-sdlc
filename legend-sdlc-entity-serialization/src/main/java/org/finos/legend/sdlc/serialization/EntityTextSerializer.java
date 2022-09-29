@@ -43,7 +43,15 @@ public interface EntityTextSerializer extends EntitySerializer
     @Override
     default void serialize(Entity entity, OutputStream stream) throws IOException
     {
-        serialize(entity, new OutputStreamWriter(stream, StandardCharsets.UTF_8));
+        OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8);
+        try
+        {
+            serialize(entity, writer);
+        }
+        finally
+        {
+            writer.flush();
+        }
     }
 
     /**

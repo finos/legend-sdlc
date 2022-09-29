@@ -64,17 +64,18 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceType, workspaceAccessType);
         String workspaceCreationRevisionId;
+        String defaultBranch = getDefaultBranch(gitLabProjectId);
         try
         {
-            Commit commit = repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(MASTER_BRANCH, currentWorkspaceRevisionId));
+            Commit commit = repositoryApi.getMergeBase(gitLabProjectId.getGitLabId(), Arrays.asList(defaultBranch, currentWorkspaceRevisionId));
             workspaceCreationRevisionId = commit.getId();
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                () -> "Could not find revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString(),
-                () -> "Failed to fetch Merged Base Information for revisions " + MASTER_BRANCH + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId.toString());
+                () -> "User " + getCurrentUser() + " is not allowed to get merged based revision for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId,
+                () -> "Could not find revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId,
+                () -> "Failed to fetch Merged Base Information for revisions " + defaultBranch + ", " + currentWorkspaceRevisionId + " from project " + gitLabProjectId);
         }
         ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, workspaceCreationRevisionId, workspaceType, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, workspaceCreationRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);
@@ -90,7 +91,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         String currentProjectRevisionId = this.revisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId();
         ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
 
-        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), MASTER_BRANCH, currentProjectRevisionId, workspaceType, workspaceAccessType);
+        ProjectStructure fromProjectStructure = getProjectStructure(gitLabProjectId.toString(), getDefaultBranch(gitLabProjectId), currentProjectRevisionId, workspaceType, workspaceAccessType);
         String currentWorkspaceRevisionId = this.revisionApi.getWorkspaceRevisionContext(projectId, workspaceId, workspaceType).getCurrentRevision().getId();
         ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), workspaceId, currentWorkspaceRevisionId, workspaceType, workspaceAccessType);
         return getComparisonResult(gitLabProjectId, repositoryApi, currentProjectRevisionId, currentWorkspaceRevisionId, fromProjectStructure, toProjectStructure);

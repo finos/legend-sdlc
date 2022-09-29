@@ -14,9 +14,10 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import java.util.Comparator;
 import java.util.Objects;
 
-public abstract class MetamodelDependency extends Dependency implements Comparable<MetamodelDependency>
+public abstract class MetamodelDependency extends Dependency
 {
     public abstract String getMetamodel();
 
@@ -35,7 +36,7 @@ public abstract class MetamodelDependency extends Dependency implements Comparab
             return false;
         }
 
-        MetamodelDependency that = (MetamodelDependency)other;
+        MetamodelDependency that = (MetamodelDependency) other;
         return (this.getVersion() == that.getVersion()) && Objects.equals(this.getMetamodel(), that.getMetamodel());
     }
 
@@ -43,18 +44,6 @@ public abstract class MetamodelDependency extends Dependency implements Comparab
     public int hashCode()
     {
         return Objects.hashCode(getMetamodel()) + 61 * getVersion();
-    }
-
-    @Override
-    public int compareTo(MetamodelDependency other)
-    {
-        if (this == other)
-        {
-            return 0;
-        }
-
-        int cmp = comparePossiblyNull(this.getMetamodel(), other.getMetamodel());
-        return (cmp == 0) ? Integer.compare(this.getVersion(), other.getVersion()) : cmp;
     }
 
     @Override
@@ -98,7 +87,7 @@ public abstract class MetamodelDependency extends Dependency implements Comparab
         int delimiterIndex = string.indexOf(delimiter, start);
         if ((delimiterIndex == -1) || (delimiterIndex >= end))
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid metamodel dependency string: \"").append(string, start, end).append('"').toString());
+            throw new IllegalArgumentException("Invalid metamodel dependency string: \"" + string.substring(start, end) + '"');
         }
 
         String metamodel = string.substring(start, delimiterIndex);
@@ -109,7 +98,7 @@ public abstract class MetamodelDependency extends Dependency implements Comparab
         }
         catch (NumberFormatException e)
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid metamodel dependency string: \"").append(string, start, end).append('"').toString(), e);
+            throw new IllegalArgumentException("Invalid metamodel dependency string: \"" + string.substring(start, end) + '"', e);
         }
         return newMetamodelDependency(metamodel, version);
     }
@@ -138,5 +127,11 @@ public abstract class MetamodelDependency extends Dependency implements Comparab
                 return version;
             }
         };
+    }
+
+    public static Comparator<MetamodelDependency> getDefaultComparator()
+    {
+        return Comparator.comparing(MetamodelDependency::getMetamodel, Comparator.nullsLast(Comparator.naturalOrder()))
+                .thenComparingInt(MetamodelDependency::getVersion);
     }
 }

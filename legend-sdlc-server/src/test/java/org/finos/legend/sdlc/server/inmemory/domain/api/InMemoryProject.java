@@ -18,11 +18,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.time.Instant;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryProject implements Project
@@ -33,6 +37,7 @@ public class InMemoryProject implements Project
     private final MutableMap<String, InMemoryRevision> revisions = Maps.mutable.empty();
     private final MutableMap<String, InMemoryVersion> versions = Maps.mutable.empty();
     private String currentRevisionId;
+    private final MutableMap<String, InMemoryReview> reviews = Maps.mutable.empty();
 
     @Inject
     public InMemoryProject()
@@ -193,5 +198,37 @@ public class InMemoryProject implements Project
     public Iterable<InMemoryRevision> getRevisions()
     {
         return this.revisions.valuesView();
+    }
+
+    @JsonIgnore
+    public InMemoryReview getReview(String reviewId)
+    {
+        return this.reviews.get(reviewId);
+    }
+
+    @JsonIgnore
+    public MutableList<InMemoryReview> getReviews(ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    {
+        MutableList<InMemoryReview> filteredReviews = Lists.mutable.empty();
+        Iterable<InMemoryReview> reviews = this.reviews.valuesView();
+
+        for (InMemoryReview rev : reviews)
+        {
+
+            if ((state == null) || (state == rev.getState()))
+            {
+                filteredReviews.add(rev);
+            }
+        }
+        
+        return filteredReviews;
+    }
+
+    @JsonIgnore
+    public InMemoryReview addReview(String reviewId)
+    {
+        InMemoryReview review = new InMemoryReview(projectId, reviewId);
+        this.reviews.put(reviewId, review);
+        return this.reviews.get(reviewId);
     }
 }
