@@ -61,22 +61,29 @@ public class ProjectEntitiesResource extends EntityAccessResource
                                        @QueryParam("stereotype")
                                        @ApiParam("Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
                                        @QueryParam("taggedValue")
-                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
+                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
+                                       @QueryParam("excludeInvalid")
+                                       @DefaultValue("false")
+                                       @ApiParam("If true, exclude invalid entities due to Engine grammar changes and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") Boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting entities for project " + projectId,
-                () -> getEntities(this.entityApi.getProjectEntityAccessContext(projectId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntities(this.entityApi.getProjectEntityAccessContext(projectId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the project by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("path") String path)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId,
+                                  @PathParam("path") String path,
+                                  @QueryParam("excludeInvalid")
+                                  @DefaultValue("false")
+                                  @ApiParam("If true, exclude the invalid entity due to Engine grammar changes and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting entity " + path + " for project " + projectId,
-                () -> this.entityApi.getProjectEntityAccessContext(projectId).getEntity(path)
+                () -> this.entityApi.getProjectEntityAccessContext(projectId).getEntity(path, excludeInvalid)
         );
     }
 }
