@@ -78,7 +78,11 @@ public class ConflictResolutionWorkspaceRevisionEntitiesResource extends EntityA
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the user workspace with conflict resolution at the revision by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId, @PathParam("path") String path)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId,
+                                  @PathParam("workspaceId") String workspaceId,
+                                  @PathParam("revisionId")
+                                  @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                  @PathParam("path") String path)
     {
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId,
