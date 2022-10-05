@@ -65,7 +65,7 @@ public class GroupBackupWorkspaceEntitiesResource extends EntityAccessResource
                                        @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
                                        @QueryParam("excludeInvalid")
                                        @DefaultValue("false")
-                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") Boolean excludeInvalid)
+                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting entities in backup group workspace " + workspaceId + " for project " + projectId,
@@ -76,16 +76,11 @@ public class GroupBackupWorkspaceEntitiesResource extends EntityAccessResource
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the backup group workspace by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId,
-                                  @PathParam("workspaceId") String workspaceId,
-                                  @PathParam("path") String path,
-                                  @QueryParam("excludeInvalid")
-                                  @DefaultValue("false")
-                                  @ApiParam("If true, exclude the invalid entity and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
                 "getting entity " + path + " in backup group workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getBackupGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path, excludeInvalid)
+                () -> this.entityApi.getBackupGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 }

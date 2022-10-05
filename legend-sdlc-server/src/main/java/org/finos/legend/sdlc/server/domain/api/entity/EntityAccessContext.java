@@ -24,11 +24,12 @@ public interface EntityAccessContext
 {
     Entity getEntity(String path);
 
-    Entity getEntity(String path, Boolean excludeInvalid);
+    default List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
+    {
+        return getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate, false);
+    }
 
-    List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate);
-
-    List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, Boolean excludeInvalid);
+    List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid);
 
     List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate);
 }

@@ -356,12 +356,6 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public Entity getEntity(String path)
         {
-            return getEntity(path, false);
-        }
-
-        @Override
-        public Entity getEntity(String path, Boolean excludeInvalid)
-        {
             try
             {
                 ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
@@ -377,14 +371,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                             Entity localEntity = sourceDirectory.deserialize(file);
                             if (!Objects.equals(localEntity.getPath(), path))
                             {
-                                if (excludeInvalid)
-                                {
-                                    return null;
-                                }
-                                else
-                                {
-                                    throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
-                                }
+                                throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
                             }
                             return localEntity;
                         }
@@ -408,31 +395,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
 
         @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
-        {
-            return getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate, false);
-        }
-
-        @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, Boolean excludeInvalid)
+        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
             try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
             {
-                return stream.map(entityProjectFile ->
+                return stream.map(excludeInvalid ? epf ->
                 {
                     try
                     {
-                        return entityProjectFile.getEntity();
+                        return epf.getEntity();
                     }
-                    catch (RuntimeException e)
+                    catch (Exception ignore)
                     {
-                        if (excludeInvalid)
-                        {
-                            return null;
-                        }
-                        throw new RuntimeException(e.getMessage());
+                        return null;
                     }
-                }).filter(Objects::nonNull).collect(Collectors.toList());
+                } : EntityProjectFile::getEntity).filter(Objects::nonNull).collect(Collectors.toList());
             }
             catch (Exception e)
             {

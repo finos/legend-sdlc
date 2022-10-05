@@ -66,7 +66,7 @@ public class ComparisonReviewEntitiesResource extends EntityAccessResource
                                               @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
                                               @QueryParam("excludeInvalid")
                                               @DefaultValue("false")
-                                              @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") Boolean excludeInvalid)
+                                              @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting [from] entities in review " + reviewId + " for project " + projectId,
@@ -93,7 +93,7 @@ public class ComparisonReviewEntitiesResource extends EntityAccessResource
                                             @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
                                             @QueryParam("excludeInvalid")
                                             @DefaultValue("false")
-                                            @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") Boolean excludeInvalid)
+                                            @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting [to] entities in review " + reviewId + " for project " + projectId,
@@ -104,32 +104,22 @@ public class ComparisonReviewEntitiesResource extends EntityAccessResource
     @GET
     @Path("from/entities/{entityPath}")
     @ApiOperation("Get [from] entity for a given review")
-    public Entity getReviewFromEntity(@PathParam("projectId") String projectId,
-                                      @PathParam("reviewId") String reviewId,
-                                      @PathParam("entityPath") String entityPath,
-                                      @QueryParam("excludeInvalid")
-                                      @DefaultValue("false")
-                                      @ApiParam("If true, exclude the invalid entity due to Engine grammar changes and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
+    public Entity getReviewFromEntity(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
     {
         return executeWithLogging(
                 "getting [from] entity for review " + reviewId + " of project " + projectId,
-                () -> this.entityApi.getReviewFromEntityAccessContext(projectId, reviewId).getEntity(entityPath, excludeInvalid)
+                () -> this.entityApi.getReviewFromEntityAccessContext(projectId, reviewId).getEntity(entityPath)
         );
     }
 
     @GET
     @Path("to/entities/{entityPath}")
     @ApiOperation("Get [to] entity for a given review")
-    public Entity getReviewToEntity(@PathParam("projectId") String projectId,
-                                    @PathParam("reviewId") String reviewId,
-                                    @PathParam("entityPath") String entityPath,
-                                    @QueryParam("excludeInvalid")
-                                    @DefaultValue("false")
-                                    @ApiParam("If true, exclude the invalid entity due to Engine grammar changes and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
+    public Entity getReviewToEntity(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
     {
         return executeWithLogging(
                 "getting [to] entity for review " + reviewId + " of project " + projectId,
-                () -> this.entityApi.getReviewToEntityAccessContext(projectId, reviewId).getEntity(entityPath, excludeInvalid)
+                () -> this.entityApi.getReviewToEntityAccessContext(projectId, reviewId).getEntity(entityPath)
         );
     }
 

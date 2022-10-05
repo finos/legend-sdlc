@@ -147,13 +147,7 @@ public class InMemoryEntityApi implements EntityApi
         @Override
         public Entity getEntity(String path)
         {
-            return getEntity(path, false);
-        }
-
-        @Override
-        public Entity getEntity(String path, Boolean excludeInvalid)
-        {
-            List<Entity> matches = this.getEntities((p) -> p.equals(path), null, null, excludeInvalid);
+            List<Entity> matches = this.getEntities((p) -> p.equals(path), null, null, false);
             if (matches.size() > 1)
             {
                 throw new IllegalStateException(String.format("Found %d instead of 1 matches for entity with path %s", matches.size(), path));
@@ -166,13 +160,7 @@ public class InMemoryEntityApi implements EntityApi
         }
 
         @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
-        {
-            return getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate, false);
-        }
-
-        @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate,  Boolean excludeInvalid)
+        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate,  boolean excludeInvalid)
         {
             Stream<Entity> stream = StreamSupport.stream(this.entities.spliterator(), false);
             if (entityPathPredicate != null)

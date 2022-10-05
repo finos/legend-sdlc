@@ -76,16 +76,11 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the backup user workspace by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId,
-                                  @PathParam("workspaceId") String workspaceId,
-                                  @PathParam("path") String path,
-                                  @QueryParam("excludeInvalid")
-                                  @DefaultValue("false")
-                                  @ApiParam("If true, exclude the invalid entity and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
                 "getting entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path, excludeInvalid)
+                () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
 }
