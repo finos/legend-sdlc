@@ -35,11 +35,11 @@ import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
-import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 public class TestModelBuilder
 {
@@ -152,9 +152,13 @@ public class TestModelBuilder
 
             return dependencies;
         }
-        catch (Exception ex)
+        catch (LegendSDLCServerException e)
         {
-            throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error processing dependencies", ex), ex);
+            throw e;
+        }
+        catch (Exception e)
+        {
+            throw new LegendSDLCServerException(StringTools.appendThrowableMessageIfPresent("Error processing dependencies", e), e);
         }
     }
 
