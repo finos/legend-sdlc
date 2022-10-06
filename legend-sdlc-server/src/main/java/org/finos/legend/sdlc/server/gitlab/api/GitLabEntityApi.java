@@ -397,7 +397,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
-            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid))
             {
                 return stream.map(excludeInvalid ? epf ->
                 {
@@ -722,6 +722,11 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate)
     {
+        return getEntityProjectFiles(accessContext, entityPathPredicate, classifierPathPredicate, contentPredicate, false);
+    }
+
+    private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate, boolean excludeInvalid)
+    {
         Stream<EntityProjectFile> stream = getEntityProjectFiles(accessContext);
         if (entityPathPredicate != null)
         {
@@ -729,11 +734,31 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         if (classifierPathPredicate != null)
         {
-            stream = stream.filter(epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                try
+                {
+                    return classifierPathPredicate.test(epf.getEntity().getClassifierPath());
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+            } : epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
         }
         if (contentPredicate != null)
         {
-            stream = stream.filter(epf -> contentPredicate.test(epf.getEntity().getContent()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                try
+                {
+                    return contentPredicate.test(epf.getEntity().getContent());
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+            } : epf -> contentPredicate.test(epf.getEntity().getContent()));
         }
         return stream;
     }
