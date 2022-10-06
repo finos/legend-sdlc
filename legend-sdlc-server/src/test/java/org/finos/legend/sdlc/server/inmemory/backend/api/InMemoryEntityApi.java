@@ -147,7 +147,7 @@ public class InMemoryEntityApi implements EntityApi
         @Override
         public Entity getEntity(String path)
         {
-            List<Entity> matches = this.getEntities((p) -> p.equals(path), null, null, false);
+            List<Entity> matches = this.getEntities((p) -> p.equals(path), null, null);
             if (matches.size() > 1)
             {
                 throw new IllegalStateException(String.format("Found %d instead of 1 matches for entity with path %s", matches.size(), path));
@@ -184,7 +184,7 @@ public class InMemoryEntityApi implements EntityApi
         @Override
         public List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
         {
-            List<Entity> entities = this.getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate, false);
+            List<Entity> entities = this.getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate);
             return entities.stream().map(Entity::getPath).collect(Collectors.toList());
         }
     }
