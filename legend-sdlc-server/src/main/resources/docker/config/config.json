@@ -1,5 +1,6 @@
 {
   "applicationName": "Legend SDLC",
+  "sessionCookie": "LEGEND_SDLC_JSESSIONID",
   "server": {
     "adminContextPath": "/admin",
     "applicationConnectors": [
