@@ -75,11 +75,7 @@ public class ProjectEntitiesResource extends EntityAccessResource
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the project by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId,
-                                  @PathParam("path") String path,
-                                  @QueryParam("excludeInvalid")
-                                  @DefaultValue("false")
-                                  @ApiParam("If true, exclude the invalid entity and return null. If false, the endpoint will return an error if there is an invalid entity.") Boolean excludeInvalid)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("path") String path)
     {
         return executeWithLogging(
                 "getting entity " + path + " for project " + projectId,

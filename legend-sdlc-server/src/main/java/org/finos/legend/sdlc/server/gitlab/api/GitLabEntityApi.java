@@ -736,28 +736,32 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             stream = stream.filter(excludeInvalid ? epf ->
             {
+                Entity entity;
                 try
                 {
-                    return classifierPathPredicate.test(epf.getEntity().getClassifierPath());
+                    entity =  epf.getEntity();
                 }
                 catch (Exception ignore)
                 {
                     return false;
                 }
+                return classifierPathPredicate.test(entity.getClassifierPath());
             } : epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
         }
         if (contentPredicate != null)
         {
             stream = stream.filter(excludeInvalid ? epf ->
             {
+                Entity entity;
                 try
                 {
-                    return contentPredicate.test(epf.getEntity().getContent());
+                    entity =  epf.getEntity();
                 }
                 catch (Exception ignore)
                 {
                     return false;
                 }
+                return contentPredicate.test(entity.getContent());
             } : epf -> contentPredicate.test(epf.getEntity().getContent()));
         }
         return stream;
