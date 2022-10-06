@@ -19,11 +19,11 @@ sessionCookie: LEGEND_SDLC_JSESSIONID
 server:
   applicationConnectors:
     - type: http
-      port: 7070
+      port: 6100
       maxRequestHeaderSize: 128KiB
   adminConnectors:
     - type: http
-      port: 7076
+      port: 6101
   gzip:
     includedMethods:
       - GET

@@ -27,15 +27,15 @@ You will also need an instance of GitLab to connect to, such as [gitlab.com](htt
 need to create an "Application", which is used for authorization so that the SDLC Server can act on behalf of users.
 See [GitLab's documentation](https://docs.gitlab.com/ee/api/oauth2.html) for general information about creating an
 application in GitLab. The application will need to have "api" scope and
-have [http://`SDLC_SERVER`/api/auth/callback](http://127.0.0.1:7070/api/auth/callback) as a redirect URI,
+have [http://`SDLC_SERVER`/api/auth/callback](http://127.0.0.1:6100/api/auth/callback) as a redirect URI,
 where `SDLC_SERVER` is the host and possibly port needed to connect to the SDLC Server. (For testing purposes, you can
-use `127.0.0.1:7070` or `localhost:7070` or both. You can have many redirect URIs specified for the application, so it
+use `127.0.0.1:6100` or `localhost:6100` or both. You can have many redirect URIs specified for the application, so it
 is advisable to add all you think you might want.) This redirect URI will also need to appear in your configuration
 file.
 
 If you are using the GitlabClient for authentication (see the pac4j section of the configuration), you will need a
 GitLab application for that as well. It will need "openid" and "profile" scopes, and will require
-[http://`SDLC_SERVER`/api/pac4j/login/callback](http://127.0.0.1:7070/api/pac4j/login/callback) as a redirect URI.
+[http://`SDLC_SERVER`/api/pac4j/login/callback](http://127.0.0.1:6100/api/pac4j/login/callback) as a redirect URI.
 Again, `SDLC_SERVER` is the host and port needed to connect to the SDLC Server, and the same advice mentioned above
 applies for this case as well. You can either create a new application for this, or you can add these scopes and
 redirect URIs to your existing application. We recommend you use a single application for both purposes, as it makes the
