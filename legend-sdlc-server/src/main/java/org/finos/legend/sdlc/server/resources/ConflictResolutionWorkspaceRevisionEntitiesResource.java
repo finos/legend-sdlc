@@ -50,7 +50,8 @@ public class ConflictResolutionWorkspaceRevisionEntitiesResource extends EntityA
     @ApiOperation("Get entities of the user workspace with conflict resolution at the revision")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
-                                       @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                       @PathParam("revisionId")
+                                       @ApiParam("Including aliases: head, latest, current, base") String revisionId,
                                        @QueryParam("classifierPath")
                                        @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
                                        @QueryParam("package")
@@ -63,11 +64,14 @@ public class ConflictResolutionWorkspaceRevisionEntitiesResource extends EntityA
                                        @QueryParam("stereotype")
                                        @ApiParam("Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
                                        @QueryParam("taggedValue")
-                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
+                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
+                                       @QueryParam("excludeInvalid")
+                                       @DefaultValue("false")
+                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntities(this.entityApi.getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -76,7 +80,8 @@ public class ConflictResolutionWorkspaceRevisionEntitiesResource extends EntityA
     @ApiOperation("Get an entity of the user workspace with conflict resolution at the revision by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId,
                                   @PathParam("workspaceId") String workspaceId,
-                                  @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                  @PathParam("revisionId")
+                                  @ApiParam("Including aliases: head, latest, current, base") String revisionId,
                                   @PathParam("path") String path)
     {
         return executeWithLogging(

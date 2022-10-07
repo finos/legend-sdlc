@@ -368,7 +368,12 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         try
                         {
-                            return sourceDirectory.deserialize(file);
+                            Entity localEntity = sourceDirectory.deserialize(file);
+                            if (!Objects.equals(localEntity.getPath(), path))
+                            {
+                                throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
+                            }
+                            return localEntity;
                         }
                         catch (Exception e)
                         {
@@ -390,11 +395,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
 
         @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
+        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
-            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid))
             {
-                return stream.map(EntityProjectFile::getEntity).collect(Collectors.toList());
+                return stream.map(excludeInvalid ? epf ->
+                {
+                    try
+                    {
+                        return epf.getEntity();
+                    }
+                    catch (Exception ignore)
+                    {
+                        return null;
+                    }
+                } : EntityProjectFile::getEntity).filter(Objects::nonNull).collect(Collectors.toList());
             }
             catch (Exception e)
             {
@@ -707,6 +722,11 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate)
     {
+        return getEntityProjectFiles(accessContext, entityPathPredicate, classifierPathPredicate, contentPredicate, false);
+    }
+
+    private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate, boolean excludeInvalid)
+    {
         Stream<EntityProjectFile> stream = getEntityProjectFiles(accessContext);
         if (entityPathPredicate != null)
         {
@@ -714,11 +734,35 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         if (classifierPathPredicate != null)
         {
-            stream = stream.filter(epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                Entity entity;
+                try
+                {
+                    entity =  epf.getEntity();
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+                return classifierPathPredicate.test(entity.getClassifierPath());
+            } : epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
         }
         if (contentPredicate != null)
         {
-            stream = stream.filter(epf -> contentPredicate.test(epf.getEntity().getContent()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                Entity entity;
+                try
+                {
+                    entity =  epf.getEntity();
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+                return contentPredicate.test(entity.getContent());
+            } : epf -> contentPredicate.test(epf.getEntity().getContent()));
         }
         return stream;
     }

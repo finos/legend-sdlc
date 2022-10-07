@@ -160,7 +160,7 @@ public class InMemoryEntityApi implements EntityApi
         }
 
         @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
+        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
             Stream<Entity> stream = StreamSupport.stream(this.entities.spliterator(), false);
             if (entityPathPredicate != null)

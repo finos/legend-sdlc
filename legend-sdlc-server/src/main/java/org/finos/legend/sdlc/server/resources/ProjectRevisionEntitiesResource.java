@@ -49,7 +49,8 @@ public class ProjectRevisionEntitiesResource extends EntityAccessResource
     @GET
     @ApiOperation("Get entities of a revision of the project")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
-                                       @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                       @PathParam("revisionId")
+                                       @ApiParam("Including aliases: head, latest, current, base") String revisionId,
                                        @QueryParam("classifierPath")
                                        @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
                                        @QueryParam("package")
@@ -62,20 +63,21 @@ public class ProjectRevisionEntitiesResource extends EntityAccessResource
                                        @QueryParam("stereotype")
                                        @ApiParam("Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
                                        @QueryParam("taggedValue")
-                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
+                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
+                                       @QueryParam("excludeInvalid")
+                                       @DefaultValue("false")
+                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
         return executeWithLogging(
                 "getting entities for revision " + revisionId + " of project " + projectId,
-                () -> getEntities(this.entityApi.getProjectRevisionEntityAccessContext(projectId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntities(this.entityApi.getProjectRevisionEntityAccessContext(projectId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of a revision of the project by its path")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId,
-                                  @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId,
-                                  @PathParam("path") String path)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId, @PathParam("path") String path)
     {
         return executeWithLogging(
                 "getting entity " + path + " for revision " + revisionId + " of project " + projectId,
