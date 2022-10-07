@@ -21,7 +21,7 @@ import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.Connection;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.mappingTest.MappingTest;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.mappingTest.MappingTest_Legacy;
 import org.finos.legend.engine.test.runner.mapping.MappingTestRunner;
 import org.finos.legend.engine.test.runner.mapping.RichMappingTestResult;
 import org.finos.legend.engine.test.runner.shared.TestResult;
@@ -40,7 +40,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
 {
     private final MappingTestRunner mappingTestRunner;
 
-    private MappingTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Mapping mapping, MappingTest mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
+    private MappingTestCase(PureModel pureModel, PureModelContextData pureModelContextData, Mapping mapping, MappingTest_Legacy mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(pureModel, pureModelContextData, planTransformers, extensions, pureVersion, mapping);
         this.mappingTestRunner = new MappingTestRunner(pureModel, mapping.getPath(), mappingTest, this.planExecutor, extensions, planTransformers, pureVersion);
@@ -56,7 +56,7 @@ public class MappingTestCase extends LegendPureV1TestCase<Mapping>
     protected void doRunTest()
     {
         RichMappingTestResult richMappingTestResult = this.mappingTestRunner.doRunTest();
-        MappingTest mappingTest = this.mappingTestRunner.mappingTest;
+        MappingTest_Legacy mappingTest = this.mappingTestRunner.mappingTestLegacy;
         if (richMappingTestResult.getResult() == TestResult.FAILURE)
         {
             String message = "Test failure for mapping test '" + mappingTest.name + "' for Mapping '" + this.entity.getPath() + "'";
