@@ -91,6 +91,24 @@ public class TestFinosGitlabProjectStructureExtension
     }
 
     @Test
+    public void testProjectStructureVersion13()
+    {
+        Assert.assertEquals(Integer.valueOf(2), this.provider.getLatestVersionForProjectStructureVersion(13));
+
+        ProjectStructureExtension ext1 = this.provider.getProjectStructureExtension(13, 1);
+        assertFiles(Maps.mutable.with(
+                "/.gitlab-ci.yml", loadTextResource("org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-3.yml"),
+                "/ci_settings.xml", loadTextResource("org/finos/legend/sdlc/server/gitlab/finos/ci_settings-1.xml")
+        ), ext1);
+
+        ProjectStructureExtension ext2 = this.provider.getProjectStructureExtension(13, 2);
+        assertFiles(Maps.mutable.with(
+                "/.gitlab-ci.yml", loadTextResource("org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-3.yml"),
+                "/ci_settings.xml", loadTextResource("org/finos/legend/sdlc/server/gitlab/finos/ci_settings-1.xml")
+        ), ext2);
+    }
+
+    @Test
     public void testNoUntestedProjectStructureVersions()
     {
         int expectedLatest = 12;
