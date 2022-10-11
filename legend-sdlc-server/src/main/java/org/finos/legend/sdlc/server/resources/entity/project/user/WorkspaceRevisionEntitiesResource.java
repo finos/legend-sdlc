@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -84,6 +85,35 @@ public class WorkspaceRevisionEntitiesResource extends EntityAccessResource
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId).getEntity(path)
+        );
+    }
+
+    @GET
+    @Path("invalidEntities")
+    @ApiOperation("Get invalid entities of the user workspace at the revision")
+    public List<InvalidEntity> getInvalidEntities(@PathParam("projectId") String projectId,
+                                                  @PathParam("workspaceId") String workspaceId,
+                                                  @PathParam("revisionId")
+                                                  @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+    {
+        return executeWithLogging(
+                "getting invalid entities in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
+                () -> getInvalidEntities(this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId))
+        );
+    }
+
+    @GET
+    @Path("invalidEntities/{path}")
+    @ApiOperation("Get an invalid entity of the user workspace at the revision by its path")
+    public InvalidEntity getInvalidEntityByPath(@PathParam("projectId") String projectId,
+                                                @PathParam("workspaceId") String workspaceId,
+                                                @PathParam("revisionId")
+                                                @ApiParam("Including aliases: head, latest, current, base") String revisionId,
+                                                @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting invalid entity " + path + " in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId).getInvalidEntity(path)
         );
     }
 }

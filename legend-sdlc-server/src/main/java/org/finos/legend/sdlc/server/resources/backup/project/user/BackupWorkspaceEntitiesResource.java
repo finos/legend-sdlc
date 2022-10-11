@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -82,6 +83,28 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
         return executeWithLogging(
                 "getting entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+        );
+    }
+
+    @GET
+    @Path("invalidEntities")
+    @ApiOperation("Get invalid entities of the backup user workspace")
+    public List<InvalidEntity> getInvalidEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return executeWithLogging(
+                "getting invalid entities in backup user workspace " + workspaceId + " for project " + projectId,
+                () -> getInvalidEntities(this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId))
+        );
+    }
+
+    @GET
+    @Path("invalidEntities/{path}")
+    @ApiOperation("Get an invalid entity of the backup user workspace by its path")
+    public InvalidEntity getInvalidEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting invalid entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getInvalidEntity(path)
         );
     }
 }

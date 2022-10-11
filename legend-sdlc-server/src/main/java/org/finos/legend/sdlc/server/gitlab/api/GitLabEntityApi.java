@@ -20,6 +20,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -213,6 +214,50 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                         return null;
                     }
                 } : EntityProjectFile::getEntity).filter(Objects::nonNull).collect(Collectors.toList());
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to get entities for " + getInfoForException(),
+                        () -> "Unknown entities for " + getInfoForException(),
+                        () -> "Failed to get entities for " + getInfoForException());
+            }
+        }
+
+        @Override
+        public InvalidEntity getInvalidEntity(String path)
+        {
+            ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
+            ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+            for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+            {
+                String filePath = sourceDirectory.entityPathToFilePath(path);
+                ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
+                if (file != null)
+                {
+                    try
+                    {
+                        Entity localEntity = sourceDirectory.deserialize(file);
+                        if (!Objects.equals(localEntity.getPath(), path))
+                        {
+                            throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        return InvalidEntity.newInvalidEntity(path, e.getMessage(), e.getStackTrace().toString(), file.getContentAsString());
+                    }
+                }
+            }
+            throw new LegendSDLCServerException("Unknown invalid entity " + path + " for " + getInfoForException(), Status.NOT_FOUND);
+        }
+
+        @Override
+        public List<InvalidEntity> getInvalidEntities()
+        {
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider())))
+            {
+                return stream.map(EntityProjectFile::getInvalidEntity).filter(Objects::nonNull).collect(Collectors.toList());
             }
             catch (Exception e)
             {
@@ -763,6 +808,26 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 this.entity = localEntity;
             }
             return this.entity;
+        }
+
+        synchronized InvalidEntity getInvalidEntity()
+        {
+            if (this.entity == null)
+            {
+                try
+                {
+                    Entity localEntity = this.sourceDirectory.deserialize(this.file);
+                    if (!Objects.equals(localEntity.getPath(), getEntityPath()))
+                    {
+                        throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    }
+                }
+                catch (Exception e)
+                {
+                    return InvalidEntity.newInvalidEntity(getEntityPath(), e.getMessage(), e.getStackTrace().toString(), this.file.getContentAsString());
+                }
+            }
+            return null;
         }
     }
 }

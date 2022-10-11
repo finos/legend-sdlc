@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.CreateOrUpdateEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
@@ -83,6 +84,18 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         );
     }
 
+    @GET
+    @Path("invalidEntities")
+    @ApiOperation("Get invalid entities of the user workspace")
+    public List<InvalidEntity> getInvalidEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return execute(
+                "getting entities in user workspace " + workspaceId + " for project " + projectId,
+                "get entities of the user workspace",
+                () -> getInvalidEntities(this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId))
+        );
+    }
+
     @DELETE
     @ApiOperation(value = "Delete multiple entities", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
     public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
@@ -121,6 +134,18 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
                 () -> this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
         );
     }
+
+    @GET
+    @Path("invalidEntities/{path}")
+    @ApiOperation("Get an invalid entity of the workspace by its path")
+    public InvalidEntity getInvalidEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getInvalidEntity(path)
+        );
+    }
+
 
     @POST
     @Path("{path}")

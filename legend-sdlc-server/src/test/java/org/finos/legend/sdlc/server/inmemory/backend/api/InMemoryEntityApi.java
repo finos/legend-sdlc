@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -35,6 +36,7 @@ import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
@@ -43,6 +45,9 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
@@ -188,6 +193,18 @@ public class InMemoryEntityApi implements EntityApi
                             ((classifierPathPredicate == null) || classifierPathPredicate.test(e.getClassifierPath())) &&
                             ((entityContentPredicate == null) || entityContentPredicate.test(e.getContent())),
                     Lists.mutable.empty());
+        }
+
+        @Override
+        public InvalidEntity getInvalidEntity(String path)
+        {
+            throw new LegendSDLCServerException("Unknown invalid entity " + path, Response.Status.NOT_FOUND);
+        }
+
+        @Override
+        public List<InvalidEntity> getInvalidEntities()
+        {
+            return Collections.emptyList();
         }
 
         @Override
