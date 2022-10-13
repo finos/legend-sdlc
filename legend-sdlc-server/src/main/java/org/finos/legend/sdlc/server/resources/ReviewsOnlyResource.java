@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
@@ -40,7 +41,7 @@ import java.util.Set;
 @Api("Reviews")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ReviewsOnlyResource extends BaseResource
+public class ReviewsOnlyResource extends ReviewFilterResource
 {
     private final ReviewApi reviewApi;
 
@@ -60,6 +61,8 @@ public class ReviewsOnlyResource extends BaseResource
                                    @ApiParam("Only include reviews authored/created by me if true") boolean authoredByMe,
                                    @QueryParam("labels")
                                    @ApiParam("Only include reviews that match all the given labels") List<String> labels,
+                                   @QueryParam("workspaceIdRegex") @ApiParam("Include reviews with a workspace id matching this regular expression") String workspaceIdRegex,
+                                   @QueryParam("workspaceTypes") @ApiParam("Include reviews with any of the given workspace types") Set<WorkspaceType> workspaceTypes,
                                    @QueryParam("state")
                                    @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since")
@@ -74,6 +77,6 @@ public class ReviewsOnlyResource extends BaseResource
     {
         return executeWithLogging(
             (state == null) ? ("getting reviews for project type(s) " + projectTypes) : ("getting reviews for project type(s) " + projectTypes + " with state " + state),
-            () -> this.reviewApi.getReviews(assignedToMe, authoredByMe, labels, state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit));
+            () -> this.reviewApi.getReviews(assignedToMe, authoredByMe, labels, this.getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), state, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit));
     }
 }
