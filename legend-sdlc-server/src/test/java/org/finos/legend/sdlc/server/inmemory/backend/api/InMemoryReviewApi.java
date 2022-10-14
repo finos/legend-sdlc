@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
@@ -91,6 +92,12 @@ public class InMemoryReviewApi implements ReviewApi
 
     @Override
     public Review rejectReview(String projectId, String reviewId)
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public Approval getReviewApproval(String projectId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

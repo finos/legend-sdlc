@@ -823,6 +823,24 @@ abstract class BaseGitLabApi
         return (workspaceInfo != null) && (workspaceInfo.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE);
     }
 
+    protected MergeRequest getReviewMergeRequestApprovals(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId)
+    {
+        int mergeRequestId = parseIntegerId(reviewId);
+        MergeRequest mergeRequest;
+        try
+        {
+            mergeRequest = withRetries(() -> mergeRequestApi.getMergeRequestApprovals(projectId.getGitLabId(), mergeRequestId));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
+                () -> "Unknown review in project " + projectId + ": " + reviewId,
+                () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
+        }
+        return mergeRequest;
+    }
+
     protected static boolean isOpen(MergeRequest mergeRequest)
     {
         return isOpen(mergeRequest.getState());

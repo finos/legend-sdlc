@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.review;
 
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
@@ -138,6 +139,15 @@ public interface ReviewApi
      * @return updated review
      */
     Review rejectReview(String projectId, String reviewId);
+
+    /**
+     * Get the approval information for a particular review in the given project.
+     *
+     * @param projectId project id
+     * @param reviewId  review id
+     * @return approval
+     */
+    Approval getReviewApproval(String projectId, String reviewId);
 
     /**
      * Commit changes from a review. This is only valid if the
