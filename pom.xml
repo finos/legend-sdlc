@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.94.2-SNAPSHOT</version>
+    <version>0.95.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -66,7 +66,7 @@
         <java.version.range>[11.0.10,12)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>3.18.2</legend.engine.version>
+        <legend.engine.version>3.19.1</legend.engine.version>
         <legend.pure.version>3.7.0</legend.pure.version>
         <legend.shared.version>0.22.5</legend.shared.version>
 
@@ -99,7 +99,7 @@
         <apache.maven.version>3.8.6</apache.maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <snakeyaml.version>1.27</snakeyaml.version>
+        <snakeyaml.version>1.31</snakeyaml.version>
         <freemarker.version>2.3.30</freemarker.version>
         <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
     </properties>
@@ -1091,7 +1091,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
-                <version>1.8</version>
+                <version>1.10.0</version>
             </dependency>
 
             <dependency>
