@@ -20,5 +20,5 @@ import java.util.List;
 
 public interface Approval
 {
-  List<User> getApprovedBy();
+    List<User> getApprovedBy();
 }
