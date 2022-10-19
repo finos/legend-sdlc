@@ -961,9 +961,38 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 Entity localEntity = this.sourceDirectory.deserialize(this.file);
                 if (!Objects.equals(localEntity.getPath(), getEntityPath()))
                 {
-                    throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    /**
+                     * This is a temporary hack to compensate for a non-backward-compatible change in
+                     * ConcreteFunctionDefinition parsing in legend-engine. Previously, the function name was used as the
+                     * PackageableElement name by the parser. Now, however, a new PackageableElement name is created
+                     * based on the function name and signature (i.e., the same name the Pure compiler would give it)
+                     *
+                     * Normally, an exception would be thrown when there is a mismatch between the expected entity path
+                     * (based on the file path) and the one computed from the parsed entity (based on the "package" and
+                     * "name" properties). However, to compensate for this non-backward-compatible change, if the entity is a
+                     * ConcreteFunctionDefinition, the entity path and "name" property will be changed to match the expected
+                     * values.
+                     *
+                     * This hack should be removed at the earliest opportunity, and no later than 3/31/2023.
+                     */
+                    if ((localEntity.getPath() != null) && (getEntityPath() != null) &&
+                            localEntity.getPath().startsWith(getEntityPath()) &&
+                            "meta::pure::metamodel::function::ConcreteFunctionDefinition".equals(localEntity.getClassifierPath()))
+                    {
+                        Map<String, Object> newContent = Maps.mutable.ofMap(localEntity.getContent());
+                        newContent.put("name", getEntityPath().substring(getEntityPath().lastIndexOf(":") + 1));
+                        this.entity = Entity.newEntity(getEntityPath(), localEntity.getClassifierPath(), newContent);
+                    }
+                    else
+                    {
+                        throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    }
                 }
-                this.entity = localEntity;
+                else
+                {
+
+                    this.entity = localEntity;
+                }
             }
             return this.entity;
         }
