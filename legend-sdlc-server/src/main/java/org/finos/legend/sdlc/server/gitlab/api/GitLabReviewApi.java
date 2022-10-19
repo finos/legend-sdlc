@@ -25,6 +25,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
@@ -511,6 +512,26 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 () -> "User " + getCurrentUser() + " is not allowed to reject review " + reviewId + " in project " + projectId,
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error rejecting review " + reviewId + " in project " + projectId);
+        }
+    }
+
+    @Override
+    public Approval getReviewApproval(String projectId, String reviewId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        try
+        {
+            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+            MergeRequest mergeRequest = getReviewMergeRequestApprovals(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
+            return fromGitLabMergeRequest(mergeRequest);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
+                () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
+                () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
         }
     }
 
@@ -1028,6 +1049,27 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             public List<String> getLabels()
             {
                 return labels;
+            }
+        };
+    }
+
+    private static Approval fromGitLabMergeRequest(MergeRequest mergeRequest)
+    {
+        if ((mergeRequest == null) || (mergeRequest.getApprovedBy() == null))
+        {
+            return null;
+        }
+        return newApproval(mergeRequest.getApprovedBy().stream().map(BaseGitLabApi::fromGitLabAbstractUser).collect(Collectors.toList()));
+    }
+
+    private static Approval newApproval(List<User> approvedBy)
+    {
+        return new Approval()
+        {
+            @Override
+            public List<User> getApprovedBy()
+            {
+                return approvedBy;
             }
         };
     }

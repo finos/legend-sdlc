@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
@@ -171,6 +172,19 @@ public class ReviewsResource extends BaseResource
         return executeWithLogging(
                 "rejecting review " + reviewId + " for project " + projectId,
                 () -> this.reviewApi.rejectReview(projectId, reviewId)
+        );
+    }
+
+    @GET
+    @Path("{reviewId}/approval")
+    @ApiOperation("Get approval information for a review")
+    public Approval getReviewApproval(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId)
+    {
+        return executeWithLogging(
+            "getting approval details for review " + reviewId + " in project " + projectId,
+            this.reviewApi::getReviewApproval,
+            projectId,
+            reviewId
         );
     }
 
