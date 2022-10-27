@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
+import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 
 import java.util.List;
 import javax.inject.Inject;
@@ -167,6 +168,12 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
 
     @Override
     public ProjectStructureVersion getLatestProjectStructureVersion()
+    {
+        throw new UnsupportedOperationException("Not implemented");
+    }
+
+    @Override
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

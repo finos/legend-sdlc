@@ -85,6 +85,8 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
     private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
+    static final String PROJECT_CONFIGURATION_WORKSPACE_ID_PREFIX = "ProjectConfiguration_";
+
     @Inject
     public GitLabProjectApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
@@ -367,7 +369,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
         // Create a workspace for project configuration
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
-        String workspaceId = "ProjectConfiguration_" + getRandomIdString();
+        String workspaceId = PROJECT_CONFIGURATION_WORKSPACE_ID_PREFIX + getRandomIdString();
         WorkspaceType workspaceType = WorkspaceType.USER;
         WorkspaceAccessType workspaceAccessType = WorkspaceAccessType.WORKSPACE;
         Branch workspaceBranch;
