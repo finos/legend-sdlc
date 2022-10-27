@@ -18,6 +18,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -32,14 +33,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.regex.Pattern;
 
 public class EntityValidator
 {
-    private static final Pattern VALID_NAME_PATTERN = Pattern.compile("^[\\w$]++$");
-    private static final Pattern VALID_PACKAGE_PATTERN = Pattern.compile("^\\w++(::\\w++)*+$");
-    private static final Pattern VALID_CLASSIFIER_PATH_PATTERN = Pattern.compile("^meta(::\\w++)++$");
-
     private static final EntitySerializer ENTITY_SERIALIZER = EntitySerializers.getDefaultJsonSerializer();
     private static final String ENTITY_DIRECTORY = "entities";
     private static final String ENTITY_EXTENSION = "." + ENTITY_SERIALIZER.getDefaultFileExtension();
@@ -110,7 +106,7 @@ public class EntityValidator
             violationConsumer.accept("invalid package: " + pkg + " (instance of " + pkg.getClass() + ")");
             packageAndNameValid = false;
         }
-        else if (!isValidEntityPackage((String)pkg))
+        else if (!isValidEntityPackage((String) pkg))
         {
             violationConsumer.accept("invalid package: \"" + pkg + "\"");
             packageAndNameValid = false;
@@ -127,7 +123,7 @@ public class EntityValidator
             violationConsumer.accept("invalid name: " + name + " (instance of " + name.getClass() + ")");
             packageAndNameValid = false;
         }
-        else if (!isValidEntityName((String)name))
+        else if (!EntityPaths.isValidEntityName((String) name))
         {
             violationConsumer.accept("invalid name: \"" + name + "\"");
             packageAndNameValid = false;
@@ -150,7 +146,7 @@ public class EntityValidator
         {
             violationConsumer.accept("invalid classifier path: null");
         }
-        else if (!isValidClassifierPath(classifierPath))
+        else if (!EntityPaths.isValidClassifierPath(classifierPath))
         {
             violationConsumer.accept("invalid classifier path: \"" + classifierPath + "\"");
         }
@@ -158,17 +154,7 @@ public class EntityValidator
 
     private static boolean isValidEntityPackage(String pkg)
     {
-        return !"meta".equals(pkg) && !pkg.startsWith("meta::") && VALID_PACKAGE_PATTERN.matcher(pkg).matches();
-    }
-
-    private static boolean isValidEntityName(String name)
-    {
-        return VALID_NAME_PATTERN.matcher(name).matches();
-    }
-
-    private static boolean isValidClassifierPath(String classifierPath)
-    {
-        return VALID_CLASSIFIER_PATH_PATTERN.matcher(classifierPath).matches();
+        return !"meta".equals(pkg) && !pkg.startsWith("meta::") && EntityPaths.isValidPackagePath(pkg);
     }
 
     private static int forEachEntity(Iterable<? extends Path> directories, BiConsumer<? super Entity, Consumer<String>> validator, Consumer<String> violationConsumer) throws IOException

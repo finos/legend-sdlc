@@ -39,6 +39,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
@@ -491,14 +492,14 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             }
 
             String path = entity.getPath();
-            if (!isValidEntityPath(path))
+            if (!EntityPaths.isValidEntityPath(path))
             {
                 errorMessages.add("Invalid entity path: \"" + path + "\"");
                 return;
             }
 
             String classifierPath = entity.getClassifierPath();
-            if (!isValidClassifierPath(classifierPath))
+            if (!EntityPaths.isValidClassifierPath(classifierPath))
             {
                 errorMessages.add("Entity: " + path + "; error: invalid classifier path \"" + classifierPath + "\"");
             }
@@ -831,7 +832,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             errorMessages.add("Missing entity path");
         }
-        else if (!isValidEntityPath(path))
+        else if (!EntityPaths.isValidEntityPath(path))
         {
             errorMessages.add("Invalid entity path: " + path);
         }
@@ -874,7 +875,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         errorMessages.add("Missing classifier path");
                     }
-                    else if (!isValidClassifierPath(classifierPath))
+                    else if (!EntityPaths.isValidClassifierPath(classifierPath))
                     {
                         errorMessages.add("Invalid classifier path: " + classifierPath);
                     }
@@ -902,7 +903,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         errorMessages.add("Missing new entity path");
                     }
-                    else if (!isValidEntityPath(newPath))
+                    else if (!EntityPaths.isValidEntityPath(newPath))
                     {
                         errorMessages.add("Invalid new entity path: " + newPath);
                     }

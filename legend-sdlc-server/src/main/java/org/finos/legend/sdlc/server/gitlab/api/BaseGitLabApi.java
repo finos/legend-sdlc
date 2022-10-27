@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceA
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.server.tools.ThrowingRunnable;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
@@ -65,8 +66,6 @@ abstract class BaseGitLabApi
 
     private static final Random RANDOM = new Random();
     private static final Encoder RANDOM_ID_ENCODER = Base64.getUrlEncoder().withoutPadding();
-
-    private static final Pattern PACKAGEABLE_ELEMENT_PATH_PATTERN = Pattern.compile("^\\w++(::\\w++)*+[\\w$]*+$");
 
     private static final int MAX_RETRIES = 5;
     private static final long INITIAL_RETRY_WAIT_INTERVAL_MILLIS = 1000L;
@@ -155,29 +154,34 @@ abstract class BaseGitLabApi
         }
     }
 
+    @Deprecated
     protected static boolean isValidEntityName(String string)
     {
-        return (string != null) && !string.isEmpty() && string.chars().allMatch(c -> (c == '_')  || (c == '$') || Character.isLetterOrDigit(c));
+        return EntityPaths.isValidEntityName(string);
     }
 
+    @Deprecated
     protected static boolean isValidEntityPath(String string)
     {
-        return isValidPackageableElementPath(string) && !string.startsWith("meta::") && string.contains(PACKAGE_SEPARATOR);
+        return EntityPaths.isValidEntityPath(string);
     }
 
+    @Deprecated
     protected static boolean isValidPackagePath(String string)
     {
-        return isValidPackageableElementPath(string) && !string.contains("$");
+        return EntityPaths.isValidPackagePath(string);
     }
 
+    @Deprecated
     protected static boolean isValidClassifierPath(String string)
     {
-        return isValidPackageableElementPath(string) && string.startsWith("meta::");
+        return EntityPaths.isValidClassifierPath(string);
     }
 
+    @Deprecated
     protected static boolean isValidPackageableElementPath(String string)
     {
-        return (string != null) && PACKAGEABLE_ELEMENT_PATH_PATTERN.matcher(string).matches();
+        return (string != null) && string.matches("^\\w++(::\\w++)*+[\\w$]*+$");
     }
 
     protected static String getWorkspaceBranchNamePrefix(WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)

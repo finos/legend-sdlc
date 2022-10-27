@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.Pager;
@@ -43,8 +44,6 @@ import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.CommitRef.RefType;
 import org.gitlab4j.api.models.Tag;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +52,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabRevisionApi extends GitLabApiWithFileAccess implements RevisionApi
 {
@@ -74,7 +75,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(entityPath, "entityPath may not be null");
-        if (!isValidEntityPath(entityPath))
+        if (!EntityPaths.isValidEntityPath(entityPath))
         {
             throw new LegendSDLCServerException("Invalid entity path: " + entityPath, Status.BAD_REQUEST);
         }
@@ -95,7 +96,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(packagePath, "packagePath may not be null");
-        if (!isValidPackagePath(packagePath))
+        if (!EntityPaths.isValidPackagePath(packagePath))
         {
             throw new LegendSDLCServerException("Invalid package path: " + packagePath, Status.BAD_REQUEST);
         }
@@ -145,7 +146,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(entityPath, "entityPath may not be null");
-        if (!isValidEntityPath(entityPath))
+        if (!EntityPaths.isValidEntityPath(entityPath))
         {
             throw new LegendSDLCServerException("Invalid entity path: " + entityPath, Status.BAD_REQUEST);
         }
@@ -175,7 +176,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(packagePath, "packagePath may not be null");
-        if (!isValidPackagePath(packagePath))
+        if (!EntityPaths.isValidPackagePath(packagePath))
         {
             throw new LegendSDLCServerException("Invalid package path: " + packagePath, Status.BAD_REQUEST);
         }
