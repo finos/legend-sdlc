@@ -120,6 +120,11 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return config;
     }
 
+    protected ProjectConfiguration getProjectConfiguration(String projectId)
+    {
+        return ProjectStructure.getProjectConfiguration(projectId, null, null, getProjectFileAccessProvider(), null, null);
+    }
+
     protected ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId)
     {
         ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, versionId, getProjectFileAccessProvider());

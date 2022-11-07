@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
@@ -28,6 +29,8 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
+import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
@@ -36,9 +39,11 @@ import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionP
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
 
@@ -399,6 +404,46 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             }
         };
         return ProjectStructure.getProjectStructure(projectConfiguration).getAvailableGenerationConfigurations();
+    }
+
+    @Override
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
+    {
+        Boolean isProjectConfigured = getProjectConfiguration(projectId) != null;
+        List<String> reviewIds = Lists.mutable.empty();
+        if (!isProjectConfigured)
+        {
+            try
+            {
+                GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+                MergeRequestFilter mergeRequestFilter =  new MergeRequestFilter();
+                mergeRequestFilter.setProjectId(gitLabProjectId.getGitLabId());
+                mergeRequestFilter.setTargetBranch(getDefaultBranch(gitLabProjectId));
+                Stream<MergeRequest> mergeRequests = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
+                mergeRequests.filter(mr -> mr.getSourceBranch() != null && mr.getSourceBranch().contains(GitLabProjectApi.PROJECT_CONFIGURATION_WORKSPACE_ID_PREFIX)).map(mr -> toStringIfNotNull(mr.getIid())).forEach(reviewIds::add);
+            }
+            catch (Exception e)
+            {
+                throw buildException(e,
+                        () -> "User " + getCurrentUser() + " is not allowed to access the project configuration status of " + projectId,
+                        () -> "Unknown project (" + projectId + ")",
+                        () -> "Failed to access project configuration status for project " + projectId);
+            }
+        }
+        return new ProjectConfigurationStatusReport()
+        {
+            @Override
+            public boolean isProjectConfigured()
+            {
+                return isProjectConfigured;
+            }
+
+            @Override
+            public List<String> getReviewIds()
+            {
+                return reviewIds;
+            }
+        };
     }
 
     @Override

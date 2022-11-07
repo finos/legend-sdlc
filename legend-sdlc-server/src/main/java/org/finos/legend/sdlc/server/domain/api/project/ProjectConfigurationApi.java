@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 
 import java.util.Collections;
 import java.util.List;
@@ -165,4 +166,6 @@ public interface ProjectConfigurationApi
     {
         return Collections.emptyList();
     }
+
+    ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId);
 }

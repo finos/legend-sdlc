@@ -312,6 +312,11 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
 
         validateWorkspaceId(workspaceId);
+        if (this.getProjectConfiguration(projectId) ==  null)
+        {
+            throw new LegendSDLCServerException("Project structure has not been set up", Status.CONFLICT);
+        }
+
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
         // Delete backup workspace with the same name if exists
