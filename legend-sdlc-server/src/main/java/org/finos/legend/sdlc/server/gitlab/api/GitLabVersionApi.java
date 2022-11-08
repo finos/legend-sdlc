@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
@@ -28,19 +29,19 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.CommitRef.RefType;
+import org.gitlab4j.api.models.ReleaseParams;
 import org.gitlab4j.api.models.Tag;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabVersionApi extends GitLabApiWithFileAccess implements VersionApi
 {
@@ -255,7 +256,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             Commit referenceCommit;
             if (revisionId == null)
             {
-                referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), getDefaultBranch(projectId));
+                referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), getDefaultBranch(projectId)));
                 if (referenceCommit == null)
                 {
                     throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
@@ -265,7 +266,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             {
                 try
                 {
-                    referenceCommit = commitsApi.getCommit(projectId.getGitLabId(), revisionId);
+                    referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), revisionId));
                 }
                 catch (GitLabApiException e)
                 {
@@ -276,53 +277,41 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                     throw e;
                 }
 
-                Pager<CommitRef> referenceCommitBranchPager = withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), referenceCommit.getId(), RefType.BRANCH, ITEMS_PER_PAGE));
-                Stream<CommitRef> referenceCommitBranches = PagerTools.stream(referenceCommitBranchPager);
                 String defaultBranch = getDefaultBranch(projectId);
-                if (referenceCommitBranches.noneMatch(ref -> defaultBranch.equals(ref.getName())))
+                boolean isOnDefaultBranch = PagerTools.stream(withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), revisionId, RefType.BRANCH, ITEMS_PER_PAGE)))
+                        .anyMatch(ref -> defaultBranch.equals(ref.getName()));
+                if (!isOnDefaultBranch)
                 {
                     throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
                 }
             }
 
             String referenceRevisionId = referenceCommit.getId();
-            Pager<CommitRef> referenceCommitTagPager = withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), referenceRevisionId, RefType.TAG, ITEMS_PER_PAGE));
-            List<CommitRef> referenceCommitTags = PagerTools.stream(referenceCommitTagPager).collect(Collectors.toList());
-            if (referenceCommitTags.stream().map(CommitRef::getName).anyMatch(GitLabVersionApi::isVersionTagName))
-            {
-                StringBuilder builder = new StringBuilder("Revision ").append(referenceRevisionId).append(" has already been released in ");
-                List<VersionId> revisionVersionIds = referenceCommitTags.stream()
+            List<VersionId> revisionVersionIds = PagerTools.stream(withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), referenceRevisionId, RefType.TAG, ITEMS_PER_PAGE)))
                     .map(CommitRef::getName)
                     .filter(GitLabVersionApi::isVersionTagName)
                     .map(GitLabVersionApi::parseVersionTagName)
                     .collect(Collectors.toList());
+            if (!revisionVersionIds.isEmpty())
+            {
+                StringBuilder builder = new StringBuilder("Revision ").append(referenceRevisionId).append(" has already been released in ");
                 if (revisionVersionIds.size() == 1)
                 {
-                    builder.append("version ");
-                    revisionVersionIds.get(0).appendVersionIdString(builder);
+                    revisionVersionIds.get(0).appendVersionIdString(builder.append("version "));
                 }
                 else
                 {
-                    builder.append("versions ");
                     revisionVersionIds.sort(Comparator.naturalOrder());
-                    boolean first = true;
-                    for (VersionId revisionVersionId : revisionVersionIds)
-                    {
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            builder.append(", ");
-                        }
-                        revisionVersionId.appendVersionIdString(builder);
-                    }
+                    ListIterate.forEachWithIndex(revisionVersionIds, (id, i) -> id.appendVersionIdString((i == 0) ? builder.append("versions ") : builder.append(", ")));
                 }
                 throw new LegendSDLCServerException(builder.toString());
             }
 
-            Tag tag = getGitLabApi().getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceRevisionId, message, notes);
+            Tag tag = gitLabApi.getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceRevisionId, message, (String) null);
+            if (notes != null)
+            {
+                gitLabApi.getReleasesApi().createRelease(projectId.getGitLabId(), new ReleaseParams().withTagName(tagName).withDescription(notes));
+            }
             return fromGitLabTag(projectId.toString(), tag);
         }
         catch (Exception e)
