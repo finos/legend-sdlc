@@ -66,6 +66,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -82,7 +83,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         Set<String> revisionIdSet;
@@ -139,7 +140,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             }
             String targetBranch = getDefaultBranch(gitLabProjectId);
             Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch)).map(mr -> fromGitLabMergeRequest(projectId, mr));
-            return addReviewFilters(stream, state, since, until, limit).collect(Collectors.toList());
+            return addReviewFilters(stream, state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
         }
         catch (Exception e)
         {
@@ -151,7 +152,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit)
     {
         if (assignedToMe && authoredByMe)
         {
@@ -159,7 +160,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
 
         MergeRequestFilter mergeRequestFilter = withMergeRequestLabels(withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withScope(assignedToMe ? MergeRequestScope.ASSIGNED_TO_ME : (authoredByMe ? MergeRequestScope.CREATED_BY_ME : MergeRequestScope.ALL)), labels);
-        return addReviewFilters(getReviewStream(mergeRequestFilter), state, since, until, limit).collect(Collectors.toList());
+        return addReviewFilters(getReviewStream(mergeRequestFilter), state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
     }
 
     private Stream<Review> getReviewStream(MergeRequestFilter mergeRequestFilter)
@@ -227,9 +228,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         return mergeRequestFilter;
     }
 
-    private Stream<Review> addReviewFilters(Stream<Review> stream, ReviewState state, Instant since, Instant until, Integer limit)
+    private Stream<Review> addReviewFilters(Stream<Review> stream, ReviewState state, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
-        return addLimitFilter(addTimeFilter(addStateFilter(stream, state), state, since, until), limit);
+        return addWorkspaceIdAndTypeFilter(addLimitFilter(addTimeFilter(addStateFilter(stream, state), state, since, until), limit), workspaceIdAndTypePredicate);
+    }
+
+    public Stream<Review> addWorkspaceIdAndTypeFilter(Stream<Review> stream, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate)
+    {
+        return workspaceIdAndTypePredicate == null ? stream : stream.filter(r -> workspaceIdAndTypePredicate.test(r.getWorkspaceId(), r.getWorkspaceType()));
     }
 
     private Stream<Review> addStateFilter(Stream<Review> stream, ReviewState state)
