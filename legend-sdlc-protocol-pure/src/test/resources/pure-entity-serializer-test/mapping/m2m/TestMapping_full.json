@@ -13,7 +13,7 @@
             "_type": "purePropertyMapping",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "id"
             },
             "source": "tc1",
@@ -39,7 +39,7 @@
             "enumMappingId": "TestEnumerationMappingInt",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "type"
             },
             "source": "tc1",
@@ -65,7 +65,7 @@
             "enumMappingId": "TestEnumerationMappingString",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "otherType"
             },
             "source": "tc1",
@@ -90,7 +90,7 @@
             "_type": "purePropertyMapping",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "other"
             },
             "source": "tc1",
@@ -125,7 +125,7 @@
             "_type": "purePropertyMapping",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass2",
+              "owner": "model::domain::TargetClass2",
               "property": "id"
             },
             "source": "tc2",
@@ -150,7 +150,7 @@
             "_type": "purePropertyMapping",
             "explodeProperty": false,
             "property": {
-              "class": "model::domain::TargetClass2",
+              "owner": "model::domain::TargetClass2",
               "property": "name"
             },
             "source": "tc2",

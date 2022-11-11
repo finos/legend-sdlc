@@ -15,7 +15,7 @@
           {
             "_type": "relationalPropertyMapping",
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "id"
             },
             "relationalOperation": {
@@ -36,7 +36,7 @@
             "_type": "relationalPropertyMapping",
             "enumMappingId": "TestEnumerationMappingInt",
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "type"
             },
             "relationalOperation": {
@@ -57,7 +57,7 @@
             "_type": "relationalPropertyMapping",
             "enumMappingId": "TestEnumerationMappingString",
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "otherType"
             },
             "relationalOperation": {
@@ -77,7 +77,7 @@
           {
             "_type": "relationalPropertyMapping",
             "property": {
-              "class": "model::domain::TargetClass1",
+              "owner": "model::domain::TargetClass1",
               "property": "other"
             },
             "relationalOperation": {
@@ -106,7 +106,7 @@
           {
             "_type": "relationalPropertyMapping",
             "property": {
-              "class": "model::domain::TargetClass2",
+              "owner": "model::domain::TargetClass2",
               "property": "id"
             },
             "relationalOperation": {
@@ -126,7 +126,7 @@
           {
             "_type": "relationalPropertyMapping",
             "property": {
-              "class": "model::domain::TargetClass2",
+              "owner": "model::domain::TargetClass2",
               "property": "name"
             },
             "relationalOperation": {
