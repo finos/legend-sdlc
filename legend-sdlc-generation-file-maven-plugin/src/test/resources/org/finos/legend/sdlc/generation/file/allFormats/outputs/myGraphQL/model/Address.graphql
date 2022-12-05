@@ -1,0 +1,5 @@
+type Address {
+  Street: String!
+  City: City!
+  Country: Country!
+}

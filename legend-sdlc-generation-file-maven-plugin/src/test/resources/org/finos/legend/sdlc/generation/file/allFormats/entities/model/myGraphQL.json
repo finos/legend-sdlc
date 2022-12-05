@@ -1,0 +1,12 @@
+{
+  "classifierPath" : "meta::pure::generation::metamodel::GenerationConfiguration",
+  "content" : {
+    "_type" : "fileGeneration",
+    "configurationProperties" : [ ],
+    "name" : "myGraphQL",
+    "package" : "model",
+    "scopeElements" : [ "model", "complex" ],
+    "generationOutputPath": "myGraphQL",
+    "type" : "graphql"
+  }
+}

@@ -22,6 +22,10 @@
       {
         "path": "model::myYAMLSchema",
         "type": "FILE_GENERATION"
+      },
+      {
+        "path": "model::myGraphQL",
+        "type": "FILE_GENERATION"
       }
     ],
     "generationNodes": [],

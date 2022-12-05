@@ -1,0 +1,4 @@
+enum City {
+  London
+  NY
+}

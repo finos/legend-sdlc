@@ -1,0 +1,5 @@
+type Firm {
+  employees: Person!
+  legalName: String!
+  incType: IncType!
+}
