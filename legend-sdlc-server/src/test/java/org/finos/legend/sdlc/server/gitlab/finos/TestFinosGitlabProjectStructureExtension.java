@@ -93,7 +93,7 @@ public class TestFinosGitlabProjectStructureExtension
     @Test
     public void testProjectStructureVersion13()
     {
-        Assert.assertEquals(Integer.valueOf(2), this.provider.getLatestVersionForProjectStructureVersion(13));
+        Assert.assertEquals(Integer.valueOf(1), this.provider.getLatestVersionForProjectStructureVersion(13));
 
         ProjectStructureExtension ext1 = this.provider.getProjectStructureExtension(13, 1);
         assertFiles(Maps.mutable.with("/.gitlab-ci.yml", loadTextResource("org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml")), ext1);
