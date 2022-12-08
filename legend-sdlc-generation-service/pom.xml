@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.finos.legend.sdlc</groupId>
         <artifactId>legend-sdlc</artifactId>
-        <version>0.89.2-SNAPSHOT</version>
+        <version>0.106.1-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -166,7 +166,7 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-xt-relationalStore-pure</artifactId>
+            <artifactId>legend-engine-extensions-collection-generation</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

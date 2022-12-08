@@ -37,12 +37,12 @@ abstract class EntityAccessResource extends BaseResource
         return entityAccessContext.getEntityPaths(entityPathPredicate, classifierPathPredicate, contentPredicate);
     }
 
-    protected List<Entity> getEntities(EntityAccessContext entityAccessContext, Set<String> classifierPaths, Set<String> packages, boolean includeSubPackages, String nameRegex, Set<String> stereotypes, Collection<String> taggedValueRegexes)
+    protected List<Entity> getEntities(EntityAccessContext entityAccessContext, Set<String> classifierPaths, Set<String> packages, boolean includeSubPackages, String nameRegex, Set<String> stereotypes, Collection<String> taggedValueRegexes, boolean excludeInvalidEntities)
     {
         Predicate<String> entityPathPredicate = getEntityPathPredicate(packages, includeSubPackages, nameRegex);
         Predicate<String> classifierPathPredicate = getClassifierPathPredicate(classifierPaths);
         Predicate<Map<String, ?>> contentPredicate = getContentPredicate(stereotypes, taggedValueRegexes);
-        return entityAccessContext.getEntities(entityPathPredicate, classifierPathPredicate, contentPredicate);
+        return entityAccessContext.getEntities(entityPathPredicate, classifierPathPredicate, contentPredicate, excludeInvalidEntities);
     }
 
     private Predicate<String> getEntityPathPredicate(Set<String> packages, boolean includeSubPackages, String nameRegex)

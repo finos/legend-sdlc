@@ -17,6 +17,8 @@ package org.finos.legend.sdlc.generation.service;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
@@ -27,13 +29,14 @@ import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
 import org.finos.legend.engine.plan.execution.result.serialization.SerializationFormat;
+import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
-import org.finos.legend.pure.generated.core_relational_relational_extensions_extension;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -332,10 +335,11 @@ public class TestServiceExecutionGenerator
 
     private ClassLoader generateAndCompile(String packagePrefix, Collection<? extends Service> services) throws IOException
     {
+        ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
         // Generate
         for (Service service : services)
         {
-            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, core_relational_relational_extensions_extension.Root_meta_relational_extension_relationalExtensions__Extension_MANY_(PURE_MODEL.getExecutionSupport()), LegendPlanTransformers.transformers, "vX_X_X").generate();
+            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, extensions, LegendPlanTransformers.transformers, "vX_X_X").generate();
         }
 
         // Check generated files

@@ -16,12 +16,14 @@ package org.finos.legend.sdlc.server.domain.api.review;
 
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 public interface ReviewApi
 {
@@ -45,12 +47,19 @@ public interface ReviewApi
      * @param projectId   project id
      * @param state       review state
      * @param revisionIds a set of revision IDs, with each we will get the reviews are associated
+     * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
      * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit);
+
+    @Deprecated
+    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    {
+        return this.getReviews(projectId, state, revisionIds, null, since, until, limit);
+    }
 
     /**
      * Get reviews across all projects with the given state and labels.
@@ -65,18 +74,19 @@ public interface ReviewApi
      * @param assignedToMe whether to return only reviews assigned to me
      * @param authoredByMe whether to return only reviews authored by me
      * @param labels       labels to apply, return only reviews that match all the labels
+     * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
      * @param state        review state
      * @param since        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param until        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit        maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit);
 
     @Deprecated
     default List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
     {
-        return this.getReviews(assignedToMe, authoredByMe, labels, state, since, until, limit);
+        return this.getReviews(assignedToMe, authoredByMe, labels, null, state, since, until, limit);
     }
 
     /**
@@ -138,6 +148,15 @@ public interface ReviewApi
      * @return updated review
      */
     Review rejectReview(String projectId, String reviewId);
+
+    /**
+     * Get the approval information for a particular review in the given project.
+     *
+     * @param projectId project id
+     * @param reviewId  review id
+     * @return approval
+     */
+    Approval getReviewApproval(String projectId, String reviewId);
 
     /**
      * Commit changes from a review. This is only valid if the

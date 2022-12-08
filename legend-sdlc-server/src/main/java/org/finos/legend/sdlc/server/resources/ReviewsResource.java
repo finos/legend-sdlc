@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
@@ -47,7 +48,7 @@ import javax.ws.rs.core.MediaType;
 @Api("Reviews")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class ReviewsResource extends BaseResource
+public class ReviewsResource extends ReviewFilterResource
 {
     private final ReviewApi reviewApi;
 
@@ -62,13 +63,15 @@ public class ReviewsResource extends BaseResource
     public List<Review> getReviews(@PathParam("projectId") String projectId,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("revisionIds") @ApiParam("List of revision IDs that any of the reviews are associated to") Set<String> revisionIds,
+                                   @QueryParam("workspaceIdRegex") @ApiParam("Include reviews with a workspace id matching this regular expression") String workspaceIdRegex,
+                                   @QueryParam("workspaceTypes") @ApiParam("Include reviews with any of the given workspace types") Set<WorkspaceType> workspaceTypes,
                                    @QueryParam("since") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
                                    @QueryParam("until") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
                                    @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
                 (state == null) ? ("getting reviews for project " + projectId) : ("getting reviews for project " + projectId + " with state " + state),
-                () -> this.reviewApi.getReviews(projectId, state, revisionIds, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.reviewApi.getReviews(projectId, state, revisionIds, this.getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -171,6 +174,19 @@ public class ReviewsResource extends BaseResource
         return executeWithLogging(
                 "rejecting review " + reviewId + " for project " + projectId,
                 () -> this.reviewApi.rejectReview(projectId, reviewId)
+        );
+    }
+
+    @GET
+    @Path("{reviewId}/approval")
+    @ApiOperation("Get approval information for a review")
+    public Approval getReviewApproval(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId)
+    {
+        return executeWithLogging(
+            "getting approval details for review " + reviewId + " in project " + projectId,
+            this.reviewApi::getReviewApproval,
+            projectId,
+            reviewId
         );
     }
 

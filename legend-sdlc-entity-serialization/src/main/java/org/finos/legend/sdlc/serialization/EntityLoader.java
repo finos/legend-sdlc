@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.serialization;
 
-import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +34,7 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Enumeration;
@@ -42,6 +42,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -130,9 +131,9 @@ public class EntityLoader implements AutoCloseable
                     {
                         exception.addSuppressed(e);
                     }
-                    catch (Exception ignore)
+                    catch (Exception ee)
                     {
-                        // ignore exception trying to add suppressed exception
+                        LOGGER.debug("Error adding suppressed exception", ee);
                     }
                 }
             }
@@ -176,55 +177,56 @@ public class EntityLoader implements AutoCloseable
 
     public static EntityLoader newEntityLoader(Path... paths)
     {
-        if ((paths == null) || (paths.length == 0))
-        {
-            return new EntityLoader(Collections.emptyList());
-        }
-        if (paths.length == 1)
-        {
-            return newEntityLoader(paths[0]);
-        }
-        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(paths.length);
-        Arrays.stream(paths).map(EntityLoader::newPathEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
-        return new EntityLoader(searchList);
+        return newEntityLoader(paths, EntityLoader::newPathEntityFileSearch);
     }
 
-    public static EntityLoader newEntityLoader(File... directories)
+    public static EntityLoader newEntityLoader(File... files)
     {
-        return newEntityLoader((directories == null) ? null : Arrays.stream(directories).map(File::toPath).toArray(Path[]::new));
+        return newEntityLoader(files, EntityLoader::newFileEntityFileSearch);
     }
 
     public static EntityLoader newEntityLoader(URI... uris)
     {
-        if ((uris == null) || (uris.length == 0))
-        {
-            return new EntityLoader(Collections.emptyList());
-        }
-        if (uris.length == 1)
-        {
-            return newEntityLoader(uris[0]);
-        }
-        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(uris.length);
-        Arrays.stream(uris).map(EntityLoader::newURIEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
-        return new EntityLoader(searchList);
+        return newEntityLoader(uris, EntityLoader::newURIEntityFileSearch);
     }
 
     public static EntityLoader newEntityLoader(ClassLoader classLoader, Path... paths)
     {
-        if ((paths == null) || (paths.length == 0))
+        return newEntityLoader(classLoader, paths, EntityLoader::newPathEntityFileSearch);
+    }
+
+    public static EntityLoader newEntityLoader(ClassLoader classLoader, File... files)
+    {
+        return newEntityLoader(classLoader, files, EntityLoader::newFileEntityFileSearch);
+    }
+
+    private static <T> EntityLoader newEntityLoader(T[] sources, Function<T, EntityFileSearch> searchFunction)
+    {
+        if ((sources == null) || (sources.length == 0))
+        {
+            return new EntityLoader(Collections.emptyList());
+        }
+        if (sources.length == 1)
+        {
+            EntityFileSearch search = searchFunction.apply(sources[0]);
+            return new EntityLoader((search == null) ? Collections.emptyList() : Collections.singletonList(search));
+        }
+        List<EntityFileSearch> searchList = new ArrayList<>(sources.length);
+        Arrays.stream(sources).map(searchFunction).filter(Objects::nonNull).forEach(searchList::add);
+        return new EntityLoader(searchList);
+    }
+
+    private static <T> EntityLoader newEntityLoader(ClassLoader classLoader, T[] sources, Function<T, EntityFileSearch> searchFunction)
+    {
+        if ((sources == null) || (sources.length == 0))
         {
             return newEntityLoader(classLoader);
         }
 
-        List<EntityFileSearch> searchList = Lists.mutable.ofInitialCapacity(paths.length + 1);
+        List<EntityFileSearch> searchList = new ArrayList<>(sources.length + 1);
         searchList.add(new ClassLoaderEntityFileSearch(classLoader));
-        Arrays.stream(paths).map(EntityLoader::newPathEntityFileSearch).filter(Objects::nonNull).forEach(searchList::add);
+        Arrays.stream(sources).map(searchFunction).filter(Objects::nonNull).forEach(searchList::add);
         return new EntityLoader(searchList);
-    }
-
-    public static EntityLoader newEntityLoader(ClassLoader classLoader, File... paths)
-    {
-        return newEntityLoader(classLoader, (paths == null) ? null : Arrays.stream(paths).map(File::toPath).toArray(Path[]::new));
     }
 
     private static Entity readEntity(Path path)
@@ -233,9 +235,9 @@ public class EntityLoader implements AutoCloseable
         {
             return ENTITY_SERIALIZER.deserialize(stream);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            LOGGER.error("Error reading entity from file: " + path, e);
+            LOGGER.error("Error reading entity from file: {}", path, e);
             return null;
         }
     }
@@ -243,10 +245,7 @@ public class EntityLoader implements AutoCloseable
     private static String entityPathToFilePath(String entityPath)
     {
         StringBuilder builder = new StringBuilder(ENTITIES_DIRECTORY.length() + entityPath.length() + ENTITY_FILE_EXTENSION.length());
-        builder.append(ENTITIES_DIRECTORY);
-        writePackageablePathAsFilePath(builder, entityPath);
-        builder.append(ENTITY_FILE_EXTENSION);
-        return builder.toString();
+        return writePackageablePathAsFilePath(builder.append(ENTITIES_DIRECTORY), entityPath).append(ENTITY_FILE_EXTENSION).toString();
     }
 
     private static String packagePathToDirectoryPath(String packagePath)
@@ -258,12 +257,10 @@ public class EntityLoader implements AutoCloseable
         }
 
         StringBuilder builder = new StringBuilder(ENTITIES_DIRECTORY.length() + packagePath.length());
-        builder.append(ENTITIES_DIRECTORY);
-        writePackageablePathAsFilePath(builder, packagePath);
-        return builder.toString();
+        return writePackageablePathAsFilePath(builder.append(ENTITIES_DIRECTORY), packagePath).toString();
     }
 
-    private static void writePackageablePathAsFilePath(StringBuilder builder, String packageablePath)
+    private static StringBuilder writePackageablePathAsFilePath(StringBuilder builder, String packageablePath)
     {
         int current = 0;
         for (int nextDelim = packageablePath.indexOf(':'); nextDelim != -1; nextDelim = packageablePath.indexOf(':', current))
@@ -271,7 +268,7 @@ public class EntityLoader implements AutoCloseable
             builder.append('/').append(packageablePath, current, nextDelim);
             current = nextDelim + 2;
         }
-        builder.append('/').append(packageablePath, current, packageablePath.length());
+        return builder.append('/').append(packageablePath, current, packageablePath.length());
     }
 
     private static boolean isPossiblyEntityFile(Path path)
@@ -304,7 +301,7 @@ public class EntityLoader implements AutoCloseable
         }
         catch (URISyntaxException e)
         {
-            LOGGER.error("Error converting URL to URI: " + url, e);
+            LOGGER.error("Error converting URL to URI: {}", url, e);
             return null;
         }
     }
@@ -317,7 +314,7 @@ public class EntityLoader implements AutoCloseable
         }
         catch (Exception e)
         {
-            LOGGER.error("Error getting path from URI: " + uri, e);
+            LOGGER.error("Error getting path from URI: {}", uri, e);
             return null;
         }
     }
@@ -347,6 +344,11 @@ public class EntityLoader implements AutoCloseable
                 return FileSystems.getFileSystem(uri);
             }
         }
+    }
+
+    private static EntityFileSearch newFileEntityFileSearch(File file)
+    {
+        return newPathEntityFileSearch(file.toPath());
     }
 
     private static EntityFileSearch newPathEntityFileSearch(Path path)
@@ -458,7 +460,7 @@ public class EntityLoader implements AutoCloseable
 
         private ClassLoaderEntityFileSearch(ClassLoader classLoader)
         {
-            this.classLoader = classLoader;
+            this.classLoader = Objects.requireNonNull(classLoader, "ClassLoader may not be null");
         }
 
         @Override

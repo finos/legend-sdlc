@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -61,6 +62,17 @@ public class ProjectConfigurationResource extends BaseResource
         return executeWithLogging(
                 "getting project " + projectId + " available generations configurations",
                 () -> this.projectConfigurationApi.getProjectAvailableArtifactGenerations(projectId)
+        );
+    }
+
+    @GET
+    @Path("/projectConfigurationStatus")
+    @ApiOperation("Returns the project configuration status report")
+    public ProjectConfigurationStatusReport checkProjectConfigurationStatus(@PathParam("projectId") String projectId)
+    {
+        return executeWithLogging(
+                "checking if project " + projectId + " is configured",
+                () -> this.projectConfigurationApi.getProjectConfigurationStatus(projectId)
         );
     }
 }

@@ -17,12 +17,15 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
+import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
@@ -55,18 +58,19 @@ import org.gitlab4j.api.models.MergeRequestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewApi
 {
@@ -79,7 +83,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         Set<String> revisionIdSet;
@@ -134,8 +138,9 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
                 mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            Stream<Review> stream = mergeRequestStream.filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(projectId, mr));
-            return addReviewFilters(stream, state, since, until, limit).collect(Collectors.toList());
+            String targetBranch = getDefaultBranch(gitLabProjectId);
+            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch)).map(mr -> fromGitLabMergeRequest(projectId, mr));
+            return addReviewFilters(stream, state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
         }
         catch (Exception e)
         {
@@ -147,7 +152,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit)
     {
         if (assignedToMe && authoredByMe)
         {
@@ -155,14 +160,22 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
 
         MergeRequestFilter mergeRequestFilter = withMergeRequestLabels(withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withScope(assignedToMe ? MergeRequestScope.ASSIGNED_TO_ME : (authoredByMe ? MergeRequestScope.CREATED_BY_ME : MergeRequestScope.ALL)), labels);
-        return addReviewFilters(getReviewStream(mergeRequestFilter), state, since, until, limit).collect(Collectors.toList());
+        return addReviewFilters(getReviewStream(mergeRequestFilter), state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
     }
 
     private Stream<Review> getReviewStream(MergeRequestFilter mergeRequestFilter)
     {
+        MutableIntObjectMap<String> pIdTodefaultBranch = IntObjectMaps.mutable.empty();
+
         try
         {
-            return PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE))).filter(BaseGitLabApi::isReviewMergeRequest).map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), mr.getProjectId()).toString(), mr));
+            return PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)))
+                    .filter(mr ->
+                    {
+                        String defaultBranch = pIdTodefaultBranch.getIfAbsentPutWithKey(mr.getProjectId(), pid -> getDefaultBranch(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), pid)));
+                        return isReviewMergeRequest(mr, defaultBranch);
+                    })
+                      .map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), mr.getProjectId()).toString(), mr));
         }
         catch (Exception e)
         {
@@ -215,9 +228,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         return mergeRequestFilter;
     }
 
-    private Stream<Review> addReviewFilters(Stream<Review> stream, ReviewState state, Instant since, Instant until, Integer limit)
+    private Stream<Review> addReviewFilters(Stream<Review> stream, ReviewState state, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
-        return addLimitFilter(addTimeFilter(addStateFilter(stream, state), state, since, until), limit);
+        return addWorkspaceIdAndTypeFilter(addLimitFilter(addTimeFilter(addStateFilter(stream, state), state, since, until), limit), workspaceIdAndTypePredicate);
+    }
+
+    public Stream<Review> addWorkspaceIdAndTypeFilter(Stream<Review> stream, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate)
+    {
+        return workspaceIdAndTypePredicate == null ? stream : stream.filter(r -> workspaceIdAndTypePredicate.test(r.getWorkspaceId(), r.getWorkspaceType()));
     }
 
     private Stream<Review> addStateFilter(Stream<Review> stream, ReviewState state)
@@ -332,7 +350,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             String workspaceBranchName = getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
             // TODO should we check for other merge requests for this workspace?
-            MergeRequest mergeRequest = getGitLabApi().getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, MASTER_BRANCH, title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
+            MergeRequest mergeRequest = getGitLabApi().getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, getDefaultBranch(gitLabProjectId), title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
             return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (Exception e)
@@ -500,6 +518,26 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 () -> "User " + getCurrentUser() + " is not allowed to reject review " + reviewId + " in project " + projectId,
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error rejecting review " + reviewId + " in project " + projectId);
+        }
+    }
+
+    @Override
+    public Approval getReviewApproval(String projectId, String reviewId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        try
+        {
+            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+            MergeRequest mergeRequest = getReviewMergeRequestApprovals(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
+            return fromGitLabMergeRequest(mergeRequest);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
+                () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
+                () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
         }
     }
 
@@ -1017,6 +1055,27 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             public List<String> getLabels()
             {
                 return labels;
+            }
+        };
+    }
+
+    private static Approval fromGitLabMergeRequest(MergeRequest mergeRequest)
+    {
+        if ((mergeRequest == null) || (mergeRequest.getApprovedBy() == null))
+        {
+            return null;
+        }
+        return newApproval(mergeRequest.getApprovedBy().stream().map(BaseGitLabApi::fromGitLabAbstractUser).collect(Collectors.toList()));
+    }
+
+    private static Approval newApproval(List<User> approvedBy)
+    {
+        return new Approval()
+        {
+            @Override
+            public List<User> getApprovedBy()
+            {
+                return approvedBy;
             }
         };
     }

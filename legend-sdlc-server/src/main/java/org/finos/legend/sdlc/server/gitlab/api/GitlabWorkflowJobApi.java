@@ -56,7 +56,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        return new RefWorkflowJobAccessContext(projectId, MASTER_BRANCH)
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        return new RefWorkflowJobAccessContext(projectId, getDefaultBranch(gitLabProjectId))
         {
             @Override
             protected String getInfoForException()
@@ -71,7 +72,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
-        return new RefWorkflowJobAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType))
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        return new RefWorkflowJobAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId))
         {
             @Override
             protected String getInfoForException()

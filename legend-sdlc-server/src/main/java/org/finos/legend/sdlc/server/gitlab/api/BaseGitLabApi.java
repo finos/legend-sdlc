@@ -32,11 +32,14 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceA
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.server.tools.ThrowingRunnable;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
+import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AbstractUser;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.Project;
 import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,8 +67,6 @@ abstract class BaseGitLabApi
     private static final Random RANDOM = new Random();
     private static final Encoder RANDOM_ID_ENCODER = Base64.getUrlEncoder().withoutPadding();
 
-    private static final Pattern PACKAGEABLE_ELEMENT_PATH_PATTERN = Pattern.compile("^\\w++(::\\w++)*+$");
-
     private static final int MAX_RETRIES = 5;
     private static final long INITIAL_RETRY_WAIT_INTERVAL_MILLIS = 1000L;
     private static final LongUnaryOperator RETRY_WAIT_INTERVAL_UPDATER = w -> w + 1000L;
@@ -83,8 +84,9 @@ abstract class BaseGitLabApi
     private static final String MR_STATE_LOCKED = "locked";
     private static final String MR_STATE_MERGED = "merged";
 
+    private static final String MASTER_BRANCH = "master";
+
     protected static final int ITEMS_PER_PAGE = 100;
-    protected static final String MASTER_BRANCH = "master";
 
     protected static final String PACKAGE_SEPARATOR = "::";
 
@@ -152,29 +154,34 @@ abstract class BaseGitLabApi
         }
     }
 
+    @Deprecated
     protected static boolean isValidEntityName(String string)
     {
-        return (string != null) && !string.isEmpty() && string.chars().allMatch(c -> (c == '_') || Character.isLetterOrDigit(c));
+        return EntityPaths.isValidEntityName(string);
     }
 
+    @Deprecated
     protected static boolean isValidEntityPath(String string)
     {
-        return isValidPackageableElementPath(string) && !string.startsWith("meta::") && string.contains(PACKAGE_SEPARATOR);
+        return EntityPaths.isValidEntityPath(string);
     }
 
+    @Deprecated
     protected static boolean isValidPackagePath(String string)
     {
-        return isValidPackageableElementPath(string);
+        return EntityPaths.isValidPackagePath(string);
     }
 
+    @Deprecated
     protected static boolean isValidClassifierPath(String string)
     {
-        return isValidPackageableElementPath(string) && string.startsWith("meta::");
+        return EntityPaths.isValidClassifierPath(string);
     }
 
+    @Deprecated
     protected static boolean isValidPackageableElementPath(String string)
     {
-        return (string != null) && PACKAGEABLE_ELEMENT_PATH_PATTERN.matcher(string).matches();
+        return (string != null) && string.matches("^\\w++(::\\w++)*+[\\w$]*+$");
     }
 
     protected static String getWorkspaceBranchNamePrefix(WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
@@ -316,9 +323,28 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, GitLabProjectId projectId)
     {
-        return (workspaceId == null) ? MASTER_BRANCH : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+        return (workspaceId == null) ? getDefaultBranch(projectId) : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+    }
+
+    protected String getDefaultBranch(GitLabProjectId projectId)
+    {
+        try
+        {
+            ProjectApi projectApi = getGitLabApi().getProjectApi();
+            return getDefaultBranch(withRetries(() -> projectApi.getProject(projectId.getGitLabId())));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Error getting default branch for " + projectId);
+        }
+    }
+
+    protected String getDefaultBranch(Project project)
+    {
+        String defaultBranch = project.getDefaultBranch();
+        return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
     protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
@@ -782,21 +808,41 @@ abstract class BaseGitLabApi
                 () -> "Unknown review in project " + projectId + ": " + reviewId,
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
-        if (!isReviewMergeRequest(mergeRequest))
+
+        if (!isReviewMergeRequest(mergeRequest, getDefaultBranch(projectId)))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }
 
-    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest)
+    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch)
     {
-        if ((mergeRequest == null) || !MASTER_BRANCH.equals(mergeRequest.getTargetBranch()))
+
+        if ((mergeRequest == null) || !targetBranch.equals(mergeRequest.getTargetBranch()))
         {
             return false;
         }
         WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         return (workspaceInfo != null) && (workspaceInfo.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE);
+    }
+
+    protected MergeRequest getReviewMergeRequestApprovals(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId)
+    {
+        int mergeRequestId = parseIntegerId(reviewId);
+        MergeRequest mergeRequest;
+        try
+        {
+            mergeRequest = withRetries(() -> mergeRequestApi.getMergeRequestApprovals(projectId.getGitLabId(), mergeRequestId));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
+                () -> "Unknown review in project " + projectId + ": " + reviewId,
+                () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
+        }
+        return mergeRequest;
     }
 
     protected static boolean isOpen(MergeRequest mergeRequest)

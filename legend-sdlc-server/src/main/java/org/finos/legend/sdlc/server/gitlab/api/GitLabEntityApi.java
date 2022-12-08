@@ -39,6 +39,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
@@ -368,7 +369,12 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         try
                         {
-                            return sourceDirectory.deserialize(file);
+                            Entity localEntity = sourceDirectory.deserialize(file);
+                            if (!Objects.equals(localEntity.getPath(), path))
+                            {
+                                throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
+                            }
+                            return localEntity;
                         }
                         catch (Exception e)
                         {
@@ -390,11 +396,21 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
 
         @Override
-        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
+        public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
-            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid))
             {
-                return stream.map(EntityProjectFile::getEntity).collect(Collectors.toList());
+                return stream.map(excludeInvalid ? epf ->
+                {
+                    try
+                    {
+                        return epf.getEntity();
+                    }
+                    catch (Exception ignore)
+                    {
+                        return null;
+                    }
+                } : EntityProjectFile::getEntity).filter(Objects::nonNull).collect(Collectors.toList());
             }
             catch (Exception e)
             {
@@ -476,14 +492,14 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             }
 
             String path = entity.getPath();
-            if (!isValidEntityPath(path))
+            if (!EntityPaths.isValidEntityPath(path))
             {
                 errorMessages.add("Invalid entity path: \"" + path + "\"");
                 return;
             }
 
             String classifierPath = entity.getClassifierPath();
-            if (!isValidClassifierPath(classifierPath))
+            if (!EntityPaths.isValidClassifierPath(classifierPath))
             {
                 errorMessages.add("Entity: " + path + "; error: invalid classifier path \"" + classifierPath + "\"");
             }
@@ -707,6 +723,11 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate)
     {
+        return getEntityProjectFiles(accessContext, entityPathPredicate, classifierPathPredicate, contentPredicate, false);
+    }
+
+    private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate, boolean excludeInvalid)
+    {
         Stream<EntityProjectFile> stream = getEntityProjectFiles(accessContext);
         if (entityPathPredicate != null)
         {
@@ -714,11 +735,35 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         }
         if (classifierPathPredicate != null)
         {
-            stream = stream.filter(epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                Entity entity;
+                try
+                {
+                    entity =  epf.getEntity();
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+                return classifierPathPredicate.test(entity.getClassifierPath());
+            } : epf -> classifierPathPredicate.test(epf.getEntity().getClassifierPath()));
         }
         if (contentPredicate != null)
         {
-            stream = stream.filter(epf -> contentPredicate.test(epf.getEntity().getContent()));
+            stream = stream.filter(excludeInvalid ? epf ->
+            {
+                Entity entity;
+                try
+                {
+                    entity =  epf.getEntity();
+                }
+                catch (Exception ignore)
+                {
+                    return false;
+                }
+                return contentPredicate.test(entity.getContent());
+            } : epf -> contentPredicate.test(epf.getEntity().getContent()));
         }
         return stream;
     }
@@ -787,7 +832,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             errorMessages.add("Missing entity path");
         }
-        else if (!isValidEntityPath(path))
+        else if (!EntityPaths.isValidEntityPath(path))
         {
             errorMessages.add("Invalid entity path: " + path);
         }
@@ -830,7 +875,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         errorMessages.add("Missing classifier path");
                     }
-                    else if (!isValidClassifierPath(classifierPath))
+                    else if (!EntityPaths.isValidClassifierPath(classifierPath))
                     {
                         errorMessages.add("Invalid classifier path: " + classifierPath);
                     }
@@ -858,7 +903,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     {
                         errorMessages.add("Missing new entity path");
                     }
-                    else if (!isValidEntityPath(newPath))
+                    else if (!EntityPaths.isValidEntityPath(newPath))
                     {
                         errorMessages.add("Invalid new entity path: " + newPath);
                     }
@@ -917,9 +962,38 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 Entity localEntity = this.sourceDirectory.deserialize(this.file);
                 if (!Objects.equals(localEntity.getPath(), getEntityPath()))
                 {
-                    throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    /**
+                     * This is a temporary hack to compensate for a non-backward-compatible change in
+                     * ConcreteFunctionDefinition parsing in legend-engine. Previously, the function name was used as the
+                     * PackageableElement name by the parser. Now, however, a new PackageableElement name is created
+                     * based on the function name and signature (i.e., the same name the Pure compiler would give it)
+                     *
+                     * Normally, an exception would be thrown when there is a mismatch between the expected entity path
+                     * (based on the file path) and the one computed from the parsed entity (based on the "package" and
+                     * "name" properties). However, to compensate for this non-backward-compatible change, if the entity is a
+                     * ConcreteFunctionDefinition, the entity path and "name" property will be changed to match the expected
+                     * values.
+                     *
+                     * This hack should be removed at the earliest opportunity, and no later than 3/31/2023.
+                     */
+                    if ((localEntity.getPath() != null) && (getEntityPath() != null) &&
+                            localEntity.getPath().startsWith(getEntityPath()) &&
+                            "meta::pure::metamodel::function::ConcreteFunctionDefinition".equals(localEntity.getClassifierPath()))
+                    {
+                        Map<String, Object> newContent = Maps.mutable.ofMap(localEntity.getContent());
+                        newContent.put("name", getEntityPath().substring(getEntityPath().lastIndexOf(":") + 1));
+                        this.entity = Entity.newEntity(getEntityPath(), localEntity.getClassifierPath(), newContent);
+                    }
+                    else
+                    {
+                        throw new RuntimeException("Expected entity path " + getEntityPath() + ", found " + localEntity.getPath());
+                    }
                 }
-                this.entity = localEntity;
+                else
+                {
+
+                    this.entity = localEntity;
+                }
             }
             return this.entity;
         }

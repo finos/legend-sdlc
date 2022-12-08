@@ -70,12 +70,16 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
                                        @QueryParam("stereotype")
                                        @ApiParam("Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
                                        @QueryParam("taggedValue")
-                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes)
+                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
+                                       @QueryParam("excludeInvalid")
+                                       @DefaultValue("false")
+                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid
+    )
     {
         return execute(
                 "getting entities in group workspace " + workspaceId + " for project " + projectId,
                 "get entities of the group workspace",
-                () -> getEntities(this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntities(this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
