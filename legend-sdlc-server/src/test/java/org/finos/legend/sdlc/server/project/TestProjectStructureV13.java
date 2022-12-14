@@ -53,8 +53,8 @@ public class TestProjectStructureV13 extends TestMultiGenerationProjectStructure
     protected void collectExpectedProjectProperties(ProjectStructureV13Factory.ProjectStructureV13 projectStructure, BiConsumer<String, String> propertyConsumer)
     {
         super.collectExpectedProjectProperties(projectStructure, propertyConsumer);
-        propertyConsumer.accept("platform.legend-engine.version", "3.14.5");
-        propertyConsumer.accept("platform.legend-sdlc.version", "0.90.1");
+        propertyConsumer.accept("platform.legend-engine.version", "3.29.1");
+        propertyConsumer.accept("platform.legend-sdlc.version", "0.107.1");
     }
 
     @Override

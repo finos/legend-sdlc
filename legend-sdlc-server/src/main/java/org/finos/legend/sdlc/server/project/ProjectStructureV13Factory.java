@@ -75,13 +75,13 @@ public class ProjectStructureV13Factory extends ProjectStructureVersionFactory
 
         // LEGEND SDLC
         private static final String LEGEND_SDLC_GROUP_ID = "org.finos.legend.sdlc";
-        private static final String LEGEND_SDLC_VERSION = "0.90.1";
+        private static final String LEGEND_SDLC_VERSION = "0.107.1";
         private static final String LEGEND_SDLC_PROPERTY = "platform.legend-sdlc.version";
         private static final String LEGEND_SDLC_PROPERTY_REFERENCE = getPropertyReference(LEGEND_SDLC_PROPERTY);
 
         // LEGEND ENGINE
         private static final String LEGEND_ENGINE_GROUP_ID = "org.finos.legend.engine";
-        private static final String LEGEND_ENGINE_VERSION = "3.14.5";
+        private static final String LEGEND_ENGINE_VERSION = "3.29.1";
         private static final String LEGEND_ENGINE_PROPERTY = "platform.legend-engine.version";
         private static final String LEGEND_ENGINE_PROPERTY_REFERENCE = getPropertyReference(LEGEND_ENGINE_PROPERTY);
         private static final String LEGEND_SDLC_VERSION_PLUGIN = "legend-sdlc-version-package-maven-plugin";
