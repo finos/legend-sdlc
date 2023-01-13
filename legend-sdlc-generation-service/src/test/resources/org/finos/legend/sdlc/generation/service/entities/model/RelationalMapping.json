@@ -9,6 +9,7 @@
         "mainTable": {
           "_type": "Table",
           "database": "store::MyDatabase",
+          "mainTableDb": "store::MyDatabase",
           "schema": "MAIN_SCHEMA",
           "table": "PERSON_TABLE"
         },
@@ -19,6 +20,7 @@
             "table": {
               "_type": "Table",
               "database": "store::MyDatabase",
+              "mainTableDb": "store::MyDatabase",
               "schema": "MAIN_SCHEMA",
               "table": "PERSON_TABLE"
             },
@@ -38,12 +40,12 @@
               "table": {
                 "_type": "Table",
                 "database": "store::MyDatabase",
+                "mainTableDb": "store::MyDatabase",
                 "schema": "MAIN_SCHEMA",
                 "table": "PERSON_TABLE"
               },
               "tableAlias": "PERSON_TABLE"
-            },
-            "source": "model_SourcePerson"
+            }
           },
           {
             "_type": "relationalPropertyMapping",
@@ -57,12 +59,12 @@
               "table": {
                 "_type": "Table",
                 "database": "store::MyDatabase",
+                "mainTableDb": "store::MyDatabase",
                 "schema": "MAIN_SCHEMA",
                 "table": "PERSON_TABLE"
               },
               "tableAlias": "PERSON_TABLE"
-            },
-            "source": "model_SourcePerson"
+            }
           },
           {
             "_type": "relationalPropertyMapping",
@@ -76,18 +78,123 @@
               "table": {
                 "_type": "Table",
                 "database": "store::MyDatabase",
+                "mainTableDb": "store::MyDatabase",
                 "schema": "MAIN_SCHEMA",
                 "table": "PERSON_TABLE"
               },
               "tableAlias": "PERSON_TABLE"
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "model_Country",
+            "property": {
+              "class": "model::SourcePerson",
+              "property": "country"
             },
-            "source": "model_SourcePerson"
+            "relationalOperation": {
+              "_type": "column",
+              "column": "COUNTRY",
+              "table": {
+                "_type": "Table",
+                "database": "store::MyDatabase",
+                "mainTableDb": "store::MyDatabase",
+                "schema": "MAIN_SCHEMA",
+                "table": "PERSON_TABLE"
+              },
+              "tableAlias": "PERSON_TABLE"
+            }
+          },
+          {
+            "_type": "relationalPropertyMapping",
+            "enumMappingId": "model_enum_Country",
+            "property": {
+              "class": "model::SourcePerson",
+              "property": "countryName"
+            },
+            "relationalOperation": {
+              "_type": "column",
+              "column": "COUNTRY_NAME",
+              "table": {
+                "_type": "Table",
+                "database": "store::MyDatabase",
+                "mainTableDb": "store::MyDatabase",
+                "schema": "MAIN_SCHEMA",
+                "table": "PERSON_TABLE"
+              },
+              "tableAlias": "PERSON_TABLE"
+            }
           }
         ],
         "root": false
       }
     ],
-    "enumerationMappings": [],
+    "enumerationMappings": [
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "AMEA",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "AMEA"
+              }
+            ]
+          },
+          {
+            "enumValue": "EMEA",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "EMEA"
+              }
+            ]
+          },
+          {
+            "enumValue": "ASIA",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "ASIA"
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::Country"
+      },
+      {
+        "enumValueMappings": [
+          {
+            "enumValue": "America",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "America"
+              }
+            ]
+          },
+          {
+            "enumValue": "Europe",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "Europe"
+              }
+            ]
+          },
+          {
+            "enumValue": "India",
+            "sourceValues": [
+              {
+                "_type": "stringSourceValue",
+                "value": "India"
+              }
+            ]
+          }
+        ],
+        "enumeration": "model::enum::Country"
+      }
+    ],
     "includedMappings": [],
     "name": "RelationalMapping",
     "package": "model",
