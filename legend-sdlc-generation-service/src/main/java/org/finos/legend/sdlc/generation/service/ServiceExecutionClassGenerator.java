@@ -36,6 +36,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
+import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -47,6 +48,7 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import javax.lang.model.SourceVersion;
 
@@ -57,12 +59,14 @@ public class ServiceExecutionClassGenerator
     private final Service service;
     private final String packagePrefix;
     private final String planResourceName;
+    private final Map<String, EnumParameter> enumParameters;
 
-    private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName)
+    private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName, Map<String, EnumParameter> enumParameters)
     {
         this.service = Objects.requireNonNull(service);
         this.packagePrefix = packagePrefix;
         this.planResourceName = Objects.requireNonNull(planResourceName);
+        this.enumParameters = enumParameters;
     }
 
     public GeneratedJavaClass generate()
@@ -80,7 +84,7 @@ public class ServiceExecutionClassGenerator
         DefaultObjectWrapper objectWrapper = new DefaultObjectWrapper(Configuration.VERSION_2_3_30);
         objectWrapper.setExposeFields(true);
         objectWrapper.setExposureLevel(BeansWrapper.EXPOSE_ALL);
-        Template template = loadTemplate();
+        Template template = loadTemplate("generation/service/ServiceExecutionClassGenerator.ftl", "ServiceExecutionClassGenerator");
         try
         {
             StringWriter code = new StringWriter();
@@ -95,9 +99,8 @@ public class ServiceExecutionClassGenerator
         }
     }
 
-    private Template loadTemplate()
+    static Template loadTemplate(String freeMarkerTemplate, String name)
     {
-        String freeMarkerTemplate = "generation/service/ServiceExecutionClassGenerator.ftl";
         URL templateURL = Thread.currentThread().getContextClassLoader().getResource(freeMarkerTemplate);
         if (templateURL == null)
         {
@@ -105,7 +108,7 @@ public class ServiceExecutionClassGenerator
         }
         try (InputStreamReader reader = new InputStreamReader(templateURL.openStream(), StandardCharsets.UTF_8))
         {
-            return new Template("ServiceExecutionClassGenerator", reader, new Configuration(Configuration.VERSION_2_3_30));
+            return new Template(name, reader, new Configuration(Configuration.VERSION_2_3_30));
         }
         catch (IOException e)
         {
@@ -113,9 +116,9 @@ public class ServiceExecutionClassGenerator
         }
     }
 
-    private MutableList<String> getImports(ListIterable<ExecutionParameter> executionParameters)
+    private MutableList<String> getImports(MutableList<ExecutionParameter> executionParameters)
     {
-        MutableSet<Class<?>> imports = executionParameters.collect(p -> getVariableJavaClass(p.variable, false), Sets.mutable.with(List.class));
+        MutableSet<Class<?>> imports = executionParameters.collectIf(p -> !p.isValidEnumParam(), p -> getVariableJavaClassForPrimitive(p.variable, false), Sets.mutable.with(List.class));
         imports.removeIf(c -> "java.lang".equals(c.getPackage().getName()));
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
@@ -192,7 +195,21 @@ public class ServiceExecutionClassGenerator
         return name;
     }
 
-    private static Class<?> getVariableJavaClass(Variable variable, boolean usePrimitive)
+    private String getVariableJavaClass(ExecutionParameter executionParameter, boolean usePrimitive)
+    {
+        if (enumParameters != null && executionParameter.isValidEnumParam())
+        {
+            StringBuilder builder = new StringBuilder(packagePrefix).append('.');
+            ArrayAdapter.adapt(executionParameter.variable._class.split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, ".");
+            return builder.toString();
+        }
+        else
+        {
+            return getVariableJavaClassForPrimitive(executionParameter.variable, usePrimitive).getSimpleName();
+        }
+    }
+
+    private static Class<?> getVariableJavaClassForPrimitive(Variable variable, boolean usePrimitive)
     {
         switch (variable._class)
         {
@@ -240,9 +257,9 @@ public class ServiceExecutionClassGenerator
         return (variable.multiplicity.lowerBound == 1) && variable.multiplicity.isUpperBoundEqualTo(1);
     }
 
-    public static ServiceExecutionClassGenerator newGenerator(Service service, String packagePrefix, String planResourceName)
+    public static ServiceExecutionClassGenerator newGenerator(Service service, String packagePrefix, String planResourceName, Map<String, EnumParameter> enumParameters)
     {
-        return new ServiceExecutionClassGenerator(service, packagePrefix, planResourceName);
+        return new ServiceExecutionClassGenerator(service, packagePrefix, planResourceName, enumParameters);
     }
 
     public static class GeneratedJavaClass
@@ -250,7 +267,7 @@ public class ServiceExecutionClassGenerator
         private final String name;
         private final String code;
 
-        private GeneratedJavaClass(String name, String code)
+        GeneratedJavaClass(String name, String code)
         {
             this.name = name;
             this.code = code;
@@ -277,7 +294,7 @@ public class ServiceExecutionClassGenerator
         }
     }
 
-    public static class ExecutionParameter
+    public class ExecutionParameter
     {
         private final Variable variable;
         private final String javaParamName;
@@ -300,12 +317,17 @@ public class ServiceExecutionClassGenerator
 
         public String getJavaMethodType()
         {
-            return getVariableJavaClass(this.variable, true).getSimpleName();
+            return getVariableJavaClass(this, true);
         }
 
         public String getServiceParameterType()
         {
-            return getVariableJavaClass(this.variable, false).getSimpleName();
+            return getVariableJavaClass(this, false);
+        }
+
+        public boolean isValidEnumParam()
+        {
+            return enumParameters != null && enumParameters.size() >= 1 && variable._class.equals(enumParameters.get(variable.name).getEnumClass());
         }
 
         public Multiplicity getMultiplicity()

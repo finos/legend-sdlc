@@ -15,18 +15,32 @@
 package org.finos.legend.sdlc.generation.service;
 
 import io.github.classgraph.ClassGraph;
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.eclipse.collections.impl.utility.Iterate;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
+import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
+import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
+import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
+import org.finos.legend.engine.plan.platform.PlanPlatform;
+import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
+import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryClassLoader;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
+import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
+import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.model.Country;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -48,8 +62,10 @@ import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.ServiceLoader;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -58,6 +74,7 @@ import javax.tools.ToolProvider;
 
 public class TestServiceExecutionClassGenerator
 {
+    private static PureModel PURE_MODEL;
     private static String CLASSPATH;
     private static PureModelContextData PURE_MODEL_CONTEXT_DATA;
     private static Map<String, Service> SERVICES;
@@ -75,6 +92,8 @@ public class TestServiceExecutionClassGenerator
         try (EntityLoader entityLoader = EntityLoader.newEntityLoader(Paths.get(url.toURI())))
         {
             PURE_MODEL_CONTEXT_DATA = PureModelContextDataBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).build();
+            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).build();
+            PURE_MODEL = pureModelWithContextData.getPureModel();
         }
         SERVICES = Iterate.groupByUniqueKey(PURE_MODEL_CONTEXT_DATA.getElementsOfType(Service.class), PackageableElement::getPath);
     }
@@ -85,6 +104,7 @@ public class TestServiceExecutionClassGenerator
         CLASSPATH = null;
         PURE_MODEL_CONTEXT_DATA = null;
         SERVICES = null;
+        PURE_MODEL = null;
     }
 
     @Test
@@ -130,6 +150,13 @@ public class TestServiceExecutionClassGenerator
     }
 
     @Test
+    public void testSimpleRelationalWithEnumParams() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithEnumParams");
+        assertExecuteMethodsExist(cls, Country.class, org.finos.model._enum.Country.class);
+    }
+
+    @Test
     public void testModelToModelServiceWithMultipleParams() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithMultipleParams");
@@ -143,13 +170,36 @@ public class TestServiceExecutionClassGenerator
         {
             throw new RuntimeException("Could not find service: " + servicePath);
         }
-        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace("::", "/").concat(".json"));
+        ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
+        ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
+        Map<String, EnumParameter> enumParameters = new HashMap<>();
+        ServiceExecutionGenerator.getEnumParameters(plan, enumParameters);
+        if (enumParameters != null && enumParameters.size() >= 1)
+        {
+            enumParameters.forEach((varName, enumProperty) ->
+            {
+                ServiceExecutionClassGenerator.GeneratedJavaClass generatedEnumJavaClass = ServiceParamEnumClassGenerator.newGenerator(packagePrefix, enumProperty).generate();
+                StringBuilder builder = new StringBuilder();
+                ArrayAdapter.adapt(enumProperty.getEnumClass().split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, "/");
+                String path = builder.toString();
+                Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/" + path + ".generated.java"), generatedEnumJavaClass.getCode());
+                try
+                {
+                    compileGeneratedJavaClass(generatedEnumJavaClass);
+                }
+                catch (ClassNotFoundException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            });
+        }
+        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace("::", "/").concat(".json"), enumParameters);
         ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass = generator.generate();
         String expectedClassName = ((packagePrefix == null) ? "" : (packagePrefix + ".")) + servicePath.replace("::", ".");
         Assert.assertEquals(expectedClassName, generatedJavaClass.getName());
         // Uncomment to update generated code
         // org.apache.commons.io.FileUtils.writeStringToFile(new java.io.File("src/test/resources/generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode(), StandardCharsets.UTF_8);
-        Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedServiceJavaFile(service.name), generatedJavaClass.getCode());
+        Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode());
         Class<?> cls = compileGeneratedJavaClass(generatedJavaClass);
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
@@ -157,9 +207,8 @@ public class TestServiceExecutionClassGenerator
         return cls;
     }
 
-    private String loadExpectedGeneratedServiceJavaFile(String serviceName)
+    private String loadExpectedGeneratedJavaFile(String resourceName)
     {
-        String resourceName = "generation/service/" + serviceName + ".generated.java";
         URL url = getClass().getClassLoader().getResource(resourceName);
         if (url == null)
         {

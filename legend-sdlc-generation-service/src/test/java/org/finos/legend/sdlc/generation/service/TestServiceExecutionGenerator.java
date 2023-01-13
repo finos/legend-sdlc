@@ -40,6 +40,7 @@ import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.model.Country;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -175,6 +176,44 @@ public class TestServiceExecutionGenerator
         Service service = getService("service::RelationalServiceWithParams");
         ClassLoader classLoader = generateAndCompile(packagePrefix, service);
         assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithParams", String.class, String.class);
+    }
+
+    @Test
+    public void testRelationalWithEnumParams() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::RelationalServiceWithEnumParams");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", Country.class, org.finos.model._enum.Country.class);
+    }
+
+    @Test
+    public void testEnumParamServiceExecutionUsingServiceRunnerAPI() throws Exception
+    {
+        Service service = getService("service::RelationalServiceWithEnumParams");
+        ClassLoader classLoader = generateAndCompile("org.finos", service);
+
+        try (JavaHelper.ThreadContextClassLoaderScope ignored = JavaHelper.withCurrentThreadContextClassLoader(classLoader))
+        {
+            ServiceRunner multiParamServiceRunner = findServiceRunnerByPath("service::RelationalServiceWithEnumParams");
+            assertServiceVariables(multiParamServiceRunner,
+                    new ServiceVariable("cou", Country.class, new Multiplicity(0, 1)),
+                    new ServiceVariable("couName", org.finos.model._enum.Country.class, new Multiplicity(1, 1))
+            );
+            IllegalArgumentException e1 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance()));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 0", e1.getMessage());
+
+            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(Country.AMEA, Country.EMEA, Country.ASIA))));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 3", e2.getMessage());
+
+            List<Object> args1 = Arrays.asList(Country.AMEA, "1");
+            IllegalArgumentException e3 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args1)));
+            Assert.assertEquals("Invalid provided parameter(s): [Invalid enum value 1 for model::enum::Country, valid enum values: [America, Europe, India]]", e3.getMessage());
+
+            JsonNode expected = OBJECT_MAPPER.readTree("{\"columns\":[{\"name\":\"First Name\",\"type\":\"String\"}],\"rows\":[{\"values\":[\"John\"]}]}");
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(Country.AMEA, org.finos.model._enum.Country.America)).withSerializationFormat(SerializationFormat.PURE))));
+
+        }
     }
 
     @Test

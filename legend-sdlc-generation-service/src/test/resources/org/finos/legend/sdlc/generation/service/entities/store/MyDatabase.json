@@ -44,6 +44,22 @@
                   "precision": 38,
                   "scale": 0
                 }
+              },
+              {
+                "name": "COUNTRY",
+                "nullable": true,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 16777216
+                }
+              },
+              {
+                "name": "COUNTRY_NAME",
+                "nullable": true,
+                "type": {
+                  "_type": "Varchar",
+                  "size": 16777216
+                }
               }
             ],
             "name": "PERSON_TABLE",
