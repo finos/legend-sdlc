@@ -18,7 +18,6 @@ import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.modelManager.ModelManager;
-import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Testable;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
@@ -26,7 +25,8 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connect
 import org.finos.legend.engine.protocol.pure.v1.model.test.assertion.status.AssertFail;
 import org.finos.legend.engine.protocol.pure.v1.model.test.assertion.status.EqualToJsonAssertFail;
 import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestError;
-import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestFailed;
+import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestExecuted;
+import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestExecutionStatus;
 import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestResult;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
@@ -34,6 +34,7 @@ import org.finos.legend.engine.testable.model.RunTestsInput;
 import org.finos.legend.engine.testable.model.RunTestsResult;
 import org.finos.legend.engine.testable.model.RunTestsTestableInput;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Testable;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.test.junit.LegendSDLCTestCaseCollector;
@@ -92,7 +93,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
 
     private void handleDoTestResult(RunTestsResult doTestsResult)
     {
-        List<TestFailed> failedTests = doTestsResult.results.stream().filter(res -> res instanceof TestFailed).map(TestFailed.class::cast).collect(Collectors.toList());
+        List<TestExecuted> failedTests = doTestsResult.results.stream().filter(res -> res instanceof TestExecuted && ((TestExecuted) res).testExecutionStatus == TestExecutionStatus.FAIL).map(TestExecuted.class::cast).collect(Collectors.toList());
         List<TestError> errorTests = doTestsResult.results.stream().filter(res -> res instanceof TestError).map(TestError.class::cast).collect(Collectors.toList());
 
         if (!failedTests.isEmpty() || !errorTests.isEmpty())
@@ -121,7 +122,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
         }
     }
 
-    private String buildErrorMessageForTestFailure(TestFailed testFailed)
+    private String buildErrorMessageForTestFailure(TestExecuted testFailed)
     {
         List<AssertFail> failedAsserts = testFailed.assertStatuses.stream().filter(a -> a instanceof AssertFail).map(AssertFail.class::cast).collect(Collectors.toList());
 
@@ -155,11 +156,11 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     private String buildTestId(TestResult testResult)
     {
         StringBuilder str = new StringBuilder();
-        if (testResult.atomicTestId.testSuiteId != null)
+        if (testResult.testSuiteId != null)
         {
-            str.append(testResult.atomicTestId.testSuiteId).append(".");
+            str.append(testResult.testSuiteId).append(".");
         }
-        str.append(testResult.atomicTestId.atomicTestId);
+        str.append(testResult.atomicTestId);
 
         return str.toString();
     }
