@@ -16,7 +16,9 @@ package org.finos.legend.sdlc.generation.service;
 
 import io.github.classgraph.ClassGraph;
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.ImmutableList;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
@@ -40,7 +42,6 @@ import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.E
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.finos.model.Country;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -61,8 +62,6 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
@@ -153,7 +152,8 @@ public class TestServiceExecutionClassGenerator
     public void testSimpleRelationalWithEnumParams() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithEnumParams");
-        assertExecuteMethodsExist(cls, Country.class, org.finos.model._enum.Country.class);
+        ClassLoader classLoader = cls.getClassLoader();
+        assertExecuteMethodsExist(cls, classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"));
     }
 
     @Test
@@ -172,20 +172,22 @@ public class TestServiceExecutionClassGenerator
         }
         ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
         ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
-        Map<String, EnumParameter> enumParameters = new HashMap<>();
+        Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
         ServiceExecutionGenerator.getEnumParameters(plan, enumParameters);
+        List<ServiceExecutionClassGenerator.GeneratedJavaClass> generatedEnumClasses = Lists.mutable.empty();
         if (enumParameters != null && enumParameters.size() >= 1)
         {
             enumParameters.forEach((varName, enumProperty) ->
             {
                 ServiceExecutionClassGenerator.GeneratedJavaClass generatedEnumJavaClass = ServiceParamEnumClassGenerator.newGenerator(packagePrefix, enumProperty).generate();
+                generatedEnumClasses.add(generatedEnumJavaClass);
                 StringBuilder builder = new StringBuilder();
                 ArrayAdapter.adapt(enumProperty.getEnumClass().split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, "/");
                 String path = builder.toString();
                 Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/" + path + ".generated.java"), generatedEnumJavaClass.getCode());
                 try
                 {
-                    compileGeneratedJavaClass(generatedEnumJavaClass);
+                    compileGeneratedJavaClass(generatedEnumJavaClass, null);
                 }
                 catch (ClassNotFoundException e)
                 {
@@ -200,7 +202,7 @@ public class TestServiceExecutionClassGenerator
         // Uncomment to update generated code
         // org.apache.commons.io.FileUtils.writeStringToFile(new java.io.File("src/test/resources/generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode(), StandardCharsets.UTF_8);
         Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode());
-        Class<?> cls = compileGeneratedJavaClass(generatedJavaClass);
+        Class<?> cls = compileGeneratedJavaClass(generatedJavaClass, generatedEnumClasses);
         Assert.assertTrue(AbstractServicePlanExecutor.class.isAssignableFrom(cls));
         Assert.assertTrue(ServiceRunner.class.isAssignableFrom(cls));
         assertRunMethodsExist(cls);
@@ -234,13 +236,18 @@ public class TestServiceExecutionClassGenerator
         return builder.toString();
     }
 
-    private Class<?> compileGeneratedJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass) throws ClassNotFoundException
+    private Class<?> compileGeneratedJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass, List<ServiceExecutionClassGenerator.GeneratedJavaClass> generatedEnumClasses) throws ClassNotFoundException
     {
 //        System.out.format("%s%n-------------------------%n%s%n", generatedJavaClass.getName(), generatedJavaClass.getCode());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
         MemoryFileManager fileManager = new MemoryFileManager(compiler);
-        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnosticCollector, Arrays.asList("-classpath", CLASSPATH), null, Collections.singletonList(new GeneratedJavaFileObject(generatedJavaClass)));
+        MutableList<GeneratedJavaFileObject> javaClasses = Lists.mutable.with(new GeneratedJavaFileObject(generatedJavaClass));
+        if (generatedEnumClasses != null)
+        {
+            generatedEnumClasses.forEach(e -> javaClasses.add(new GeneratedJavaFileObject(e)));
+        }
+        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnosticCollector, Arrays.asList("-classpath", CLASSPATH), null, javaClasses);
         if (!task.call())
         {
             Assert.fail(diagnosticCollector.getDiagnostics().toString());
