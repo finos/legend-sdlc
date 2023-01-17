@@ -18,6 +18,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
@@ -25,22 +27,26 @@ import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServi
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceVariable;
+import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
 import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
 import org.finos.legend.engine.plan.execution.result.serialization.SerializationFormat;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
+import org.finos.legend.engine.plan.platform.PlanPlatform;
+import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
+import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.finos.model.Country;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -184,7 +190,7 @@ public class TestServiceExecutionGenerator
         String packagePrefix = "org.finos";
         Service service = getService("service::RelationalServiceWithEnumParams");
         ClassLoader classLoader = generateAndCompile(packagePrefix, service);
-        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", Country.class, org.finos.model._enum.Country.class);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"));
     }
 
     @Test
@@ -193,25 +199,30 @@ public class TestServiceExecutionGenerator
         Service service = getService("service::RelationalServiceWithEnumParams");
         ClassLoader classLoader = generateAndCompile("org.finos", service);
 
+        Class<?> countryClass = classLoader.loadClass("org.finos.model.Country");
+        Object[] countryValues = countryClass.getEnumConstants();
+        Class<?> countryNameClass = classLoader.loadClass("org.finos.model._enum.Country");
+        Object[] countryNameValues = countryNameClass.getEnumConstants();
+
         try (JavaHelper.ThreadContextClassLoaderScope ignored = JavaHelper.withCurrentThreadContextClassLoader(classLoader))
         {
             ServiceRunner multiParamServiceRunner = findServiceRunnerByPath("service::RelationalServiceWithEnumParams");
             assertServiceVariables(multiParamServiceRunner,
-                    new ServiceVariable("cou", Country.class, new Multiplicity(0, 1)),
-                    new ServiceVariable("couName", org.finos.model._enum.Country.class, new Multiplicity(1, 1))
+                    new ServiceVariable("cou", countryClass, new Multiplicity(0, 1)),
+                    new ServiceVariable("couName", countryNameClass, new Multiplicity(1, 1))
             );
             IllegalArgumentException e1 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance()));
             Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 0", e1.getMessage());
 
-            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(Country.AMEA, Country.EMEA, Country.ASIA))));
+            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryValues[1], countryValues[2]))));
             Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 3", e2.getMessage());
 
-            List<Object> args1 = Arrays.asList(Country.AMEA, "1");
+            List<Object> args1 = Arrays.asList(countryValues[0], "1");
             IllegalArgumentException e3 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args1)));
             Assert.assertEquals("Invalid provided parameter(s): [Invalid enum value 1 for model::enum::Country, valid enum values: [America, Europe, India]]", e3.getMessage());
 
             JsonNode expected = OBJECT_MAPPER.readTree("{\"columns\":[{\"name\":\"First Name\",\"type\":\"String\"}],\"rows\":[{\"values\":[\"John\"]}]}");
-            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(Country.AMEA, org.finos.model._enum.Country.America)).withSerializationFormat(SerializationFormat.PURE))));
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryNameValues[0])).withSerializationFormat(SerializationFormat.PURE))));
 
         }
     }
@@ -376,9 +387,17 @@ public class TestServiceExecutionGenerator
     {
         ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
         // Generate
+        Set<String> enumClases = Sets.mutable.empty();
         for (Service service : services)
         {
             ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, extensions, LegendPlanTransformers.transformers, "vX_X_X").generate();
+            ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
+            Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
+            ServiceExecutionGenerator.getEnumParameters(plan, enumParameters);
+            if (enumParameters.size() >= 1)
+            {
+                enumParameters.forEach((varName, enumProperty) -> enumClases.add(enumProperty.enumClass));
+            }
         }
 
         // Check generated files
@@ -391,11 +410,12 @@ public class TestServiceExecutionGenerator
         Assert.assertEquals(expectedResources, actualResources);
 
         // Check class files generated
-        Set<String> expectedServiceJavaSources = services.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace("::", separator) + ".java").collect(Collectors.toSet());
+        Set<String> expectedJavaSources = services.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace("::", separator) + ".java").collect(Collectors.toSet());
+        enumClases.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + String.join("/", Arrays.stream(v.split("::")).map(e -> JavaSourceHelper.toValidJavaIdentifier(e)).collect(Collectors.toList())) + ".java"));
         Set<String> actualJavaSources = Files.walk(this.generatedSourcesDirectory, Integer.MAX_VALUE).map(this.generatedSourcesDirectory::relativize).map(Path::toString).filter(s -> s.endsWith(".java")).collect(Collectors.toSet());
-        if (!actualJavaSources.containsAll(expectedServiceJavaSources))
+        if (!actualJavaSources.containsAll(expectedJavaSources))
         {
-            Assert.fail(expectedServiceJavaSources.stream().filter(c -> !actualJavaSources.contains(c)).sorted().collect(Collectors.joining(", ", "Missing Java sources: ", "")));
+            Assert.fail(expectedJavaSources.stream().filter(c -> !actualJavaSources.contains(c)).sorted().collect(Collectors.joining(", ", "Missing Java sources: ", "")));
         }
 
         // Compile

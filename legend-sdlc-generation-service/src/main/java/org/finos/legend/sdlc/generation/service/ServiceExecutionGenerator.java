@@ -22,6 +22,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
@@ -46,7 +47,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.HashMap;
 import java.util.Map;
 import javax.lang.model.SourceVersion;
 
@@ -104,7 +104,7 @@ public class ServiceExecutionGenerator
 
         // Generate Enum Classes if service takes enums as parameters
         // Map holds the enum parameter name as key, and (class with package, valid enum values) as value
-        Map<String, EnumParameter> enumParameters = new HashMap<>();
+        Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
         getEnumParameters(plan, enumParameters);
         if (enumParameters != null && enumParameters.size() >= 1)
         {
