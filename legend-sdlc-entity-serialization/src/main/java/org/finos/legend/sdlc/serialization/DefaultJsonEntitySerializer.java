@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -143,7 +144,7 @@ public class DefaultJsonEntitySerializer implements EntityTextSerializer
                 }
                 if (pkg instanceof String)
                 {
-                    return pkg + "::" + name;
+                    return pkg + EntityPaths.PACKAGE_SEPARATOR + name;
                 }
             }
         }

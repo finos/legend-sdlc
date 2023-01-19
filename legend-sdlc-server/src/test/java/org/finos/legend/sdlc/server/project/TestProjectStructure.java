@@ -42,6 +42,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -983,7 +984,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             this.fileAccessProvider.createWorkspace(projectId, workspaceId);
             Entity newClass = TestTools.newClassEntity(entityName, modelPackage, TestTools.newProperty("prop1", "String", 0, 1));
             ProjectFileOperation addEntityOperation = generateAddOperationForEntity(newClass, projectStructure);
-            this.fileAccessProvider.getWorkspaceFileModificationContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).submit("Add " + modelPackage + "::" + entityName, Collections.singletonList(addEntityOperation));
+            this.fileAccessProvider.getWorkspaceFileModificationContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).submit("Add " + modelPackage + EntityPaths.PACKAGE_SEPARATOR + entityName, Collections.singletonList(addEntityOperation));
             this.fileAccessProvider.commitWorkspace(projectId, workspaceId);
             this.fileAccessProvider.createVersion(projectId, VersionId.parseVersionId(versionId));
         }

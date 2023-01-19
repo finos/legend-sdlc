@@ -37,6 +37,7 @@ import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationFactory;
 import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationResult;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
 import java.io.IOException;
@@ -50,8 +51,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Mojo(name = "generate-file-generations", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
@@ -167,14 +166,12 @@ public class FileGenerationMojo extends AbstractMojo
         getLog().info("Start serializing file generations");
         Path outputDirPath = this.outputDirectory.toPath();
         String fileSeparator = outputDirPath.getFileSystem().getSeparator();
-        Pattern pkgSepPattern = Pattern.compile("::", Pattern.LITERAL);
-        String replacement = Matcher.quoteReplacement(outputDirPath.getFileSystem().getSeparator());
         for (Map.Entry<FileGenerationSpecification, List<GenerationOutput>> fileOutputPair : generationGenerationOutputMap.entrySet())
         {
             FileGenerationSpecification fileGenerationSpecification = fileOutputPair.getKey();
             List<GenerationOutput> generationOutputs = fileOutputPair.getValue();
             String generationOutPath = fileGenerationSpecification.generationOutputPath;
-            String rootFolder = (generationOutPath != null && !generationOutPath.isEmpty()) ? generationOutPath : fileGenerationSpecification.getPath().replaceAll("::", "_");
+            String rootFolder = (generationOutPath != null && !generationOutPath.isEmpty()) ? generationOutPath : fileGenerationSpecification.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "_");
             getLog().info(String.format("Serializing %,d files for '%s'", generationOutputs.size(), fileGenerationSpecification.getPath()));
             for (GenerationOutput output : generationOutputs)
             {
@@ -183,7 +180,7 @@ public class FileGenerationMojo extends AbstractMojo
                 {
                     throw new MojoExecutionException("Duplicate file paths found when serializing file generations outputs : '" + fileName + "'");
                 }
-                String resolver = pkgSepPattern.matcher(fileName).replaceAll(replacement);
+                String resolver = fileName.replace(EntityPaths.PACKAGE_SEPARATOR, fileSeparator);
                 Path entityFilePath = outputDirPath.resolve(resolver);
                 Files.createDirectories(entityFilePath.getParent());
                 try (OutputStream stream = Files.newOutputStream(entityFilePath))
@@ -203,8 +200,6 @@ public class FileGenerationMojo extends AbstractMojo
         getLog().info("Start serializing artifact extension generations");
         Path outputDirPath = this.outputDirectory.toPath();
         String fileSeparator = outputDirPath.getFileSystem().getSeparator();
-        Pattern pkgSepPattern = Pattern.compile("::", Pattern.LITERAL);
-        String replacement = Matcher.quoteReplacement(fileSeparator);
         for (Map.Entry<ArtifactGenerationExtension, List<ArtifactGenerationResult>> resultByExtension : results.entrySet())
         {
             ArtifactGenerationExtension extension = resultByExtension.getKey();
@@ -222,7 +217,7 @@ public class FileGenerationMojo extends AbstractMojo
                     {
                         throw new MojoExecutionException("Duplicate file path found when serializing artifact generation extension  '" + extension.getClass() + "' output: '" + fileName + "'");
                     }
-                    String resolver = pkgSepPattern.matcher(fileName).replaceAll(replacement);
+                    String resolver = fileName.replace(EntityPaths.PACKAGE_SEPARATOR, fileSeparator);
                     Path entityFilePath = outputDirPath.resolve(resolver);
                     Files.createDirectories(entityFilePath.getParent());
                     try (OutputStream stream = Files.newOutputStream(entityFilePath))
@@ -277,8 +272,7 @@ public class FileGenerationMojo extends AbstractMojo
         {
             try (EntityLoader directoriesLoader = EntityLoader.newEntityLoader(elementFilter.directories))
             {
-
-                resolvedElementsByPath = directoriesLoader.getAllEntities().filter(e -> elementsByPath.contains(e.getPath())).map(Entity::getPath).collect(Collectors.toCollection(Sets.mutable::empty));
+                resolvedElementsByPath = directoriesLoader.getAllEntities().map(Entity::getPath).filter(elementsByPath::contains).collect(Collectors.toCollection(Sets.mutable::empty));
             }
             if (elementFilter.paths != null)
             {
@@ -295,7 +289,6 @@ public class FileGenerationMojo extends AbstractMojo
 
     public static class PackageableElementFilter
     {
-
         public File[] directories;
         public Set<String> paths;
         public Set<String> packages;
@@ -316,7 +309,7 @@ public class FileGenerationMojo extends AbstractMojo
             }
             else
             {
-                this.packages = Iterate.collectWith(packages, String::concat, "::", Lists.mutable.ofInitialCapacity(packages.size()))
+                this.packages = Iterate.collect(packages, p -> p + EntityPaths.PACKAGE_SEPARATOR, Lists.mutable.ofInitialCapacity(packages.size()))
                         .sortThis(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
             }
         }

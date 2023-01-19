@@ -88,7 +88,8 @@ abstract class BaseGitLabApi
 
     protected static final int ITEMS_PER_PAGE = 100;
 
-    protected static final String PACKAGE_SEPARATOR = "::";
+    @Deprecated
+    protected static final String PACKAGE_SEPARATOR = EntityPaths.PACKAGE_SEPARATOR;
 
     protected static final char BRANCH_DELIMITER = '/';
 

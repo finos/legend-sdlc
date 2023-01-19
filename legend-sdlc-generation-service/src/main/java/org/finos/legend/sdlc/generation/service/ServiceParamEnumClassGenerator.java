@@ -21,9 +21,9 @@ import freemarker.template.Template;
 import freemarker.template.TemplateException;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.sdlc.generation.service.ServiceExecutionClassGenerator.GeneratedJavaClass;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.StringWriter;
@@ -43,13 +43,14 @@ public class ServiceParamEnumClassGenerator
 
     public GeneratedJavaClass generate()
     {
-        String enumClass = enumParameter.getEnumClass();
-        String enumClassName = enumClass.substring(enumClass.lastIndexOf("::") + 2);
-        String packageName = generatePackageName(enumClass);
-        MutableMap<String, Object> dataModel = Maps.mutable.<String, Object>empty()
-                .withKeyValue("classPackage", packageName)
-                .withKeyValue("enumClassName", enumClassName)
-                .withKeyValue("validEnumValues", enumParameter.getValidEnumValues());
+        String enumClass = this.enumParameter.getEnumClass();
+        int lastSeparatorIndex = enumClass.lastIndexOf(EntityPaths.PACKAGE_SEPARATOR);
+        String enumClassName = enumClass.substring(lastSeparatorIndex + EntityPaths.PACKAGE_SEPARATOR.length());
+        String packageName = generatePackageName(enumClass, lastSeparatorIndex);
+        MutableMap<String, Object> dataModel = Maps.mutable.with(
+                "classPackage", packageName,
+                "enumClassName", enumClassName,
+                "validEnumValues", this.enumParameter.getValidEnumValues());
 
         DefaultObjectWrapper objectWrapper = new DefaultObjectWrapper(Configuration.VERSION_2_3_30);
         objectWrapper.setExposeFields(true);
@@ -74,9 +75,9 @@ public class ServiceParamEnumClassGenerator
         return new ServiceParamEnumClassGenerator(packagePrefix, enumParam);
     }
 
-    private String generatePackageName(String enumClassWithPackage)
+    private String generatePackageName(String enumClassWithPackage, int lastSeparatorIndex)
     {
-        String enumPackage = enumClassWithPackage.substring(0, enumClassWithPackage.lastIndexOf("::"));
+        String enumPackage = (lastSeparatorIndex == -1) ? null : enumClassWithPackage.substring(0, lastSeparatorIndex);
         if ((enumPackage == null) || enumPackage.isEmpty())
         {
             throw new RuntimeException("Enum does not have a package: " + enumClassWithPackage);
@@ -88,9 +89,9 @@ public class ServiceParamEnumClassGenerator
             {
                 throw new RuntimeException("Invalid package prefix: \"" + this.packagePrefix + "\"");
             }
-            builder.append(this.packagePrefix).append('.');
+            builder.append(this.packagePrefix);
         }
-        ArrayAdapter.adapt(enumPackage.split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, ".");
+        EntityPaths.forEachPathElement(enumPackage, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
         return builder.toString();
     }
 

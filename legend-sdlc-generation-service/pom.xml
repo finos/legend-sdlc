@@ -94,6 +94,10 @@
         <!-- SDLC -->
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-model</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-serialization</artifactId>
         </dependency>
         <dependency>

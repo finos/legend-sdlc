@@ -35,6 +35,7 @@ import org.finos.legend.sdlc.protocol.pure.v1.PureToEntityConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
 import java.io.IOException;
@@ -238,7 +239,7 @@ public class ModelGenerationMojo extends AbstractMojo
             }
             else
             {
-                this.packages = Iterate.collectWith(packages, String::concat, "::", Lists.mutable.ofInitialCapacity(packages.size()))
+                this.packages = Iterate.collect(packages, p -> p + EntityPaths.PACKAGE_SEPARATOR, Lists.mutable.ofInitialCapacity(packages.size()))
                         .sortThis(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
             }
         }

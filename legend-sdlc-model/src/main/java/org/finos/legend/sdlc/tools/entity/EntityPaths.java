@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.tools.entity;
 
+import java.util.function.Consumer;
+
 public class EntityPaths
 {
     public static final String PACKAGE_SEPARATOR = "::";
@@ -118,5 +120,17 @@ public class EntityPaths
     private static boolean isValidEntityNameChar(char c)
     {
         return (c == '$') || isValidPackageNameChar(c);
+    }
+
+    public static void forEachPathElement(String path, Consumer<? super String> consumer)
+    {
+        int start = 0;
+        int end;
+        while ((end = path.indexOf(PACKAGE_SEPARATOR, start)) != -1)
+        {
+            consumer.accept(path.substring(start, end));
+            start = end + PACKAGE_SEPARATOR.length();
+        }
+        consumer.accept(path.substring(start));
     }
 }

@@ -20,6 +20,7 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -71,7 +72,7 @@ public class TestEntityMojo
 
         Map<String, Entity> expectedEntities = TestHelper.loadEntities(simpleJsonModelDir);
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
         Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
@@ -148,7 +149,7 @@ public class TestEntityMojo
 
         Map<String, Entity> expectedEntities = TestHelper.loadEntities(simpleJsonModelDir);
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
         Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
@@ -181,7 +182,7 @@ public class TestEntityMojo
 
         Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
         Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
@@ -202,7 +203,7 @@ public class TestEntityMojo
 
         Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
         Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
@@ -224,7 +225,7 @@ public class TestEntityMojo
 
         Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace("::", outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
         Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
         TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);

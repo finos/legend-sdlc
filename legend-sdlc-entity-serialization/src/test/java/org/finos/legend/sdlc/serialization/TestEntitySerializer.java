@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.serialization;
 
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -86,7 +87,7 @@ public abstract class TestEntitySerializer<T extends EntitySerializer>
             // specified extension
             for (String extension : extensions)
             {
-                String expectedRelativePath = entity.getPath().replace("::", separator) + "." + extension;
+                String expectedRelativePath = entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + "." + extension;
                 Path expectedPath = entitiesDir.resolve(expectedRelativePath);
 
                 Path actualPath = this.serializer.serializeToFile(entity, entitiesDir, extension);
@@ -102,7 +103,7 @@ public abstract class TestEntitySerializer<T extends EntitySerializer>
             }
 
             // default extension
-            String expectedRelativePath = entity.getPath().replace("::", separator) + "." + this.serializer.getDefaultFileExtension();
+            String expectedRelativePath = entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + "." + this.serializer.getDefaultFileExtension();
             Path expectedPath = entitiesDir.resolve(expectedRelativePath);
 
             Path actualPath = this.serializer.serializeToFile(entity, entitiesDir);
@@ -129,14 +130,14 @@ public abstract class TestEntitySerializer<T extends EntitySerializer>
             // specified extension
             for (String extension : extensions)
             {
-                String expectedRelativePath = entity.getPath().replace("::", separator) + "." + extension;
+                String expectedRelativePath = entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + "." + extension;
                 Path expectedPath = entitiesDir.resolve(expectedRelativePath);
                 Path actualPath = this.serializer.filePathForEntity(entity, entitiesDir, extension);
                 Assert.assertEquals(expectedPath, actualPath);
             }
 
             // default extension
-            String expectedRelativePath = entity.getPath().replace("::", separator) + "." + this.serializer.getDefaultFileExtension();
+            String expectedRelativePath = entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + "." + this.serializer.getDefaultFileExtension();
             Path expectedPath = entitiesDir.resolve(expectedRelativePath);
             Path actualPath = this.serializer.filePathForEntity(entity, entitiesDir);
             Assert.assertEquals(expectedPath, actualPath);

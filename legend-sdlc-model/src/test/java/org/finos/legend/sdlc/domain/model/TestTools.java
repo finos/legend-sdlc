@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.domain.model;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 
 import java.util.Arrays;
@@ -150,7 +151,7 @@ public class TestTools
         content.put("properties", (properties == null) ? Collections.emptyList() : properties);
         content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList(ANY) : superTypes);
         return Entity.newEntity(
-                pkg + "::" + name,
+                pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Class",
                 content
         );
@@ -164,7 +165,7 @@ public class TestTools
         content.put("package", pkg);
         content.put("values", (values == null) ? Collections.emptyList() : Arrays.stream(values).map(v -> Collections.singletonMap("value", v)).collect(Collectors.toList()));
         return Entity.newEntity(
-                pkg + "::" + name,
+                pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Enumeration",
                 content
         );

@@ -47,6 +47,7 @@ import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
 import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.Before;
@@ -55,11 +56,6 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
 
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -89,6 +85,11 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+import javax.tools.DiagnosticCollector;
+import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.SimpleJavaFileObject;
+import javax.tools.ToolProvider;
 
 public class TestServiceExecutionGenerator
 {
@@ -404,14 +405,14 @@ public class TestServiceExecutionGenerator
         String separator = this.tmpFolder.getRoot().toPath().getFileSystem().getSeparator();
 
         // Check execution plan resources generated
-        Set<String> expectedResources = services.stream().map(s -> "plans" + separator + getPackagePrefix(packagePrefix, separator) + s.getPath().replace("::", separator) + ".json").collect(Collectors.toSet());
+        Set<String> expectedResources = services.stream().map(s -> "plans" + separator + getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".json").collect(Collectors.toSet());
         expectedResources.add("META-INF" + separator + "services" + separator +  ServiceRunner.class.getCanonicalName());
         Set<String> actualResources = Files.walk(this.classesDirectory, Integer.MAX_VALUE).filter(Files::isRegularFile).map(this.classesDirectory::relativize).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(expectedResources, actualResources);
 
         // Check class files generated
-        Set<String> expectedJavaSources = services.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace("::", separator) + ".java").collect(Collectors.toSet());
-        enumClases.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + String.join("/", Arrays.stream(v.split("::")).map(e -> JavaSourceHelper.toValidJavaIdentifier(e)).collect(Collectors.toList())) + ".java"));
+        Set<String> expectedJavaSources = services.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java").collect(Collectors.toSet());
+        enumClases.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + Arrays.stream(v.split(EntityPaths.PACKAGE_SEPARATOR)).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining(this.generatedSourcesDirectory.getFileSystem().getSeparator())) + ".java"));
         Set<String> actualJavaSources = Files.walk(this.generatedSourcesDirectory, Integer.MAX_VALUE).map(this.generatedSourcesDirectory::relativize).map(Path::toString).filter(s -> s.endsWith(".java")).collect(Collectors.toSet());
         if (!actualJavaSources.containsAll(expectedJavaSources))
         {
@@ -435,7 +436,7 @@ public class TestServiceExecutionGenerator
 
         // Check plan resources
         List<String> missingPlanResources = services.stream()
-                .map(s -> "plans/" + getPackagePrefix(packagePrefix, "/") + s.getPath().replace("::", "/") + ".json")
+                .map(s -> "plans/" + getPackagePrefix(packagePrefix, "/") + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "/") + ".json")
                 .filter(n -> classLoader.getResource(n) == null)
                 .sorted()
                 .collect(Collectors.toList());
@@ -443,7 +444,7 @@ public class TestServiceExecutionGenerator
 
         // Check service execution classes
         List<String> missingServiceExecutionClasses = services.stream()
-                .map(s -> getPackagePrefix(packagePrefix, ".") + s.getPath().replace("::", "."))
+                .map(s -> getPackagePrefix(packagePrefix, ".") + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "."))
                 .filter(n ->
                 {
                     try
@@ -466,7 +467,7 @@ public class TestServiceExecutionGenerator
         List<String> serviceRunnerProviders = new BufferedReader(new InputStreamReader(serviceRunnerResourceStream)).lines().collect(Collectors.toList());
         List<String> missingServiceProviders = services.stream()
                 .map(PackageableElement::getPath)
-                .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace("::", ".")))
+                .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace(EntityPaths.PACKAGE_SEPARATOR, ".")))
                 .sorted()
                 .collect(Collectors.toList());
         Assert.assertEquals(Collections.emptyList(), missingServiceProviders);

@@ -137,4 +137,16 @@ public class TestEntityPaths
         Assert.assertFalse(EntityPaths.isValidPackageName("test_String_$1_10$__String_$1_*$_&"));
         Assert.assertFalse(EntityPaths.isValidPackageName("entity_name_has_other_characters_*#@"));
     }
+
+    @Test
+    public void testForEachPathElement()
+    {
+        for (String path : new String[]{"valid::entity::path", "path", "a::b", "abc::def::gh::i::jk::lmnop"})
+        {
+            String expected = "/" + path.replace(EntityPaths.PACKAGE_SEPARATOR, "/");
+            StringBuilder builder = new StringBuilder();
+            EntityPaths.forEachPathElement(path, elt -> builder.append('/').append(elt));
+            Assert.assertEquals(path, expected, builder.toString());
+        }
+    }
 }

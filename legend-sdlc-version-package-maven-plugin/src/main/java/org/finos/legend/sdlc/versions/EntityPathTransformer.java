@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.versions;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -136,7 +137,7 @@ class EntityPathTransformer
 
     private Map<?, ?> transformPackageableElement(Map<?, ?> packageableElement)
     {
-        String oldPath = packageableElement.get(PACKAGE_KEY) + "::" + packageableElement.get(NAME_KEY);
+        String oldPath = packageableElement.get(PACKAGE_KEY) + EntityPaths.PACKAGE_SEPARATOR + packageableElement.get(NAME_KEY);
         String newPath = applyPathTransformer(oldPath);
         if (newPath == null)
         {
@@ -148,7 +149,7 @@ class EntityPathTransformer
     private <K> Map<K, ?> transformPackageableElement(String newPath, Map<K, ?> packageableElement)
     {
         int lastColon = newPath.lastIndexOf(':');
-        String newPackage = (lastColon == -1) ? "::" : newPath.substring(0, lastColon - 1);
+        String newPackage = (lastColon == -1) ? EntityPaths.PACKAGE_SEPARATOR : newPath.substring(0, lastColon - 1);
         String newName = (lastColon == -1) ? newPath : newPath.substring(lastColon + 1);
 
         Map<K, Object> transformed = new HashMap<>(packageableElement.size());

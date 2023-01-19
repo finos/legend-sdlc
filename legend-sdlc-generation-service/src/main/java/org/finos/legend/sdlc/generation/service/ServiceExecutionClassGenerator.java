@@ -27,7 +27,6 @@ import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.set.MutableSet;
-import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
@@ -37,6 +36,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -63,6 +63,10 @@ public class ServiceExecutionClassGenerator
 
     private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName, Map<String, EnumParameter> enumParameters)
     {
+        if ((packagePrefix != null) && !SourceVersion.isName(packagePrefix))
+        {
+            throw new IllegalArgumentException("Invalid package prefix: \"" + packagePrefix + "\"");
+        }
         this.service = Objects.requireNonNull(service);
         this.packagePrefix = packagePrefix;
         this.planResourceName = Objects.requireNonNull(planResourceName);
@@ -133,13 +137,9 @@ public class ServiceExecutionClassGenerator
         StringBuilder builder = new StringBuilder();
         if (this.packagePrefix != null)
         {
-            if (!SourceVersion.isName(this.packagePrefix))
-            {
-                throw new RuntimeException("Invalid package prefix: \"" + this.packagePrefix + "\"");
-            }
-            builder.append(this.packagePrefix).append('.');
+            builder.append(this.packagePrefix);
         }
-        ArrayAdapter.adapt(servicePackage.split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, ".");
+        EntityPaths.forEachPathElement(servicePackage, name -> ((builder.length() == 0 ? builder : builder.append('.'))).append(JavaSourceHelper.toValidJavaIdentifier(name)));
         return builder.toString();
     }
 
@@ -197,10 +197,14 @@ public class ServiceExecutionClassGenerator
 
     private String getVariableJavaClass(ExecutionParameter executionParameter, boolean usePrimitive)
     {
-        if (enumParameters != null && executionParameter.isValidEnumParam())
+        if (executionParameter.isValidEnumParam())
         {
-            StringBuilder builder = new StringBuilder(packagePrefix).append('.');
-            ArrayAdapter.adapt(executionParameter.variable._class.split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, ".");
+            StringBuilder builder = new StringBuilder();
+            if (this.packagePrefix != null)
+            {
+                builder.append(this.packagePrefix);
+            }
+            EntityPaths.forEachPathElement(executionParameter.variable._class, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
             return builder.toString();
         }
         else

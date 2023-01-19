@@ -131,7 +131,7 @@ public class EntityValidator
 
         if (packageAndNameValid)
         {
-            String expectedEntityPath = pkg + "::" + name;
+            String expectedEntityPath = pkg + EntityPaths.PACKAGE_SEPARATOR + name;
             if (!expectedEntityPath.equals(entity.getPath()))
             {
                 violationConsumer.accept("mismatch between entity path (" + entity.getPath() + ") and package (" + pkg + ") and name (" + name + ") properties");
@@ -189,7 +189,7 @@ public class EntityValidator
                 {
                     Path relativePath = root.relativize(entry);
                     String relativePathString = relativePath.toString();
-                    String entityPath = relativePathString.substring(0, relativePathString.length() - ENTITY_EXTENSION.length()).replace(relativePath.getFileSystem().getSeparator(), "::");
+                    String entityPath = relativePathString.substring(0, relativePathString.length() - ENTITY_EXTENSION.length()).replace(relativePath.getFileSystem().getSeparator(), EntityPaths.PACKAGE_SEPARATOR);
                     String violationPrefix = "Entity " + entityPath + " - ";
                     Entity entity;
                     try (InputStream stream = Files.newInputStream(entry))
