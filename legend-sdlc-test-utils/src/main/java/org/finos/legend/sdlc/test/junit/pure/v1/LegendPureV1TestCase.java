@@ -44,6 +44,7 @@ import org.finos.legend.pure.generated.Root_meta_pure_runtime_Runtime_Impl;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.mapping.Mapping;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.LambdaFunction;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -235,7 +236,7 @@ public abstract class LegendPureV1TestCase<T extends PackageableElement> extends
 
         return (path.length() == (element._package.length() + element.name.length() + 2)) &&
                 path.startsWith(element._package) &&
-                path.startsWith("::", element._package.length()) &&
+                path.startsWith(EntityPaths.PACKAGE_SEPARATOR, element._package.length()) &&
                 path.endsWith(element.name);
     }
 

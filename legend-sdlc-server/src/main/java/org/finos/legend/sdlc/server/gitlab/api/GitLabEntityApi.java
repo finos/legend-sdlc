@@ -513,7 +513,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             {
                 Object pkg = content.get("package");
                 Object name = content.get("name");
-                if (!(pkg instanceof String) || !(name instanceof String) || !path.equals(pkg + "::" + name))
+                if (!(pkg instanceof String) || !(name instanceof String) || !path.equals(pkg + EntityPaths.PACKAGE_SEPARATOR + name))
                 {
                     StringBuilder builder = new StringBuilder("Entity: ").append(path).append("; mismatch between entity path and package (");
                     if (pkg instanceof String)
@@ -840,7 +840,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         {
             Object pkg = content.get("package");
             Object name = content.get("name");
-            if (!(pkg instanceof String) || !(name instanceof String) || !path.equals(pkg + "::" + name))
+            if (!(pkg instanceof String) || !(name instanceof String) || !path.equals(pkg + EntityPaths.PACKAGE_SEPARATOR + name))
             {
                 StringBuilder builder = new StringBuilder("Mismatch between entity path (\"").append(path).append("\") and package (");
                 if (pkg instanceof String)

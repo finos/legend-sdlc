@@ -42,6 +42,7 @@ import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.E
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -182,7 +183,7 @@ public class TestServiceExecutionClassGenerator
                 ServiceExecutionClassGenerator.GeneratedJavaClass generatedEnumJavaClass = ServiceParamEnumClassGenerator.newGenerator(packagePrefix, enumProperty).generate();
                 generatedEnumClasses.add(generatedEnumJavaClass);
                 StringBuilder builder = new StringBuilder();
-                ArrayAdapter.adapt(enumProperty.getEnumClass().split("::")).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, "/");
+                ArrayAdapter.adapt(enumProperty.getEnumClass().split(EntityPaths.PACKAGE_SEPARATOR)).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, "/");
                 String path = builder.toString();
                 Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/" + path + ".generated.java"), generatedEnumJavaClass.getCode());
                 try
@@ -195,9 +196,9 @@ public class TestServiceExecutionClassGenerator
                 }
             });
         }
-        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace("::", "/").concat(".json"), enumParameters);
+        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace(EntityPaths.PACKAGE_SEPARATOR, "/").concat(".json"), enumParameters);
         ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass = generator.generate();
-        String expectedClassName = ((packagePrefix == null) ? "" : (packagePrefix + ".")) + servicePath.replace("::", ".");
+        String expectedClassName = ((packagePrefix == null) ? "" : (packagePrefix + ".")) + servicePath.replace(EntityPaths.PACKAGE_SEPARATOR, ".");
         Assert.assertEquals(expectedClassName, generatedJavaClass.getName());
         // Uncomment to update generated code
         // org.apache.commons.io.FileUtils.writeStringToFile(new java.io.File("src/test/resources/generation/service/" + service.name + ".generated.java"), generatedJavaClass.getCode(), StandardCharsets.UTF_8);

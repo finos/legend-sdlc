@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.serialization;
 
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -44,7 +45,7 @@ abstract class TestEntityLoader
         EntitySerializer entitySerializer = EntitySerializers.getDefaultJsonSerializer();
         for (Entity entity : this.testEntities)
         {
-            String relativeFilePath = "entities/" + entity.getPath().replaceAll("::", "/") + ".json";
+            String relativeFilePath = "entities/" + entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "/") + ".json";
             byte[] fileContent = entitySerializer.serializeToBytes(entity);
             filesByPath.put(relativeFilePath, fileContent);
         }

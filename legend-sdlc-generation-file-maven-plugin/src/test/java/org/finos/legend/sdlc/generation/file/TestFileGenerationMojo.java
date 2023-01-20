@@ -28,6 +28,7 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -450,7 +451,7 @@ public class TestFileGenerationMojo
 
     private void writeEntityToDirectory(Path directory, Entity entity)
     {
-        Path entityFilePath = directory.resolve("entities").resolve(entity.getPath().replace("::", "/") + ".json");
+        Path entityFilePath = directory.resolve("entities").resolve(entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "/") + ".json");
         try
         {
             Files.createDirectories(entityFilePath.getParent());

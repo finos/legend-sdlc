@@ -18,6 +18,7 @@ import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 
 import java.net.URISyntaxException;
@@ -45,7 +46,7 @@ class EntityTransformationTestTools
         int lastColon = newPath.lastIndexOf(':');
         Map<String, Object> newContent = new HashMap<>(entity.getContent().size());
         entity.getContent().forEach((k, v) -> newContent.put(k, transformValue(v, pathTransform)));
-        newContent.put("package", (lastColon == -1) ? "::" : newPath.substring(0, lastColon - 1));
+        newContent.put("package", (lastColon == -1) ? EntityPaths.PACKAGE_SEPARATOR : newPath.substring(0, lastColon - 1));
         newContent.put("name", (lastColon == -1) ? newPath : newPath.substring(lastColon + 1));
         return Entity.newEntity(newPath, entity.getClassifierPath(), newContent);
     }
@@ -72,10 +73,10 @@ class EntityTransformationTestTools
             map.forEach((k, v) -> newMap.put(k, transformValue(v, pathTransform)));
             if (map.containsKey("package") && map.containsKey("name"))
             {
-                String oldPath = map.get("package") + "::" + map.get("name");
+                String oldPath = map.get("package") + EntityPaths.PACKAGE_SEPARATOR + map.get("name");
                 String newPath = pathTransform.apply(oldPath);
                 int lastColon = newPath.lastIndexOf(':');
-                newMap.put("package", (lastColon == -1) ? "::" : newPath.substring(0, lastColon - 1));
+                newMap.put("package", (lastColon == -1) ? EntityPaths.PACKAGE_SEPARATOR : newPath.substring(0, lastColon - 1));
                 newMap.put("name", newPath.substring(lastColon + 1));
             }
             return newMap;

@@ -17,12 +17,13 @@ package org.finos.legend.sdlc.server.inmemory.domain.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
-import javax.inject.Inject;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryEntity implements Entity
@@ -89,7 +90,7 @@ public class InMemoryEntity implements Entity
         content.put("properties", (properties == null) ? Collections.emptyList() : properties);
         content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList("meta::pure::metamodel::type::Any") : superTypes);
         return new InMemoryEntity(
-                pkg + "::" + name,
+                pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Class",
                 content
         );

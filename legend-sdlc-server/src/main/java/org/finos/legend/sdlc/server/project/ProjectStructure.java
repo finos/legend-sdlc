@@ -54,6 +54,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceA
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,8 +93,6 @@ public abstract class ProjectStructure
     private static final Pattern STRICT_VERSION_ID_PATTERN = Pattern.compile("((0|([1-9]\\d*+))\\.){2}(0|([1-9]\\d*+))");
 
     public static final String PROJECT_CONFIG_PATH = "/project.json";
-
-    private static final String PACKAGE_SEPARATOR = "::";
 
     private static final Set<ArtifactType> FORBIDDEN_ARTIFACT_GENERATION_TYPES = Collections.unmodifiableSet(EnumSet.of(ArtifactType.entities, ArtifactType.versioned_entities, ArtifactType.service_execution));
 
@@ -699,15 +698,7 @@ public abstract class ProjectStructure
 
     private static void appendPackageablePathAsFilePath(StringBuilder builder, String packageablePath)
     {
-        int current = 0;
-        int next = packageablePath.indexOf(PACKAGE_SEPARATOR);
-        while (next != -1)
-        {
-            builder.append('/').append(packageablePath, current, next);
-            current = next + 2;
-            next = packageablePath.indexOf(PACKAGE_SEPARATOR, current);
-        }
-        builder.append('/').append(packageablePath, current, packageablePath.length());
+        EntityPaths.forEachPathElement(packageablePath, elt -> builder.append('/').append(elt));
     }
 
     private static void appendFilePathAsPackageablePath(StringBuilder builder, String filePath, int start, int end)
@@ -716,7 +707,7 @@ public abstract class ProjectStructure
         int next = filePath.indexOf('/', current);
         while ((next != -1) && (next < end))
         {
-            builder.append(filePath, current, next).append(PACKAGE_SEPARATOR);
+            builder.append(filePath, current, next).append(EntityPaths.PACKAGE_SEPARATOR);
             current = next + 1;
             next = filePath.indexOf('/', current);
         }

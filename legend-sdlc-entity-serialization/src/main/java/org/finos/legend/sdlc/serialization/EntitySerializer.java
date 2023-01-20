@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.serialization;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
@@ -142,7 +143,7 @@ public interface EntitySerializer
      */
     default Path filePathForEntity(Entity entity, Path rootDirectory, String extension)
     {
-        String relativePath = entity.getPath().replace("::", rootDirectory.getFileSystem().getSeparator()) + ((extension == null) ? "" : ("." + extension));
+        String relativePath = entity.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, rootDirectory.getFileSystem().getSeparator()) + ((extension == null) ? "" : ("." + extension));
         return rootDirectory.resolve(relativePath);
     }
 

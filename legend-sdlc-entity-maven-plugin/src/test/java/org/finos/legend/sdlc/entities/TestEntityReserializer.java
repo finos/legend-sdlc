@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Rule;
 import org.junit.Test;
@@ -85,7 +86,7 @@ public class TestEntityReserializer
         Assert.assertTrue(Files.isDirectory(sourceDir));
         Assert.assertTrue(Files.isDirectory(targetDir));
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + targetDir.getFileSystem().getSeparator() + p.replace("::", targetDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + targetDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, targetDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 targetDir);
 
         Map<String, Entity> actualEntities = TestHelper.loadEntities(targetDir);
@@ -136,7 +137,7 @@ public class TestEntityReserializer
         Assert.assertTrue(Files.isDirectory(sourceDir));
         Assert.assertTrue(Files.isDirectory(targetDir));
         TestHelper.assertDirectoryTreeFilePaths(
-                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + targetDir.getFileSystem().getSeparator() + p.replace("::", targetDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + targetDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, targetDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 targetDir);
 
         Map<String, Entity> actualEntities = TestHelper.loadEntities(targetDir);

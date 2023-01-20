@@ -28,6 +28,7 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
@@ -40,12 +41,11 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
@@ -251,20 +251,13 @@ public class ServicesGenerationMojo extends AbstractMojo
     private static class ResolvedServicesSpecification
     {
         private final Set<String> servicePaths;
-        private final List<String> packages;
+        private final RichIterable<String> packages;
 
         private ResolvedServicesSpecification(Set<String> servicePaths, Set<String> packages)
         {
             this.servicePaths = servicePaths;
-            if (packages == null)
-            {
-                this.packages = null;
-            }
-            else
-            {
-                this.packages = new ArrayList<>(packages);
-                this.packages.sort(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
-            }
+            this.packages = (packages == null) ? null : Iterate.collect(packages, p -> p + EntityPaths.PACKAGE_SEPARATOR, Lists.mutable.ofInitialCapacity(packages.size()))
+                    .sortThis(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
         }
 
         boolean matches(String servicePath)
@@ -284,7 +277,7 @@ public class ServicesGenerationMojo extends AbstractMojo
 
         private boolean inSomePackage(String servicePath)
         {
-            return this.packages.stream().anyMatch(pkg -> servicePath.startsWith(pkg) && servicePath.startsWith("::", pkg.length()));
+            return this.packages.anySatisfy(servicePath::startsWith);
         }
 
         boolean notMatches(String servicePath)

@@ -28,6 +28,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
 import java.io.IOException;
@@ -287,7 +288,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
                 Object name = map.get("name");
                 if (name instanceof String)
                 {
-                    String path = pkg + "::" + name;
+                    String path = pkg + EntityPaths.PACKAGE_SEPARATOR + name;
                     pathConsumer.accept(path);
                 }
             }
@@ -304,10 +305,10 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         StringBuilder builder = new StringBuilder(groupId.length() + artifactId.length() + ((versionAlias == null) ? version : versionAlias).length() + 16);
 
         // groupId
-        appendGroupIdPackage(builder, groupId).append("::");
+        appendGroupIdPackage(builder, groupId).append(EntityPaths.PACKAGE_SEPARATOR);
 
         // artifactId
-        appendArtifactIdPackage(builder, artifactId).append("::");
+        appendArtifactIdPackage(builder, artifactId).append(EntityPaths.PACKAGE_SEPARATOR);
 
         // version/versionAlias
         if (versionAlias == null)
@@ -318,7 +319,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         {
             builder.append(versionAlias);
         }
-        builder.append("::");
+        builder.append(EntityPaths.PACKAGE_SEPARATOR);
 
         return builder.toString();
     }
@@ -328,7 +329,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
         int start = 0;
         for (int end = groupId.indexOf('.'); end != -1; start = end + 1, end = groupId.indexOf('.', start))
         {
-            builder.append(groupId, start, end).append("::");
+            builder.append(groupId, start, end).append(EntityPaths.PACKAGE_SEPARATOR);
         }
         return builder.append(groupId, start, groupId.length());
     }

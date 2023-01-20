@@ -40,6 +40,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.EnumVa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -200,7 +201,7 @@ public class ServiceExecutionGenerator
         {
             appendReplacingDelimiter(builder, this.packagePrefix, ".", separator).append(separator);
         }
-        return appendReplacingDelimiter(builder, this.service._package, "::", separator).append(separator).append(this.service.name).append(".json").toString();
+        return appendReplacingDelimiter(builder, this.service._package, EntityPaths.PACKAGE_SEPARATOR, separator).append(separator).append(this.service.name).append(".json").toString();
     }
 
     private String getJavaSourceFileRelativePath(String javaClassName)
@@ -217,7 +218,7 @@ public class ServiceExecutionGenerator
         {
             appendReplacingDelimiter(builder, this.packagePrefix, ".", "_").append('_');
         }
-        appendReplacingDelimiter(builder, this.service._package, "::", "_").append('_').append(this.service.name);
+        appendReplacingDelimiter(builder, this.service._package, EntityPaths.PACKAGE_SEPARATOR, "_").append('_').append(this.service.name);
         return JavaSourceHelper.toValidJavaIdentifier(builder.toString(), '$', true);
     }
 

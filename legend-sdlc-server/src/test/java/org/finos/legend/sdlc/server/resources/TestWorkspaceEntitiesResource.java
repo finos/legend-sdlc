@@ -17,10 +17,11 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -72,8 +73,8 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         Assert.assertEquals(2, entities.size());
         Entity entityOne = findEntity(entities, entityOneName, entityPackageName);
         Entity entityTwo = findEntity(entities, entityTwoName, entityPackageName);
-        Assert.assertEquals(entityPackageName + "::" + entityOneName, entityOne.getPath());
-        Assert.assertEquals(entityPackageName + "::" + entityTwoName, entityTwo.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityOneName, entityOne.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityTwoName, entityTwo.getPath());
     }
 
     @Test
@@ -117,8 +118,8 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         Assert.assertEquals(2, entities.size());
         Entity entityOne = findEntity(entities, entityOneName, entityPackageName);
         Entity entityTwo = findEntity(entities, entityTwoName, entityPackageName);
-        Assert.assertEquals(entityPackageName + "::" + entityOneName, entityOne.getPath());
-        Assert.assertEquals(entityPackageName + "::" + entityTwoName, entityTwo.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityOneName, entityOne.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityTwoName, entityTwo.getPath());
     }
 
     @Test
@@ -158,7 +159,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         });
 
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entityPackageName + "::" + entityOneName, entity.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityOneName, entity.getPath());
         Assert.assertEquals(entityPackageName, entity.getContent().get("package"));
         Assert.assertEquals(entityOneName, entity.getContent().get("name"));
 
@@ -216,7 +217,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         });
 
         Assert.assertNotNull(entity);
-        Assert.assertEquals(entityPackageName + "::" + entityOneName, entity.getPath());
+        Assert.assertEquals(entityPackageName + EntityPaths.PACKAGE_SEPARATOR + entityOneName, entity.getPath());
         Assert.assertEquals(entityPackageName, entity.getContent().get("package"));
         Assert.assertEquals(entityOneName, entity.getContent().get("name"));
 

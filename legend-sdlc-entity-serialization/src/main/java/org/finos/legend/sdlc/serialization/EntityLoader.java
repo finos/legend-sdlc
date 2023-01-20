@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.serialization;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -250,7 +251,7 @@ public class EntityLoader implements AutoCloseable
 
     private static String packagePathToDirectoryPath(String packagePath)
     {
-        if ("::".equals(packagePath))
+        if (EntityPaths.PACKAGE_SEPARATOR.equals(packagePath))
         {
             // special case for root package
             return ENTITIES_DIRECTORY;
