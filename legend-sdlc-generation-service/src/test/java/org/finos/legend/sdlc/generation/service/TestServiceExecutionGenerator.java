@@ -191,7 +191,7 @@ public class TestServiceExecutionGenerator
         String packagePrefix = "org.finos";
         Service service = getService("service::RelationalServiceWithEnumParams");
         ClassLoader classLoader = generateAndCompile(packagePrefix, service);
-        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"));
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
     }
 
     @Test
@@ -210,20 +210,21 @@ public class TestServiceExecutionGenerator
             ServiceRunner multiParamServiceRunner = findServiceRunnerByPath("service::RelationalServiceWithEnumParams");
             assertServiceVariables(multiParamServiceRunner,
                     new ServiceVariable("cou", countryClass, new Multiplicity(0, 1)),
-                    new ServiceVariable("couName", countryNameClass, new Multiplicity(1, 1))
+                    new ServiceVariable("couName", countryNameClass, new Multiplicity(1, 1)),
+                    new ServiceVariable("name", String.class, new Multiplicity(1, 1))
             );
             IllegalArgumentException e1 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance()));
-            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 0", e1.getMessage());
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 3, Passed parameter size: 0", e1.getMessage());
 
-            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryValues[1], countryValues[2]))));
-            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 2, Passed parameter size: 3", e2.getMessage());
+            IllegalArgumentException e2 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryValues[1]))));
+            Assert.assertEquals("Unexpected number of parameters. Expected parameter size: 3, Passed parameter size: 2", e2.getMessage());
 
-            List<Object> args1 = Arrays.asList(countryValues[0], "1");
+            List<Object> args1 = Arrays.asList(countryValues[0], "1", "John");
             IllegalArgumentException e3 = Assert.assertThrows(IllegalArgumentException.class, () -> multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(args1)));
             Assert.assertEquals("Invalid provided parameter(s): [Invalid enum value 1 for model::enum::Country, valid enum values: [America, Europe, India]]", e3.getMessage());
 
-            JsonNode expected = OBJECT_MAPPER.readTree("{\"columns\":[{\"name\":\"First Name\",\"type\":\"String\"}],\"rows\":[{\"values\":[\"John\"]}]}");
-            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryNameValues[0])).withSerializationFormat(SerializationFormat.PURE))));
+            JsonNode expected = OBJECT_MAPPER.readTree("{\"columns\":[{\"name\":\"Last Name\",\"type\":\"String\"},{\"name\":\"Country\",\"type\":\"String\"}],\"rows\":[{\"values\":[\"Johnson\",\"America\"]},{\"values\":[\"Peterson\",\"America\"]}]}");
+            Assert.assertEquals(expected, OBJECT_MAPPER.readTree(multiParamServiceRunner.run(ServiceRunnerInput.newInstance().withArgs(Arrays.asList(countryValues[0], countryNameValues[0], "John")).withSerializationFormat(SerializationFormat.PURE))));
 
         }
     }

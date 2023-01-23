@@ -18,21 +18,21 @@
                 "parameters": [
                   {
                     "_type": "func",
-                    "function": "filter",
+                    "function": "getAll",
                     "parameters": [
                       {
-                        "_type": "func",
-                        "function": "getAll",
-                        "parameters": [
-                          {
-                            "_type": "packageableElementPtr",
-                            "fullPath": "model::SourcePerson"
-                          }
-                        ]
-                      },
+                        "_type": "packageableElementPtr",
+                        "fullPath": "model::SourcePerson"
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "lambda",
+                    "body": [
                       {
-                        "_type": "lambda",
-                        "body": [
+                        "_type": "func",
+                        "function": "and",
+                        "parameters": [
                           {
                             "_type": "func",
                             "function": "equal",
@@ -45,44 +45,33 @@
                                     "name": "p"
                                   }
                                 ],
-                                "property": "country"
+                                "property": "countryName"
                               },
                               {
                                 "_type": "var",
-                                "name": "cou"
+                                "name": "couName"
                               }
                             ]
-                          }
-                        ],
-                        "parameters": [
-                          {
-                            "_type": "var",
-                            "name": "p"
-                          }
-                        ]
-                      }
-                    ]
-                  },
-                  {
-                    "_type": "lambda",
-                    "body": [
-                      {
-                        "_type": "func",
-                        "function": "equal",
-                        "parameters": [
-                          {
-                            "_type": "property",
-                            "parameters": [
-                              {
-                                "_type": "var",
-                                "name": "p"
-                              }
-                            ],
-                            "property": "countryName"
                           },
                           {
-                            "_type": "var",
-                            "name": "couName"
+                            "_type": "func",
+                            "function": "equal",
+                            "parameters": [
+                              {
+                                "_type": "property",
+                                "parameters": [
+                                  {
+                                    "_type": "var",
+                                    "name": "p"
+                                  }
+                                ],
+                                "property": "firstName"
+                              },
+                              {
+                                "_type": "var",
+                                "name": "name"
+                              }
+                            ]
                           }
                         ]
                       }
@@ -99,8 +88,8 @@
               {
                 "_type": "collection",
                 "multiplicity": {
-                  "lowerBound": 1,
-                  "upperBound": 1
+                  "lowerBound": 2,
+                  "upperBound": 2
                 },
                 "values": [
                   {
@@ -114,7 +103,80 @@
                             "name": "x"
                           }
                         ],
-                        "property": "firstName"
+                        "property": "lastName"
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "func",
+                        "function": "if",
+                        "parameters": [
+                          {
+                            "_type": "func",
+                            "function": "and",
+                            "parameters": [
+                              {
+                                "_type": "func",
+                                "function": "isNotEmpty",
+                                "parameters": [
+                                  {
+                                    "_type": "var",
+                                    "name": "cou"
+                                  }
+                                ]
+                              },
+                              {
+                                "_type": "func",
+                                "function": "equal",
+                                "parameters": [
+                                  {
+                                    "_type": "var",
+                                    "name": "cou"
+                                  },
+                                  {
+                                    "_type": "property",
+                                    "parameters": [
+                                      {
+                                        "_type": "packageableElementPtr",
+                                        "fullPath": "model::Country"
+                                      }
+                                    ],
+                                    "property": "AMEA"
+                                  }
+                                ]
+                              }
+                            ]
+                          },
+                          {
+                            "_type": "lambda",
+                            "body": [
+                              {
+                                "_type": "string",
+                                "value": "America"
+                              }
+                            ],
+                            "parameters": []
+                          },
+                          {
+                            "_type": "lambda",
+                            "body": [
+                              {
+                                "_type": "string",
+                                "value": "India"
+                              }
+                            ],
+                            "parameters": []
+                          }
+                        ]
                       }
                     ],
                     "parameters": [
@@ -129,13 +191,17 @@
               {
                 "_type": "collection",
                 "multiplicity": {
-                  "lowerBound": 1,
-                  "upperBound": 1
+                  "lowerBound": 2,
+                  "upperBound": 2
                 },
                 "values": [
                   {
                     "_type": "string",
-                    "value": "First Name"
+                    "value": "Last Name"
+                  },
+                  {
+                    "_type": "string",
+                    "value": "Country"
                   }
                 ]
               }
@@ -160,6 +226,15 @@
               "upperBound": 1
             },
             "name": "couName"
+          },
+          {
+            "_type": "var",
+            "class": "String",
+            "multiplicity": {
+              "lowerBound": 1,
+              "upperBound": 1
+            },
+            "name": "name"
           }
         ]
       },
@@ -182,7 +257,7 @@
                   "databaseType": "H2",
                   "datasourceSpecification": {
                     "_type": "h2Local",
-                    "testDataSetupCsv": "MAIN_SCHEMA\nPERSON_TABLE\nID,FIRST_NAME,LAST_NAME,AGE,COUNTRY,COUNTRY_NAME\n1,Peter,Smith,22,AMEA,Europe\n2,John,Johnson,23,AMEA,America\n"
+                    "testDataSetupCsv": "MAIN_SCHEMA\nPERSON_TABLE\nID,FIRST_NAME,LAST_NAME,AGE,COUNTRY,COUNTRY_NAME\n1,Peter,Smith,22,AMEA,Europe\n2,John,Johnson,23,AMEA,America\n3,John,Peterson,26,AMEA,America\n"
                   },
                   "element": "store::MyDatabase",
                   "type": "H2"
@@ -203,7 +278,7 @@
     "name": "RelationalServiceWithEnumParams",
     "owners": [],
     "package": "service",
-    "pattern": "/relationalService/{cou}/{couName}",
+    "pattern": "/relationalService/{couName}/{name}",
     "test": {
       "_type": "singleExecutionTest",
       "asserts": [],
