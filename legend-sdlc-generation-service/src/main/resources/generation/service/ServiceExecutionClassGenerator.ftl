@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-package ${classPackage};
+package ${packageName};
 
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
@@ -23,7 +23,7 @@ import org.finos.legend.engine.plan.execution.stores.StoreExecutorConfiguration;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 
 ${imports?map(import->"import ${import};")?join("\n", "", "\n")}
-public class ${service.name} extends AbstractServicePlanExecutor
+public class ${className} extends AbstractServicePlanExecutor
 {
     public ${service.name}()
     {

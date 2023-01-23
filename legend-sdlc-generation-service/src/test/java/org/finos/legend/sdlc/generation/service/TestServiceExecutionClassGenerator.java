@@ -19,7 +19,8 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
+import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.tuple.Pair;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServicePlanExecutor;
@@ -33,12 +34,15 @@ import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
+import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryClassLoader;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
-import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -173,31 +177,28 @@ public class TestServiceExecutionClassGenerator
         }
         ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
         ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
-        Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
-        ServiceExecutionGenerator.getEnumParameters(plan, enumParameters);
-        List<ServiceExecutionClassGenerator.GeneratedJavaClass> generatedEnumClasses = Lists.mutable.empty();
-        if (enumParameters != null && enumParameters.size() >= 1)
+        MutableList<GeneratedJavaClass> generatedEnumClasses = Lists.mutable.empty();
+        MutableMap<String, Enumeration<? extends Enum>> enumerations = Maps.mutable.empty();
+        ((PureExecution) service.execution).func.parameters.forEach(p ->
         {
-            enumParameters.forEach((varName, enumProperty) ->
+            if (!PrimitiveUtilities.isPrimitiveTypeName(p._class))
             {
-                ServiceExecutionClassGenerator.GeneratedJavaClass generatedEnumJavaClass = ServiceParamEnumClassGenerator.newGenerator(packagePrefix, enumProperty).generate();
-                generatedEnumClasses.add(generatedEnumJavaClass);
-                StringBuilder builder = new StringBuilder();
-                ArrayAdapter.adapt(enumProperty.getEnumClass().split(EntityPaths.PACKAGE_SEPARATOR)).asLazy().collect(JavaSourceHelper::toValidJavaIdentifier).appendString(builder, "/");
-                String path = builder.toString();
-                Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/" + path + ".generated.java"), generatedEnumJavaClass.getCode());
-                try
-                {
-                    compileGeneratedJavaClass(generatedEnumJavaClass, null);
-                }
-                catch (ClassNotFoundException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            });
+                enumerations.getIfAbsentPut(p._class, () -> PURE_MODEL.getEnumeration(p._class, null));
+            }
+        });
+        for (Pair<String, Enumeration<? extends Enum>> pair : enumerations.keyValuesView())
+        {
+            Enumeration<? extends Enum> enumeration = pair.getTwo();
+            GeneratedJavaClass generatedEnumJavaClass = EnumerationClassGenerator.newGenerator(packagePrefix, enumeration).generate();
+            generatedEnumClasses.add(generatedEnumJavaClass);
+            StringBuilder builder = new StringBuilder();
+            org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.forEachUserPathElement(pair.getOne(), name -> ((builder.length() == 0) ? builder : builder.append('/')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
+            String path = builder.toString();
+            Assert.assertEquals("Generated code matches expected formatting?", loadExpectedGeneratedJavaFile("generation/" + path + ".generated.java"), generatedEnumJavaClass.getCode());
+            compileGeneratedJavaClass(generatedEnumJavaClass, null);
         }
-        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace(EntityPaths.PACKAGE_SEPARATOR, "/").concat(".json"), enumParameters);
-        ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass = generator.generate();
+        ServiceExecutionClassGenerator generator = ServiceExecutionClassGenerator.newGenerator(service, packagePrefix, "org/finos/legend/sdlc/generation/service/entities/" + servicePath.replace(EntityPaths.PACKAGE_SEPARATOR, "/").concat(".json"));
+        GeneratedJavaClass generatedJavaClass = generator.generate();
         String expectedClassName = ((packagePrefix == null) ? "" : (packagePrefix + ".")) + servicePath.replace(EntityPaths.PACKAGE_SEPARATOR, ".");
         Assert.assertEquals(expectedClassName, generatedJavaClass.getName());
         // Uncomment to update generated code
@@ -237,7 +238,7 @@ public class TestServiceExecutionClassGenerator
         return builder.toString();
     }
 
-    private Class<?> compileGeneratedJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass, List<ServiceExecutionClassGenerator.GeneratedJavaClass> generatedEnumClasses) throws ClassNotFoundException
+    private Class<?> compileGeneratedJavaClass(GeneratedJavaClass generatedJavaClass, List<GeneratedJavaClass> generatedEnumClasses) throws ClassNotFoundException
     {
 //        System.out.format("%s%n-------------------------%n%s%n", generatedJavaClass.getName(), generatedJavaClass.getCode());
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -287,9 +288,9 @@ public class TestServiceExecutionClassGenerator
 
     private static class GeneratedJavaFileObject extends SimpleJavaFileObject
     {
-        private final ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass;
+        private final GeneratedJavaClass generatedJavaClass;
 
-        private GeneratedJavaFileObject(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass)
+        private GeneratedJavaFileObject(GeneratedJavaClass generatedJavaClass)
         {
             super(URI.create("string:///" + generatedJavaClass.getName().replace('.', '/') + Kind.SOURCE.extension), Kind.SOURCE);
             this.generatedJavaClass = generatedJavaClass;
