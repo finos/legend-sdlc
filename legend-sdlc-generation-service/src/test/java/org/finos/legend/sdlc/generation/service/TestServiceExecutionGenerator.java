@@ -18,7 +18,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.github.classgraph.ClassGraph;
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -40,11 +39,12 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
+import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
-import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -388,17 +388,18 @@ public class TestServiceExecutionGenerator
     {
         ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
         // Generate
-        Set<String> enumClases = Sets.mutable.empty();
+        Set<String> enumClasses = Sets.mutable.empty();
         for (Service service : services)
         {
             ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, extensions, LegendPlanTransformers.transformers, "vX_X_X").generate();
             ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
-            Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
-            ServiceExecutionGenerator.getEnumParameters(plan, enumParameters);
-            if (enumParameters.size() >= 1)
+            ((PureExecution) service.execution).func.parameters.forEach(p ->
             {
-                enumParameters.forEach((varName, enumProperty) -> enumClases.add(enumProperty.enumClass));
-            }
+                if (!PrimitiveUtilities.isPrimitiveTypeName(p._class))
+                {
+                    enumClasses.add(org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.getUserPathForPackageableElement(PURE_MODEL.getEnumeration(p._class, null)));
+                }
+            });
         }
 
         // Check generated files
@@ -412,7 +413,7 @@ public class TestServiceExecutionGenerator
 
         // Check class files generated
         Set<String> expectedJavaSources = services.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java").collect(Collectors.toSet());
-        enumClases.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + Arrays.stream(v.split(EntityPaths.PACKAGE_SEPARATOR)).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining(this.generatedSourcesDirectory.getFileSystem().getSeparator())) + ".java"));
+        enumClasses.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + Arrays.stream(v.split(EntityPaths.PACKAGE_SEPARATOR)).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining(this.generatedSourcesDirectory.getFileSystem().getSeparator())) + ".java"));
         Set<String> actualJavaSources = Files.walk(this.generatedSourcesDirectory, Integer.MAX_VALUE).map(this.generatedSourcesDirectory::relativize).map(Path::toString).filter(s -> s.endsWith(".java")).collect(Collectors.toSet());
         if (!actualJavaSources.containsAll(expectedJavaSources))
         {

@@ -22,9 +22,10 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.impl.utility.ListIterate;
+import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
@@ -33,13 +34,13 @@ import org.finos.legend.engine.plan.platform.PlanPlatform;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.SingleExecutionPlan;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.CompositeExecutionPlan;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.FunctionParametersValidationNode;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.nodes.EnumValidationContext;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
-import org.finos.legend.sdlc.generation.service.ServiceParamEnumClassGenerator.EnumParameter;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
+import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
@@ -48,7 +49,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.Map;
 import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionGenerator
@@ -88,6 +88,9 @@ public class ServiceExecutionGenerator
             throw new RuntimeException("Invalid service path (missing package): " + this.service.name);
         }
 
+        // Validate service parameter types and collect enumerations to generate
+        ListIterable<Enumeration<? extends Enum>> enumerations = validateServiceParameterTypes();
+
         // Generate plan
         ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(this.service, null, this.pureModel, this.clientVersion, PlanPlatform.JAVA, getPlanId(), this.extensions,  this.transformers);
 
@@ -104,26 +107,14 @@ public class ServiceExecutionGenerator
         }
 
         // Generate Enum Classes if service takes enums as parameters
-        // Map holds the enum parameter name as key, and (class with package, valid enum values) as value
-        Map<String, EnumParameter> enumParameters = Maps.mutable.empty();
-        getEnumParameters(plan, enumParameters);
-        if (enumParameters != null && enumParameters.size() >= 1)
+        for (Enumeration<? extends Enum> enumeration : enumerations)
         {
-            enumParameters.forEach((varName, enumProperty) ->
-            {
-                try
-                {
-                    writeJavaClass(ServiceParamEnumClassGenerator.newGenerator(this.packagePrefix, enumProperty).generate());
-                }
-                catch (IOException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            });
+            GeneratedJavaClass generatedJavaClass = EnumerationClassGenerator.newGenerator(this.packagePrefix, enumeration).generate();
+            writeJavaClass(generatedJavaClass);
         }
 
         // Generate execution plan for service
-        ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.service, this.packagePrefix, getExecutionPlanResourceName(), enumParameters).generate();
+        GeneratedJavaClass generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.service, this.packagePrefix, getExecutionPlanResourceName()).generate();
         writeJavaClass(generatedJavaClass);
 
         // Append the class reference to ServiceRunner provider-configuration file
@@ -136,28 +127,37 @@ public class ServiceExecutionGenerator
         }
     }
 
-    static void getEnumParameters(ExecutionPlan plan, Map<String, EnumParameter> enumParameters)
+    private ListIterable<Enumeration<? extends Enum>> validateServiceParameterTypes()
     {
-        FunctionParametersValidationNode parameterValidationNode = null;
-        if (plan instanceof SingleExecutionPlan)
+        if (!(this.service.execution instanceof PureExecution))
         {
-            parameterValidationNode = (FunctionParametersValidationNode) ((SingleExecutionPlan) plan).rootExecutionNode.childNodes().stream().filter(FunctionParametersValidationNode.class::isInstance).findFirst().orElse(null);
-        }
-        else if (plan instanceof CompositeExecutionPlan)
-        {
-            parameterValidationNode = (FunctionParametersValidationNode) ((CompositeExecutionPlan) plan).executionPlans.get(((CompositeExecutionPlan) plan).executionKeys.get(0)).rootExecutionNode.childNodes().stream().filter(FunctionParametersValidationNode.class::isInstance).findFirst().orElse(null);
+            throw new RuntimeException("Only services with PureExecution are supported");
         }
 
-        MutableList<EnumValidationContext> enumValidationContexts = (parameterValidationNode != null && parameterValidationNode.parameterValidationContext != null) ? ListIterate.selectInstancesOf(parameterValidationNode.parameterValidationContext, EnumValidationContext.class) : null;
-
-        if (enumValidationContexts != null)
+        MutableList<Enumeration<? extends Enum>> enumerations = Lists.mutable.empty();
+        MutableSet<String> enumerationPaths = Sets.mutable.empty();
+        ((PureExecution) this.service.execution).func.parameters.forEach(var ->
         {
-            FunctionParametersValidationNode finalParameterValidationNode = parameterValidationNode;
-            enumValidationContexts.forEach(v -> finalParameterValidationNode.functionParameters.stream().filter(p -> p.name.equals(v.varName)).forEach(c -> enumParameters.put(c.name, new EnumParameter(c._class, v.validEnumValues))));
-        }
+            String type = var._class;
+            if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
+            {
+                Enumeration<? extends Enum> enumeration;
+                try
+                {
+                    enumeration = this.pureModel.getEnumeration(type, var.sourceInformation);
+                }
+                catch (EngineException e)
+                {
+                    throw new RuntimeException("Invalid type for parameter '" + var.name + "': " + type, e);
+                }
+                enumerations.add(enumeration);
+                enumerationPaths.add(type);
+            }
+        });
+        return enumerations;
     }
 
-    private void writeJavaClass(ServiceExecutionClassGenerator.GeneratedJavaClass generatedJavaClass) throws IOException
+    private void writeJavaClass(GeneratedJavaClass generatedJavaClass) throws IOException
     {
         Path javaClassPath = this.javaSourceOutputDirectory.resolve(getJavaSourceFileRelativePath(generatedJavaClass.getName()));
         Files.createDirectories(javaClassPath.getParent());
