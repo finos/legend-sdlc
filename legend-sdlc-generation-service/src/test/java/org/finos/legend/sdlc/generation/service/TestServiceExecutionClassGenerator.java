@@ -158,7 +158,7 @@ public class TestServiceExecutionClassGenerator
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::RelationalServiceWithEnumParams");
         ClassLoader classLoader = cls.getClassLoader();
-        assertExecuteMethodsExist(cls, classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"));
+        assertExecuteMethodsExist(cls, classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
     }
 
     @Test
