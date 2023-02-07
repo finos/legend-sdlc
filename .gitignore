@@ -15,3 +15,4 @@ Thumbs.db
 **/surefire-reports-aggregate
 **/dependency-reduced-pom.xml
 /logs
+/.run/
