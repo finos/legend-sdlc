@@ -19,6 +19,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
@@ -28,7 +29,9 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.generation.extension.ArtifactGenerationExtension;
+import org.finos.legend.engine.protocol.pure.v1.model.context.AlloySDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
@@ -65,6 +68,9 @@ public class FileGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File outputDirectory;
+
+    @Parameter(defaultValue = "${project}", readonly = true)
+    private MavenProject mavenProject;
 
     @Override
     public void execute() throws MojoExecutionException
@@ -106,7 +112,7 @@ public class FileGenerationMojo extends AbstractMojo
             throw new MojoExecutionException("Error loading entities from model", e);
         }
         getLog().info("Compiling model");
-        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.build();
+        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.withSDLC(buildSDLCInfo()).build();
         PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
         PureModel pureModel = pureModelWithContextData.getPureModel();
         long modelEnd = System.nanoTime();
@@ -284,6 +290,22 @@ public class FileGenerationMojo extends AbstractMojo
             resolvedElementsByPath = elementFilter.paths;
         }
         return new ResolvedPackageableElementFilter(resolvedElementsByPath, elementFilter.packages);
+    }
+
+    private SDLC buildSDLCInfo()
+    {
+        MavenProject parentProject = mavenProject.getParent();
+        if (parentProject != null)
+        {
+            AlloySDLC sdlcInfo = new AlloySDLC();
+            sdlcInfo.groupId = parentProject.getGroupId();
+            sdlcInfo.artifactId = parentProject.getArtifactId();
+            sdlcInfo.version = parentProject.getVersion();
+
+            return sdlcInfo;
+        }
+
+        return null;
     }
 
 
