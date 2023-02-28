@@ -21,17 +21,18 @@ public class RelationalServiceWithEnumParams extends AbstractServicePlanExecutor
         super("service::RelationalServiceWithEnumParams", "org/finos/legend/sdlc/generation/service/entities/service/RelationalServiceWithEnumParams.json", storeExecutorConfigurations);
     }
 
-    public Result execute(org.finos.model.Country cou, org.finos.model._enum.Country couName)
+    public Result execute(org.finos.model.Country cou, org.finos.model._enum.Country couName, String name)
     {
-        return this.execute(cou, couName, null);
+        return this.execute(cou, couName, name, null);
     }
 
-    public Result execute(org.finos.model.Country cou, org.finos.model._enum.Country couName, StreamProvider streamProvider)
+    public Result execute(org.finos.model.Country cou, org.finos.model._enum.Country couName, String name, StreamProvider streamProvider)
     {
-        return this.newExecutionBuilder(2)
+        return this.newExecutionBuilder(3)
                      .withStreamProvider(streamProvider)
                      .withParameter("cou", cou)
                      .withParameter("couName", couName)
+                     .withParameter("name", name)
                      .execute();
     }
 
@@ -40,7 +41,8 @@ public class RelationalServiceWithEnumParams extends AbstractServicePlanExecutor
     {
         return Lists.mutable.of(
             this.newServiceVariable("cou", org.finos.model.Country.class, 0, 1),
-            this.newServiceVariable("couName", org.finos.model._enum.Country.class, 1, 1)
+            this.newServiceVariable("couName", org.finos.model._enum.Country.class, 1, 1),
+            this.newServiceVariable("name", String.class, 1, 1)
         );
     }
 }

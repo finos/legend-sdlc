@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
-import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
@@ -40,10 +38,12 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.connection.ConnectionVisitor;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
+import org.finos.legend.pure.generated.Root_meta_pure_runtime_Connection;
+import org.finos.legend.pure.generated.Root_meta_pure_runtime_Runtime;
 import org.finos.legend.pure.generated.Root_meta_pure_runtime_Runtime_Impl;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.mapping.Mapping;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.function.LambdaFunction;
-import org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Runtime;
+import org.finos.legend.sdlc.test.junit.LegendSDLCTestCase;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.ByteArrayInputStream;
@@ -51,11 +51,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Consumer;
 
 public abstract class LegendPureV1TestCase<T extends PackageableElement> extends LegendSDLCTestCase
@@ -69,7 +65,7 @@ public abstract class LegendPureV1TestCase<T extends PackageableElement> extends
     protected final RichIterable<? extends Root_meta_pure_extension_Extension> extensions;
     protected final String pureVersion;
 
-    private Runtime runtime;
+    private Root_meta_pure_runtime_Runtime runtime;
 
     protected LegendPureV1TestCase(PureModel pureModel, PureModelContextData pureModelContextData, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion, T entity)
     {
@@ -87,8 +83,8 @@ public abstract class LegendPureV1TestCase<T extends PackageableElement> extends
     protected void doSetUp() throws Exception
     {
         // Initialize runtime
-        Runtime newRuntime = new Root_meta_pure_runtime_Runtime_Impl("");
-        ConnectionVisitor<org.finos.legend.pure.m3.coreinstance.meta.pure.runtime.Connection> connectionVisitor1 = new ConnectionFirstPassBuilder(this.pureModel.getContext());
+        Root_meta_pure_runtime_Runtime newRuntime = new Root_meta_pure_runtime_Runtime_Impl("");
+        ConnectionVisitor<Root_meta_pure_runtime_Connection> connectionVisitor1 = new ConnectionFirstPassBuilder(this.pureModel.getContext());
         setUpTestData(conn -> newRuntime._connectionsAdd(conn.accept(connectionVisitor1)));
         this.runtime = newRuntime;
     }
