@@ -343,7 +343,7 @@
           "startColumn": 7,
           "startLine": 79
         },
-        "storeTestDatas": [
+        "mappingStoreTestDatas": [
           {
             "data": {
               "_type": "reference",
