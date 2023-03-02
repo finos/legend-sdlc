@@ -294,18 +294,14 @@ public class FileGenerationMojo extends AbstractMojo
 
     private SDLC buildSDLCInfo()
     {
-        MavenProject parentProject = mavenProject.getParent();
-        if (parentProject != null)
-        {
-            AlloySDLC sdlcInfo = new AlloySDLC();
-            sdlcInfo.groupId = parentProject.getGroupId();
-            sdlcInfo.artifactId = parentProject.getArtifactId();
-            sdlcInfo.version = parentProject.getVersion();
+        MavenProject projectToInspect = mavenProject.getParent() != null ? mavenProject.getParent() : mavenProject;
 
-            return sdlcInfo;
-        }
+        AlloySDLC sdlcInfo = new AlloySDLC();
+        sdlcInfo.groupId = projectToInspect.getGroupId();
+        sdlcInfo.artifactId = projectToInspect.getArtifactId();
+        sdlcInfo.version = projectToInspect.getVersion();
 
-        return null;
+        return sdlcInfo;
     }
 
 
