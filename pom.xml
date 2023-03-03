@@ -99,7 +99,7 @@
         <apache.maven.version>3.8.6</apache.maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
-        <snakeyaml.version>1.33</snakeyaml.version>
+        <snakeyaml.version>2.0</snakeyaml.version>
         <freemarker.version>2.3.30</freemarker.version>
         <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
     </properties>
