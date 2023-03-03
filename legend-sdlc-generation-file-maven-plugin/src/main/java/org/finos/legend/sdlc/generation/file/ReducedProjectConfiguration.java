@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructure
 import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class ReducedProjectConfiguration implements ProjectConfiguration
+class ReducedProjectConfiguration implements ProjectConfiguration
 {
     private String projectId;
     private String groupId;

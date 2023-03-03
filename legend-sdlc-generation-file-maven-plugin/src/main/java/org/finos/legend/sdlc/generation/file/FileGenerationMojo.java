@@ -315,7 +315,7 @@ public class FileGenerationMojo extends AbstractMojo
         }
         catch (IOException e)
         {
-            getLog().warn("Unable to build SDLC info");
+            getLog().warn("Unable to build SDLC info", e);
         }
 
         return sdlcInfo;
