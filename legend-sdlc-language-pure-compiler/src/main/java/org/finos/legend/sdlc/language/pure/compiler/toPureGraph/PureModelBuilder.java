@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.Protocol;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
@@ -139,6 +140,12 @@ public class PureModelBuilder
     public PureModelBuilder withSDLC(SDLC sdlc)
     {
         this.contextDataBuilder.withSDLC(sdlc);
+        return this;
+    }
+
+    public PureModelBuilder withProtocol(Protocol protocol)
+    {
+        this.contextDataBuilder.withProtocol(protocol);
         return this;
     }
 
