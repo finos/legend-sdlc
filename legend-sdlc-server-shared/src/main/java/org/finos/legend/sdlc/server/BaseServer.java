@@ -35,7 +35,6 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 import org.finos.legend.sdlc.server.tools.StringTools;
-import org.finos.legend.server.pac4j.LegendPac4jBundle;
 import org.finos.legend.server.shared.bundles.ChainFixingFilterHandler;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
@@ -75,7 +74,6 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         // Enable variable substitution with environment variables
         bootstrap.setConfigurationSourceProvider(new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(), new EnvironmentVariableSubstitutor(true)));
 
-        bootstrap.addBundle(new LegendPac4jBundle<>(ServerConfiguration::getPac4jConfiguration));
         bootstrap.addBundle(new DropwizardConfigurationSwaggerBundle());
     }
 

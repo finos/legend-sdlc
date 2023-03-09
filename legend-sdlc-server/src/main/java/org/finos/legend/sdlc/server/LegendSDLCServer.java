@@ -14,13 +14,24 @@
 
 package org.finos.legend.sdlc.server;
 
+import io.dropwizard.setup.Bootstrap;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.config.ServerConfiguration;
+import org.finos.legend.server.pac4j.LegendPac4jBundle;
 
 public class LegendSDLCServer extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
     public LegendSDLCServer(String mode)
     {
         super(mode);
+    }
+
+    @Override
+    public void initialize(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
+    {
+        super.initialize(bootstrap);
+
+        bootstrap.addBundle(new LegendPac4jBundle<>(ServerConfiguration::getPac4jConfiguration));
     }
 
     @Override
