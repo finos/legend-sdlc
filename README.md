@@ -4,7 +4,7 @@
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=legend-sdlc&metric=security_rating&token=69394360757d5e1356312ddfee658a6b205e2c97)](https://sonarcloud.io/dashboard?id=legend-sdlc)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=legend-sdlc&metric=bugs&token=69394360757d5e1356312ddfee658a6b205e2c97)](https://sonarcloud.io/dashboard?id=legend-sdlc)
 
-# legend-sdlc
+# legend-sdlc 
 
 The Legend SDLC Server provides a rich REST API allowing users to safely manage metadata. Most SDLCs are file- and
 text-centric, but the Legend SDLC is model-centric. That is, users interact with model entities rather than with files
