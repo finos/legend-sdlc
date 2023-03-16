@@ -73,6 +73,8 @@ public abstract class MavenProjectStructure extends ProjectStructure
     public static final String MAVEN_MODEL_PATH = "/pom.xml";
     public static final String JAR_PACKAGING = "jar";
     public static final String POM_PACKAGING = "pom";
+    public static final String MAVEN_BUILD_TIMESTAMP = "maven.build.timestamp";
+    public static final String MAVEN_USER_NAME = "user.name";
 
     private static final ImmutableList<ArtifactType> DEFAULT_ARTIFACT_TYPES = Lists.immutable.with(ArtifactType.entities, ArtifactType.versioned_entities);
 
@@ -273,6 +275,11 @@ public abstract class MavenProjectStructure extends ProjectStructure
         return "0.0.1-SNAPSHOT";
     }
 
+    protected String getMavenJarPluginVersion()
+    {
+        return "2.4";
+    }
+
     protected String getMavenSourcePluginVersion()
     {
         return null;
@@ -306,6 +313,12 @@ public abstract class MavenProjectStructure extends ProjectStructure
         {
             dependencyConsumer.accept(newMavenTestDependency("junit", "junit", includeVersion ? version : null));
         }
+    }
+
+    protected Plugin getMavenJarPlugin(boolean includeVersion)
+    {
+        //None for Default
+        return null;
     }
 
     protected String getJacksonVersion()
