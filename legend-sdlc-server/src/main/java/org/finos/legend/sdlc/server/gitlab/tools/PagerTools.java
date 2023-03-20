@@ -175,7 +175,7 @@ public class PagerTools
         private PagerSpliterator(Pager<T> pager, int maxRetries, long initialRetryWaitIntervalMillis, LongUnaryOperator retryWaitIntervalUpdater)
         {
             this.pager = pager;
-            this.current = getNextSpliterator();
+            this.current = getFirstSpliterator();
             this.maxRetries = maxRetries;
             this.initialRetryWaitIntervalMillis = initialRetryWaitIntervalMillis;
             this.retryWaitIntervalUpdater = retryWaitIntervalUpdater;
@@ -278,6 +278,19 @@ public class PagerTools
         public int characteristics()
         {
             return 0;
+        }
+
+        private Spliterator<T> getFirstSpliterator()
+        {
+            if (this.pager.getCurrentPage() > 0)
+            {
+                List<T> page = this.pager.page(this.pager.getCurrentPage());
+                if ((page != null) && !page.isEmpty())
+                {
+                    return page.spliterator();
+                }
+            }
+            return getNextSpliterator();
         }
 
         private Spliterator<T> getNextSpliterator()
