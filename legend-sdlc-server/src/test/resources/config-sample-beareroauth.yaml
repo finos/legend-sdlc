@@ -65,7 +65,7 @@ gitLab:
   projectIdPrefix: SAMPLE
   projectTag: legend
   server:
-    scheme: https
+    scheme: http
     host: localhost
   app:
     id: $APP_ID
