@@ -828,11 +828,6 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-xt-rosetta</artifactId>
-                <version>${legend.engine.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-external-format-jsonSchema</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>

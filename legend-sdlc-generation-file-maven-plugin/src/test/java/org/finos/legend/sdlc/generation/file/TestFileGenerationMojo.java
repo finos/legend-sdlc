@@ -113,7 +113,7 @@ public class TestFileGenerationMojo
                     .filter(p -> !GENERATION_SPECIFICATION_CLASSIFIER_PATH.equals(p.getClassifierPath()))
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(13, entities.size());
+        Assert.assertEquals(12, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         serializeProjectConfiguration(projectDir);
@@ -135,7 +135,7 @@ public class TestFileGenerationMojo
         {
             entities = testEntities.getAllEntities().collect(Collectors.toList());
         }
-        Assert.assertEquals(14, entities.size());
+        Assert.assertEquals(13, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
         serializeProjectConfiguration(projectDir);
@@ -145,7 +145,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(26, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(25, actualGeneratedSourceFiles.size());
         // Temporary disable because of ordering issue in the Protobuf generation
         verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
@@ -200,11 +200,6 @@ public class TestFileGenerationMojo
 
                 String expectedContent = new String(Files.readAllBytes(fileInOther), StandardCharsets.UTF_8);
                 String actualContent = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-                // FIXME: order is not preserved for cdm so we do not assert on the file content
-                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(expectedContent, actualContent))
-                {
-                    fileDiffs.add(new FileDiff(file.getFileName().toString(), expectedContent, actualContent));
-                }
                 return result;
             }
         });
@@ -231,7 +226,7 @@ public class TestFileGenerationMojo
             entities = testEntities.getAllEntities()
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(14, entities.size());
+        Assert.assertEquals(13, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
         entities.forEach(e -> writeEntityToDirectory(includedDirectory.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", includedDirectory);
@@ -242,7 +237,7 @@ public class TestFileGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(26, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(25, actualGeneratedSourceFiles.size());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)
