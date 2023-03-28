@@ -30,6 +30,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variabl
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -197,6 +198,10 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
             case "Date":
             {
                 return Temporal.class;
+            }
+            case "ByteStream":
+            {
+                return InputStream.class;
             }
             default:
             {

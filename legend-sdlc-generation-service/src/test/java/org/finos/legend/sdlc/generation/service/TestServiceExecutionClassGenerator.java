@@ -126,6 +126,13 @@ public class TestServiceExecutionClassGenerator
     }
 
     @Test
+    public void testSimpleServiceWithByteStreamParam() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithByteStreamParam");
+        assertExecuteMethodsExist(cls, InputStream.class);
+    }
+
+    @Test
     public void testSimpleServiceWithNMultiplicityParam() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithNMultiplicityParam");

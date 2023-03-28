@@ -159,6 +159,15 @@ public class TestServiceExecutionGenerator
     }
 
     @Test
+    public void testSimpleServiceWithByteStreamParam() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::ModelToModelServiceWithByteStreamParam");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceWithByteStreamParam", InputStream.class);
+    }
+
+    @Test
     public void testSimpleMultiService() throws Exception
     {
         String packagePrefix = "org.finos";
