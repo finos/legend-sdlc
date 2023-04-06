@@ -177,6 +177,10 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jsr310</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -246,29 +250,30 @@
             <artifactId>javax.ws.rs-api</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.glassfish.jersey.core</groupId>
-            <artifactId>jersey-client</artifactId>
-        </dependency>
-
         <!--
-            NOTE: we must include this runtime dependency as it is required by
+            NOTE: we must include these runtime dependencies as they are required by
             gitlab4j-api >=4.16.0, in particular, gitlab4j-api starts to use
             JacksonJaxbJsonProvider (this comes from Jersey >= 2.26); that's a
             breaking change from Jersey. If we want to use Jersey 2.26 though
             we would need to also upgrade to DropWizard > 2
             See https://github.com/dropwizard/dropwizard/issues/2148
 
-            For this reason, we will only add this as a runtime dependency
-            And we would need to address the JacksonFeature class (part of
-            this dependency) being automatically picked up and configured to
-            Jersey servers as part of an auto-discoverable feature
+            For this reason, we will only add them as runtime dependencies
+            And we would need to avoid using JacksonJaxbJsonProvider as the
+            default JacksonJsonProvider now that is in scope during runtime, ast
+            it will automatically detect auto-discoverable features and bring in
+            undesirable JSON serialization features
             See https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/deployment.html#deployment.autodiscoverable
 
-            NOTE: this workaround is sensible because the jackson features configuration
+            NOTE: this workaround is sensible because the serialization features configuration
             is needed by gitlab4j-api Gitlab client will still continue to be used by this
-            client, while we only turn these off for our clients/servers specifically
+            client, while we use a fixed/pre-determined JacksonJsonProvider for our clients
         -->
+        <dependency>
+            <groupId>org.glassfish.jersey.core</groupId>
+            <artifactId>jersey-client</artifactId>
+            <scope>runtime</scope>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>

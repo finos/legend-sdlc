@@ -17,21 +17,9 @@ package org.finos.legend.sdlc.server;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
-import org.eclipse.collections.api.factory.Maps;
-import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.InMemoryModule;
-import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
-import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
-import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
-import org.finos.legend.sdlc.domain.model.review.Review;
-import org.glassfish.jersey.CommonProperties;
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
@@ -46,14 +34,6 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         super.configureApis(bootstrap);
-
-        bootstrap.getObjectMapper().addMixIn(Project.class, InMemoryMixins.Project.class);
-        bootstrap.getObjectMapper().addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-        bootstrap.getObjectMapper().addMixIn(Entity.class, InMemoryMixins.Entity.class);
-        bootstrap.getObjectMapper().addMixIn(Revision.class, InMemoryMixins.Revision.class);
-        bootstrap.getObjectMapper().addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-        bootstrap.getObjectMapper().addMixIn(VersionId.class, VersionIdMixin.class);
-        bootstrap.getObjectMapper().addMixIn(Review.class, InMemoryMixins.Review.class);
     }
 
     @Override
@@ -67,10 +47,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     public void run(LegendSDLCServerConfiguration configuration, Environment environment)
     {
         super.run(configuration, environment);
-        // Ensure JacksonJaxbJsonProvider coming from org.glassfish.jersey.media:jersey-media-json-jackson
-        // is not automatically picked up by the Jersey server via AutoDiscoverable mechanism
-        // See https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/deployment.html#deployment.autodiscoverable
-        environment.jersey().getResourceConfig().setProperties(Maps.mutable.of(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true));
+        environment.jersey().register(LegendSDLCServerForTestJacksonJsonProvider.class);
     }
 
     @Override

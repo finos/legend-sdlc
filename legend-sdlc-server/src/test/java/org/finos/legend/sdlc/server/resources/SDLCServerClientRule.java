@@ -17,31 +17,30 @@ package org.finos.legend.sdlc.server.resources;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
-import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
-import org.glassfish.jersey.CommonProperties;
-import org.glassfish.jersey.client.ClientConfig;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.ext.ContextResolver;
 
 public class SDLCServerClientRule implements TestRule
 {
-    private ObjectMapper objectMapper;
     private Client client;
 
     @Override
@@ -60,19 +59,6 @@ public class SDLCServerClientRule implements TestRule
 
     private void before()
     {
-        this.objectMapper = new ObjectMapper();
-        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-        this.objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
-        this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-        this.objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
-        this.objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
-        this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
-        this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
-        this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-        this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
-        this.objectMapper.findAndRegisterModules();
         this.client = this.createClient();
     }
 
@@ -83,9 +69,36 @@ public class SDLCServerClientRule implements TestRule
 
     private Client createClient()
     {
-        JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
-        jacksonJsonProvider.setMapper(this.objectMapper);
-        return ClientBuilder.newBuilder().withConfig(new ClientConfig().property(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true)).build().register(jacksonJsonProvider);
+        return ClientBuilder.newBuilder().build().register(new SDLCServerClientRuleJacksonJsonProvider());
+    }
+
+    static class SDLCServerClientRuleJacksonJsonProvider extends JacksonJsonProvider implements ContextResolver<ObjectMapper>
+    {
+        private final ObjectMapper objectMapper;
+
+        public SDLCServerClientRuleJacksonJsonProvider()
+        {
+            objectMapper = new ObjectMapper();
+            objectMapper.registerModule(new JavaTimeModule());
+            this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+            this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+            this.objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
+            this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
+            this.objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
+            this.objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
+            this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
+            this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
+            this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
+            this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
+            this.objectMapper.findAndRegisterModules();
+        }
+
+        @Override
+        public ObjectMapper getContext(Class<?> type)
+        {
+            return objectMapper;
+        }
     }
 }
 
