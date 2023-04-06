@@ -39,14 +39,14 @@ import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
+import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements WorkflowApi
 {
@@ -137,7 +137,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         return new GitLabWorkflowAccessContext(gitLabProjectId)
         {
             @Override
-            protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
+            protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
             {
                 return getMergeRequestPipeline(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid(), pipelineId);
             }
@@ -179,7 +179,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         @Override
         public Workflow getWorkflow(String workflowId)
         {
-            int pipelineId = parseIntegerIdIfNotNull(workflowId);
+            long pipelineId = parseNumericIdIfNotNull(workflowId);
             Pipeline pipeline;
             try
             {
@@ -276,7 +276,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
             }
         }
 
-        protected abstract Pipeline getPipeline(int pipelineId) throws GitLabApiException;
+        protected abstract Pipeline getPipeline(long pipelineId) throws GitLabApiException;
 
         protected abstract Pager<Pipeline> getPipelines() throws GitLabApiException;
 
@@ -335,7 +335,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         }
 
         @Override
-        protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
+        protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
         {
             return getRefPipeline(this.gitLabProjectId.getGitLabId(), this.ref, pipelineId);
         }

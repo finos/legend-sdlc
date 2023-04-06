@@ -23,9 +23,9 @@ public final class GitLabProjectId
     private static final char DELIMITER = '-';
 
     private final String prefix;
-    private final int gitLabId;
+    private final long gitLabId;
 
-    private GitLabProjectId(String prefix, int gitLabId)
+    private GitLabProjectId(String prefix, long gitLabId)
     {
         this.prefix = prefix;
         this.gitLabId = gitLabId;
@@ -36,7 +36,7 @@ public final class GitLabProjectId
         return this.prefix;
     }
 
-    public int getGitLabId()
+    public long getGitLabId()
     {
         return this.gitLabId;
     }
@@ -59,7 +59,7 @@ public final class GitLabProjectId
     @Override
     public int hashCode()
     {
-        return Objects.hashCode(this.prefix) ^ this.gitLabId;
+        return Objects.hashCode(this.prefix) ^ Long.hashCode(this.gitLabId);
     }
 
     @Override
@@ -68,7 +68,7 @@ public final class GitLabProjectId
         return getProjectIdString(this.prefix, this.gitLabId);
     }
 
-    public static GitLabProjectId newProjectId(String prefix, int gitLabId)
+    public static GitLabProjectId newProjectId(String prefix, long gitLabId)
     {
         return new GitLabProjectId(prefix, gitLabId);
     }
@@ -91,15 +91,15 @@ public final class GitLabProjectId
 
         int separatorIndex = projectId.indexOf(DELIMITER);
         String prefix = (separatorIndex == -1) ? null : projectId.substring(0, separatorIndex);
-        int gitLabId = parseGitLabId(projectId, separatorIndex + 1);
+        long gitLabId = parseGitLabId(projectId, separatorIndex + 1);
         return newProjectId(prefix, gitLabId);
     }
 
-    private static int parseGitLabId(String projectId, int start)
+    private static long parseGitLabId(String projectId, int start)
     {
         try
         {
-            return Integer.parseInt(projectId.substring(start));
+            return Long.parseLong(projectId.substring(start));
         }
         catch (NumberFormatException e)
         {
@@ -107,8 +107,8 @@ public final class GitLabProjectId
         }
     }
 
-    private static String getProjectIdString(String prefix, int gitLabId)
+    private static String getProjectIdString(String prefix, long gitLabId)
     {
-        return (prefix == null) ? Integer.toString(gitLabId) : (prefix + DELIMITER + gitLabId);
+        return (prefix == null) ? Long.toString(gitLabId) : (prefix + DELIMITER + gitLabId);
     }
 }

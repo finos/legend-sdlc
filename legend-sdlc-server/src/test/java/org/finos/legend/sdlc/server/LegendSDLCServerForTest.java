@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server;
 
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
+import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -29,6 +31,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 import org.finos.legend.sdlc.domain.model.review.Review;
+import org.glassfish.jersey.CommonProperties;
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
@@ -58,6 +61,16 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     {
         this.guiceBundle = super.buildGuiceBundle();
         return this.guiceBundle;
+    }
+
+    @Override
+    public void run(LegendSDLCServerConfiguration configuration, Environment environment)
+    {
+        super.run(configuration, environment);
+        // Ensure JacksonJaxbJsonProvider coming from org.glassfish.jersey.media:jersey-media-json-jackson
+        // is not automatically picked up by the Jersey server via AutoDiscoverable mechanism
+        // See https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/deployment.html#deployment.autodiscoverable
+        environment.jersey().getResourceConfig().setProperties(Maps.mutable.of(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true));
     }
 
     @Override

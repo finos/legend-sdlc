@@ -152,7 +152,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
         @Override
         public Build getBuild(String buildId)
         {
-            int pipelineId = parseIntegerIdIfNotNull(buildId);
+            long pipelineId = parseNumericIdIfNotNull(buildId);
             Pipeline pipeline;
             try
             {

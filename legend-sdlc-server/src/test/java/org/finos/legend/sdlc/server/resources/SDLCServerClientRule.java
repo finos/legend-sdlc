@@ -30,6 +30,8 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
+import org.glassfish.jersey.CommonProperties;
+import org.glassfish.jersey.client.ClientConfig;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -83,7 +85,7 @@ public class SDLCServerClientRule implements TestRule
     {
         JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
         jacksonJsonProvider.setMapper(this.objectMapper);
-        return ClientBuilder.newClient().register(jacksonJsonProvider);
+        return ClientBuilder.newBuilder().withConfig(new ClientConfig().property(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, true)).build().register(jacksonJsonProvider);
     }
 }
 

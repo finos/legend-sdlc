@@ -43,7 +43,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi().getIssuesApi().getIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
+            org.gitlab4j.api.models.Issue issue = withRetries(() -> getGitLabApi().getIssuesApi().getIssue(gitLabProjectId.getGitLabId(), parseNumericIdIfNotNull(issueId)));
             return fromGitLabIssue(issue);
         }
         catch (Exception e)
@@ -62,7 +62,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            Pager<org.gitlab4j.api.models.Issue> pager = withRetries(() -> getGitLabApi().getIssuesApi().getIssues((Integer) gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE));
+            Pager<org.gitlab4j.api.models.Issue> pager = withRetries(() -> getGitLabApi().getIssuesApi().getIssues(gitLabProjectId.getGitLabId(), ITEMS_PER_PAGE));
             return PagerTools.stream(pager).map(GitLabIssueApi::fromGitLabIssue).collect(PagerTools.listCollector(pager));
         }
         catch (Exception e)
@@ -103,7 +103,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            withRetries(() -> getGitLabApi().getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseIntegerIdIfNotNull(issueId)));
+            withRetries(() -> getGitLabApi().getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseNumericIdIfNotNull(issueId)));
         }
         catch (LegendSDLCServerException e)
         {

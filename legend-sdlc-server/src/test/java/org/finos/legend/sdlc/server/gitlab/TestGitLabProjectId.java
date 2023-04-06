@@ -23,18 +23,18 @@ public class TestGitLabProjectId
     @Test
     public void testNewProjectId()
     {
-        for (int i : getGitLabIdsForTest())
+        for (long i : getGitLabIdsForTest())
         {
             testNewProjectId("SOMEPREFIX", i);
             testNewProjectId(null, i);
         }
     }
 
-    private void testNewProjectId(String prefix, int i)
+    private void testNewProjectId(String prefix, long i)
     {
         GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
         String projectIdString = projectId.toString();
-        Assert.assertEquals((prefix == null) ? Integer.toString(i) : (prefix + "-" + i), projectIdString);
+        Assert.assertEquals((prefix == null) ? Long.toString(i) : (prefix + "-" + i), projectIdString);
         Assert.assertEquals(projectIdString, i, projectId.getGitLabId());
         Assert.assertEquals(projectIdString, prefix, projectId.getPrefix());
     }
@@ -43,7 +43,7 @@ public class TestGitLabProjectId
     public void testEquality()
     {
         String prefix = "SOMEPREFIX";
-        for (int i : getGitLabIdsForTest())
+        for (long i : getGitLabIdsForTest())
         {
             GitLabProjectId projectId = GitLabProjectId.newProjectId(prefix, i);
             Assert.assertEquals(projectId, projectId);
@@ -60,11 +60,11 @@ public class TestGitLabProjectId
     public void testGetProjectIdString()
     {
         String prefix = "SOMEPREFIX";
-        for (int i : getGitLabIdsForTest())
+        for (long i : getGitLabIdsForTest())
         {
             Project project = new Project().withId(i);
             Assert.assertEquals(prefix + "-" + i, GitLabProjectId.getProjectIdString(prefix, project));
-            Assert.assertEquals(Integer.toString(i), GitLabProjectId.getProjectIdString(null, project));
+            Assert.assertEquals(Long.toString(i), GitLabProjectId.getProjectIdString(null, project));
         }
     }
 
@@ -77,7 +77,7 @@ public class TestGitLabProjectId
         Assert.assertEquals(GitLabProjectId.newProjectId("", 3332), GitLabProjectId.parseProjectId("-3332"));
         Assert.assertEquals(GitLabProjectId.newProjectId(null, 99412), GitLabProjectId.parseProjectId("99412"));
 
-        for (String invalidProjectId : new String []{null, "", "not-a-project-id", "NoDigits", "SeparatorAtEnd-", "UAT521", "UAT/521", "UAT*521", "UAT-&&&"})
+        for (String invalidProjectId : new String[]{null, "", "not-a-project-id", "NoDigits", "SeparatorAtEnd-", "UAT521", "UAT/521", "UAT*521", "UAT-&&&"})
         {
             IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> GitLabProjectId.parseProjectId(invalidProjectId));
             String expectedMessage = (invalidProjectId == null) ? "Invalid project id: null" : ("Invalid project id: \"" + invalidProjectId + "\"");
@@ -85,8 +85,8 @@ public class TestGitLabProjectId
         }
     }
 
-    private int[] getGitLabIdsForTest()
+    private long[] getGitLabIdsForTest()
     {
-        return new int[]{0, 1, 2, 3, 4, 5, 64, 127, 511, 1024, 17_560_438, 1_030_991_200, Integer.MAX_VALUE};
+        return new long[]{0, 1, 2, 3, 4, 5, 64, 127, 511, 1024, 17_560_438, 1_030_991_200, Integer.MAX_VALUE};
     }
 }

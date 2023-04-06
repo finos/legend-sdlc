@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.eclipse.collections.api.map.primitive.IntObjectMap;
-import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
-import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
+import org.eclipse.collections.api.map.primitive.LongObjectMap;
+import org.eclipse.collections.api.map.primitive.MutableLongObjectMap;
+import org.eclipse.collections.impl.factory.primitive.LongObjectMaps;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
@@ -36,7 +36,7 @@ abstract class AbstractGitlabWorkflowApi extends GitLabApiWithFileAccess
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
     }
 
-    protected Pipeline getMergeRequestPipeline(int gitLabProjectId, int mergeRequestId, int pipelineId) throws GitLabApiException
+    protected Pipeline getMergeRequestPipeline(long gitLabProjectId, long mergeRequestId, long pipelineId) throws GitLabApiException
     {
         return PagerTools.stream(getMergeRequestPipelines(gitLabProjectId, mergeRequestId))
                 .filter(p -> (p.getId() != null) && (p.getId() == pipelineId))
@@ -44,36 +44,36 @@ abstract class AbstractGitlabWorkflowApi extends GitLabApiWithFileAccess
                 .orElse(null);
     }
 
-    protected Pager<Pipeline> getMergeRequestPipelines(int gitLabProjectId, int mergeRequestId) throws GitLabApiException
+    protected Pager<Pipeline> getMergeRequestPipelines(long gitLabProjectId, long mergeRequestId) throws GitLabApiException
     {
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
         return withRetries(() -> mergeRequestApi.getMergeRequestPipelines(gitLabProjectId, mergeRequestId, ITEMS_PER_PAGE));
     }
 
-    protected Pipeline getRefPipeline(int gitLabProjectId, String ref, int pipelineId) throws GitLabApiException
+    protected Pipeline getRefPipeline(long gitLabProjectId, String ref, long pipelineId) throws GitLabApiException
     {
         PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
         Pipeline pipeline = withRetries(() -> pipelineApi.getPipeline(gitLabProjectId, pipelineId));
         return ((pipeline != null) && ref.equals(pipeline.getRef())) ? pipeline : null;
     }
 
-    protected Pager<Pipeline> getRefPipelines(int gitLabProjectId, String ref) throws GitLabApiException
+    protected Pager<Pipeline> getRefPipelines(long gitLabProjectId, String ref) throws GitLabApiException
     {
         PipelineApi pipelineApi = getGitLabApi().getPipelineApi();
         return withRetries(() -> pipelineApi.getPipelines(gitLabProjectId, null, null, ref, false, null, null, null, null, ITEMS_PER_PAGE));
     }
 
-    protected IntObjectMap<Pipeline> indexPipelinesById(Pager<Pipeline> pager, boolean ignoreNullIds, boolean ignoreIdConflicts)
+    protected LongObjectMap<Pipeline> indexPipelinesById(Pager<Pipeline> pager, boolean ignoreNullIds, boolean ignoreIdConflicts)
     {
         return indexPipelinesById(PagerTools.stream(pager), ignoreNullIds, ignoreIdConflicts);
     }
 
-    protected IntObjectMap<Pipeline> indexPipelinesById(Stream<Pipeline> pipelines, boolean ignoreNullIds, boolean ignoreIdConflicts)
+    protected LongObjectMap<Pipeline> indexPipelinesById(Stream<Pipeline> pipelines, boolean ignoreNullIds, boolean ignoreIdConflicts)
     {
-        MutableIntObjectMap<Pipeline> map = IntObjectMaps.mutable.empty();
+        MutableLongObjectMap<Pipeline> map = LongObjectMaps.mutable.empty();
         pipelines.forEach(p ->
         {
-            Integer id = p.getId();
+            Long id = p.getId();
             if (id == null)
             {
                 if (ignoreNullIds)

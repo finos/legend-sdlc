@@ -202,8 +202,8 @@ public class GitLabWorkspaceApiTestResource
 
         GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI().getMergeRequestApi();
-        Integer parsedMergeRequestId = Integer.parseInt(reviewId);
-        Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
+        long parsedMergeRequestId = Long.parseLong(reviewId);
+        long gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
 
         String requiredStatus = "can_be_merged";
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
@@ -339,8 +339,8 @@ public class GitLabWorkspaceApiTestResource
 
         GitLabProjectId sdlcGitLabProjectId = GitLabProjectId.parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = gitLabMemberUserContext.getGitLabAPI().getMergeRequestApi();
-        Integer parsedMergeRequestId = Integer.parseInt(reviewId);
-        Integer gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
+        long parsedMergeRequestId = Long.parseLong(reviewId);
+        long gitlabProjectId = sdlcGitLabProjectId.getGitLabId();
 
         String requiredStatus = "can_be_merged";
         CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
