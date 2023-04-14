@@ -30,7 +30,6 @@ import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestExecutionS
 import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestResult;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
-import org.finos.legend.engine.testable.model.RunTestsInput;
 import org.finos.legend.engine.testable.model.RunTestsResult;
 import org.finos.legend.engine.testable.model.RunTestsTestableInput;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
@@ -46,7 +45,7 @@ import java.util.stream.Collectors;
 
 public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
 {
-    private final RunTestsInput runTestsInput;
+    private final List<RunTestsTestableInput> runTestsTestableInputs;
     private final TestableRunner testableRunner;
 
     public TestableTestCase(PureModel pureModel, PureModelContextData pureModelContextData, PackageableElement packageableElement, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
@@ -56,12 +55,8 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
         RunTestsTestableInput runTestsTestableInput = new RunTestsTestableInput();
         runTestsTestableInput.testable = packageableElement.getPath();
         runTestsTestableInput.unitTestIds = Collections.emptyList();
+        this.runTestsTestableInputs = Collections.singletonList(runTestsTestableInput);
 
-        RunTestsInput runTestsInput = new RunTestsInput();
-        runTestsInput.model = pureModelContextData;
-        runTestsInput.testables = Collections.singletonList(runTestsTestableInput);
-
-        this.runTestsInput = runTestsInput;
         this.testableRunner = new TestableRunner(new ModelManager(DeploymentMode.PROD));
     }
 
@@ -76,7 +71,7 @@ public class TestableTestCase extends LegendPureV1TestCase<PackageableElement>
     {
         try
         {
-            RunTestsResult runTestsResultResult = testableRunner.doTests(this.runTestsInput, null);
+            RunTestsResult runTestsResultResult = testableRunner.doTests(this.runTestsTestableInputs, this.pureModel, this.pureModelContextData);
             handleDoTestResult(runTestsResultResult);
         }
         catch (Exception e)
