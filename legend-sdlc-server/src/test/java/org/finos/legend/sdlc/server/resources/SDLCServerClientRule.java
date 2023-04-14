@@ -17,7 +17,6 @@ package org.finos.legend.sdlc.server.resources;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -79,7 +78,7 @@ public class SDLCServerClientRule implements TestRule
         public SDLCServerClientRuleJacksonJsonProvider()
         {
             objectMapper = new ObjectMapper();
-            objectMapper.registerModule(new JavaTimeModule());
+            this.objectMapper.findAndRegisterModules();
             this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
             this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
             this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
@@ -91,7 +90,6 @@ public class SDLCServerClientRule implements TestRule
             this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
             this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
             this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
-            this.objectMapper.findAndRegisterModules();
         }
 
         @Override

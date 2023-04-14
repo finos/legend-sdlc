@@ -16,7 +16,6 @@ package org.finos.legend.sdlc.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -38,7 +37,7 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
     public LegendSDLCServerForTestJacksonJsonProvider()
     {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.findAndRegisterModules();
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
         objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);

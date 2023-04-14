@@ -16,7 +16,6 @@ package org.finos.legend.sdlc.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 
 import javax.ws.rs.ext.ContextResolver;
@@ -28,7 +27,7 @@ public class BaseServerJacksonJsonProvider extends JacksonJsonProvider implement
     public BaseServerJacksonJsonProvider()
     {
         objectMapper = new ObjectMapper();
-        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.findAndRegisterModules();
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
     }
 
