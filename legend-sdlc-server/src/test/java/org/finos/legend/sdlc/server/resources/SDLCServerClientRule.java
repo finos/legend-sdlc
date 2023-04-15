@@ -77,19 +77,19 @@ public class SDLCServerClientRule implements TestRule
 
         public SDLCServerClientRuleJacksonJsonProvider()
         {
-            objectMapper = new ObjectMapper();
-            this.objectMapper.findAndRegisterModules();
-            this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-            this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
-            this.objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
-            this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-            this.objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
-            this.objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
-            this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
-            this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
-            this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-            this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
+            this.objectMapper = new ObjectMapper()
+                    .findAndRegisterModules()
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
+                    .addMixIn(Project.class, InMemoryMixins.Project.class)
+                    .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
+                    .addMixIn(Entity.class, InMemoryMixins.Entity.class)
+                    .addMixIn(Revision.class, InMemoryMixins.Revision.class)
+                    .addMixIn(Review.class, InMemoryMixins.Review.class)
+                    .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
+                    .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
+                    .addMixIn(VersionId.class, VersionIdMixin.class);
         }
 
         @Override

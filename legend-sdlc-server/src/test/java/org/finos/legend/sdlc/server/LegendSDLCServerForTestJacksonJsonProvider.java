@@ -36,16 +36,16 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
 
     public LegendSDLCServerForTestJacksonJsonProvider()
     {
-        objectMapper = new ObjectMapper();
-        objectMapper.findAndRegisterModules();
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
-        objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-        objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
-        objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
-        objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-        objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
-        objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
+        this.objectMapper = new ObjectMapper()
+                .findAndRegisterModules()
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                .addMixIn(Project.class, InMemoryMixins.Project.class)
+                .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
+                .addMixIn(Entity.class, InMemoryMixins.Entity.class)
+                .addMixIn(Revision.class, InMemoryMixins.Revision.class)
+                .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
+                .addMixIn(VersionId.class, VersionIdMixin.class)
+                .addMixIn(Review.class, InMemoryMixins.Review.class);
     }
 
     @Override
