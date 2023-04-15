@@ -51,6 +51,6 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
     @Override
     public ObjectMapper getContext(Class<?> type)
     {
-        return objectMapper;
+        return this.objectMapper;
     }
 }

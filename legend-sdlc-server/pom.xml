@@ -256,7 +256,7 @@
 
             For this reason, we will only add them as runtime dependencies
             And we would need to avoid using JacksonJaxbJsonProvider as the
-            default JacksonJsonProvider now that is in scope during runtime, ast
+            default JacksonJsonProvider now that is in scope during runtime, as
             it will automatically detect auto-discoverable features and bring in
             undesirable JSON serialization features
             See https://eclipse-ee4j.github.io/jersey.github.io/documentation/latest/deployment.html#deployment.autodiscoverable

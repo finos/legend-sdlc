@@ -87,6 +87,6 @@ public class TestGitLabProjectId
 
     private long[] getGitLabIdsForTest()
     {
-        return new long[]{0, 1, 2, 3, 4, 5, 64, 127, 511, 1024, 17_560_438, 1_030_991_200, Integer.MAX_VALUE};
+        return new long[]{0, 1, 2, 3, 4, 5, 64, 127, 511, 1024, 17_560_438, 1_030_991_200, Integer.MAX_VALUE, Long.MAX_VALUE};
     }
 }

@@ -68,10 +68,10 @@ public class SDLCServerClientRule implements TestRule
 
     private Client createClient()
     {
-        return ClientBuilder.newBuilder().build().register(new SDLCServerClientRuleJacksonJsonProvider());
+        return ClientBuilder.newClient().register(SDLCServerClientRuleJacksonJsonProvider.class);
     }
 
-    static class SDLCServerClientRuleJacksonJsonProvider extends JacksonJsonProvider implements ContextResolver<ObjectMapper>
+    private static class SDLCServerClientRuleJacksonJsonProvider extends JacksonJsonProvider implements ContextResolver<ObjectMapper>
     {
         private final ObjectMapper objectMapper;
 
@@ -95,7 +95,7 @@ public class SDLCServerClientRule implements TestRule
         @Override
         public ObjectMapper getContext(Class<?> type)
         {
-            return objectMapper;
+            return this.objectMapper;
         }
     }
 }

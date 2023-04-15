@@ -28,12 +28,12 @@ public class BaseServerJacksonJsonProvider extends JacksonJsonProvider implement
     {
         objectMapper = new ObjectMapper();
         objectMapper.findAndRegisterModules();
-        objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Override
     public ObjectMapper getContext(Class<?> type)
     {
-        return objectMapper;
+        return this.objectMapper;
     }
 }
