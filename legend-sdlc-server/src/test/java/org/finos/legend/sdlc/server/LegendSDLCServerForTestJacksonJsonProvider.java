@@ -24,8 +24,10 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
+import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 
 import javax.ws.rs.ext.ContextResolver;
@@ -37,15 +39,22 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
     public LegendSDLCServerForTestJacksonJsonProvider()
     {
         this.objectMapper = new ObjectMapper()
-                .findAndRegisterModules()
                 .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .addMixIn(Project.class, InMemoryMixins.Project.class)
                 .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
                 .addMixIn(Entity.class, InMemoryMixins.Entity.class)
                 .addMixIn(Revision.class, InMemoryMixins.Revision.class)
+                .addMixIn(Review.class, InMemoryMixins.Review.class)
+                .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
                 .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
-                .addMixIn(VersionId.class, VersionIdMixin.class)
-                .addMixIn(Review.class, InMemoryMixins.Review.class);
+                .addMixIn(VersionId.class, VersionIdMixin.class);
+        // NOTE: this call needs to be called separately and not part of the fluent-style declaration block
+        // above, else things might go wrong in test, this could be due to the weird interaction between
+        // gitlab4j-api and our old version of dropwizard and their dependencies and service loader magic,
+        // that we haven't quite figured out just yet. We should clean this up when we upgrade DropWizard
+        // See https://github.com/FasterXML/jackson-databind/issues/2983
+        // See https://github.com/finos/legend-sdlc/pull/414
+        this.objectMapper.findAndRegisterModules();
     }
 
     @Override

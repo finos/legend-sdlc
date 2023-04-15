@@ -78,7 +78,6 @@ public class SDLCServerClientRule implements TestRule
         public SDLCServerClientRuleJacksonJsonProvider()
         {
             this.objectMapper = new ObjectMapper()
-                    .findAndRegisterModules()
                     .enable(SerializationFeature.INDENT_OUTPUT)
                     .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                     .setSerializationInclusion(JsonInclude.Include.NON_NULL)
@@ -90,6 +89,13 @@ public class SDLCServerClientRule implements TestRule
                     .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
                     .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
                     .addMixIn(VersionId.class, VersionIdMixin.class);
+            // NOTE: this call needs to be called separately and not part of the fluent-style declaration block
+            // above, else things might go wrong in test, this could be due to the weird interaction between
+            // gitlab4j-api and our old version of dropwizard and their dependencies and service loader magic,
+            // that we haven't quite figured out just yet. We should clean this up when we upgrade DropWizard
+            // See https://github.com/FasterXML/jackson-databind/issues/2983
+            // See https://github.com/finos/legend-sdlc/pull/414
+            this.objectMapper.findAndRegisterModules();
         }
 
         @Override
