@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.test;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,11 +37,7 @@ public class PathTools
 
     public static Path resourceToPath(ClassLoader classLoader, String resourceName)
     {
-        if (classLoader == null)
-        {
-            classLoader = PathTools.class.getClassLoader();
-        }
-        URL url = classLoader.getResource(resourceName);
+        URL url = resolveClassLoader(classLoader).getResource(resourceName);
         if (url == null)
         {
             throw new RuntimeException("Could not find resource: " + resourceName);
@@ -51,24 +48,32 @@ public class PathTools
         }
         catch (Exception e)
         {
-            throw new RuntimeException("Error getting resource \"" + resourceName + "\" from URL " + url, e);
+            StringBuilder builder = new StringBuilder("Error getting resource \"").append(resourceName).append("\" from URL ").append(url);
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append(": ").append(eMessage);
+            }
+            throw new RuntimeException(builder.toString(), e);
         }
     }
 
     public static Path[] resourceToPaths(ClassLoader classLoader, String resourceName)
     {
-        if (classLoader == null)
-        {
-            classLoader = PathTools.class.getClassLoader();
-        }
         Enumeration<URL> urls;
         try
         {
-            urls = classLoader.getResources(resourceName);
+            urls = resolveClassLoader(classLoader).getResources(resourceName);
         }
         catch (IOException e)
         {
-            throw new RuntimeException("Could not get resource: " + resourceName, e);
+            StringBuilder builder = new StringBuilder("Error getting resource \"").append(resourceName).append('"');
+            String eMessage = e.getMessage();
+            if (eMessage != null)
+            {
+                builder.append(": ").append(eMessage);
+            }
+            throw new UncheckedIOException(builder.toString(), e);
         }
         if (urls == null)
         {
@@ -84,9 +89,20 @@ public class PathTools
             }
             catch (Exception e)
             {
-                throw new RuntimeException("Error getting resource \"" + resourceName + "\" from URL " + url, e);
+                StringBuilder builder = new StringBuilder("Error getting resource \"").append(resourceName).append("\" from URL ").append(url);
+                String eMessage = e.getMessage();
+                if (eMessage != null)
+                {
+                    builder.append(": ").append(eMessage);
+                }
+                throw new RuntimeException(builder.toString(), e);
             }
         }
         return paths.toArray(new Path[0]);
+    }
+
+    private static ClassLoader resolveClassLoader(ClassLoader classLoader)
+    {
+        return (classLoader == null) ? Thread.currentThread().getContextClassLoader() : classLoader;
     }
 }

@@ -107,12 +107,12 @@ public class TestLegendSDLCTestSuiteBuilder
 
     protected class ExpectedTestState
     {
-        private String entitiesResourceName;
-        private int expectedTestCount;
-        private int expectedTestCaseCount;
-        private int expectedErrors;
-        private int expectedFailures;
-        private Map<String, Set<String>> expectedTestCasesByTestSuite;
+        private final String entitiesResourceName;
+        private final int expectedTestCount;
+        private final int expectedTestCaseCount;
+        private final int expectedErrors;
+        private final int expectedFailures;
+        private final Map<String, Set<String>> expectedTestCasesByTestSuite;
 
         public ExpectedTestState(String entitiesResourceName, int expectedTestCount, int expectedTestCaseCount, int expectedErrors, int expectedFailures, Map<String, Set<String>> expectedTestCasesByTestSuite)
         {
@@ -137,14 +137,14 @@ public class TestLegendSDLCTestSuiteBuilder
             TestResult testResult = new TestResult();
             suite.run(testResult);
 
-            Assert.assertEquals(entitiesResourceName, suite.getName());
-            Assert.assertEquals(expectedTestCount, suite.testCount());
-            Assert.assertEquals(expectedTestCaseCount, suite.countTestCases());
+            Assert.assertEquals(this.entitiesResourceName, suite.getName());
+            Assert.assertEquals(this.expectedTestCount, suite.testCount());
+            Assert.assertEquals(this.expectedTestCaseCount, suite.countTestCases());
 
             Assert.assertEquals(suite.countTestCases(), testResult.runCount());
-            Assert.assertEquals(buildFailureMessage("erroring", testResult.errors()), expectedErrors, testResult.errorCount());
-            Assert.assertEquals(buildFailureMessage("failing", testResult.failures()), expectedFailures, testResult.failureCount());
-            Assert.assertEquals(expectedTestCasesByTestSuite, actualTestCasesByTestSuite);
+            Assert.assertEquals(buildFailureMessage("erroring", testResult.errors()), this.expectedErrors, testResult.errorCount());
+            Assert.assertEquals(buildFailureMessage("failing", testResult.failures()), this.expectedFailures, testResult.failureCount());
+            Assert.assertEquals(this.expectedTestCasesByTestSuite, actualTestCasesByTestSuite);
         }
     }
 }
