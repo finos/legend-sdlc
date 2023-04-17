@@ -27,8 +27,8 @@ public class BaseServerJacksonJsonProvider extends JacksonJsonProvider implement
 
     public BaseServerJacksonJsonProvider()
     {
-        this.objectMapper = Jackson.newObjectMapper()
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper = Jackson.newObjectMapper();
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     }
 
     @Override

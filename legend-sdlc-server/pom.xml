@@ -227,6 +227,10 @@
             <groupId>io.dropwizard.metrics</groupId>
             <artifactId>metrics-healthchecks</artifactId>
         </dependency>
+        <dependency>
+            <groupId>io.dropwizard</groupId>
+            <artifactId>dropwizard-jackson</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>io.swagger</groupId>
@@ -293,12 +297,6 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
-        <!-- This is needed for base server Jackson.newObjectMapper to work properly -->
-        <dependency>
-            <groupId>io.dropwizard</groupId>
-            <artifactId>dropwizard-jackson</artifactId>
-            <scope>runtime</scope>
         </dependency>
 
         <dependency>

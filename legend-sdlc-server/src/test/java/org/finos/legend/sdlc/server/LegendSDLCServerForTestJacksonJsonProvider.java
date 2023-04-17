@@ -39,8 +39,8 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
 
     public LegendSDLCServerForTestJacksonJsonProvider()
     {
-        this.objectMapper = new ObjectMapper()
-                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+        this.objectMapper = Jackson.newObjectMapper();
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .addMixIn(Project.class, InMemoryMixins.Project.class)
                 .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
                 .addMixIn(Entity.class, InMemoryMixins.Entity.class)
@@ -49,7 +49,6 @@ public class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvi
                 .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
                 .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
                 .addMixIn(VersionId.class, VersionIdMixin.class);
-        this.objectMapper.findAndRegisterModules();
     }
 
     @Override
