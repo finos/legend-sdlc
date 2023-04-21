@@ -92,4 +92,33 @@ public class TestBaseGitLabApi
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::$test::$function"));
         Assert.assertFalse(BaseGitLabApi.isValidClassifierPath("meta::has::other::characters::test_String_$1_10$__String_$1_*$_&"));
     }
+
+    @Test
+    public void testIsVersionTagName()
+    {
+        Assert.assertTrue(BaseGitLabApi.isVersionTagName("release-0.0.0"));
+        Assert.assertTrue(BaseGitLabApi.isVersionTagName("release-1.2.3"));
+        Assert.assertTrue(BaseGitLabApi.isVersionTagName("release-100023.24.35"));
+        Assert.assertTrue(BaseGitLabApi.isVersionTagName("release-" + Integer.MAX_VALUE + "." + Integer.MAX_VALUE + "." + Integer.MAX_VALUE));
+
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-" + (1L + (long) Integer.MAX_VALUE) + ".2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-2023.04.21"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-20230421000000.0.0"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release--1.2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.-2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2."));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2.3."));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2.3.4"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2.3-SNAPSHOT"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-1.2.3a"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("1.2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("r-1.2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release_1.2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release/1.2.3"));
+        Assert.assertFalse(BaseGitLabApi.isVersionTagName("release-01.02.03"));
+    }
 }
