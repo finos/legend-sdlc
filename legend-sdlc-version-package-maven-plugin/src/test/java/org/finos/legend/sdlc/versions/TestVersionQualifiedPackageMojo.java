@@ -82,7 +82,24 @@ public class TestVersionQualifiedPackageMojo
     }
 
     @Test
-    public void testNumericVersion() throws Exception
+    public void testCanonicalNumericVersion() throws Exception
+    {
+        File[] entityDirectories = getTestEntityDirectories();
+        File projectDir = buildSingleModuleProject("project", "org.finos.legend.sdlc", "test-project", "4.7.219", entityDirectories, null, null, null);
+
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+
+        File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
+        assertDirectoryEmpty(outputDir);
+        this.mojoRule.executeMojo(projectDir, GOAL);
+
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project::v4_7_219::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
+        EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
+    }
+
+    @Test
+    public void testNonCanonicalNumericVersion() throws Exception
     {
         File[] entityDirectories = getTestEntityDirectories();
         File projectDir = buildSingleModuleProject("project", "org.finos.legend.sdlc", "test-project", "4.07.219", entityDirectories, null, null, null);
@@ -93,8 +110,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(projectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::test_project::v4_7_219::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project::v4_07_219::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -110,8 +127,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(projectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::snapshot::test_project_for_snapshot::vX_X_X::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::snapshot::test_project_for_snapshot::vX_X_X::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -127,8 +144,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(projectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::alias::test_project_for_alias::latest::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::alias::test_project_for_alias::latest::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -170,8 +187,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(projectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::test_project::v1_1_2::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project::v1_1_2::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -192,8 +209,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(childProjectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::test_project::v2_7_1::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project::v2_7_1::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -214,8 +231,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(childProjectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::test_project::v5_0_0::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project::v5_0_0::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -236,8 +253,8 @@ public class TestVersionQualifiedPackageMojo
         assertDirectoryEmpty(outputDir);
         this.mojoRule.executeMojo(childProjectDir, GOAL);
 
-        List<Entity> expected = EntityTransformationTestTools.transformEntities(EntityLoader.newEntityLoader(entityDirectories).getAllEntities().collect(Collectors.toList()), "org::finos::legend::sdlc::test_project_versions::v4_3_2::"::concat);
-        List<Entity> actual = EntityLoader.newEntityLoader(outputDir).getAllEntities().collect(Collectors.toList());
+        List<Entity> expected = EntityTransformationTestTools.transformEntities(getAllEntities(entityDirectories), "org::finos::legend::sdlc::test_project_versions::v4_3_2::"::concat);
+        List<Entity> actual = getAllEntities(outputDir);
         EntityTransformationTestTools.assertEntitiesEquivalent(expected, actual);
     }
 
@@ -374,5 +391,13 @@ public class TestVersionQualifiedPackageMojo
     private File[] getTestEntityDirectories()
     {
         return new File[] {EntityTransformationTestTools.getResource(getClass().getClassLoader(), "entity-path-transformer-test-resources").toFile()};
+    }
+
+    private List<Entity> getAllEntities(File... paths) throws Exception
+    {
+        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(paths))
+        {
+            return entityLoader.getAllEntities().collect(Collectors.toList());
+        }
     }
 }

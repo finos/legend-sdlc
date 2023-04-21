@@ -134,26 +134,26 @@ public abstract class VersionId implements Comparable<VersionId>
         return parseVersionId(versionString, 0, versionString.length(), delimiter);
     }
 
-    public static VersionId parseVersionId(String versionString, int start, int end)
+    public static VersionId parseVersionId(String string, int start, int end)
     {
-        return parseVersionId(versionString, start, end, DELIMITER);
+        return parseVersionId(string, start, end, DELIMITER);
     }
 
-    public static VersionId parseVersionId(String versionString, int start, int end, char delimiter)
+    public static VersionId parseVersionId(String string, int start, int end, char delimiter)
     {
-        if (versionString == null)
+        if (string == null)
         {
             throw new IllegalArgumentException("Invalid version string: null");
         }
-        int firstDelimiterIndex = versionString.indexOf(delimiter, start);
+        int firstDelimiterIndex = string.indexOf(delimiter, start);
         if ((firstDelimiterIndex <= start) || (firstDelimiterIndex >= (end - 1)))
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid version string: \"").append(versionString, start, end).append('"').toString());
+            throw new IllegalArgumentException("Invalid version string: \"" + string.substring(start, end) + '"');
         }
-        int secondDelimiterIndex = versionString.indexOf(delimiter, firstDelimiterIndex + 1);
+        int secondDelimiterIndex = string.indexOf(delimiter, firstDelimiterIndex + 1);
         if ((secondDelimiterIndex <= (firstDelimiterIndex + 1)) || (secondDelimiterIndex >= (end - 1)))
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid version string: \"").append(versionString, start, end).append('"').toString());
+            throw new IllegalArgumentException("Invalid version string: \"" + string.substring(start, end) + '"');
         }
 
         int majorVersion;
@@ -161,16 +161,109 @@ public abstract class VersionId implements Comparable<VersionId>
         int patchVersion;
         try
         {
-            majorVersion = Integer.parseInt(versionString.substring(start, firstDelimiterIndex));
-            minorVersion = Integer.parseInt(versionString.substring(firstDelimiterIndex + 1, secondDelimiterIndex));
-            patchVersion = Integer.parseInt(versionString.substring(secondDelimiterIndex + 1, end));
+            majorVersion = parseVersionNumber(string, start, firstDelimiterIndex);
+            minorVersion = parseVersionNumber(string, firstDelimiterIndex + 1, secondDelimiterIndex);
+            patchVersion = parseVersionNumber(string, secondDelimiterIndex + 1, end);
         }
         catch (NumberFormatException e)
         {
-            throw new IllegalArgumentException(new StringBuilder("Invalid version string: \"").append(versionString, start, end).append('"').toString(), e);
+            throw new IllegalArgumentException("Invalid version string: \"" + string.substring(start, end) + '"', e);
         }
 
         return newVersionId(majorVersion, minorVersion, patchVersion);
+    }
+
+    private static int parseVersionNumber(String string, int start, int end)
+    {
+        if (!isValidVersionNumber(string, start, end))
+        {
+            throw new NumberFormatException("Invalid version number: " + string.substring(start, end));
+        }
+        return Integer.parseInt(string.substring(start, end));
+    }
+
+    public static boolean isValidVersionIdString(String string)
+    {
+        return isValidVersionIdString(string, DELIMITER);
+    }
+
+    public static boolean isValidVersionIdString(String string, char delimiter)
+    {
+        return (string != null) && isValidVersionIdString(string, 0, string.length(), delimiter);
+    }
+
+    public static boolean isValidVersionIdString(String string, int start, int end)
+    {
+        return isValidVersionIdString(string, start, end, DELIMITER);
+    }
+
+    public static boolean isValidVersionIdString(String string, int start, int end, char delimiter)
+    {
+        if (string == null)
+        {
+            return false;
+        }
+
+        int firstDelimiterIndex = string.indexOf(delimiter, start);
+        if ((firstDelimiterIndex == -1) || (firstDelimiterIndex >= (end - 1)))
+        {
+            return false;
+        }
+
+        int secondDelimiterIndex = string.indexOf(delimiter, firstDelimiterIndex + 1);
+        if ((secondDelimiterIndex <= (firstDelimiterIndex + 1)) || (secondDelimiterIndex >= (end - 1)))
+        {
+            return false;
+        }
+
+        return isValidVersionNumber(string, start, firstDelimiterIndex) &&
+                isValidVersionNumber(string, firstDelimiterIndex + 1, secondDelimiterIndex) &&
+                isValidVersionNumber(string, secondDelimiterIndex + 1, end);
+    }
+
+    private static boolean isValidVersionNumber(String string, int start, int end)
+    {
+        int len = end - start;
+        if ((len <= 0) || (len > 10))
+        {
+            // must have length 1-10
+            return false;
+        }
+        if (len == 1)
+        {
+            char c = string.charAt(start);
+            return ('0' <= c) && (c <= '9');
+        }
+        if (string.charAt(start) == '0')
+        {
+            return false;
+        }
+        for (int i = start; i < end; i++)
+        {
+            char c = string.charAt(i);
+            if ((c < '0') || (c > '9'))
+            {
+                return false;
+            }
+        }
+        if (len == 10)
+        {
+            String maxInt = "2147483647";
+            for (int i = 0; i < 10; i++)
+            {
+                char c = string.charAt(start + i);
+                char maxC = maxInt.charAt(i);
+                if (c > maxC)
+                {
+                    return false;
+                }
+                if (c < maxC)
+                {
+                    return true;
+                }
+            }
+        }
+        return true;
     }
 
     public static VersionId newVersionId(int majorVersion, int minorVersion, int patchVersion)

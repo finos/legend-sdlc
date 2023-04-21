@@ -56,7 +56,6 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
-import java.util.regex.Pattern;
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.Response.Status;
 
@@ -94,7 +93,6 @@ abstract class BaseGitLabApi
     protected static final char BRANCH_DELIMITER = '/';
 
     protected static final String RELEASE_TAG_PREFIX = "release-";
-    protected static final Pattern RELEASE_TAG_NAME_PATTERN = Pattern.compile(RELEASE_TAG_PREFIX + "\\d++\\.\\d++\\.\\d++");
 
     private final GitLabConfiguration gitLabConfiguration;
     private final GitLabUserContext userContext;
@@ -458,7 +456,9 @@ abstract class BaseGitLabApi
 
     protected static boolean isVersionTagName(String name)
     {
-        return (name != null) && RELEASE_TAG_NAME_PATTERN.matcher(name).matches();
+        return (name != null) &&
+                name.startsWith(RELEASE_TAG_PREFIX) &&
+                VersionId.isValidVersionIdString(name, RELEASE_TAG_PREFIX.length(), name.length());
     }
 
     protected static VersionId parseVersionTagName(String name)
