@@ -45,6 +45,7 @@ import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
+import org.finos.legend.pure.runtime.java.compiled.generation.orchestrator.VoidLog;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -431,7 +432,7 @@ public class TestServiceExecutionGenerator
         {
             Assert.fail(diagnosticCollector.getDiagnostics().toString());
         }
-        fileManager.writeClassJavaSources(this.classesDirectory, false);
+        fileManager.writeClassJavaSources(this.classesDirectory, false, new VoidLog());
 
         // Create new classloader and check that everything expected is present
         ClassLoader classLoader = new URLClassLoader(new URL[]{this.classesDirectory.toUri().toURL()}, Thread.currentThread().getContextClassLoader());
