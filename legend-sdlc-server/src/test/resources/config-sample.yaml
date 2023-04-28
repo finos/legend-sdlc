@@ -61,6 +61,9 @@ pac4j:
         scope: openid profile api
   bypassPaths:
     - /api/info
+    - /api/server/info
+    - /api/server/platforms
+    - /api/auth/authorized
 
 gitLab:
   newProjectVisibility: public
