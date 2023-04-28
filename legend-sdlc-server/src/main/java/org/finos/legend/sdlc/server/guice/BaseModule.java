@@ -55,6 +55,7 @@ import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthCheckResource;
 import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
 
 import java.util.Collections;
@@ -89,6 +90,7 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(WorkflowJobApi.class).to(GitlabWorkflowJobApi.class);
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
+            binder.bind(GitLabAuthCheckResource.class);
             binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
             binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getGitLabConfiguration()));
             binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
