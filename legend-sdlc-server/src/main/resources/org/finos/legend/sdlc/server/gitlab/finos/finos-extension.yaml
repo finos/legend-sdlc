@@ -10,3 +10,11 @@
         .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
     - files:
         .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
+- projectStructureVersion: 13
+  extensions:
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-3.yml
+        ci_settings.xml: org/finos/legend/sdlc/server/gitlab/finos/ci_settings-1.xml
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-3.yml
+        ci_settings.xml: org/finos/legend/sdlc/server/gitlab/finos/ci_settings-1.xml
