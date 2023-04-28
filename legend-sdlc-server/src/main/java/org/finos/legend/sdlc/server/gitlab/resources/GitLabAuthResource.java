@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2023 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -60,9 +60,7 @@ public class GitLabAuthResource extends BaseResource
     @GET
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public String authorize(@QueryParam("redirect_uri") @ApiParam("URI to redirect to when authorization is complete") String redirectUri,
-                            // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
-                            @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
+    public String authorize(@QueryParam("redirect_uri") @ApiParam("URI to redirect to when authorization is complete") String redirectUri)
     {
         return executeWithLogging("authorizing", () ->
         {
@@ -79,9 +77,7 @@ public class GitLabAuthResource extends BaseResource
     @Path("termsOfServiceAcceptance")
     @Produces(MediaType.APPLICATION_JSON)
     // NOTE: we have to return a set for backward compatibility reason
-    public Set<String> termsOfServiceAcceptance(
-        // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
-        @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
+    public Set<String> termsOfServiceAcceptance()
     {
         return executeWithLogging("checking acceptance of terms of service", () ->
         {
