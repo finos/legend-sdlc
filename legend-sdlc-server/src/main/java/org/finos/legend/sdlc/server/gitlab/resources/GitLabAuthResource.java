@@ -58,26 +58,26 @@ public class GitLabAuthResource extends BaseResource
         return executeWithLogging("processing auth callback", this::processAuthCallback, code, state);
     }
 
-    @GET
-    @Path("authorized")
-    @Produces(MediaType.APPLICATION_JSON)
-    public boolean isAuthorized(
-        // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
-        @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
-    {
-        return executeWithLogging("checking authorization", () ->
-        {
-            try
-            {
-                return this.userContext.isUserAuthorized();
-            }
-            catch (GitLabAuthAccessException e)
-            {
-                getLogger().error("Access exception occurred while checking authorization", e);
-                return false;
-            }
-        });
-    }
+//    @GET
+//    @Path("authorized")
+//    @Produces(MediaType.APPLICATION_JSON)
+//    public boolean isAuthorized(
+//        // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
+//        @QueryParam("mode") @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<String> modes)
+//    {
+//        return executeWithLogging("checking authorization", () ->
+//        {
+//            try
+//            {
+//                return this.userContext.isUserAuthorized();
+//            }
+//            catch (GitLabAuthAccessException e)
+//            {
+//                getLogger().error("Access exception occurred while checking authorization", e);
+//                return false;
+//            }
+//        });
+//    }
 
     @GET
     @Path("authorize")
