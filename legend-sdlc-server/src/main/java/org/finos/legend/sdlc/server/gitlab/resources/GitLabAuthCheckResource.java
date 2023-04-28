@@ -2,6 +2,7 @@ package org.finos.legend.sdlc.server.gitlab.resources;
 
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthAccessException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -43,14 +44,19 @@ public class GitLabAuthCheckResource extends BaseResource
         {
             Session session = SessionUtil.findSession(httpRequest);
 
-            if (session == null)
-            {
-                return  false;
-            } else
+            if (session != null)
             {
                 GitLabUserContext gitLabUserContext = new GitLabUserContext(httpRequest, httpResponse, authorizerManager, appInfo);
-                return gitLabUserContext.isUserAuthorized();
+                try {
+                    return gitLabUserContext.isUserAuthorized();
+                }
+                catch (GitLabAuthAccessException e)
+                {
+                    getLogger().error("Access exception occurred while checking authorization", e);
+                }
             }
+
+            return false;
         });
 
     }
