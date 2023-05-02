@@ -18,6 +18,7 @@ import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthAccessException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabSession;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.SessionUtil;
@@ -58,7 +59,7 @@ public class GitLabAuthCheckResource extends BaseResource
         {
             Session session = SessionUtil.findSession(httpRequest);
 
-            if (session != null)
+            if (session instanceof GitLabSession)
             {
                 GitLabUserContext gitLabUserContext = new GitLabUserContext(httpRequest, httpResponse, authorizerManager, appInfo);
                 try
