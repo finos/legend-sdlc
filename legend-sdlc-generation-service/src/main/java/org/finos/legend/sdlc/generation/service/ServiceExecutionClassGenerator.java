@@ -30,6 +30,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variabl
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
+import java.io.InputStream;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
@@ -198,6 +199,17 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
             {
                 return Temporal.class;
             }
+            case "Byte":
+            {
+                if (usePrimitive && isToOne(variable.multiplicity))
+                {
+                    return byte.class;
+                }
+                else
+                {
+                    return variable.multiplicity.isUpperBoundGreaterThan(1) ? InputStream.class : Byte.class;
+                }
+            }
             default:
             {
                 return null;
@@ -268,12 +280,14 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         StringBuilder appendTypeString(StringBuilder builder)
         {
             boolean isToMany = getMultiplicity().isUpperBoundGreaterThan(1);
-            if (isToMany)
+            boolean isByteType = "Byte".equals(variable._class);
+
+            if (isToMany && !isByteType)
             {
                 builder.append("List<? extends ");
             }
             builder.append(this.javaParamRawType);
-            if (isToMany)
+            if (isToMany && !isByteType)
             {
                 builder.append('>');
             }
