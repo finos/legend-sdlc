@@ -18,10 +18,10 @@ import junit.framework.TestCase;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.finos.legend.sdlc.test.PathTools;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -40,11 +40,11 @@ public class TestLegendSDLCTestSuiteBuilder
     public void testBuildM2MMappingWithTestsTestSuite() throws Exception
     {
         Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
-                "legend::demo::AB { Specific }", Sets.immutable.with("legend::demo::AB Test #1").castToSet(),
-                "model::domain::inmemm2m::mapping::M2MMapping { Specific }", Sets.immutable.with("model::domain::inmemm2m::mapping::M2MMapping Test #1", "model::domain::inmemm2m::mapping::M2MMapping Test #2").castToSet());
+                "legend::demo::SingleQuoteInResultM2M { Specific }", Sets.immutable.with("legend::demo::SingleQuoteInResultM2M Test #1").castToSet(),
+                "model::mapping::SourceToTargetM2M { Specific }", Sets.immutable.with("model::mapping::SourceToTargetM2M Test #1", "model::mapping::SourceToTargetM2M Test #2").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-m2m-mapping-model-with-tests", 2, 3, 0, 0, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-m2m-mapping-model-with-tests", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-m2m-mapping-model-with-tests", "legend", "model");
     }
 
     @Test
@@ -55,7 +55,7 @@ public class TestLegendSDLCTestSuiteBuilder
                 "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 2, 2, 0, 1, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-service-with-testSuites", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-service-with-testSuites", "testTestSuites");
     }
 
     @Test
@@ -65,17 +65,17 @@ public class TestLegendSDLCTestSuiteBuilder
                 "execution::RelationalMapping { Generic }", Sets.immutable.with("execution::RelationalMapping Test #1").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-mapping-with-testTestSuites", 1, 1, 0, 0, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-mapping-with-testTestSuites", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-mapping-with-testTestSuites", Lists.immutable.with("data", "execution", "model", "store"), Lists.immutable.with("model::mapping", "model::domain"));
     }
 
-    protected void testTestSuiteBuilder(String entitiesResourceName, ExpectedTestState expectedTestState) throws Exception
+    protected void testTestSuiteBuilder(ExpectedTestState expectedTestState, String suiteName, String... testingPackages)
     {
-        TestSuite suite;
-        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(PathTools.resourceToPath(entitiesResourceName)))
-        {
-            suite = new LegendSDLCTestSuiteBuilder("vX_X_X")
-                    .buildSuite(entitiesResourceName, entityLoader);
-        }
+        testTestSuiteBuilder(expectedTestState, suiteName, ArrayAdapter.adapt(testingPackages), null);
+    }
+
+    protected void testTestSuiteBuilder(ExpectedTestState expectedTestState, String suiteName, Iterable<String> includePackagesForTesting, Iterable<String> excludePackagesForTesting)
+    {
+        TestSuite suite = new LegendSDLCTestSuiteBuilder(suiteName, "vX_X_X").buildSuiteFromPackages(includePackagesForTesting, excludePackagesForTesting);
         expectedTestState.assertTestSuite(suite);
     }
 
@@ -99,7 +99,7 @@ public class TestLegendSDLCTestSuiteBuilder
                 {
                     t.printStackTrace(pw);
                 }
-                builder.append('\n').append(writer.toString());
+                builder.append('\n').append(writer.getBuffer());
             }
         });
         return builder.toString();
@@ -107,16 +107,16 @@ public class TestLegendSDLCTestSuiteBuilder
 
     protected class ExpectedTestState
     {
-        private final String entitiesResourceName;
+        private final String suiteName;
         private final int expectedTestCount;
         private final int expectedTestCaseCount;
         private final int expectedErrors;
         private final int expectedFailures;
         private final Map<String, Set<String>> expectedTestCasesByTestSuite;
 
-        public ExpectedTestState(String entitiesResourceName, int expectedTestCount, int expectedTestCaseCount, int expectedErrors, int expectedFailures, Map<String, Set<String>> expectedTestCasesByTestSuite)
+        public ExpectedTestState(String suiteName, int expectedTestCount, int expectedTestCaseCount, int expectedErrors, int expectedFailures, Map<String, Set<String>> expectedTestCasesByTestSuite)
         {
-            this.entitiesResourceName = entitiesResourceName;
+            this.suiteName = suiteName;
             this.expectedTestCount = expectedTestCount;
             this.expectedTestCaseCount = expectedTestCaseCount;
             this.expectedErrors = expectedErrors;
@@ -137,7 +137,7 @@ public class TestLegendSDLCTestSuiteBuilder
             TestResult testResult = new TestResult();
             suite.run(testResult);
 
-            Assert.assertEquals(this.entitiesResourceName, suite.getName());
+            Assert.assertEquals(this.suiteName, suite.getName());
             Assert.assertEquals(this.expectedTestCount, suite.testCount());
             Assert.assertEquals(this.expectedTestCaseCount, suite.countTestCases());
 
@@ -148,4 +148,3 @@ public class TestLegendSDLCTestSuiteBuilder
         }
     }
 }
-

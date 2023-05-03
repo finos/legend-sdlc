@@ -30,7 +30,7 @@ class LegacyMappingTestHelper extends TestHelper
         this.testRunner = testRunner;
     }
 
-    void setUp() throws Exception
+    void setUp()
     {
         this.testRunner.setupTestData();
     }

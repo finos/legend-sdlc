@@ -1,9 +1,9 @@
 {
   "classifierPath": "meta::pure::mapping::Mapping",
   "content": {
-    "package": "model::domain::inmemm2m::mapping",
+    "package": "model::mapping",
     "_type": "mapping",
-    "name": "M2MMapping",
+    "name": "SourceToTargetM2M",
     "classMappings": [
       {
         "srcClass": "model::domain::_Firm",

@@ -30,12 +30,14 @@ import org.finos.legend.engine.testable.model.RunTestsResult;
 import org.finos.legend.engine.testable.model.RunTestsTestableInput;
 
 import java.util.List;
+import java.util.regex.Pattern;
 
 class TestableHelper extends TestHelper
 {
     private final TestableRunner testableRunner;
     private final PureModel pureModel;
     private final PureModelContextData pureModelContextData;
+    private Pattern linebreakPattern;
 
     TestableHelper(int junitVersion, String entityPath, TestableRunner testableRunner, PureModel pureModel, PureModelContextData pureModelContextData)
     {
@@ -74,50 +76,62 @@ class TestableHelper extends TestHelper
             {
                 builder.append('=');
             }
-            builder.append("\n");
+            builder.append('\n');
 
             if (failures.notEmpty())
             {
-                failures.collect(TestableHelper::buildTestId, Lists.mutable.ofInitialCapacity(failures.size())).sortThis().appendString(builder, "Test Failures : ", ", ", "\n");
-                failures.forEach(t -> appendMessageForTestFailure(builder, t).append("\n"));
+                failures.collect(this::buildTestId, Lists.mutable.ofInitialCapacity(failures.size())).sortThis().appendString(builder, "Test Failures : ", ", ", "");
+                failures.forEach(t -> appendMessageForTestFailure(builder.append('\n'), t));
             }
             if (errors.notEmpty())
             {
-                errors.collect(TestableHelper::buildTestId, Lists.mutable.ofInitialCapacity(errors.size())).sortThis().appendString(builder, "Test Errors : ", ", ", "\n");
-                errors.forEach(t -> appendMessageForTestError(builder, t).append("\n"));
+                errors.collect(this::buildTestId, Lists.mutable.ofInitialCapacity(errors.size())).sortThis().appendString(builder, "Test Errors : ", ", ", "");
+                errors.forEach(t -> appendMessageForTestError(builder.append('\n'), t));
             }
             fail(builder.toString());
         }
     }
 
-    private static StringBuilder appendMessageForTestFailure(StringBuilder builder, TestExecuted testFailed)
+    private StringBuilder appendMessageForTestFailure(StringBuilder builder, TestExecuted testFailed)
     {
-        appendTestId(builder, testFailed).append(":\n");
-        MutableList<AssertFail> assertFails = ListIterate.selectInstancesOf(testFailed.assertStatuses, AssertFail.class);
-        assertFails.collect(a -> a.id).sortThis().appendString(builder, "Failed Asserts : ", ", ", "\n");
-        assertFails.forEach(a ->
+        appendTestId(builder, testFailed);
+        MutableList<AssertFail> assertFails = ListIterate.selectInstancesOf(testFailed.assertStatuses, AssertFail.class).sortThis();
+        if (assertFails.notEmpty())
         {
-            builder.append(a.id).append(": ").append(a.message).append("\n");
-            if (a instanceof EqualToJsonAssertFail)
+            assertFails.asLazy().collect(a -> a.id).appendString(builder, ":\nFailed Asserts : ", ", ", "");
+            assertFails.forEach(a ->
             {
-                builder.append("  Expected : ").append(((EqualToJsonAssertFail) a).expected).append("\n");
-                builder.append("  Actual : ").append(((EqualToJsonAssertFail) a).actual).append("\n");
-            }
-        });
+                builder.append('\n').append(a.id).append(": ").append(a.message);
+                if (a instanceof EqualToJsonAssertFail)
+                {
+                    builder.append("\n  Expected : ").append(normalizeLinebreaks(((EqualToJsonAssertFail) a).expected));
+                    builder.append("\n  Actual : ").append(normalizeLinebreaks(((EqualToJsonAssertFail) a).actual));
+                }
+            });
+        }
         return builder;
     }
 
-    private static StringBuilder appendMessageForTestError(StringBuilder builder, TestError testError)
+    private String normalizeLinebreaks(String string)
+    {
+        if (this.linebreakPattern == null)
+        {
+            this.linebreakPattern = Pattern.compile("\\R");
+        }
+        return this.linebreakPattern.matcher(string).replaceAll("\n");
+    }
+
+    private StringBuilder appendMessageForTestError(StringBuilder builder, TestError testError)
     {
         return appendTestId(builder, testError).append(":\n").append(testError.error);
     }
 
-    private static String buildTestId(TestResult testResult)
+    private String buildTestId(TestResult testResult)
     {
         return (testResult.testSuiteId == null) ? testResult.atomicTestId : (testResult.testSuiteId + "." + testResult.atomicTestId);
     }
 
-    private static StringBuilder appendTestId(StringBuilder builder, TestResult testResult)
+    private StringBuilder appendTestId(StringBuilder builder, TestResult testResult)
     {
         if (testResult.testSuiteId != null)
         {
@@ -126,7 +140,7 @@ class TestableHelper extends TestHelper
         return builder.append(testResult.atomicTestId);
     }
 
-    private static List<RunTestsTestableInput> buildRunTestsTestableInput(String elementPath)
+    private List<RunTestsTestableInput> buildRunTestsTestableInput(String elementPath)
     {
         RunTestsTestableInput runTestsTestableInput = new RunTestsTestableInput();
         runTestsTestableInput.testable = elementPath;

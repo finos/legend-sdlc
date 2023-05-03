@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2023 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,14 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.test.junit;
+package org.finos.legend.sdlc.test.junit.junit4.model.mapping;
 
-import junit.framework.TestSuite;
+import org.finos.legend.sdlc.test.junit.pure.v1.AbstractMappingTest;
+import org.junit.Test;
 
-public class TestLegendSDLCTestSuite extends TestSuite
+public class TestSourceToTargetM2M extends AbstractMappingTest
 {
-    public static TestSuite suite()
+    @Test
+    public void test1() throws Exception
     {
-        return new LegendSDLCTestSuiteBuilder("Test TestSuite", "vX_X_X").buildSuiteFromPackages("legend", "model::domain", "model::mapping");
+        runTest(1);
+    }
+
+    @Test
+    public void test2() throws Exception
+    {
+        runTest(2);
+    }
+
+    @Override
+    protected String getEntityPath()
+    {
+        return "model::mapping::SourceToTargetM2M";
     }
 }

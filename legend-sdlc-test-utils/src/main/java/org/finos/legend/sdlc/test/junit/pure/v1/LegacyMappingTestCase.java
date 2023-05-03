@@ -35,7 +35,7 @@ public class LegacyMappingTestCase extends LegendSDLCTestCase
     }
 
     @Override
-    protected void doSetUp() throws Exception
+    protected void doSetUp()
     {
         this.helper.setUp();
     }

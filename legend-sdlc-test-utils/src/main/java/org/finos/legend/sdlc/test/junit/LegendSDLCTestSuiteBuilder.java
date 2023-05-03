@@ -20,8 +20,9 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.set.MutableSet;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
@@ -31,6 +32,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Test;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Testable;
@@ -45,84 +47,112 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.ServiceLoader;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class LegendSDLCTestSuiteBuilder
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCTestSuiteBuilder.class);
 
+    private final String name;
     private final String pureVersion;
+    private final Set<String> testableClassifiers;
+    private final ListIterable<Entity> entities;
+    private final PureModel pureModel;
+    private final PureModelContextData pureModelContextData;
+    private final MapIterable<String, PackageableElement> protocolIndex;
+    private final RichIterable<? extends Root_meta_pure_extension_Extension> routerExtensions;
+    private final MutableList<PlanTransformer> planTransformers;
 
-    public LegendSDLCTestSuiteBuilder(String pureVersion)
+    private LegendSDLCTestSuiteBuilder(String name, String pureVersion, ClassLoader classLoader)
     {
+        this.name = name;
         this.pureVersion = pureVersion;
+        this.testableClassifiers = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap(classLoader).keySet();
+        this.entities = getEntities(classLoader);
+        PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(this.entities).build(classLoader);
+        this.pureModel = pureModelWithContextData.getPureModel();
+        this.pureModelContextData = pureModelWithContextData.getPureModelContextData();
+        this.protocolIndex = Iterate.groupByUniqueKey(this.pureModelContextData.getElements(), PackageableElement::getPath);
+        MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class, classLoader));
+        this.routerExtensions = extensions.flatCollect(e -> e.getExtraExtensions(this.pureModel));
+        this.planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
     }
 
-    public LegendSDLCTestSuiteBuilder()
+    public LegendSDLCTestSuiteBuilder(String name, String pureVersion)
     {
-        this(null);
+        this(name, pureVersion, Thread.currentThread().getContextClassLoader());
     }
 
-    public static TestSuite buildTestSuite(String name, Path... entitiesDirectories)
+    public TestSuite buildSuiteFromDirectories(Path... directoriesForTesting)
     {
-        return new LegendSDLCTestSuiteBuilder().buildSuite(name, entitiesDirectories);
-    }
-
-    public static TestSuite buildTestSuite(String name, EntityLoader entityLoader)
-    {
-        return new LegendSDLCTestSuiteBuilder().buildSuite(name, entityLoader);
-    }
-
-    public TestSuite buildSuite(String name, Path... entitiesDirectories)
-    {
-        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(entitiesDirectories))
+        MutableSet<String> entityPaths = Sets.mutable.empty();
+        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(directoriesForTesting))
         {
-            return buildSuite(name, entityLoader);
-        }
-        catch (RuntimeException e)
-        {
-            throw e;
+            entityLoader.getAllEntities().map(Entity::getPath).forEach(entityPaths::add);
         }
         catch (Exception e)
         {
-            throw new RuntimeException(e);
+            LOGGER.error("Error loading entities for testing", e);
+            throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException(e);
         }
+        return buildSuiteFromEntityPaths(entityPaths);
     }
 
-    public TestSuite buildSuite(String name, EntityLoader entityLoader)
+    public TestSuite buildSuiteFromEntityPaths(Iterable<String> entitiesForTestingPaths)
     {
-        return buildSuite(name, entityLoader, null);
+        return buildSuiteFromEntityPaths(Sets.mutable.withAll(entitiesForTestingPaths));
     }
 
-    public TestSuite buildSuite(String name, EntityLoader entityLoader, ClassLoader classLoader)
+    private TestSuite buildSuiteFromEntityPaths(MutableSet<String> pathSet)
     {
-        return buildSuite(name, entityLoader.getAllEntities().collect(Collectors.toList()), classLoader);
-    }
-
-    public TestSuite buildSuite(String name, Collection<? extends Entity> entitiesForTesting, ClassLoader classLoader)
-    {
-        if (classLoader == null)
+        ListIterable<Entity> entitiesForTesting = this.entities.select(e -> pathSet.remove(e.getPath()));
+        if (pathSet.notEmpty())
         {
-            classLoader = Thread.currentThread().getContextClassLoader();
+            throw new RuntimeException(pathSet.toSortedList().makeString("Missing entities: ", ", ", ""));
         }
-        PureModelWithContextData pureModelWithContextData = buildPureModelWithContextData(entitiesForTesting, classLoader);
-        PureModel pureModel = pureModelWithContextData.getPureModel();
-        PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
-        MutableMap<String, PackageableElement> pureModelContextDataIndex = Iterate.groupByUniqueKey(pureModelContextData.getElements(), PackageableElement::getPath);
+        return buildSuite(entitiesForTesting);
+    }
 
-        MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class));
-        RichIterable<? extends Root_meta_pure_extension_Extension> routerExtensions = extensions.flatCollect(e -> e.getExtraExtensions(pureModel));
-        MutableList<PlanTransformer> planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
+    public TestSuite buildSuiteFromPackages(String... packagesForTesting)
+    {
+        return buildSuiteFromPackages(ArrayAdapter.adapt(packagesForTesting));
+    }
 
+    public TestSuite buildSuiteFromPackages(Iterable<String> packagesForTesting)
+    {
+        return buildSuiteFromPackages(packagesForTesting, null);
+    }
+
+    public TestSuite buildSuiteFromPackages(Iterable<String> includePackagesForTesting, Iterable<String> excludePackagesForTesting)
+    {
+        MutableList<String> includePrefixes = (includePackagesForTesting == null) ? null : Iterate.collect(includePackagesForTesting, pkg -> pkg + "::", Lists.mutable.empty());
+        MutableList<String> excludePrefixes = (excludePackagesForTesting == null) ? null : Iterate.collect(excludePackagesForTesting, pkg -> pkg + "::", Lists.mutable.empty());
+        return (includePrefixes == null) ?
+                ((excludePrefixes == null) ?
+                        buildSuite(this.entities) :
+                        buildSuite(e -> excludePrefixes.noneSatisfy(p -> e.getPath().startsWith(p)))) :
+                ((excludePrefixes == null) ?
+                        buildSuite(e -> includePrefixes.anySatisfy(p -> e.getPath().startsWith(p))) :
+                        buildSuite(e -> includePrefixes.anySatisfy(p -> e.getPath().startsWith(p)) && excludePrefixes.noneSatisfy(p -> e.getPath().startsWith(p))));
+    }
+
+    private TestSuite buildSuite(Predicate<? super Entity> entitiesForTestingPred)
+    {
+        return buildSuite((entitiesForTestingPred == null) ? this.entities : this.entities.select(entitiesForTestingPred::test));
+    }
+
+    private TestSuite buildSuite(ListIterable<? extends Entity> entitiesForTesting)
+    {
         TestSuite suite = new TestSuite();
-        suite.setName(name);
+        suite.setName(this.name);
         entitiesForTesting.forEach(entity ->
         {
             LOGGER.debug("Building test suite(s) for {} (classifier: {})", entity.getPath(), entity.getClassifierPath());
 
-            PackageableElement protocolElement = pureModelContextDataIndex.get(entity.getPath());
+            PackageableElement protocolElement = this.protocolIndex.get(entity.getPath());
             if (protocolElement == null)
             {
                 return;
@@ -137,7 +167,7 @@ public class LegendSDLCTestSuiteBuilder
                 Mapping mapping = (Mapping) protocolElement;
                 if ((mapping.tests != null) && !mapping.tests.isEmpty())
                 {
-                    TestSuite mappingTestSuite = buildTestSuite(entity, true, ListIterate.collect(mapping.tests, test -> new LegacyMappingTestCase(entity.getPath(), pureModel, test, planTransformers, routerExtensions, this.pureVersion)));
+                    TestSuite mappingTestSuite = buildTestSuite(entity, true, ListIterate.collect(mapping.tests, test -> new LegacyMappingTestCase(entity.getPath(), this.pureModel, test, this.planTransformers, this.routerExtensions, this.pureVersion)));
                     int testCount = mappingTestSuite.testCount();
                     LOGGER.debug("  Legacy mapping test count for {}: {}", entity.getPath(), testCount);
                     totalTestCount += testCount;
@@ -151,7 +181,7 @@ public class LegendSDLCTestSuiteBuilder
                 Service service = (Service) protocolElement;
                 if (service.test != null)
                 {
-                    TestSuite serviceTestSuite = buildTestSuite(entity, true, new LegacyServiceTestCase(entity.getPath(), pureModel, pureModelContextData, service, planTransformers, routerExtensions, this.pureVersion));
+                    TestSuite serviceTestSuite = buildTestSuite(entity, true, new LegacyServiceTestCase(entity.getPath(), this.pureModel, this.pureModelContextData, service, this.planTransformers, this.routerExtensions, this.pureVersion));
                     int testCount = serviceTestSuite.testCount();
                     LOGGER.debug("  Legacy service test count for {}: {}", entity.getPath(), testCount);
                     totalTestCount += testCount;
@@ -160,18 +190,21 @@ public class LegendSDLCTestSuiteBuilder
             }
 
             // Testables
-            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement modelElement = pureModel.getPackageableElement(entity.getPath());
-            if (modelElement instanceof Testable)
+            if (this.testableClassifiers.contains(entity.getClassifierPath()))
             {
-                Testable testable = (Testable) modelElement;
-                RichIterable<? extends Test> tests = testable._tests();
-                if (tests.notEmpty())
+                org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement modelElement = this.pureModel.getPackageableElement(entity.getPath());
+                if (modelElement instanceof Testable)
                 {
-                    TestSuite testableTestSuite = buildTestSuite(entity, false, new TestableTestCase(entity.getPath(), pureModel, pureModelContextData));
-                    int testCount = testableTestSuite.testCount();
-                    LOGGER.debug("  Testable test count for {}: {}", entity.getPath(), testCount);
-                    totalTestCount += testCount;
-                    suite.addTest(testableTestSuite);
+                    Testable testable = (Testable) modelElement;
+                    RichIterable<? extends Test> tests = testable._tests();
+                    if (tests.notEmpty())
+                    {
+                        TestSuite testableTestSuite = buildTestSuite(entity, false, new TestableTestCase(entity.getPath(), this.pureModel, this.pureModelContextData));
+                        int testCount = testableTestSuite.testCount();
+                        LOGGER.debug("  Testable test count for {}: {}", entity.getPath(), testCount);
+                        totalTestCount += testCount;
+                        suite.addTest(testableTestSuite);
+                    }
                 }
             }
 
@@ -184,23 +217,6 @@ public class LegendSDLCTestSuiteBuilder
             LOGGER.debug("Entity test case count: {}", suite.countTestCases());
         }
         return suite;
-    }
-
-    private PureModelWithContextData buildPureModelWithContextData(Collection<? extends Entity> entitiesForTesting, ClassLoader classLoader)
-    {
-        MutableSet<String> entitiesForTestingPaths = Iterate.collect(entitiesForTesting, Entity::getPath, Sets.mutable.empty());
-        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(classLoader))
-        {
-            return PureModelBuilder.newBuilder()
-                    .withEntitiesIfPossible(entitiesForTesting)
-                    .withEntitiesIfPossible(entityLoader.getAllEntities().filter(e -> !entitiesForTestingPaths.contains(e.getPath())))
-                    .build(classLoader);
-        }
-        catch (Exception e)
-        {
-            LOGGER.error("Error loading entities", e);
-            throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException("Error loading entities", e);
-        }
     }
 
     private TestSuite buildTestSuite(Entity entity, boolean legacy, LegendSDLCTestCase testCase)
@@ -218,5 +234,24 @@ public class LegendSDLCTestSuiteBuilder
             suite.addTest(testCase);
         });
         return suite;
+    }
+
+    @SuppressWarnings("unused")
+    public static TestSuite buildTestSuite(String name, Path... entitiesDirectories)
+    {
+        return new LegendSDLCTestSuiteBuilder(name, null).buildSuiteFromDirectories(entitiesDirectories);
+    }
+
+    private static MutableList<Entity> getEntities(ClassLoader classLoader)
+    {
+        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(classLoader))
+        {
+            return entityLoader.getAllEntities().collect(Collectors.toCollection(Lists.mutable::empty));
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Error loading entities", e);
+            throw (e instanceof RuntimeException) ? (RuntimeException) e : new RuntimeException("Error loading entities", e);
+        }
     }
 }

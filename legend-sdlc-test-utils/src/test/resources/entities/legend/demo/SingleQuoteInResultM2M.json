@@ -49,7 +49,7 @@
     } ],
     "enumerationMappings" : [ ],
     "includedMappings" : [ ],
-    "name" : "AB",
+    "name" : "SingleQuoteInResultM2M",
     "package" : "legend::demo",
     "tests" : [ {
       "assert" : {

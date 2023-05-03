@@ -19,20 +19,13 @@ import org.finos.legend.sdlc.test.PathTools;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
-
 public class TestEntityValidator
 {
     @Test
-    public void testM2MMappingModelValidation() throws Exception
+    public void testEntityValidator() throws Exception
     {
-        testEntityValidator("legend-sdlc-test-m2m-mapping-model-with-tests", 10, 0);
-    }
-
-    private void testEntityValidator(String entitiesResourceName, int expectedEntityCount, int expectedViolationCount) throws IOException
-    {
-        EntityValidator.ValidationReport report = EntityValidator.validateEntities(PathTools.resourceToPath(entitiesResourceName));
-        assertEntityValidationReport(report, expectedEntityCount, expectedViolationCount);
+        EntityValidator.ValidationReport report = EntityValidator.validateEntities(PathTools.resourceToPath("entities").getParent());
+        assertEntityValidationReport(report, 25, 0);
     }
 
     private void assertEntityValidationReport(EntityValidator.ValidationReport report, int expectedEntityCount, int expectedViolationCount)
