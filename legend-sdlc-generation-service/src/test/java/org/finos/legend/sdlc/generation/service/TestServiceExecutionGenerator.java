@@ -160,6 +160,33 @@ public class TestServiceExecutionGenerator
     }
 
     @Test
+    public void testSimpleServiceWithPureOneByteParam() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::ModelToModelServiceWithPureOneByteParam");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceWithPureOneByteParam", byte.class);
+    }
+
+    @Test
+    public void testSimpleServiceWithZeroOneByteParam() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::ModelToModelServiceWithZeroOneByteParam");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceWithZeroOneByteParam", Byte.class);
+    }
+
+    @Test
+    public void testSimpleServiceWithZeroManyByteParam() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service service = getService("service::ModelToModelServiceWithZeroManyByteParam");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        assertExecuteMethods(classLoader, "org.finos.service.ModelToModelServiceWithZeroManyByteParam", InputStream.class);
+    }
+
+    @Test
     public void testSimpleMultiService() throws Exception
     {
         String packagePrefix = "org.finos";

@@ -126,6 +126,27 @@ public class TestServiceExecutionClassGenerator
     }
 
     @Test
+    public void testSimpleServiceWithZeroOneByteParam() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithZeroOneByteParam");
+        assertExecuteMethodsExist(cls, Byte.class);
+    }
+
+    @Test
+    public void testSimpleServiceWithZeroManyByteParam() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithZeroManyByteParam");
+        assertExecuteMethodsExist(cls, InputStream.class);
+    }
+
+    @Test
+    public void testSimpleServiceWithPureOneByteParam() throws Exception
+    {
+        Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithPureOneByteParam");
+        assertExecuteMethodsExist(cls, byte.class);
+    }
+
+    @Test
     public void testSimpleServiceWithNMultiplicityParam() throws Exception
     {
         Class<?> cls = loadAndCompileService("org.finos", "service::ModelToModelServiceWithNMultiplicityParam");
