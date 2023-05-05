@@ -40,6 +40,17 @@ jobs:
           git config --global user.email "37706051+finos-admin@users.noreply.github.com"
           git config --global user.name "FINOS Administrator"
 
+      - name: Set up Maven Central
+        uses: actions/setup-java@v2
+        with:
+          distribution: "zulu"
+          java-version: "11"
+          server-id: ossrh
+          server-username: CI_DEPLOY_USERNAME
+          server-password: CI_DEPLOY_PASSWORD
+          gpg-private-key: ${{ secrets.CI_GPG_PRIVATE_KEY }}
+          gpg-passphrase: CI_GPG_PASSPHRASE
+
       - name: Update And Commit Legend Stack Version Upgrade
         run: |
           pureVersion="${{ github.event.client_payload.legendPureVersion }}"
@@ -62,17 +73,6 @@ jobs:
             git commit -m "Legend Stack Versions upgrade"
             git push origin master
           fi
-
-      - name: Set up Maven Central
-        uses: actions/setup-java@v2
-        with:
-          distribution: "zulu"
-          java-version: "11"
-          server-id: ossrh
-          server-username: CI_DEPLOY_USERNAME
-          server-password: CI_DEPLOY_PASSWORD
-          gpg-private-key: ${{ secrets.CI_GPG_PRIVATE_KEY }}
-          gpg-passphrase: CI_GPG_PASSPHRASE
 
       - name: Compute next development version
         run: |
