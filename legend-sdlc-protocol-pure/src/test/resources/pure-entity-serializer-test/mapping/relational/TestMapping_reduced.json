@@ -226,6 +226,8 @@
     ],
     "includedMappings": [
       {
+        "_type": "mappingIncludeMapping",
+        "createdFromExplicitType": false,
         "includedMapping": "model::mapping::OtherMapping"
       }
     ],
