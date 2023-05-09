@@ -51,7 +51,7 @@ jobs:
           gpg-private-key: ${{ secrets.CI_GPG_PRIVATE_KEY }}
           gpg-passphrase: CI_GPG_PASSPHRASE
 
-      - name: Update And Commit Legend Stack Version Upgrade
+      - name: Update Legend Stack Version Upgrade
         run: |
           pureVersion="${{ github.event.client_payload.legendPureVersion }}"
           sharedVersion="${{ github.event.client_payload.legendSharedVersion }}"
@@ -67,14 +67,42 @@ jobs:
           if [ -n "$engineVersion" ]; then
             mvn versions:set-property -Dproperty=legend.engine.version -DnewVersion=${engineVersion}
           fi
+
+      - name: Build + Test
+        run: mvn clean install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+
+      - name: Configure and start GitLab container
+        run: docker run --detach
+          --hostname localhost
+          --env GITLAB_OMNIBUS_CONFIG="gitlab_rails['initial_root_password'] = 'ac0018BD19066353'"
+          --publish 8090:80
+          --name gitlab
+          gitlab/gitlab-ee:12.10.14-ee.0
+
+      - name: Wait until gitlab container is up and running
+        run: sleep 450
+
+      - name: Gitlab Docker Test
+        run: mvn verify javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ -P test-gitlab-docker
+
+      - name: Shutdown GitLab container
+        run: docker stop gitlab
+
+      - name: Commit Legend Stack Version Upgrade
+        if: success()
+        run: |
+          pureVersion="${{ github.event.client_payload.legendPureVersion }}"
+          sharedVersion="${{ github.event.client_payload.legendSharedVersion }}"
+          engineVersion="${{ github.event.client_payload.legendEngineVersion }}"
           
           if [ -n "$sharedVersion" ] || [ -n "$engineVersion" ] || [ -n "$pureVersion" ]; then
             git add .
             git commit -m "Legend Stack Versions upgrade"
             git push origin master
-          fi
+          fi    
 
       - name: Compute next development version
+        if: success()
         run: |
           releaseVersion=${{ github.event.client_payload.releaseVersion }}
           n=${releaseVersion//[!0-9]/ }
@@ -84,7 +112,9 @@ jobs:
           echo "DEVELOPMENT_VERSION=${developmentVersion}" >> $GITHUB_ENV
 
       - name: Prepare release
+        if: success()
         run: mvn -B -DpreparationGoals=clean release:prepare -DreleaseVersion=${{ github.event.client_payload.releaseVersion }} -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} -P release
 
       - name: Perform release
+        if: success()
         run: mvn -B release:perform -P release,docker
