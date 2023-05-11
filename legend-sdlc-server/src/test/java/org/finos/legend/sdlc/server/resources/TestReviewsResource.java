@@ -52,7 +52,7 @@ public class TestReviewsResource extends AbstractLegendSDLCServerResourceTest
     {
         this.backend.project("A").addReview("456");  
 
-        Response response = this.clientFor("/api/projects/A/reviews?state=OPEN&limit=2").request().get();
+        Response response = this.clientFor("/api/projects/A/reviews?limit=2").request().get();
 
         if (response.getStatus() != 200)
         {
@@ -64,6 +64,27 @@ public class TestReviewsResource extends AbstractLegendSDLCServerResourceTest
             });
     
             
+        Assert.assertNotNull(reviews);
+        Assert.assertEquals(1, reviews.size());
+    }
+
+    @Test
+    public void testGetReviewsForPatchReleaseVersion() throws HttpResponseException
+    {
+        this.backend.project("A").addReview("457", "1.0.1");
+
+        Response response = this.clientFor("/api/projects/A/patches/1.0.1/reviews?limit=2").request().get();
+
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+
+        List<Review> reviews = response.readEntity(new GenericType<List<Review>>()
+        {
+        });
+
+
         Assert.assertNotNull(reviews);
         Assert.assertEquals(1, reviews.size());
     }

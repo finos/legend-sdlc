@@ -23,78 +23,98 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
  */
 public interface RevisionApi
 {
-    RevisionAccessContext getProjectRevisionContext(String projectId);
+    RevisionAccessContext getProjectRevisionContext(String projectId, String patchReleaseVersion);
 
-    RevisionAccessContext getProjectEntityRevisionContext(String projectId, String entityPath);
+    default RevisionAccessContext getProjectRevisionContext(String projectId)
+    {
+        return this.getProjectRevisionContext(projectId, null);
+    }
 
-    RevisionAccessContext getProjectPackageRevisionContext(String projectId, String packagePath);
+    RevisionAccessContext getProjectEntityRevisionContext(String projectId, String patchReleaseVersion, String entityPath);
+
+    default RevisionAccessContext getProjectEntityRevisionContext(String projectId, String entityPath)
+    {
+        return this.getProjectEntityRevisionContext(projectId, null, entityPath);
+    }
+
+    RevisionAccessContext getProjectPackageRevisionContext(String projectId, String patchReleaseVersion, String packagePath);
+
+    default RevisionAccessContext getProjectPackageRevisionContext(String projectId, String packagePath)
+    {
+        return this.getProjectPackageRevisionContext(projectId, null, packagePath);
+    }
 
     default RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.USER);
+        return this.getWorkspaceRevisionContext(projectId, null, workspaceId, WorkspaceType.USER);
     }
 
     default RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.GROUP);
+        return this.getWorkspaceRevisionContext(projectId, null, workspaceId, WorkspaceType.GROUP);
     }
 
     // for backward compatibility
     @Deprecated
     default RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return getWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.USER);
+        return getWorkspaceRevisionContext(projectId, null, workspaceId, WorkspaceType.USER);
     }
 
-    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType);
+    RevisionAccessContext getWorkspaceRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
 
     default RevisionAccessContext getBackupUserWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.USER);
+        return this.getBackupWorkspaceRevisionContext(projectId, null, workspaceId, WorkspaceType.USER);
     }
 
     default RevisionAccessContext getBackupGroupWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspaceRevisionContext(projectId, workspaceId, WorkspaceType.GROUP);
+        return this.getBackupWorkspaceRevisionContext(projectId, null, workspaceId, WorkspaceType.GROUP);
     }
 
-    RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType);
+    RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
 
     default RevisionAccessContext getUserWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId, WorkspaceType.USER);
+        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, null, workspaceId, WorkspaceType.USER);
     }
 
     default RevisionAccessContext getGroupWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId, WorkspaceType.GROUP);
+        return this.getWorkspaceWithConflictResolutionRevisionContext(projectId, null, workspaceId, WorkspaceType.GROUP);
     }
 
-    RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType);
+    RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
 
     default RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return this.getWorkspaceEntityRevisionContext(projectId, workspaceId, WorkspaceType.USER, entityPath);
+        return this.getWorkspaceEntityRevisionContext(projectId, null, workspaceId, WorkspaceType.USER, entityPath);
     }
 
     default RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return this.getWorkspaceEntityRevisionContext(projectId, workspaceId, WorkspaceType.GROUP, entityPath);
+        return this.getWorkspaceEntityRevisionContext(projectId, null, workspaceId, WorkspaceType.GROUP, entityPath);
     }
 
-    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType, String entityPath);
+    RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String entityPath);
 
     default RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return this.getWorkspacePackageRevisionContext(projectId, workspaceId, WorkspaceType.USER, packagePath);
+        return this.getWorkspacePackageRevisionContext(projectId, null, workspaceId, WorkspaceType.USER, packagePath);
     }
 
     default RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return this.getWorkspacePackageRevisionContext(projectId, workspaceId, WorkspaceType.GROUP, packagePath);
+        return this.getWorkspacePackageRevisionContext(projectId, null, workspaceId, WorkspaceType.GROUP, packagePath);
     }
 
-    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType, String packagePath);
+    RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String packagePath);
 
-    RevisionStatus getRevisionStatus(String projectId, String revisionId);
+    RevisionStatus getRevisionStatus(String projectId, String patchReleaseVersion, String revisionId);
+
+    default RevisionStatus getRevisionStatus(String projectId, String revisionId)
+    {
+        return this.getRevisionStatus(projectId, null, revisionId);
+    }
 }

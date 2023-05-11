@@ -91,7 +91,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId);
+                return getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId, null);
             }
 
             @Override

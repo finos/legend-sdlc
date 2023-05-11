@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.inmemory.backend;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
@@ -75,6 +76,17 @@ public class InMemoryMixins
     @JsonSubTypes({
         @JsonSubTypes.Type(value = InMemoryReview.class, name = "InMemoryReview")})
     public abstract class Review
+    {
+
+    }
+
+    @JsonTypeInfo(
+            use = JsonTypeInfo.Id.NAME,
+            include = JsonTypeInfo.As.PROPERTY,
+            property = "jackson-type")
+    @JsonSubTypes({
+            @JsonSubTypes.Type(value = InMemoryPatch.class, name = "InMemoryPatch")})
+    public abstract class Patch
     {
 
     }

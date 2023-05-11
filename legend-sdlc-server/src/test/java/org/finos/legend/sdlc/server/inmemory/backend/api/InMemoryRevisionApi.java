@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
 
@@ -40,15 +41,16 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getProjectRevisionContext(String projectId)
+    public RevisionAccessContext getProjectRevisionContext(String projectId, String patchReleaseVersion)
     {
         InMemoryProject project = this.backend.getProject(projectId);
+        InMemoryPatch patch = project.getPatch(patchReleaseVersion);
         return new RevisionAccessContext()
         {
             @Override
             public Revision getRevision(String revisionId)
             {
-                return project.getRevision(revisionId);
+                return patch == null ? project.getRevision(revisionId) : patch.getRevision(revisionId);
             }
 
             @Override
@@ -60,7 +62,7 @@ public class InMemoryRevisionApi implements RevisionApi
             @Override
             public Revision getCurrentRevision()
             {
-                return project.getCurrentRevision();
+                return patch == null ? project.getCurrentRevision() : patch.getCurrentRevision();
             }
 
             @Override
@@ -72,21 +74,22 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getProjectEntityRevisionContext(String projectId, String entityPath)
+    public RevisionAccessContext getProjectEntityRevisionContext(String projectId, String patchReleaseVersion, String entityPath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getProjectPackageRevisionContext(String projectId, String packagePath)
+    public RevisionAccessContext getProjectPackageRevisionContext(String projectId, String patchReleaseVersion, String packagePath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public RevisionAccessContext getWorkspaceRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
-        InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? backend.getProject(projectId).getGroupWorkspace(workspaceId) : backend.getProject(projectId).getUserWorkspace(workspaceId);
+        InMemoryProject project = backend.getProject(projectId);
+        InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceId, patchReleaseVersion) : project.getUserWorkspace(workspaceId, patchReleaseVersion);
         return new RevisionAccessContext()
         {
             @Override
@@ -116,31 +119,31 @@ public class InMemoryRevisionApi implements RevisionApi
     }
 
     @Override
-    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public RevisionAccessContext getBackupWorkspaceRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public RevisionAccessContext getWorkspaceWithConflictResolutionRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType, String entityPath)
+    public RevisionAccessContext getWorkspaceEntityRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String entityPath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String workspaceId, WorkspaceType workspaceType, String packagePath)
+    public RevisionAccessContext getWorkspacePackageRevisionContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String packagePath)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public RevisionStatus getRevisionStatus(String projectId, String revisionId)
+    public RevisionStatus getRevisionStatus(String projectId, String patchReleaseVersion, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

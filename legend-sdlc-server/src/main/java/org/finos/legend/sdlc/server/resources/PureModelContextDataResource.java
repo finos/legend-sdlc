@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 
-abstract class PureModelContextDataResource extends BaseResource
+public abstract class PureModelContextDataResource extends BaseResource
 {
     protected PureModelContextData getPureModelContextData(String projectId, String revisionOrVersionId, EntityAccessContext entityAccessContext)
     {

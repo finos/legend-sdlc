@@ -57,11 +57,11 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     }
 
     @Override
-    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
+    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, String patchReleaseVersion)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(projectId, getDefaultBranch(gitLabProjectId))
+        return new RefWorkflowAccessContext(projectId, getSourceBranch(gitLabProjectId, patchReleaseVersion))
         {
             @Override
             protected String getInfoForException()
@@ -78,12 +78,12 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId))
+        return new RefWorkflowAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId, patchReleaseVersion))
         {
             @Override
             protected String getInfoForException()
@@ -94,7 +94,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
+                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType);
             }
         };
     }
@@ -121,14 +121,14 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     }
 
     @Override
-    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
+    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String patchReleaseVersion, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersion, reviewId, true);
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch(), patchReleaseVersion);
         if (workspaceInfo == null)
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);

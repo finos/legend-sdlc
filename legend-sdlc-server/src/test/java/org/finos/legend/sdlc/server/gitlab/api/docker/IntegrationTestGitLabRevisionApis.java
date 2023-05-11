@@ -16,9 +16,11 @@ package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApiTestResource;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -48,6 +50,18 @@ public class IntegrationTestGitLabRevisionApis extends AbstractGitLabApiTest
         gitLabRevisionApiTestResource.runGroupWorkspaceRevisionTest();
     }
 
+    @Test
+    public void testUserWorkspaceRevisionsForPatchReleaseVersion()
+    {
+        gitLabRevisionApiTestResource.runUserWorkspaceRevisionTestForPatchReleaseVersion();
+    }
+
+    @Test
+    public void testGroupWorkspaceRevisionsForPatchReleaseVersion()
+    {
+        gitLabRevisionApiTestResource.runGroupWorkspaceRevisionTestForPatchReleaseVersion();
+    }
+
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */
@@ -62,7 +76,9 @@ public class IntegrationTestGitLabRevisionApis extends AbstractGitLabApiTest
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabWorkspaceApi gitLabWorkspaceApi = new GitLabWorkspaceApi(gitLabConfig, gitLabMemberUserContext, gitLabRevisionApi, backgroundTaskProcessor);
         GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabPatchApi gitLabPatchApi = new GitLabPatchApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabVersionApi gitLabVersionApi = new GitLabVersionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
 
-        gitLabRevisionApiTestResource = new GitLabRevisionApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabRevisionApi);
+        gitLabRevisionApiTestResource = new GitLabRevisionApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabRevisionApi, gitLabPatchApi, gitLabVersionApi);
     }
 }

@@ -27,13 +27,13 @@ public class InMemoryBackupApi implements BackupApi
     }
 
     @Override
-    public void discardBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void discardBackupWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void recoverBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType, boolean forceRecovery)
+    public void recoverBackupWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, boolean forceRecovery)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

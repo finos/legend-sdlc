@@ -19,6 +19,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
@@ -69,6 +70,7 @@ public class SDLCServerClientRule implements TestRule
         this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
         this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
         this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
+        this.objectMapper.addMixIn(Patch.class, InMemoryMixins.Patch.class);
         this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
         this.objectMapper.findAndRegisterModules();
         this.client = this.createClient();

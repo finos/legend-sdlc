@@ -26,7 +26,7 @@ public interface BackupApi
      */
     default void discardBackupUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, workspaceId, WorkspaceType.USER);
+        this.discardBackupWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
     }
 
     /**
@@ -37,17 +37,18 @@ public interface BackupApi
      */
     default void discardBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, workspaceId, WorkspaceType.GROUP);
+        this.discardBackupWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
     }
 
     /**
      * Discard the backup workspace
      *
-     * @param projectId        project id
-     * @param workspaceId      id of backup workspace
-     * @param workspaceType workspace type
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param workspaceId         id of backup workspace
+     * @param workspaceType       workspace type
      */
-    void discardBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType);
+    void discardBackupWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
 
     /**
      * Recover the backup user workspace
@@ -58,7 +59,7 @@ public interface BackupApi
      */
     default void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, workspaceId, WorkspaceType.USER, forceRecovery);
+        this.recoverBackupWorkspace(projectId, null, workspaceId, WorkspaceType.USER, forceRecovery);
     }
 
     /**
@@ -70,16 +71,17 @@ public interface BackupApi
      */
     default void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, workspaceId, WorkspaceType.GROUP, forceRecovery);
+        this.recoverBackupWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP, forceRecovery);
     }
 
     /**
      * Recover the backup workspace
      *
-     * @param projectId        project id
-     * @param workspaceId      workspace id
-     * @param workspaceType workspace type
-     * @param forceRecovery    flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param workspaceId         workspace id
+     * @param workspaceType       workspace type
+     * @param forceRecovery       flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType, boolean forceRecovery);
+    void recoverBackupWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, boolean forceRecovery);
 }

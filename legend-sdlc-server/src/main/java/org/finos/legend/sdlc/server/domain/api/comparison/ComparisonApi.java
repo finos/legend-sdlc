@@ -55,12 +55,18 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the creation of the workspace
      * to the current revision of the workspace
      *
-     * @param projectId     project id
-     * @param workspaceId   workspace id
-     * @param workspaceType workspace type
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param workspaceId         workspace id
+     * @param workspaceType       workspace type
      * @return comparison between workspace HEAD and BASE
      */
-    Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, WorkspaceType workspaceType);
+    Comparison getWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+
+    default Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
+    {
+        return this.getWorkspaceCreationComparison(projectId, null, workspaceId, workspaceType);
+    }
 
     /**
      * Get the comparison between user workspace HEAD and project HEAD
@@ -98,12 +104,18 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the current revision of the
      * project to the current revision of the workspace
      *
-     * @param projectId     project id
-     * @param workspaceId   workspace id
-     * @param workspaceType workspace type
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param workspaceId         workspace id
+     * @param workspaceType       workspace type
      * @return comparison between workspace HEAD and project HEAD
      */
-    Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, WorkspaceType workspaceType);
+    Comparison getWorkspaceProjectComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+
+    default Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
+    {
+        return this.getWorkspaceProjectComparison(projectId, null, workspaceId, workspaceType);
+    }
 
     /**
      * Get the comparison for a given review (between review workspace HEAD and project HEAD)
@@ -111,20 +123,31 @@ public interface ComparisonApi
      * Given a review, returns the comparison for that review
      * Uses the diff ref (start and end revision id for review) to get revisions ids for comparison
      *
-     * @param projectId project id
-     * @param reviewId  review id
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param reviewId            review id
      * @return comparison between review workspace HEAD and project HEAD
      */
-    Comparison getReviewComparison(String projectId, String reviewId);
+    Comparison getReviewComparison(String projectId, String patchReleaseVersion, String reviewId);
 
+    default Comparison getReviewComparison(String projectId, String reviewId)
+    {
+        return this.getReviewComparison(projectId, null, reviewId);
+    }
 
     /**
      * Get the comparison for a given review (between review workspace HEAD and workspace BASE)
      *
-     * @param projectId project id
-     * @param reviewId  review id
+     * @param projectId           project id
+     * @param patchReleaseVersion patch release version
+     * @param reviewId            review id
      * @return comparison between review workspace HEAD and BASE
      */
-    Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId);
+    Comparison getReviewWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String reviewId);
+
+    default Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId)
+    {
+        return this.getReviewWorkspaceCreationComparison(projectId, null, reviewId);
+    }
 }
 

@@ -58,6 +58,12 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     }
 
     @Override
+    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    {
+        return null;
+    }
+
+    @Override
     public FileAccessContext getFileAccessContext(String projectId, VersionId versionId)
     {
         CacheKey cacheKey = getCacheKey(projectId, versionId);
@@ -85,9 +91,9 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     }
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
     {
-        return this.delegate.getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, paths);
+        return this.delegate.getRevisionAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, paths);
     }
 
     @Override
@@ -105,7 +111,7 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // File Modification Access Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId, String patchRelaseVesion)
     {
         return this.delegate.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId);
     }

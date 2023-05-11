@@ -23,9 +23,19 @@ import javax.ws.rs.core.Response;
 
 public interface WorkflowApi
 {
-    WorkflowAccessContext getProjectWorkflowAccessContext(String projectId);
+    WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, String patchReleaseVersion);
 
-    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    default WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
+    {
+        return this.getProjectWorkflowAccessContext(projectId, null);
+    }
+
+    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+
+    default WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    {
+        return this.getWorkspaceWorkflowAccessContext(projectId, null, workspaceId, workspaceType, workspaceAccessType);
+    }
 
     default WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, String versionIdString)
     {
@@ -43,5 +53,10 @@ public interface WorkflowApi
 
     WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, VersionId versionId);
 
-    WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId);
+    WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String patchReleaseVersion, String reviewId);
+
+    default WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
+    {
+        return this.getReviewWorkflowAccessContext(projectId, null, reviewId);
+    }
 }

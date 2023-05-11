@@ -28,19 +28,19 @@ public class InMemoryConflictResolutionApi implements ConflictResolutionApi
     }
 
     @Override
-    public void discardConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void discardConflictResolution(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void discardChangesConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void discardChangesConflictResolution(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void acceptConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType, PerformChangesCommand command)
+    public void acceptConflictResolution(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, PerformChangesCommand command)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

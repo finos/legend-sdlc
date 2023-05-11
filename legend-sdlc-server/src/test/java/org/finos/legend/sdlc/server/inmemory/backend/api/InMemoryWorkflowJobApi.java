@@ -30,13 +30,13 @@ public class InMemoryWorkflowJobApi implements WorkflowJobApi
     }
 
     @Override
-    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
+    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, String patchReleaseVersion)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         throw new UnsupportedOperationException();
     }
@@ -48,7 +48,7 @@ public class InMemoryWorkflowJobApi implements WorkflowJobApi
     }
 
     @Override
-    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String patchReleaseVersion, String reviewId)
     {
         throw new UnsupportedOperationException();
     }

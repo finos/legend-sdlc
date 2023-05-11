@@ -16,10 +16,14 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.Version;
+import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -35,15 +39,21 @@ public class GitLabProjectConfigurationApiTestResource
     private final GitLabWorkspaceApi gitLabWorkspaceApi;
     private final GitLabProjectApi gitLabProjectApi;
     private final GitLabProjectConfigurationApi gitLabProjectConfigurationApi;
+    private final GitLabPatchApi gitlabPatchApi;
+    private final GitLabVersionApi gitlabVersionApi;
+    private final GitLabRevisionApi gitLabRevisionApi;
 
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabProjectConfigurationApiTestResource.class);
 
-    public GitLabProjectConfigurationApiTestResource(GitLabWorkspaceApi gitLabWorkspaceApi, GitLabProjectApi gitLabProjectApi, GitLabProjectConfigurationApi gitLabProjectConfigurationApi)
+    public GitLabProjectConfigurationApiTestResource(GitLabWorkspaceApi gitLabWorkspaceApi, GitLabProjectApi gitLabProjectApi, GitLabProjectConfigurationApi gitLabProjectConfigurationApi,GitLabPatchApi gitlabPatchAPi, GitLabVersionApi gitlabVersionApi, GitLabRevisionApi gitLabRevisionApi)
     {
         this.gitLabWorkspaceApi = gitLabWorkspaceApi;
         this.gitLabProjectApi = gitLabProjectApi;
         this.gitLabProjectConfigurationApi = gitLabProjectConfigurationApi;
+        this.gitlabPatchApi = gitlabPatchAPi;
+        this.gitlabVersionApi = gitlabVersionApi;
+        this.gitLabRevisionApi = gitLabRevisionApi;
     }
 
     public void runUserAndGroupWorkspaceProjectConfigurationTest()
@@ -87,6 +97,57 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertNull(createdWorkspaceTwo.getUserId());
 
         ProjectConfiguration projectConfigurationTwo = gitLabProjectConfigurationApi.getGroupWorkspaceProjectConfiguration(projectId, workspaceTwoId);
+
+        Assert.assertNotNull(projectConfigurationTwo);
+        Assert.assertEquals(projectConfigurationTwo.getArtifactId(), artifactId);
+        Assert.assertEquals(projectConfigurationTwo.getGroupId(), groupId);
+    }
+
+    public void runUserAndGroupWorkspaceProjectConfigurationTestForPatchReleaseVersion()
+    {
+        String projectName = "PCTestProjectOne";
+        String description = "A test project.";
+        String groupId = "org.finos.sdlc.test";
+        String artifactId = "pctestprojone";
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
+        String workspaceOneId = "testworkspaceone";
+        String workspaceTwoId = "testworkspacetwo";
+
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+        Assert.assertNull(createdProject.getProjectType());
+
+        String projectId = createdProject.getProjectId();
+        Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Patch patch = gitlabPatchApi.newPatch(projectId, version);
+        String patchReleaseVersion = patch.getPatchReleaseVersion();
+
+        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
+
+        Assert.assertNotNull(createdWorkspaceOne);
+        Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
+        Assert.assertNotNull(createdWorkspaceOne.getUserId());
+
+        ProjectConfiguration projectConfiguration = gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
+
+        Assert.assertNotNull(projectConfiguration);
+        Assert.assertNull(projectConfiguration.getProjectType());
+        Assert.assertEquals(projectConfiguration.getArtifactId(), artifactId);
+        Assert.assertEquals(projectConfiguration.getGroupId(), groupId);
+
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP);
+
+        Assert.assertNotNull(createdWorkspaceTwo);
+        Assert.assertEquals(workspaceTwoId, createdWorkspaceTwo.getWorkspaceId());
+        Assert.assertEquals(projectId, createdWorkspaceTwo.getProjectId());
+        Assert.assertNull(createdWorkspaceTwo.getUserId());
+
+        ProjectConfiguration projectConfigurationTwo = gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP);
 
         Assert.assertNotNull(projectConfigurationTwo);
         Assert.assertEquals(projectConfigurationTwo.getArtifactId(), artifactId);

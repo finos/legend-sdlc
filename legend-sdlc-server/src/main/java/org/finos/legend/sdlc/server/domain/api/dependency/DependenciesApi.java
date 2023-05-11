@@ -23,18 +23,23 @@ public interface DependenciesApi
 {
     default Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, WorkspaceType.USER, revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, null, workspaceId, WorkspaceType.USER, revisionId, transitive);
     }
 
     default Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, workspaceId, WorkspaceType.GROUP, revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, null, workspaceId, WorkspaceType.GROUP, revisionId, transitive);
     }
 
     // Upstream projects: projects that the project depends on
-    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive);
+    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive);
 
-    Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String revisionId, boolean transitive);
+    default Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String revisionId, boolean transitive)
+    {
+        return this.getProjectRevisionUpstreamProjects(projectId, null, revisionId, transitive);
+    }
+
+    Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String patchReleaseVersion, String revisionId, boolean transitive);
 
     Set<ProjectDependency> getProjectVersionUpstreamProjects(String projectId, String versionId, boolean transitive);
 

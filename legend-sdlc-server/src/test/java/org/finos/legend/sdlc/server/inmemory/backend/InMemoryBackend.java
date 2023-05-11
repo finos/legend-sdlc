@@ -110,13 +110,18 @@ public class InMemoryBackend
 
         public void addWorkspace(String workspaceId, WorkspaceType workspaceType)
         {
+           this.addWorkspace(workspaceId, workspaceType, null);
+        }
+
+        public void addWorkspace(String workspaceId, WorkspaceType workspaceType, String patchReleaseVersion)
+        {
             if (workspaceType == WorkspaceType.GROUP)
             {
-                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision());
+                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
             }
             else
             {
-                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
             }
         }
 
@@ -141,12 +146,26 @@ public class InMemoryBackend
 
         private void addEntities(String workspaceId, List<Entity> entities)
         {
-            this.addEntities(workspaceId, WorkspaceType.USER, entities);
+            this.addEntities(workspaceId, WorkspaceType.USER, entities, null);
+        }
+
+        public void addEntities(String workspaceId, List<Entity> entities, String patchReleaseVersion)
+        {
+            this.addEntities(workspaceId, WorkspaceType.USER, entities, patchReleaseVersion);
         }
 
         private void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addEntities(workspaceId, workspaceType, entities, null);
+        }
+
+        public void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities, String patchReleaseVersion)
+        {
+            if (patchReleaseVersion != null)
+            {
+                this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+            }
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
             workspace.getCurrentRevision().addEntities(entities);
         }
 
@@ -234,6 +253,11 @@ public class InMemoryBackend
             this.addEntities(workspaceId, entities);
         }
 
+        public void addPatch(String patchReleaseVersion)
+        {
+            this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+        }
+
         public void addDependency(String... projectDependencies)
         {
             InMemoryRevision newRevision = new InMemoryRevision(this.project.getProjectId(), this.project.getCurrentRevision());
@@ -304,7 +328,16 @@ public class InMemoryBackend
     
         public InMemoryReview addReview(String reviewId)
         {
-            return this.project.addReview(reviewId);
+            return this.addReview(reviewId, null);
+        }
+
+        public InMemoryReview addReview(String reviewId, String patchReleaseVersion)
+        {
+            if (patchReleaseVersion != null)
+            {
+                this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+            }
+            return this.project.addReview(reviewId, patchReleaseVersion);
         }
     }
 

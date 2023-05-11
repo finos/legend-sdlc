@@ -30,13 +30,13 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
+    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, String patchReleaseVersion)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -48,7 +48,7 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
+    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String patchReleaseVersion, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
