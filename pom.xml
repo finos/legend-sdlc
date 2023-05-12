@@ -50,6 +50,7 @@
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>legend-sdlc-test-utils</module>
         <module>legend-sdlc-test-generation</module>
+        <module>legend-sdlc-test-generation-maven-plugin</module>
     </modules>
 
     <properties>
@@ -520,6 +521,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-test-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

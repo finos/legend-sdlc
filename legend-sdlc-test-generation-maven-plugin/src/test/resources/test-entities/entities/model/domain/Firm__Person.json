@@ -1,0 +1,25 @@
+{
+  "classifierPath": "meta::pure::metamodel::relationship::Association",
+  "content": {
+    "package": "model::domain",
+    "_type": "association",
+    "name": "Firm_Person",
+    "properties": [
+      {
+        "multiplicity": {
+          "upperBound": 1,
+          "lowerBound": 1
+        },
+        "name": "firm",
+        "type": "model::domain::Firm"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employees",
+        "type": "model::domain::Person"
+      }
+    ]
+  }
+}
