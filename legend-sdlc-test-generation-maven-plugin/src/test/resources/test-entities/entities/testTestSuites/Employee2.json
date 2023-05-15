@@ -1,0 +1,119 @@
+{
+  "content": {
+    "_type": "class",
+    "name": "Employee2",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 1,
+      "startColumn": 1,
+      "endLine": 7,
+      "endColumn": 1
+    },
+    "superTypes": [],
+    "originalMilestonedProperties": [],
+    "properties": [
+      {
+        "name": "stringParam",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 3,
+          "startColumn": 3,
+          "endLine": 3,
+          "endColumn": 25
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 3,
+          "startColumn": 16,
+          "endLine": 3,
+          "endColumn": 21
+        }
+      },
+      {
+        "name": "integerParam",
+        "type": "Integer",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 3,
+          "endLine": 4,
+          "endColumn": 27
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 17,
+          "endLine": 4,
+          "endColumn": 23
+        }
+      },
+      {
+        "name": "floatParam",
+        "type": "Float",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 5,
+          "startColumn": 3,
+          "endLine": 5,
+          "endColumn": 23
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 5,
+          "startColumn": 15,
+          "endLine": 5,
+          "endColumn": 19
+        }
+      },
+      {
+        "name": "booleanParam",
+        "type": "Boolean",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 6,
+          "startColumn": 3,
+          "endLine": 6,
+          "endColumn": 27
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 6,
+          "startColumn": 17,
+          "endLine": 6,
+          "endColumn": 23
+        }
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "taggedValues": [],
+    "constraints": [],
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::pure::metamodel::type::Class"
+}

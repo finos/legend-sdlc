@@ -41,6 +41,7 @@ import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
+import org.finos.legend.sdlc.generation.GeneratedJavaCode;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.IOException;
@@ -109,12 +110,17 @@ public class ServiceExecutionGenerator
         // Generate Enum Classes if service takes enums as parameters
         for (Enumeration<? extends Enum> enumeration : enumerations)
         {
-            GeneratedJavaClass generatedJavaClass = EnumerationClassGenerator.newGenerator(this.packagePrefix, enumeration).generate();
+            GeneratedJavaCode generatedJavaClass = EnumerationClassGenerator.newGenerator(this.packagePrefix)
+                    .withEnumeration(enumeration)
+                    .generate();
             writeJavaClass(generatedJavaClass);
         }
 
         // Generate execution plan for service
-        GeneratedJavaClass generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.service, this.packagePrefix, getExecutionPlanResourceName()).generate();
+        GeneratedJavaCode generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.packagePrefix)
+                .withPlanResourceName(getExecutionPlanResourceName())
+                .withService(this.service)
+                .generate();
         writeJavaClass(generatedJavaClass);
 
         // Append the class reference to ServiceRunner provider-configuration file
@@ -122,7 +128,7 @@ public class ServiceExecutionGenerator
         Files.createDirectories(serviceRunnerProviderConfigFilePath.getParent());
         try (Writer writer = Files.newBufferedWriter(serviceRunnerProviderConfigFilePath, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.APPEND))
         {
-            writer.write(generatedJavaClass.getName());
+            writer.write(generatedJavaClass.getClassName());
             writer.write("\n");
         }
     }
@@ -157,13 +163,13 @@ public class ServiceExecutionGenerator
         return enumerations;
     }
 
-    private void writeJavaClass(GeneratedJavaClass generatedJavaClass) throws IOException
+    private void writeJavaClass(GeneratedJavaCode generatedJavaClass) throws IOException
     {
-        Path javaClassPath = this.javaSourceOutputDirectory.resolve(getJavaSourceFileRelativePath(generatedJavaClass.getName()));
+        Path javaClassPath = this.javaSourceOutputDirectory.resolve(getJavaSourceFileRelativePath(generatedJavaClass.getClassName()));
         Files.createDirectories(javaClassPath.getParent());
         try (Writer writer = Files.newBufferedWriter(javaClassPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW))
         {
-            writer.write(generatedJavaClass.getCode());
+            writer.write(generatedJavaClass.getText());
         }
     }
 

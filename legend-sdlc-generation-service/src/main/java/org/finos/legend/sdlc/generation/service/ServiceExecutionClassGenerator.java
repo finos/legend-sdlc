@@ -28,6 +28,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
+import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.InputStream;
@@ -36,50 +37,38 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.List;
-import java.util.Objects;
-import java.util.function.BiConsumer;
 
 class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenerator
 {
+    private static final String SERVICE_PARAM = "service";
+    private static final String PLAN_RESOURCE_NAME_PARAM = "planResourceName";
+    private static final String STREAM_PROVIDER_PARAMETER_NAME_PARAM = "streamProviderParameterName";
+    private static final String IMPORTS_PARAM = "imports";
+    private static final String EXEC_PARAMS_PARAM = "executionParameters";
+
     private static final ImmutableList<String> PREFERRED_STREAM_PROVIDER_PARAMETER_NAMES = Lists.immutable.with("streamProvider", "inputStreamProvider");
 
-    private final Service service;
-    private final String planResourceName;
-
-    private ServiceExecutionClassGenerator(Service service, String packagePrefix, String planResourceName)
+    private ServiceExecutionClassGenerator(String packagePrefix)
     {
-        super(packagePrefix);
-        this.service = Objects.requireNonNull(service);
-        this.planResourceName = Objects.requireNonNull(planResourceName);
+        super(GeneratorTemplate.fromResource("generation/service/ServiceExecutionClassGenerator.ftl"), packagePrefix);
     }
 
-    @Override
-    protected String getLegendPackage()
+    public ServiceExecutionClassGenerator withPlanResourceName(String name)
     {
-        return this.service._package;
+        setParameter(PLAN_RESOURCE_NAME_PARAM, name);
+        return this;
     }
 
-    @Override
-    protected String getLegendName()
+    public ServiceExecutionClassGenerator withService(Service service)
     {
-        return this.service.name;
-    }
-
-    @Override
-    protected void collectTemplateParameters(BiConsumer<String, Object> consumer)
-    {
-        MutableList<ExecutionParameter> executionParameters = getExecutionParameters();
-        consumer.accept("service", this.service);
-        consumer.accept("planResourceName", this.planResourceName);
-        consumer.accept("streamProviderParameterName", getStreamProviderParameterName(executionParameters));
-        consumer.accept("imports", getImports(executionParameters));
-        consumer.accept("executionParameters", executionParameters);
-    }
-
-    @Override
-    protected String getTemplateResourceName()
-    {
-        return "generation/service/ServiceExecutionClassGenerator.ftl";
+        setPackageName(getJavaPackageName(service._package));
+        setClassName(getJavaClassName(service.name));
+        setParameter(SERVICE_PARAM, service);
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(service);
+        setParameter(STREAM_PROVIDER_PARAMETER_NAME_PARAM, getStreamProviderParameterName(executionParameters));
+        setParameter(IMPORTS_PARAM, getImports(executionParameters));
+        setParameter(EXEC_PARAMS_PARAM, executionParameters);
+        return this;
     }
 
     private MutableList<String> getImports(MutableList<ExecutionParameter> executionParameters)
@@ -91,9 +80,9 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
 
-    private MutableList<ExecutionParameter> getExecutionParameters()
+    private MutableList<ExecutionParameter> getExecutionParameters(Service service)
     {
-        Execution execution = this.service.execution;
+        Execution execution = service.execution;
         if (!(execution instanceof PureExecution))
         {
             throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
@@ -201,14 +190,9 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
             }
             case "Byte":
             {
-                if (usePrimitive && isToOne(variable.multiplicity))
-                {
-                    return byte.class;
-                }
-                else
-                {
-                    return variable.multiplicity.isUpperBoundGreaterThan(1) ? InputStream.class : Byte.class;
-                }
+                return usePrimitive && isToOne(variable.multiplicity) ?
+                        byte.class :
+                        (variable.multiplicity.isUpperBoundGreaterThan(1) ? InputStream.class : Byte.class);
             }
             default:
             {
@@ -222,9 +206,9 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return (multiplicity.lowerBound == 1) && multiplicity.isUpperBoundEqualTo(1);
     }
 
-    static ServiceExecutionClassGenerator newGenerator(Service service, String packagePrefix, String planResourceName)
+    static ServiceExecutionClassGenerator newGenerator(String packagePrefix)
     {
-        return new ServiceExecutionClassGenerator(service, packagePrefix, planResourceName);
+        return new ServiceExecutionClassGenerator(packagePrefix);
     }
 
     public static class ExecutionParameter
@@ -279,19 +263,9 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
 
         StringBuilder appendTypeString(StringBuilder builder)
         {
-            boolean isToMany = getMultiplicity().isUpperBoundGreaterThan(1);
-            boolean isByteType = "Byte".equals(variable._class);
-
-            if (isToMany && !isByteType)
-            {
-                builder.append("List<? extends ");
-            }
-            builder.append(this.javaParamRawType);
-            if (isToMany && !isByteType)
-            {
-                builder.append('>');
-            }
-            return builder;
+            return ("Byte".equals(variable._class) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
+                    builder.append(this.javaParamRawType) :
+                    builder.append("List<? extends ").append(this.javaParamRawType).append('>');
         }
     }
 }

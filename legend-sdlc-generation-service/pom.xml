@@ -112,6 +112,10 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-language-pure-compiler</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-shared</artifactId>
+        </dependency>
         <!-- SDLC -->
 
         <dependency>
@@ -134,11 +138,6 @@
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.freemarker</groupId>
-            <artifactId>freemarker</artifactId>
         </dependency>
 
         <!-- TEST -->

@@ -1,0 +1,70 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Firm",
+    "originalMilestonedProperties": [],
+    "package": "model",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "legalName",
+        "propertyTypeSourceInformation": {
+          "endColumn": 19,
+          "endLine": 49,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 49
+        },
+        "sourceInformation": {
+          "endColumn": 23,
+          "endLine": 49,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 49
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employees",
+        "propertyTypeSourceInformation": {
+          "endColumn": 26,
+          "endLine": 50,
+          "sourceId": "",
+          "startColumn": 14,
+          "startLine": 50
+        },
+        "sourceInformation": {
+          "endColumn": 30,
+          "endLine": 50,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 50
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::Person"
+      }
+    ],
+    "qualifiedProperties": [],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 51,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 47
+    },
+    "stereotypes": [],
+    "superTypes": [],
+    "taggedValues": []
+  }
+}

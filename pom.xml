@@ -38,6 +38,7 @@
         <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
+        <module>legend-sdlc-generation-shared</module>
         <module>legend-sdlc-generation-file</module>
         <module>legend-sdlc-generation-service</module>
         <module>legend-sdlc-generation-model</module>
@@ -48,6 +49,8 @@
         <module>legend-sdlc-generation-service-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>legend-sdlc-test-utils</module>
+        <module>legend-sdlc-test-generation</module>
+        <module>legend-sdlc-test-generation-maven-plugin</module>
     </modules>
 
     <properties>
@@ -472,6 +475,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -513,6 +521,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-test-utils</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
@@ -718,6 +731,11 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-modelManager</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-relationalStore-protocol</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
