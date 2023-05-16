@@ -25,6 +25,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -52,7 +53,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 
-@Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES)
+@Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
 public class ServicesGenerationMojo extends AbstractMojo
 {
     @Parameter
@@ -67,8 +68,14 @@ public class ServicesGenerationMojo extends AbstractMojo
     @Parameter(defaultValue = "${project.build.directory}/generated-sources")
     private File javaSourceOutputDirectory;
 
+    @Parameter(defaultValue = "true")
+    private boolean addJavaSourceOutputDirectoryAsSource;
+
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File resourceOutputDirectory;
+
+    @Parameter(defaultValue = "${project}", readonly = true)
+    private MavenProject project;
 
     @Override
     public void execute() throws MojoExecutionException
@@ -170,6 +177,14 @@ public class ServicesGenerationMojo extends AbstractMojo
             long serviceEnd = System.nanoTime();
             getLog().info(String.format("Finished generating execution artifacts for %s (%.9fs)", service.getPath(), (serviceEnd - serviceStart) / 1_000_000_000.0));
         }
+
+        if (this.addJavaSourceOutputDirectoryAsSource)
+        {
+            String newSourceDirectory = this.javaSourceOutputDirectory.getAbsolutePath();
+            this.project.addCompileSourceRoot(newSourceDirectory);
+            getLog().info("Added source directory: " + newSourceDirectory);
+        }
+
         long end = System.nanoTime();
         getLog().info(String.format("Finished generating execution artifacts for %d services (%.9fs)", servicesByPath.size(), (end - start) / 1_000_000_000.0));
     }

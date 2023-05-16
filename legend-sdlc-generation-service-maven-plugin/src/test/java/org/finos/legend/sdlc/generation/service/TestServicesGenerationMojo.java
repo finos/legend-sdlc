@@ -22,9 +22,9 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -100,7 +100,7 @@ public class TestServicesGenerationMojo
         try (EntityLoader testEntities = getTestEntities())
         {
             testEntities.getAllEntities()
-                    .filter(p -> !SERVICE_CLASSIFIER.equals(p.getClassifierPath()))
+                    .filter(e -> !isServiceEntity(e))
                     .forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         }
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, "org.finos.test.test_project", null, null);
@@ -116,6 +116,7 @@ public class TestServicesGenerationMojo
     @Test
     public void testWithServices() throws Exception
     {
+        String packagePrefix = "org.finos.test.test_project";
         File entitiesDir = this.tempFolder.newFolder("testEntities");
         List<Entity> entities;
         try (EntityLoader testEntities = getTestEntities())
@@ -124,7 +125,7 @@ public class TestServicesGenerationMojo
         }
         Assert.assertEquals(5, entities.stream().filter(this::isServiceEntity).count());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, "org.finos.test.test_project", null, null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, packagePrefix, null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -135,25 +136,18 @@ public class TestServicesGenerationMojo
 
         String separator = outputDir.getFileSystem().getSeparator();
 
-        Set<String> expectedServicePlanPaths = entities.stream()
-                .filter(this::isServiceEntity)
-                .map(e -> "plans"  + separator + e.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".json")
-                .collect(Collectors.toSet());
-        Set<String> actualOutputFiles = getFileStream(outputDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(Collections.emptyList(), expectedServicePlanPaths.stream().filter(p -> !actualOutputFiles.contains(p)).sorted().collect(Collectors.toList()));
+        List<String> expectedServicePlanPaths = ListIterate.collectIf(entities, this::isServiceEntity, e -> "plans" + separator + packagePrefix.replace(".", separator) + separator + e.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".json").sortThis();
+        List<String> actualOutputFiles = getFileStream(outputDir.resolve("plans"), false).map(p -> outputDir.relativize(p).toString()).sorted().collect(Collectors.toList());
+        Assert.assertEquals(expectedServicePlanPaths, actualOutputFiles);
 
-        Set<String> expectedServiceClassJavaPaths = entities.stream()
-                .filter(this::isServiceEntity)
-                .map(e ->  e.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java")
-                .collect(Collectors.toSet());
+        MutableList<String> expectedServiceClassJavaPaths = ListIterate.collectIf(entities, this::isServiceEntity, e ->  packagePrefix.replace(".", separator) + separator + e.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java");
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(Collections.emptyList(), expectedServiceClassJavaPaths.stream().filter(p -> !actualGeneratedSourceFiles.contains(p)).sorted().collect(Collectors.toList()));
+        Assert.assertEquals(Collections.emptyList(), expectedServiceClassJavaPaths.reject(actualGeneratedSourceFiles::contains));
     }
 
     private boolean isServiceEntity(Entity entity)
     {
-        EntityToPureConverter converter = new EntityToPureConverter();
-        return converter.fromEntityIfPossible(entity).filter(e -> e instanceof Service).isPresent();
+        return SERVICE_CLASSIFIER.equals(entity.getClassifierPath());
     }
 
     private void executeMojo(File projectDir, File... entityDirectories) throws Exception
@@ -293,7 +287,7 @@ public class TestServicesGenerationMojo
     private Plugin buildPlugin(ServicesGenerationMojo.ServicesSpecification inclusions, ServicesGenerationMojo.ServicesSpecification exclusions, String packagePrefix, File javaSourceOutputDirectory, File resourceOutputDirectory)
     {
         Plugin plugin = new Plugin();
-        plugin.setGroupId("platform.legend");
+        plugin.setGroupId("org.finos.legend.sdlc");
         plugin.setArtifactId("legend-sdlc-generation-service-maven-plugin");
 
         // config
