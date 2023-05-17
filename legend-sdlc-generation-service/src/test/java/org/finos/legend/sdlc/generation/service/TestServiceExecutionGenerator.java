@@ -217,9 +217,11 @@ public class TestServiceExecutionGenerator
     public void testRelationalWithEnumParams() throws Exception
     {
         String packagePrefix = "org.finos";
-        Service service = getService("service::RelationalServiceWithEnumParams");
-        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        Service enumParamService = getService("service::RelationalServiceWithEnumParams");
+        Service reusedEnumParamService = getService("service::RelationalServiceWithEnumParamsReused");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, Lists.fixedSize.of(enumParamService, reusedEnumParamService));
         assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParamsReused", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
     }
 
     @Test
