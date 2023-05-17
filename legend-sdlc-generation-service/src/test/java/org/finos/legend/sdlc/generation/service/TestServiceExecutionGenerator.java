@@ -77,6 +77,7 @@ import java.time.temporal.Temporal;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -217,9 +218,16 @@ public class TestServiceExecutionGenerator
     public void testRelationalWithEnumParams() throws Exception
     {
         String packagePrefix = "org.finos";
-        Service service = getService("service::RelationalServiceWithEnumParams");
-        ClassLoader classLoader = generateAndCompile(packagePrefix, service);
+        Service enumParamService = getService("service::RelationalServiceWithEnumParams");
+        Service reusedEnumParamService = getService("service::RelationalServiceWithEnumParamsReused");
+
+        Collection<Service> services = new HashSet<Service>();
+        services.add(enumParamService);
+        services.add(reusedEnumParamService);
+        ClassLoader classLoader = generateAndCompile(packagePrefix, services);
+
         assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParamsReused", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
     }
 
     @Test

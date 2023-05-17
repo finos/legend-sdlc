@@ -50,6 +50,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
+import java.util.Arrays;
 import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionGenerator
@@ -113,7 +114,7 @@ public class ServiceExecutionGenerator
             GeneratedJavaCode generatedJavaClass = EnumerationClassGenerator.newGenerator(this.packagePrefix)
                     .withEnumeration(enumeration)
                     .generate();
-            writeJavaClass(generatedJavaClass);
+            writeEnumJavaClass(generatedJavaClass);
         }
 
         // Generate execution plan for service
@@ -173,6 +174,28 @@ public class ServiceExecutionGenerator
         }
     }
 
+    private void writeEnumJavaClass(GeneratedJavaCode generatedJavaClass) throws IOException
+    {
+        Path javaClassPath = this.javaSourceOutputDirectory.resolve(getJavaSourceFileRelativePath(generatedJavaClass.getClassName()));
+        byte[] content = generatedJavaClass.getText().getBytes(StandardCharsets.UTF_8);
+        if (Files.exists(javaClassPath))
+        {
+            byte[] foundContent = Files.readAllBytes(javaClassPath);
+            if (!Arrays.equals(content, foundContent))
+            {
+                throw new IOException("Duplicate file path found with different content for enum: " + javaClassPath);
+            }
+        }
+        else
+        {
+            Files.createDirectories(javaClassPath.getParent());
+            try (Writer writer = Files.newBufferedWriter(javaClassPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW))
+            {
+                writer.write(generatedJavaClass.getText());
+            }
+        }
+    }
+    
     public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory)
     {
         return newGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, null, Lists.mutable.empty(), Lists.mutable.empty(), null);
