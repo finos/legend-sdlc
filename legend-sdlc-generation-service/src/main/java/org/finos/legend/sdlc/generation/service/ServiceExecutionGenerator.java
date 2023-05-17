@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import jdk.dynalink.StandardOperation;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
@@ -47,6 +48,7 @@ import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import java.io.IOException;
 import java.io.Writer;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -183,16 +185,13 @@ public class ServiceExecutionGenerator
             byte[] foundContent = Files.readAllBytes(javaClassPath);
             if (!Arrays.equals(content, foundContent))
             {
-                throw new IOException("Duplicate file path found with different content for enum: " + javaClassPath);
+                throw new FileAlreadyExistsException("Duplicate file path found with different content for enum: " + javaClassPath);
             }
         }
         else
         {
             Files.createDirectories(javaClassPath.getParent());
-            try (Writer writer = Files.newBufferedWriter(javaClassPath, StandardCharsets.UTF_8, StandardOpenOption.CREATE_NEW))
-            {
-                writer.write(generatedJavaClass.getText());
-            }
+            Files.write(javaClassPath, content, StandardOpenOption.CREATE_NEW);
         }
     }
     
