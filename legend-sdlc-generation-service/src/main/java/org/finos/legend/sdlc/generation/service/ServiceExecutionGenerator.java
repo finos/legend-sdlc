@@ -184,7 +184,7 @@ public class ServiceExecutionGenerator
             byte[] foundContent = Files.readAllBytes(javaClassPath);
             if (!Arrays.equals(content, foundContent))
             {
-                throw new FileAlreadyExistsException("Duplicate file path found with different content for enum: " + javaClassPath);
+                throw new FileAlreadyExistsException(javaClassPath.toString(), null, "Duplicate file path found with different content for enum: " + generatedJavaClass.getClassName());
             }
         }
         else
