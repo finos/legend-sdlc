@@ -89,7 +89,10 @@ public interface ProjectFileAccessProvider
      * @param revisionId          revision id (optional)
      * @return access context
      */
-    FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId);
+     default FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+     {
+         return getFileAccessContext(projectId, null, workspaceId, workspaceType, workspaceAccessType, revisionId);
+     }
 
     /**
      * Get a file access context. The project id must always be supplied, but workspace

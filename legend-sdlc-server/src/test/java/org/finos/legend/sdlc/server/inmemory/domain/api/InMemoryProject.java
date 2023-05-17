@@ -176,8 +176,9 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public void deleteUserWorkspace(String workspaceId, String sourceBranchName)
+    public void deleteUserWorkspace(String workspaceId, String patchReleaseVersion)
     {
+        String sourceBranchName = getSourceBranch(patchReleaseVersion);
         this.userWorkspaces.remove(sourceBranchName + "_" + workspaceId);
     }
 
@@ -246,7 +247,7 @@ public class InMemoryProject implements Project
         for (InMemoryReview rev : reviews)
         {
 
-            if (((state == null) || (state == rev.getState()) && rev.getTargetBranch().equals(getSourceBranch(patchReleaseVersion))))
+            if (((state == null) || (state == rev.getState())) && rev.getTargetBranch().equals(getSourceBranch(patchReleaseVersion)))
             {
                 filteredReviews.add(rev);
             }

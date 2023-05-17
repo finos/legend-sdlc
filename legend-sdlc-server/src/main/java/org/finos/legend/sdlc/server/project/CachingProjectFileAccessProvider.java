@@ -34,11 +34,11 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         if (revisionId == null)
         {
-            return this.delegate.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, null);
+            return this.delegate.getFileAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, null);
         }
 
         CacheKey cacheKey = getCacheKey(projectId, workspaceId, revisionId);
@@ -47,7 +47,7 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
             CachingFileAccessContext fileAccessContext = this.cache.get(cacheKey);
             if (fileAccessContext == null)
             {
-                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+                fileAccessContext = CachingFileAccessContext.wrap(this.delegate.getFileAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, revisionId));
                 if (fileAccessContext != null)
                 {
                     this.cache.put(cacheKey, fileAccessContext);
@@ -55,12 +55,6 @@ class CachingProjectFileAccessProvider implements ProjectFileAccessProvider
             }
             return fileAccessContext;
         }
-    }
-
-    @Override
-    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return null;
     }
 
     @Override

@@ -160,7 +160,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
     @Test
     public void testGetMixedTypeWorkspacesForPatchReleaseVersion() throws HttpResponseException
     {
-        String projectId = "A";
+        String projectId = "B";
         String workspaceOneId = "w1";
         String workspaceTwoId = "w2";
         String workspaceThreeId = "w3";
@@ -174,7 +174,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP, patchReleaseVersion);
 
         // check workspaces api for default branch doesn't return workspaces created from patchRelease branch
-        Response responseOne = this.clientFor("/api/projects/A/workspaces").request().get();
+        Response responseOne = this.clientFor("/api/projects/B/workspaces").request().get();
 
         if (responseOne.getStatus() != 200)
         {
@@ -192,7 +192,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceTwoId, findWorkspace(allUserWorkspaces, workspaceTwoId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allUserWorkspaces, workspaceTwoId).getProjectId());
 
-        Response responseTwo = this.clientFor("/api/projects/A/groupWorkspaces").request().get();
+        Response responseTwo = this.clientFor("/api/projects/B/groupWorkspaces").request().get();
 
         if (responseTwo.getStatus() != 200)
         {
@@ -208,7 +208,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceThreeId, findWorkspace(allGroupWorkspaces, workspaceThreeId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allGroupWorkspaces, workspaceThreeId).getProjectId());
 
-        Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces").queryParam("includeUserWorkspaces", true).request().get();
+        Response responseThree = this.clientFor("/api/projects/B/groupWorkspaces").queryParam("includeUserWorkspaces", true).request().get();
 
         if (responseThree.getStatus() != 200)
         {
@@ -229,7 +229,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(projectId, findWorkspace(allUserAndGroupWorkspaces, workspaceThreeId).getProjectId());
 
         // check patch release branch workspaces api returns workspaces created from patchRelease branch
-        Response responseFour = this.clientFor("/api/projects/A/patches/1.0.1/workspaces").request().get();
+        Response responseFour = this.clientFor("/api/projects/B/patches/1.0.1/workspaces").request().get();
 
         if (responseFour.getStatus() != 200)
         {
@@ -247,7 +247,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceTwoId, findWorkspace(allPatchReleaseBranchUserWorkspaces, workspaceTwoId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allPatchReleaseBranchUserWorkspaces, workspaceTwoId).getProjectId());
 
-        Response responseFive = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces").request().get();
+        Response responseFive = this.clientFor("/api/projects/B/patches/1.0.1/groupWorkspaces").request().get();
 
         if (responseFive.getStatus() != 200)
         {
@@ -263,7 +263,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals(workspaceThreeId, findWorkspace(allPatchReleaseBranchGroupWorkspaces, workspaceThreeId).getWorkspaceId());
         Assert.assertEquals(projectId, findWorkspace(allPatchReleaseBranchGroupWorkspaces, workspaceThreeId).getProjectId());
 
-        Response responseSix = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces").queryParam("includeUserWorkspaces", true).request().get();
+        Response responseSix = this.clientFor("/api/projects/B/patches/1.0.1/groupWorkspaces").queryParam("includeUserWorkspaces", true).request().get();
 
         if (responseSix.getStatus() != 200)
         {

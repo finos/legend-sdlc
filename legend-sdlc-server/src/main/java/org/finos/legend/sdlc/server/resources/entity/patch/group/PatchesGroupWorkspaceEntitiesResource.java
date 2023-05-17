@@ -113,7 +113,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "updating entities in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
                 "update entities",
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, workspaceId, patchReleaseVersion, WorkspaceType.GROUP).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
 
@@ -125,7 +125,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
         return executeWithLogging(
                 "getting entity " + path + " in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, workspaceId, patchReleaseVersion, WorkspaceType.GROUP).getEntity(path)
+                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).getEntity(path)
         );
     }
 

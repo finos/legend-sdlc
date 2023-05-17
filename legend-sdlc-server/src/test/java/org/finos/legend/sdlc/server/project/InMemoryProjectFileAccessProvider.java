@@ -44,7 +44,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
         AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
         {
@@ -80,12 +80,6 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
                 throw new UnsupportedOperationException("Special workspace type is not supported for getting file access context");
             }
         }
-    }
-
-    @Override
-    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return null;
     }
 
     @Override

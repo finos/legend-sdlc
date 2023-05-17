@@ -33,7 +33,7 @@ public interface ProjectConfigurationApi
 
     default ProjectConfiguration getProjectProjectConfiguration(String projectId)
     {
-        return this.getReviewFromProjectConfiguration(projectId, null);
+        return this.getProjectProjectConfiguration(projectId, null);
     }
 
     default ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, String revisionId)

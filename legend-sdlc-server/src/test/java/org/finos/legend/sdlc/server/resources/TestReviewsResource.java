@@ -52,7 +52,7 @@ public class TestReviewsResource extends AbstractLegendSDLCServerResourceTest
     {
         this.backend.project("A").addReview("456");  
 
-        Response response = this.clientFor("/api/projects/A/reviews?limit=2").request().get();
+        Response response = this.clientFor("/api/projects/A/reviews?state=OPEN&limit=2").request().get();
 
         if (response.getStatus() != 200)
         {
