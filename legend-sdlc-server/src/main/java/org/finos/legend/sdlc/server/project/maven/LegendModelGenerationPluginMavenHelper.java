@@ -17,7 +17,6 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
-import java.util.Collections;
 import java.util.function.Consumer;
 
 public class LegendModelGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
@@ -25,7 +24,7 @@ public class LegendModelGenerationPluginMavenHelper extends AbstractLegendMavenP
 
     public LegendModelGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
-        super(groupId, artifactId, version, "compile", "generate-model-generations", Collections.singletonList(generationExtensionsCollection));
+        super(groupId, artifactId, version, "compile", "generate-model-generations", generationExtensionsCollection);
     }
 
     @Override

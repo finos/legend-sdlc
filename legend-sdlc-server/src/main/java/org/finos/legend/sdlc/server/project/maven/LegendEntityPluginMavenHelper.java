@@ -20,15 +20,20 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
 public class LegendEntityPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-
     public LegendEntityPluginMavenHelper(String groupId, String artifactId, String version, List<Dependency> extensionsCollections)
     {
         super(groupId, artifactId, version, "compile", "process-entities", extensionsCollections);
+    }
+
+    public LegendEntityPluginMavenHelper(String groupId, String artifactId, String version, Dependency... extensionsCollections)
+    {
+        this(groupId, artifactId, version, Arrays.asList(extensionsCollections));
     }
 
     @Override

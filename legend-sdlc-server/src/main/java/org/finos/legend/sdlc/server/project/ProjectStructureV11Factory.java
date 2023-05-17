@@ -111,7 +111,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             super(projectConfiguration, ENTITIES_MODULE_NAME, getEntitySourceDirectories(projectConfiguration), OTHER_MODULES.castToMap(), false, projectStructurePlatformExtensions);
             Dependency generationExtensionsCollection = getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, true, false);
             Dependency serializerExtensionsCollection = getExtensionsCollectionDependency(SERIALIZER_EXTENSIONS_COLLECTION_KEY, true, false);
-            this.legendEntityPluginMavenHelper = new LegendEntityPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-entity-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, Lists.immutable.with(generationExtensionsCollection, serializerExtensionsCollection).toList());
+            this.legendEntityPluginMavenHelper = new LegendEntityPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-entity-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection, serializerExtensionsCollection);
             this.legendTestUtilsMavenHelper = new LegendTestUtilsMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-test-utils", LEGEND_SDLC_PROPERTY_REFERENCE);
             this.legendServiceExecutionGenerationPluginMavenHelper = new LegendServiceExecutionGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-service-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
             this.legendModelGenerationPluginMavenHelper = new LegendModelGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-model-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
