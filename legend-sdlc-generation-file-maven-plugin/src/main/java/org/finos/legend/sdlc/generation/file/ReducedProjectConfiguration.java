@@ -14,19 +14,11 @@
 
 package org.finos.legend.sdlc.generation.file;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
-
-import java.util.List;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-class ReducedProjectConfiguration implements ProjectConfiguration
+class ReducedProjectConfiguration
 {
-    private String projectId;
     private String groupId;
     private String artifactId;
 
@@ -34,49 +26,20 @@ class ReducedProjectConfiguration implements ProjectConfiguration
     {
     }
 
-    private ReducedProjectConfiguration(String projectId, String groupId, String artifactId)
+    private ReducedProjectConfiguration(String groupId, String artifactId)
     {
-        this.projectId = projectId;
         this.groupId = groupId;
         this.artifactId = artifactId;
     }
 
-    @Override
-    public String getProjectId()
-    {
-        return this.projectId;
-    }
-
-    @Override
     public String getGroupId()
     {
         return this.groupId;
     }
 
-    @Override
     public String getArtifactId()
     {
         return this.artifactId;
     }
 
-    @Override
-    @JsonIgnore
-    public ProjectStructureVersion getProjectStructureVersion()
-    {
-        return null;
-    }
-
-    @Override
-    @JsonIgnore
-    public List<ProjectDependency> getProjectDependencies()
-    {
-        return null;
-    }
-
-    @Override
-    @JsonIgnore
-    public List<MetamodelDependency> getMetamodelDependencies()
-    {
-        return null;
-    }
 }
