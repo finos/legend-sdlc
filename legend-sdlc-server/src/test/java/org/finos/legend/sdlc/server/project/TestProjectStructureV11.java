@@ -37,7 +37,6 @@ import java.util.function.Consumer;
 
 public class TestProjectStructureV11 extends TestMultiGenerationProjectStructure<ProjectStructureV11>
 {
-
     private Dependency getGenerationDependency()
     {
         return MavenProjectStructure.newMavenDependency("org.finos.legend.engine", "legend-engine-extensions-collection-generation", "${platform.legend-engine.version}");
@@ -112,6 +111,7 @@ public class TestProjectStructureV11 extends TestMultiGenerationProjectStructure
     protected void collectExpectedEntitiesModelPlugins(ProjectStructureV11 projectStructure, Consumer<Plugin> pluginConsumer)
     {
         super.collectExpectedEntitiesModelPlugins(projectStructure, pluginConsumer);
+        pluginConsumer.accept(LEGEND_TEST_UTILS_MAVEN_HELPER.getMavenSurefirePlugin(false));
         pluginConsumer.accept(new LegendEntityPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-entity-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency(), getSerializerDependency()).getPlugin(projectStructure));
         pluginConsumer.accept(new LegendModelGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-model-maven-plugin", "${platform.legend-sdlc.version}", getGenerationDependency()).getPlugin(projectStructure));
     }
@@ -142,6 +142,5 @@ public class TestProjectStructureV11 extends TestMultiGenerationProjectStructure
     {
         pluginConsumer.accept((new LegendFileGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-file-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency())).getPlugin(projectStructure));
     }
-
 }
 

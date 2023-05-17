@@ -1,3 +1,4 @@
 org.finos.legend.sdlc.server.project.ProjectStructureV0Factory
 org.finos.legend.sdlc.server.project.ProjectStructureV11Factory
 org.finos.legend.sdlc.server.project.ProjectStructureV12Factory
+org.finos.legend.sdlc.server.project.ProjectStructureV13Factory

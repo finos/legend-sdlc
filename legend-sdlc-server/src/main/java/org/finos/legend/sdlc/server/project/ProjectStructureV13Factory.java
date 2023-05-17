@@ -1,4 +1,4 @@
-// Copyright 2022 Goldman Sachs
+// Copyright 2023 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.project.extension.UpdateProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.maven.LegendEntityPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendFileGenerationPluginMavenHelper;
+import org.finos.legend.sdlc.server.project.maven.LegendJUnitTestGenerationPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendModelGenerationPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendServiceExecutionGenerationPluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.LegendTestUtilsMavenHelper;
@@ -42,24 +43,23 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
+public class ProjectStructureV13Factory extends ProjectStructureVersionFactory
 {
     @Override
     public int getVersion()
     {
-        return 12;
+        return 13;
     }
 
     @Override
     protected ProjectStructure createProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
-        return new ProjectStructureV12(projectConfiguration, projectStructurePlatformExtensions);
+        return new ProjectStructureV13(projectConfiguration, projectStructurePlatformExtensions);
     }
 
-    public static class ProjectStructureV12 extends MultiModuleMavenProjectStructure
+    public static class ProjectStructureV13 extends MultiModuleMavenProjectStructure
     {
         public static final String ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
-        public static final String ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
 
         private static final String ENTITIES_MODULE_NAME = "entities";
         private static final ImmutableList<String> ENTITY_SERIALIZERS = Lists.immutable.with("pure", "legend");
@@ -73,13 +73,13 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
 
         // LEGEND SDLC
         private static final String LEGEND_SDLC_GROUP_ID = "org.finos.legend.sdlc";
-        private static final String LEGEND_SDLC_VERSION = "0.69.1";
+        private static final String LEGEND_SDLC_VERSION = "0.129.0";
         private static final String LEGEND_SDLC_PROPERTY = "platform.legend-sdlc.version";
         private static final String LEGEND_SDLC_PROPERTY_REFERENCE = getPropertyReference(LEGEND_SDLC_PROPERTY);
 
         // LEGEND ENGINE
         private static final String LEGEND_ENGINE_GROUP_ID = "org.finos.legend.engine";
-        private static final String LEGEND_ENGINE_VERSION = "2.57.0";
+        private static final String LEGEND_ENGINE_VERSION = "4.12.1";
         private static final String LEGEND_ENGINE_PROPERTY = "platform.legend-engine.version";
         private static final String LEGEND_ENGINE_PROPERTY_REFERENCE = getPropertyReference(LEGEND_ENGINE_PROPERTY);
         private static final String LEGEND_SDLC_VERSION_PLUGIN = "legend-sdlc-version-package-maven-plugin";
@@ -104,12 +104,13 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
         private final LegendServiceExecutionGenerationPluginMavenHelper legendServiceExecutionGenerationPluginMavenHelper;
         private final LegendModelGenerationPluginMavenHelper legendModelGenerationPluginMavenHelper;
         private final LegendFileGenerationPluginMavenHelper legendFileGenerationPluginMavenHelper;
+        private final LegendJUnitTestGenerationPluginMavenHelper legendJUnitTestGenerationPluginMavenHelper;
 
         // Test Utils Exclusion
         private static final String LEGEND_PURE_GROUP_ID = "org.finos.legend.pure";
         private static final String LEGEND_PURE_CODE_JAVA_COMPILED_CORE = "legend-pure-code-java-compiled-core";
 
-        private ProjectStructureV12(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+        private ProjectStructureV13(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
         {
             super(projectConfiguration, ENTITIES_MODULE_NAME, getEntitySourceDirectories(projectConfiguration), OTHER_MODULES.castToMap(), false, projectStructurePlatformExtensions);
             Dependency generationExtensionsCollection = getExtensionsCollectionDependency(GENERATION_EXTENSIONS_COLLECTION_KEY, true, false);
@@ -119,6 +120,7 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
             this.legendServiceExecutionGenerationPluginMavenHelper = new LegendServiceExecutionGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-service-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
             this.legendModelGenerationPluginMavenHelper = new LegendModelGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-model-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
             this.legendFileGenerationPluginMavenHelper = new LegendFileGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-file-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
+            this.legendJUnitTestGenerationPluginMavenHelper = new LegendJUnitTestGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-test-generation-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
         }
 
         private Dependency getExtensionsCollectionDependency(String extensionName, boolean includeVersion, boolean scopeTest)
@@ -158,7 +160,7 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
         @Override
         protected String getMavenSourcePluginVersion()
         {
-            return "3.2.0";
+            return "3.2.1";
         }
 
         @Override
@@ -169,30 +171,26 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
             String entitiesModuleName = getEntitiesModuleName();
             int oldVersion = oldStructure.getVersion();
             String entityValidationTestCode = getEntityValidationTestCode();
-            String entityTestSuiteCode = getEntityTestSuiteCode();
             MutableList<UpdateProjectStructureExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(UpdateProjectStructureExtension.class));
-            String entityValidationTestPath = extensions.flatCollect(e -> e.getExtraVersionEntityValidationPaths(oldVersion)).getFirstOptional().orElse(null);
-            String entityTestSuiteFilePath = extensions.flatCollect(e -> e.getExtraTestSuiteFilePaths(oldVersion)).getFirstOptional().orElse(null);
+            String entityValidationTestPath = extensions.asLazy().flatCollect(e -> e.getExtraVersionEntityValidationPaths(oldVersion)).getFirst();
+            String entityTestSuiteFilePath = extensions.asLazy().flatCollect(e -> e.getExtraTestSuiteFilePaths(oldVersion)).getFirst();
             switch (oldVersion)
             {
                 case 0:
                 {
                     addOrModifyModuleFile(entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    addOrModifyModuleFile(entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
                     break;
                 }
                 case 1:
                 case 2:
-                {
-                    moveOrAddOrModifyModuleFile(oldStructure, null, entityValidationTestPath, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    addOrModifyModuleFile(entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
-                    break;
-                }
                 case 3:
                 case 4:
                 {
                     moveOrAddOrModifyModuleFile(oldStructure, null, entityValidationTestPath, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    moveOrAddOrModifyModuleFile(oldStructure, null, entityTestSuiteFilePath, entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
+                    if (entityTestSuiteFilePath != null)
+                    {
+                        deleteModuleFileIfPresent(oldStructure, null, entityTestSuiteFilePath, fileAccessContext, operationConsumer);
+                    }
                     break;
                 }
                 case 5:
@@ -204,21 +202,30 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
                 {
                     String oldEntitiesModuleName = ((MultiModuleMavenProjectStructure) oldStructure).getEntitiesModuleName();
                     moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, entityValidationTestPath, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, entityTestSuiteFilePath, entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
+                    if (entityTestSuiteFilePath != null)
+                    {
+                        deleteModuleFileIfPresent(oldStructure, oldEntitiesModuleName, entityTestSuiteFilePath, fileAccessContext, operationConsumer);
+                    }
                     break;
                 }
                 case 11:
                 {
                     String oldEntitiesModuleName = ((MultiModuleMavenProjectStructure) oldStructure).getEntitiesModuleName();
                     moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ProjectStructureV11Factory.ProjectStructureV11.ENTITY_VALIDATION_TEST_FILE_PATH, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ProjectStructureV11Factory.ProjectStructureV11.ENTITY_TEST_SUITE_FILE_PATH, entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
+                    deleteModuleFileIfPresent(oldStructure, oldEntitiesModuleName, ProjectStructureV11Factory.ProjectStructureV11.ENTITY_TEST_SUITE_FILE_PATH, fileAccessContext, operationConsumer);
                     break;
                 }
                 case 12:
                 {
                     String oldEntitiesModuleName = ((MultiModuleMavenProjectStructure) oldStructure).getEntitiesModuleName();
+                    moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ProjectStructureV12Factory.ProjectStructureV12.ENTITY_VALIDATION_TEST_FILE_PATH, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
+                    deleteModuleFileIfPresent(oldStructure, oldEntitiesModuleName, ProjectStructureV12Factory.ProjectStructureV12.ENTITY_TEST_SUITE_FILE_PATH, fileAccessContext, operationConsumer);
+                    break;
+                }
+                case 13:
+                {
+                    String oldEntitiesModuleName = ((MultiModuleMavenProjectStructure) oldStructure).getEntitiesModuleName();
                     moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entitiesModuleName, ENTITY_VALIDATION_TEST_FILE_PATH, entityValidationTestCode, fileAccessContext, operationConsumer);
-                    moveOrAddOrModifyModuleFile(oldStructure, oldEntitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entitiesModuleName, ENTITY_TEST_SUITE_FILE_PATH, entityTestSuiteCode, fileAccessContext, operationConsumer);
                     break;
                 }
                 default:
@@ -271,11 +278,13 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
             configuration.addDependencyManagement(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, true, false));
 
             // Plugin Management
-            configuration.addPluginManagement(legendEntityPluginMavenHelper.getPluginManagementPlugin(this));
-            configuration.addPluginManagement(legendModelGenerationPluginMavenHelper.getPluginManagementPlugin(this));
-            configuration.addPluginManagement(legendFileGenerationPluginMavenHelper.getPluginManagementPlugin(this));
-            configuration.addPluginManagement(legendServiceExecutionGenerationPluginMavenHelper.getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendEntityPluginMavenHelper.getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendModelGenerationPluginMavenHelper.getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendFileGenerationPluginMavenHelper.getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendServiceExecutionGenerationPluginMavenHelper.getPluginManagementPlugin(this));
             configuration.addPluginManagement(new LegendVersionPackagePluginMavenHelper(LEGEND_SDLC_GROUP_ID, LEGEND_SDLC_VERSION_PLUGIN, LEGEND_SDLC_PROPERTY_REFERENCE, null, null).getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendJUnitTestGenerationPluginMavenHelper.getPluginManagementPlugin(this));
+            configuration.addPluginManagement(this.legendTestUtilsMavenHelper.getMavenSurefirePlugin("3.1.0"));
         }
 
         private Dependency getLegendTestUtilsDependencyWithExclusion()
@@ -298,7 +307,7 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
             // Plugins
             configuration.addPlugin(this.legendEntityPluginMavenHelper.getPlugin(this));
             configuration.addPlugin(this.legendModelGenerationPluginMavenHelper.getPlugin(this));
-            configuration.addPlugin(this.legendTestUtilsMavenHelper.getMavenSurefirePlugin(true));
+            configuration.addPlugin(this.legendJUnitTestGenerationPluginMavenHelper.getPlugin(this));
         }
 
         @Override
@@ -331,7 +340,6 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
         public void configureServiceExecutionModule(MavenModelConfiguration configuration)
         {
             configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getPlugin(this));
-            configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getBuildHelperPlugin("3.0.0"));
             configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getShadePlugin());
 
             configuration.addDependency(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, false, false));
@@ -356,16 +364,11 @@ public class ProjectStructureV12Factory extends ProjectStructureVersionFactory
             return loadJavaTestCode(4, "EntityValidationTest");
         }
 
-        // public for testing
-        public static String getEntityTestSuiteCode()
-        {
-            return loadJavaTestCode(4, "EntityTestSuite");
-        }
-
         private static List<EntitySourceDirectory> getEntitySourceDirectories(ProjectConfiguration projectConfiguration)
         {
             Map<String, EntitySerializer> serializers = EntitySerializers.getAvailableSerializersByName();
             return getDefaultEntitySourceDirectoriesForSerializers(projectConfiguration, ENTITIES_MODULE_NAME, ENTITY_SERIALIZERS.collectIf(serializers::containsKey, serializers::get).castToList());
         }
     }
+
 }

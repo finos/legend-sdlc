@@ -64,13 +64,6 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     }
 
     @Override
-    protected void collectExpectedEntitiesModelPlugins(T projectStructure, Consumer<Plugin> pluginConsumer)
-    {
-        super.collectExpectedEntitiesModelPlugins(projectStructure, pluginConsumer);
-        pluginConsumer.accept(LEGEND_TEST_UTILS_MAVEN_HELPER.getMavenSurefirePlugin(false));
-    }
-
-    @Override
     protected void assertMultiFormatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType artifactType)
     {
         ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, workspaceId, revisionId, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);

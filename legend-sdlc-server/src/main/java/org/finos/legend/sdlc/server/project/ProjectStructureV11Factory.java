@@ -58,6 +58,9 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
     public static class ProjectStructureV11 extends MultiModuleMavenProjectStructure
     {
+        public static final String ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
+        public static final String ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
+
         private static final String ENTITIES_MODULE_NAME = "entities";
         private static final ImmutableList<String> ENTITY_SERIALIZERS = Lists.immutable.with("pure", "legend");
 
@@ -120,13 +123,13 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private Dependency getExtensionsCollectionDependency(String extensionName, boolean includeVersion, boolean scopeTest)
         {
-            Dependency dependency = this.getOverrideExtensionsCollectionDependency(extensionName, includeVersion, scopeTest);
+            Dependency dependency = getOverrideExtensionsCollectionDependency(extensionName, includeVersion, scopeTest);
             if (dependency == null)
             {
                 MavenCoordinates mavenCoordinates = DEFAULT_EXTENSIONS_COLLECTION.get(extensionName);
-                String groupId = mavenCoordinates.groupId;
-                String artifactId = mavenCoordinates.artifactId;
-                String version = includeVersion ? mavenCoordinates.version : null;
+                String groupId = mavenCoordinates.getGroupId();
+                String artifactId = mavenCoordinates.getArtifactId();
+                String version = includeVersion ? mavenCoordinates.getVersion() : null;
                 return scopeTest ? newMavenTestDependency(groupId, artifactId, version) : newMavenDependency(groupId, artifactId, version);
             }
             return dependency;
@@ -134,13 +137,13 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private Dependency getOverrideExtensionsCollectionDependency(String extensionName, boolean includeVersion, boolean scopeTest)
         {
-            if (this.getProjectStructureExtensions() != null && this.getProjectStructureExtensions().containsExtension(extensionName))
+            if (getProjectStructureExtensions() != null && getProjectStructureExtensions().containsExtension(extensionName))
             {
-                ProjectStructurePlatformExtensions.ExtensionsCollection extensionsCollection = this.getProjectStructureExtensions().getExtensionsCollection(extensionName);
-                ProjectStructurePlatformExtensions.Platform platform = this.getProjectStructureExtensions().getPlatform(extensionsCollection.getPlatform());
+                ProjectStructurePlatformExtensions.ExtensionsCollection extensionsCollection = getProjectStructureExtensions().getExtensionsCollection(extensionName);
+                ProjectStructurePlatformExtensions.Platform platform = getProjectStructureExtensions().getPlatform(extensionsCollection.getPlatform());
                 String groupId = platform.getGroupId();
                 String artifactId = extensionsCollection.getArtifactId();
-                String versionId = includeVersion ? this.getPlatformPropertyReference(platform.getName()) : null;
+                String versionId = includeVersion ? getPlatformPropertyReference(platform.getName()) : null;
                 return scopeTest ? newMavenTestDependency(groupId, artifactId, versionId) : newMavenDependency(groupId, artifactId, versionId);
             }
             return null;
@@ -340,13 +343,13 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             getProjectDependenciesAsMavenDependencies(ArtifactType.versioned_entities, true).forEach(configuration::addDependency);
         }
 
-        // package private for testing
+        // public for testing
         public static String getEntityValidationTestCode()
         {
             return loadJavaTestCode(4, "EntityValidationTest");
         }
 
-        // package private for testing
+        // public for testing
         public static String getEntityTestSuiteCode()
         {
             return loadJavaTestCode(4, "EntityTestSuite");
@@ -356,35 +359,6 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
         {
             Map<String, EntitySerializer> serializers = EntitySerializers.getAvailableSerializersByName();
             return getDefaultEntitySourceDirectoriesForSerializers(projectConfiguration, ENTITIES_MODULE_NAME, ENTITY_SERIALIZERS.collectIf(serializers::containsKey, serializers::get).castToList());
-        }
-
-        private static class MavenCoordinates
-        {
-            private final String groupId;
-            private final String artifactId;
-            private final String version;
-
-            public MavenCoordinates(String groupdId, String artifactId, String version)
-            {
-                this.groupId = groupdId;
-                this.artifactId = artifactId;
-                this.version = version;
-            }
-
-            public String getArtifactId()
-            {
-                return artifactId;
-            }
-
-            public String getVersion()
-            {
-                return version;
-            }
-
-            public String getGroupId()
-            {
-                return groupId;
-            }
         }
     }
 }

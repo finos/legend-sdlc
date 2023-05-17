@@ -63,9 +63,6 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
 {
     private static final Pattern VALID_MODULE_NAME = Pattern.compile("\\w++(-\\w++)*+");
 
-    public static final String ENTITY_VALIDATION_TEST_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityValidationTest.java";
-    public static final String ENTITY_TEST_SUITE_FILE_PATH = "/src/test/java/org/finos/legend/sdlc/EntityTestSuite.java";
-
     private final String entitiesModuleName;
     private final Map<String, ArtifactType> otherModules;
     private final boolean useDependencyManagement;
@@ -392,6 +389,12 @@ public abstract class MultiModuleMavenProjectStructure extends MavenProjectStruc
         String oldFullPath = (oldStructure instanceof MultiModuleMavenProjectStructure) ? ((MultiModuleMavenProjectStructure) oldStructure).getModuleFilePath(oldModule, oldPath) : oldPath;
         String newFullPath = getModuleFilePath(newModule, newPath);
         moveOrAddOrModifyFile(oldFullPath, newFullPath, newContent, fileAccessContext, operationConsumer);
+    }
+
+    protected void deleteModuleFileIfPresent(ProjectStructure structure, String moduleName, String pathWithinModule, FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer)
+    {
+        String fullPath = (structure instanceof MultiModuleMavenProjectStructure) ? ((MultiModuleMavenProjectStructure) structure).getModuleFilePath(moduleName, pathWithinModule) : pathWithinModule;
+        deleteFileIfPresent(fullPath, fileAccessContext, operationConsumer);
     }
 
     private Model createMavenModuleModel(String moduleName)
