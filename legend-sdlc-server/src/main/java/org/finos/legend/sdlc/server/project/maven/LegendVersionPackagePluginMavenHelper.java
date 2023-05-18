@@ -28,7 +28,7 @@ public class LegendVersionPackagePluginMavenHelper extends AbstractLegendMavenPl
 
     public LegendVersionPackagePluginMavenHelper(String groupId, String artifactId,  String version, List<String> entitySourceDirectories, String outputDirectory)
     {
-        super(groupId, artifactId, version, "compile", "version-qualify-packages", null);
+        super(groupId, artifactId, version, "compile", "version-qualify-packages");
         this.entitySourceDirectories = entitySourceDirectories;
         this.outputDirectory = outputDirectory;
     }

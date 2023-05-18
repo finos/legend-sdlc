@@ -21,30 +21,45 @@ import org.eclipse.collections.api.list.ImmutableList;
 
 public class LegendTestUtilsMavenHelper
 {
-    private static final ImmutableList<String> INCLUSION_PATTERNS = Lists.immutable.with("**/Test*.java", "**/*Test.java", "**/*Tests.java", "**/*TestCase.java", "**/*TestSuite.java");
+    private static final ImmutableList<String> DEFAULT_INCLUSION_PATTERNS = Lists.immutable.with("**/Test*.java", "**/*Test.java", "**/*Tests.java", "**/*TestCase.java", "**/*TestSuite.java");
 
     private final String version;
-    private final String group_id;
-    private final String artifact_id;
+    private final String groupId;
+    private final String artifactId;
 
     public LegendTestUtilsMavenHelper(String groupId, String artifactId, String version)
     {
-        this.group_id = groupId;
-        this.artifact_id = artifactId;
+        this.groupId = groupId;
+        this.artifactId = artifactId;
         this.version = version;
     }
 
     public Dependency getDependency(boolean includeVersion)
     {
-        return MavenProjectStructure.newMavenTestDependency(group_id, artifact_id, includeVersion ? this.version : null);
+        return MavenProjectStructure.newMavenTestDependency(this.groupId, this.artifactId, includeVersion ? this.version : null);
     }
 
     public Plugin getMavenSurefirePlugin(boolean useSystemClassLoader)
     {
-        Plugin plugin = MavenPluginTools.newPlugin(null, "maven-surefire-plugin", null);
-        MavenPluginTools.setConfiguration(plugin,
-                MavenPluginTools.newDom("includes", INCLUSION_PATTERNS.stream().map(p -> MavenPluginTools.newDom("include", p))),
-                MavenPluginTools.newDom("useSystemClassLoader", useSystemClassLoader ? "true" : "false"));
+        return getMavenSurefirePlugin(null, DEFAULT_INCLUSION_PATTERNS, useSystemClassLoader);
+    }
+
+    public Plugin getMavenSurefirePlugin(String version)
+    {
+        return getMavenSurefirePlugin(version, null, null);
+    }
+
+    public Plugin getMavenSurefirePlugin(String version, Iterable<String> inclusionPatterns, Boolean useSystemClassLoader)
+    {
+        Plugin plugin = MavenPluginTools.newPlugin(null, "maven-surefire-plugin", version);
+        if (inclusionPatterns != null)
+        {
+            MavenPluginTools.addConfiguration(plugin, MavenPluginTools.newDom("includes", DEFAULT_INCLUSION_PATTERNS.asLazy().collect(p -> MavenPluginTools.newDom("include", p))));
+        }
+        if (useSystemClassLoader != null)
+        {
+            MavenPluginTools.addConfiguration(plugin, MavenPluginTools.newDom("useSystemClassLoader", useSystemClassLoader.toString()));
+        }
         return plugin;
     }
 }
