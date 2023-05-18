@@ -21,11 +21,13 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.review.CommitReviewCommand;
 import org.finos.legend.sdlc.server.application.review.CreateReviewCommand;
 import org.finos.legend.sdlc.server.application.review.EditReviewCommand;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi.ReviewUpdateStatus;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.ReviewFilterResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
@@ -44,8 +46,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/reviews")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/reviews")
 @Api("Reviews")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -62,7 +65,7 @@ public class PatchReviewsResource extends ReviewFilterResource
     @GET
     @ApiOperation(value = "Get reviews for a project for patch release version", notes = "Get reviews for a project. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
     public List<Review> getReviews(@PathParam("projectId") String projectId,
-                                   @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                   @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                    @QueryParam("state") @ApiParam("Only include reviews with the given state") ReviewState state,
                                    @QueryParam("revisionIds") @ApiParam("List of revision IDs that any of the reviews are associated to") Set<String> revisionIds,
                                    @QueryParam("workspaceIdRegex") @ApiParam("Include reviews with a workspace id matching this regular expression") String workspaceIdRegex,
@@ -71,36 +74,63 @@ public class PatchReviewsResource extends ReviewFilterResource
                                    @QueryParam("until") @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
                                    @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                (state == null) ? ("getting reviews for project " + projectId) : ("getting reviews for project " + projectId + " for patch release version " + patchReleaseVersion + " with state " + state),
-                () -> this.reviewApi.getReviews(projectId, patchReleaseVersion, state, revisionIds, this.getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                (state == null) ? ("getting reviews for project " + projectId) : ("getting reviews for project " + projectId + " for patch release version " + patchReleaseVersionId + " with state " + state),
+                () -> this.reviewApi.getReviews(projectId, versionId, state, revisionIds, this.getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
     @GET
     @Path("{reviewId}")
     @ApiOperation("Get a review for patch release version")
-    public Review getReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review getReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.getReview(projectId, patchReleaseVersion, reviewId)
+                "getting review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.getReview(projectId, versionId, reviewId)
         );
     }
 
     @GET
     @Path("{reviewId}/outdated")
     @ApiOperation(value = "Check if a review is outdated for patch release version", notes = "Check if an open review is outdated, i.e., if it is not based on the latest project revision. Returns false if an update is in progress. Returns a 409 status if the review is not open.")
-    public boolean isReviewOutdated(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public boolean isReviewOutdated(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "checking if review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion + " is outdated",
+                "checking if review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
                 () ->
                 {
-                    ReviewUpdateStatus status = this.reviewApi.getReviewUpdateStatus(projectId, patchReleaseVersion, reviewId);
+                    ReviewUpdateStatus status = this.reviewApi.getReviewUpdateStatus(projectId, versionId, reviewId);
                     if (status.isUpdateInProgress())
                     {
                         return false;
@@ -115,137 +145,236 @@ public class PatchReviewsResource extends ReviewFilterResource
 
     @POST
     @ApiOperation("Create a review for patch release version")
-    public Review createReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, CreateReviewCommand command)
+    public Review createReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, CreateReviewCommand command)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         LegendSDLCServerException.validateNonNull(command, "Input required to create review");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return execute(
-                "creating review \"" + command.getTitle() + "\" in project " + projectId + " for patch release version " + patchReleaseVersion,
+                "creating review \"" + command.getTitle() + "\" in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, patchReleaseVersion, command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), command.getTitle(), command.getDescription(), command.getLabels())
+                () -> this.reviewApi.createReview(projectId, WorkspaceSpecification.newWorkspaceSpecification(command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), null, versionId), command.getTitle(), command.getDescription(), command.getLabels())
         );
     }
 
     @POST
     @Path("{reviewId}/close")
     @ApiOperation(value = "Close a review for patch release version", notes = "Close a review. This is only valid if the review is open.")
-    public Review closeReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review closeReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "closing review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.closeReview(projectId, patchReleaseVersion, reviewId)
+                "closing review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.closeReview(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/reopen")
     @ApiOperation(value = "Reopen a closed review for patch release version", notes = "Reopen a review. This is only valid if the review is closed.")
-    public Review reopenReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review reopenReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "reopening review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.reopenReview(projectId, patchReleaseVersion, reviewId)
+                "reopening review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.reopenReview(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/approve")
     @ApiOperation(value = "Approve a review for patch release version", notes = "Approve a review. This is only valid if the review is open.")
-    public Review approveReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review approveReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "approving review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.approveReview(projectId, patchReleaseVersion, reviewId)
+                "approving review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.approveReview(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/revokeApproval")
     @ApiOperation(value = "Revoke approval of a review for patch release version", notes = "Revoke approval of a review. This is only valid if the review is open and you have approved it.")
-    public Review revokeReviewApproval(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review revokeReviewApproval(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "revoking review approval " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.revokeReviewApproval(projectId, patchReleaseVersion, reviewId)
+                "revoking review approval " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.revokeReviewApproval(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/reject")
     @ApiOperation(value = "Reject a review for patch release version", notes = "Reject a review. This is only valid if the review is open. It may cause the review to be closed.")
-    public Review rejectReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Review rejectReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "rejecting review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.rejectReview(projectId, patchReleaseVersion, reviewId)
+                "rejecting review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.rejectReview(projectId, versionId, reviewId)
         );
     }
 
     @GET
     @Path("{reviewId}/approval")
     @ApiOperation("Get approval information for a review for patch release version")
-    public Approval getReviewApproval(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public Approval getReviewApproval(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting approval details for review " + reviewId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.getReviewApproval(projectId, patchReleaseVersion, reviewId)
+                "getting approval details for review " + reviewId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.getReviewApproval(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/commit")
     @ApiOperation(value = "Commit an approved review for patch release version", notes = "Commit changes from a review. This is only valid if the review is open and has sufficient approvals.")
-    public Review commitReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId, CommitReviewCommand command)
+    public Review commitReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId, CommitReviewCommand command)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         LegendSDLCServerException.validateNonNull(command, "Input required to commit review");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "committing review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.commitReview(projectId, patchReleaseVersion, reviewId, command.getMessage())
+                "committing review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.commitReview(projectId, versionId, reviewId, command.getMessage())
         );
     }
 
     @GET
     @Path("{reviewId}/updateStatus")
     @ApiOperation(value = "Get the update status of a review for patch release version", notes = "Get the update status for an open review. If the review is not open, returns a 409 status. If an update is in progress, then the base revision will be null.")
-    public ReviewUpdateStatus getReviewUpdateStatus(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public ReviewUpdateStatus getReviewUpdateStatus(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting update status for review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.getReviewUpdateStatus(projectId, patchReleaseVersion, reviewId)
+                "getting update status for review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.getReviewUpdateStatus(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/update")
     @ApiOperation(value = "Update a review for patch release version", notes = "Try to update an open review. That is, try to bring the review up to date with the latest revision of the project. If the review is not open, this will return a 409 status. This does not wait for the update to complete. It starts the update and returns an initial status. Call updateStatus for subsequent updates. If an update is already in progress or if the review is already up to date, this returns the current update status but is otherwise a no-op. Note that it is not always possible to update a review. In case the update fails, the review will be left in the pre-update state.")
-    public ReviewUpdateStatus updateReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public ReviewUpdateStatus updateReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "updating review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.reviewApi.updateReview(projectId, patchReleaseVersion, reviewId)
+                "updating review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.reviewApi.updateReview(projectId, versionId, reviewId)
         );
     }
 
     @POST
     @Path("{reviewId}/edit")
     @ApiOperation(value = "Edit a review for patch release version", notes = "Edit an open review. This updates the title, description and the labels of the review")
-    public Review editReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId, EditReviewCommand command)
+    public Review editReview(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId, EditReviewCommand command)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         LegendSDLCServerException.validateNonNull(command, "Input required to create review");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return execute(
-                "editing review " + reviewId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
+                "editing review " + reviewId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "edit a review",
-                () -> this.reviewApi.editReview(projectId, patchReleaseVersion, reviewId, command.getTitle(), command.getDescription(), command.getLabels())
+                () -> this.reviewApi.editReview(projectId, versionId, reviewId, command.getTitle(), command.getDescription(), command.getLabels())
         );
     }
 }

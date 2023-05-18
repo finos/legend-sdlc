@@ -17,10 +17,11 @@ package org.finos.legend.sdlc.server.resources.pmcd.patch.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.PureModelContextDataResource;
 
@@ -31,8 +32,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workspaces/{workspaceId}/pureModelContextData")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/pureModelContextData")
 @Api("Pure Model Context")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -50,19 +52,28 @@ public class PatchesWorkspacePureModelContextDataResource extends PureModelConte
 
     @GET
     @ApiOperation("Get Pure model context data for a user workspace (at the latest revision) for patch release version")
-    public PureModelContextData getPureModelContextData(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId)
+    public PureModelContextData getPureModelContextData(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting Pure model context data for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
+                "getting Pure model context data for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getCurrentRevision();
+                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).getCurrentRevision();
                     if (revision == null)
                     {
-                        throw new LegendSDLCServerException("Could not find latest revision for user workspace " + workspaceId + " in project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersion);
+                        throw new LegendSDLCServerException("Could not find latest revision for user workspace " + workspaceId + " in project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersionId);
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)));
                 });
     }
 }

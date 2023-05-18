@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources.comparison.patch;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
@@ -28,9 +29,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/reviews/{reviewId}/comparison")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/reviews/{reviewId}/comparison")
 @Api("Comparison")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -47,24 +49,42 @@ public class ComparisonPatchReviewProjectConfigurationResource extends EntityAcc
     @GET
     @Path("from/configuration")
     @ApiOperation("Get [from] project configuration for a given review for patch release version")
-    public ProjectConfiguration getReviewFromProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public ProjectConfiguration getReviewFromProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting [from] project configuration for review " + reviewId + " of project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.projectConfigurationApi.getReviewFromProjectConfiguration(projectId, patchReleaseVersion, reviewId)
+                "getting [from] project configuration for review " + reviewId + " of project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.getReviewFromProjectConfiguration(projectId, versionId, reviewId)
         );
     }
 
     @GET
     @Path("to/configuration")
     @ApiOperation("Get [to] project configuration for a given review for patch release version")
-    public ProjectConfiguration getReviewToProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId)
+    public ProjectConfiguration getReviewToProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting [to] project configuration for review " + reviewId + " of project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.projectConfigurationApi.getReviewToProjectConfiguration(projectId, patchReleaseVersion, reviewId)
+                "getting [to] project configuration for review " + reviewId + " of project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.getReviewToProjectConfiguration(projectId, versionId, reviewId)
         );
     }
 

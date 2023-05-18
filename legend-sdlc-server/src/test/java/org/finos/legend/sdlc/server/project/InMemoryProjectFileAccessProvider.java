@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -44,26 +45,26 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
         {
             @Override
             protected SimpleInMemoryVCS getContextVCS()
             {
-                return getVCS(projectId, workspaceId);
+                return getVCS(projectId, workspaceSpecification.getWorkspaceId());
             }
         };
-        if (workspaceAccessType == null)
+        if (workspaceSpecification.getWorkspaceAccessType() == null)
         {
             return abstractInMemoryFileAccessContext;
         }
-        switch (workspaceType)
+        switch (workspaceSpecification.getWorkspaceType())
         {
             case USER:
             case GROUP:
             {
-                switch (workspaceAccessType)
+                switch (workspaceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
@@ -99,13 +100,13 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, Iterable<? extends String> paths)
     {
-        switch (workspaceType)
+        switch (workspaceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                switch (workspaceAccessType)
+                switch (workspaceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
@@ -114,7 +115,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
                             @Override
                             protected SimpleInMemoryVCS getContextVCS()
                             {
-                                return getVCS(projectId, workspaceId);
+                                return getVCS(projectId, workspaceSpecification.getWorkspaceId());
                             }
                         };
                     }
@@ -147,17 +148,17 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Modification Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId, String patchReleaseVersion)
+    public FileModificationContext getFileModificationContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
-        switch (workspaceType)
+        switch (workspaceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                switch (workspaceAccessType)
+                switch (workspaceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
-                        return new InMemoryFileModificationContext(projectId, workspaceId, revisionId);
+                        return new InMemoryFileModificationContext(projectId, workspaceSpecification.getWorkspaceId(), revisionId);
                     }
                     default:
                     {

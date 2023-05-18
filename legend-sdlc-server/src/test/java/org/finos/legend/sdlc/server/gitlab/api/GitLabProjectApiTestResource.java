@@ -60,9 +60,9 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId).getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json",
                 "/PANGRAM.TXT",
@@ -94,9 +94,9 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId).getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json",
                 "/PANGRAM.TXT",
@@ -140,9 +140,9 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.EMBEDDED, gitLabProjectApi.getProjectConfiguration(projectId).getProjectType());
+        Assert.assertEquals(ProjectType.EMBEDDED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNull(gitLabProjectApi.getProjectConfiguration(projectId).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json"
         ), gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));

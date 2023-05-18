@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
@@ -31,11 +32,12 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Set;
 
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/reviews/{reviewId}/comparison")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/reviews/{reviewId}/comparison")
 @Api("Comparison")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,7 +55,7 @@ public class ComparisonPatchReviewEntitiesResource extends EntityAccessResource
     @Path("from/entities")
     @ApiOperation("Get [from] entities for a given review for patch release version")
     public List<Entity> getReviewFromEntities(@PathParam("projectId") String projectId,
-                                              @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                              @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                               @PathParam("reviewId") String reviewId,
                                               @QueryParam("classifierPath")
                                               @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
@@ -71,10 +73,19 @@ public class ComparisonPatchReviewEntitiesResource extends EntityAccessResource
                                               @DefaultValue("false")
                                               @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting [from] entities in review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> getEntities(this.entityApi.getReviewFromEntityAccessContext(projectId, patchReleaseVersion, reviewId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                "getting [from] entities in review " + reviewId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> getEntities(this.entityApi.getReviewFromEntityAccessContext(projectId, versionId, reviewId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -82,7 +93,7 @@ public class ComparisonPatchReviewEntitiesResource extends EntityAccessResource
     @Path("to/entities")
     @ApiOperation("Get [to] entities for a given review")
     public List<Entity> getReviewToEntities(@PathParam("projectId") String projectId,
-                                            @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                            @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                             @PathParam("reviewId") String reviewId,
                                             @QueryParam("classifierPath")
                                             @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
@@ -100,34 +111,61 @@ public class ComparisonPatchReviewEntitiesResource extends EntityAccessResource
                                             @DefaultValue("false")
                                             @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
                 "getting [to] entities in review " + reviewId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getReviewToEntityAccessContext(projectId, patchReleaseVersion, reviewId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getReviewToEntityAccessContext(projectId, versionId, reviewId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
     @GET
     @Path("from/entities/{entityPath}")
     @ApiOperation("Get [from] entity for a given review")
-    public Entity getReviewFromEntity(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
+    public Entity getReviewFromEntity(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
                 "getting [from] entity for review " + reviewId + " of project " + projectId,
-                () -> this.entityApi.getReviewFromEntityAccessContext(projectId, patchReleaseVersion, reviewId).getEntity(entityPath)
+                () -> this.entityApi.getReviewFromEntityAccessContext(projectId, versionId, reviewId).getEntity(entityPath)
         );
     }
 
     @GET
     @Path("to/entities/{entityPath}")
     @ApiOperation("Get [to] entity for a given review")
-    public Entity getReviewToEntity(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
+    public Entity getReviewToEntity(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("reviewId") String reviewId, @PathParam("entityPath") String entityPath)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
                 "getting [to] entity for review " + reviewId + " of project " + projectId,
-                () -> this.entityApi.getReviewToEntityAccessContext(projectId, patchReleaseVersion, reviewId).getEntity(entityPath)
+                () -> this.entityApi.getReviewToEntityAccessContext(projectId, versionId, reviewId).getEntity(entityPath)
         );
     }
 

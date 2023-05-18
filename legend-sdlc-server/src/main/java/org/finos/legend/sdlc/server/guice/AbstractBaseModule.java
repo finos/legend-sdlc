@@ -46,7 +46,7 @@ import org.finos.legend.sdlc.server.resources.backup.patch.user.BackupPatchesWor
 import org.finos.legend.sdlc.server.resources.backup.project.BackupProjectResource;
 import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspaceEntitiesResource;
 import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspaceEntityPathsResource;
-import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspacePatchConfigurationResource;
+import org.finos.legend.sdlc.server.resources.backup.patch.user.BackupPatchesWorkspaceProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspaceProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspaceResource;
 import org.finos.legend.sdlc.server.resources.backup.project.user.BackupWorkspaceRevisionEntitiesResource;
@@ -166,7 +166,7 @@ import org.finos.legend.sdlc.server.resources.pmcd.patch.group.PatchesGroupWorks
 import org.finos.legend.sdlc.server.resources.revision.patch.group.PatchesGroupWorkspaceRevisionsResource;
 import org.finos.legend.sdlc.server.resources.workflow.patch.group.PatchesGroupWorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.workflow.patch.group.PatchesGroupWorkspaceWorkflowsResource;
-import org.finos.legend.sdlc.server.resources.project.patch.PatchesProjectConfigurationResource;
+import org.finos.legend.sdlc.server.resources.project.patch.PatchProjectConfigurationResource;
 import org.finos.legend.sdlc.server.resources.entity.patch.PatchesProjectEntitiesResource;
 import org.finos.legend.sdlc.server.resources.entity.patch.PatchesProjectEntityPathsResource;
 import org.finos.legend.sdlc.server.resources.patch.PatchesResource;
@@ -371,7 +371,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(GroupWorkspacesResource.class);
         binder.bind(GroupWorkspaceWorkflowJobsResource.class);
         binder.bind(GroupWorkspaceWorkflowsResource.class);
-        binder.bind(PatchesProjectConfigurationResource.class);
+        binder.bind(PatchProjectConfigurationResource.class);
         binder.bind(PatchesResource.class);
         binder.bind(PatchesWorkspacesResource.class);
         binder.bind(PatchesGroupWorkspacesResource.class);
@@ -408,7 +408,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(PatchesGroupWorkspacePackageRevisionsResource.class);
         binder.bind(BackupPatchesWorkspaceEntitiesResource.class);
         binder.bind(BackupPatchesWorkspaceEntityPathsResource.class);
-        binder.bind(BackupWorkspacePatchConfigurationResource.class);
+        binder.bind(BackupPatchesWorkspaceProjectConfigurationResource.class);
         binder.bind(BackupPatchesWorkspaceResource.class);
         binder.bind(BackupPatchesWorkspaceRevisionEntitiesResource.class);
         binder.bind(BackupPatchesWorkspaceRevisionEntityPathsResource.class);

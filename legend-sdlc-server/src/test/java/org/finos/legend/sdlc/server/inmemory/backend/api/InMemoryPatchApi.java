@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
 import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
@@ -36,26 +37,26 @@ public class InMemoryPatchApi implements PatchApi
     }
 
     @Override
-    public Patch newPatch(String projectId, Version sourcePatchReleaseVersion)
+    public Patch newPatch(String projectId, VersionId sourcePatchReleaseVersion)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public List<Patch> getAllPatches(String projectId)
+    public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
         InMemoryProject project = backend.getProject(projectId);
         return Lists.mutable.withAll(project.getPatches());
     }
 
     @Override
-    public void deletePatch(String projectId, String patchReleaseId)
+    public void deletePatch(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Version releasePatch(String projectId, String patchReleaseId)
+    public Version releasePatch(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

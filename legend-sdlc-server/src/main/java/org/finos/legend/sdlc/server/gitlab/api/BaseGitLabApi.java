@@ -14,19 +14,15 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.set.primitive.MutableIntSet;
-import org.eclipse.collections.impl.factory.primitive.IntSets;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.domain.model.review.Approval;
-import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -41,18 +37,16 @@ import org.finos.legend.sdlc.server.tools.ThrowingRunnable;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.CommitsApi;
-import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AbstractUser;
-import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Commit;
 import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.MergeRequest;
-import org.gitlab4j.api.models.MergeRequestFilter;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.Release;
 import org.gitlab4j.api.models.ReleaseParams;
 import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
@@ -63,24 +57,16 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.Base64.Encoder;
-import java.util.Collections;
 import java.util.Date;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Random;
-import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
-
-import static org.finos.legend.sdlc.server.gitlab.api.GitLabApiWithFileAccess.fromGitLabTag;
 
 abstract class BaseGitLabApi
 {
@@ -265,39 +251,34 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected static WorkspaceInfo parseWorkspaceBranchName(String branchName, String patchReleaseVersion)
+    protected static WorkspaceInfo parseWorkspaceBranchName(String branchName)
     {
         String branchType;
         int branchInfoDelimiter;
-        if (patchReleaseVersion != null)
+        int firstDelimiter = branchName.indexOf(BRANCH_DELIMITER);
+        if (firstDelimiter == -1)
         {
-            int firstDelimiter = branchName.indexOf(BRANCH_DELIMITER);
-            if (firstDelimiter == -1)
-            {
-                return null;
-            }
-            int secondDelimiter = branchName.indexOf(BRANCH_DELIMITER, firstDelimiter + 1);
-            if (secondDelimiter == -1)
-            {
-                return null;
-            }
-            int thirdDelimter = branchName.indexOf(BRANCH_DELIMITER, secondDelimiter + 1);
-            if (thirdDelimter == -1)
-            {
-                return null;
-            }
-            branchInfoDelimiter = thirdDelimter;
-            branchType = branchName.substring(firstDelimiter + 1, secondDelimiter);
+            return null;
+        }
+        int secondDelimiter = branchName.indexOf(BRANCH_DELIMITER, firstDelimiter + 1);
+        if (secondDelimiter == -1)
+        {
+            branchInfoDelimiter = firstDelimiter;
+            branchType = branchName.substring(0, firstDelimiter);
         }
         else
         {
-            int firstDelimiter = branchName.indexOf(BRANCH_DELIMITER);
-            if (firstDelimiter == -1)
+            int thirdDelimter = branchName.indexOf(BRANCH_DELIMITER, secondDelimiter + 1);
+            if (thirdDelimter == -1)
             {
-                return null;
+                branchInfoDelimiter = firstDelimiter;
+                branchType = branchName.substring(0, firstDelimiter);
             }
-            branchInfoDelimiter = firstDelimiter;
-            branchType = branchName.substring(0, firstDelimiter);
+            else
+            {
+                branchInfoDelimiter = thirdDelimter;
+                branchType = branchName.substring(firstDelimiter + 1, secondDelimiter);
+            }
         }
 
         WorkspaceType type;
@@ -374,9 +355,9 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, GitLabProjectId projectId, String patchReleaseVersion)
+    protected String getBranchName(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification)
     {
-        return (workspaceId == null) ? getSourceBranch(projectId, patchReleaseVersion) : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType, patchReleaseVersion);
+        return (workspaceSpecification.getWorkspaceId() == null) ? getSourceBranch(projectId, workspaceSpecification.getPatchReleaseVersionId()) : getWorkspaceBranchName(workspaceSpecification);
     }
 
     protected String getDefaultBranch(GitLabProjectId projectId)
@@ -392,15 +373,15 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getSourceBranch(GitLabProjectId projectId, String patchReleaseversion)
+    protected String getSourceBranch(GitLabProjectId projectId, VersionId patchReleaseVersionId)
     {
-        if (patchReleaseversion == null)
+        if (patchReleaseVersionId == null)
         {
             return getDefaultBranch(projectId);
         }
         else
         {
-            return getPatchReleaseBranchName(patchReleaseversion);
+            return getPatchReleaseBranchName(patchReleaseVersionId);
         }
     }
 
@@ -410,29 +391,34 @@ abstract class BaseGitLabApi
         return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
-    protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String patchReleaseVersion)
+    protected String getWorkspaceBranchName(WorkspaceSpecification workspaceSpecification)
     {
-        String prefix = getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType);
-        switch (workspaceType)
+        String prefix = getWorkspaceBranchNamePrefix(workspaceSpecification.getWorkspaceType(), workspaceSpecification.getWorkspaceAccessType());
+        switch (workspaceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                return patchReleaseVersion == null ? createBranchName(prefix, getCurrentUser(), workspaceId) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, patchReleaseVersion, getCurrentUser(), workspaceId);
+                return workspaceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, getCurrentUser(), workspaceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, workspaceSpecification.getPatchReleaseVersionId().toVersionIdString(), getCurrentUser(), workspaceSpecification.getWorkspaceId());
             }
             case GROUP:
             {
-                return patchReleaseVersion == null ? createBranchName(prefix, workspaceId) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, patchReleaseVersion, workspaceId);
+                return workspaceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, workspaceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, workspaceSpecification.getPatchReleaseVersionId().toVersionIdString(), workspaceSpecification.getWorkspaceId());
             }
             default:
             {
-                throw new IllegalStateException("Unknown workspace type: " + workspaceType);
+                throw new IllegalStateException("Unknown workspace type: " + workspaceSpecification.getWorkspaceType());
             }
         }
     }
 
-    protected String getPatchReleaseBranchName(String patchRelaseVersion)
+    protected String getPatchReleaseBranchPrefix()
     {
-        return patchRelaseVersion == null ? null : PATCH_RELEASE_BRANCH_PREFIX + BRANCH_DELIMITER + patchRelaseVersion;
+        return PATCH_RELEASE_BRANCH_PREFIX + BRANCH_DELIMITER;
+    }
+
+    protected String getPatchReleaseBranchName(VersionId patchRelaseVersionId)
+    {
+        return patchRelaseVersionId.appendVersionIdString(new StringBuilder(PATCH_RELEASE_BRANCH_PREFIX).append(BRANCH_DELIMITER)).toString();
     }
 
     protected String newUserTemporaryBranchName()
@@ -538,6 +524,20 @@ abstract class BaseGitLabApi
     protected static VersionId parseVersionTagName(String name)
     {
         return VersionId.parseVersionId(name, RELEASE_TAG_PREFIX.length(), name.length());
+    }
+
+    protected static VersionId parseVersionIdString(String versionIdString)
+    {
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(versionIdString);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
+        return versionId;
     }
 
     protected static boolean isVersionTag(Tag tag)
@@ -835,9 +835,9 @@ abstract class BaseGitLabApi
         };
     }
 
-    protected static Workspace fromWorkspaceBranchName(String projectId, String patchReleaseVersion, String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected static Workspace fromWorkspaceBranchName(String projectId, VersionId patchReleaseVersionId, String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        int userIdStartIndex = patchReleaseVersion == null ? getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1 : PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX.length() + getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 8;
+        int userIdStartIndex = patchReleaseVersionId == null ? getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1 : PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX.length() + getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 8;
         int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, workspaceType == WorkspaceType.GROUP ? userIdStartIndex - 1 : userIdStartIndex);
         String userId = workspaceType == WorkspaceType.GROUP ? null : branchName.substring(userIdStartIndex, userIdEndIndex);
         String workspaceId = branchName.substring(userIdEndIndex + 1);
@@ -863,12 +863,12 @@ abstract class BaseGitLabApi
         };
     }
 
-    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String patchReleaseVersion, String reviewId)
+    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, VersionId patchReleaseVersionId, String reviewId)
     {
-        return getReviewMergeRequest(mergeRequestApi, projectId, patchReleaseVersion, reviewId, false);
+        return getReviewMergeRequest(mergeRequestApi, projectId, patchReleaseVersionId, reviewId, false);
     }
 
-    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String patchReleaseVersion, String reviewId, boolean includeRebaseInProgress)
+    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, VersionId patchReleaseVersionId, String reviewId, boolean includeRebaseInProgress)
     {
         int mergeRequestId = parseIntegerId(reviewId);
         MergeRequest mergeRequest;
@@ -884,20 +884,20 @@ abstract class BaseGitLabApi
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
 
-        if (!isReviewMergeRequest(mergeRequest, getSourceBranch(projectId, patchReleaseVersion), patchReleaseVersion))
+        if (!isReviewMergeRequest(mergeRequest, getSourceBranch(projectId, patchReleaseVersionId)))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }
 
-    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch, String patchReleaseVersion)
+    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch)
     {
         if ((mergeRequest == null) || !targetBranch.equals(mergeRequest.getTargetBranch()))
         {
             return false;
         }
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch(), patchReleaseVersion);
+        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         return (workspaceInfo != null) && (workspaceInfo.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE);
     }
 
@@ -1068,7 +1068,45 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected Version getVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
+    protected static Version fromGitLabTag(String projectId, Tag tag)
+    {
+        if (tag == null)
+        {
+            return null;
+        }
+
+        VersionId versionId = parseVersionTagName(tag.getName());
+        String revisionId = tag.getCommit().getId();
+        String notes = applyIfNotNull(Release::getDescription, tag.getRelease());
+        return new Version()
+        {
+            @Override
+            public VersionId getId()
+            {
+                return versionId;
+            }
+
+            @Override
+            public String getProjectId()
+            {
+                return projectId;
+            }
+
+            @Override
+            public String getRevisionId()
+            {
+                return revisionId;
+            }
+
+            @Override
+            public String getNotes()
+            {
+                return notes;
+            }
+        };
+    }
+
+    protected Version getProjectVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -1091,7 +1129,7 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected Version newVersion(GitLabProjectId projectId, String patchReleaseVersion, String revisionId, VersionId versionId, String notes)
+    protected Version newVersion(GitLabProjectId projectId, VersionId patchReleaseVersionId, String revisionId, VersionId versionId, String notes)
     {
         String tagName = buildVersionTagName(versionId);
         String message = "Release tag for version " + versionId.toVersionIdString();
@@ -1104,7 +1142,7 @@ abstract class BaseGitLabApi
             Commit referenceCommit;
             if (revisionId == null)
             {
-                referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), getSourceBranch(projectId, patchReleaseVersion)));
+                referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), getSourceBranch(projectId, patchReleaseVersionId)));
                 if (referenceCommit == null)
                 {
                     throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
@@ -1125,7 +1163,7 @@ abstract class BaseGitLabApi
                     throw e;
                 }
 
-                String sourceBranch = getSourceBranch(projectId, patchReleaseVersion);
+                String sourceBranch = getSourceBranch(projectId, patchReleaseVersionId);
                 boolean isOnSourceBranch = PagerTools.stream(withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), revisionId, CommitRef.RefType.BRANCH, ITEMS_PER_PAGE)))
                         .anyMatch(ref -> sourceBranch.equals(ref.getName()));
                 if (!isOnSourceBranch)
@@ -1150,457 +1188,17 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected boolean isPatchReleaseBranchPresent(GitLabProjectId projectId, String patchRelaseVersion)
+    protected boolean isPatchReleaseBranchPresent(GitLabProjectId projectId, VersionId patchReleaseVersionId)
     {
-        Branch existingBranch = null;
+        boolean branchExists = false;
         try
         {
-            existingBranch = getGitLabApi().getRepositoryApi().getBranch(projectId.getGitLabId(), getPatchReleaseBranchName(patchRelaseVersion));
+            branchExists = GitLabApiTools.branchExists(getGitLabApi().getRepositoryApi(), projectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersionId));
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching the patch release branch", patchRelaseVersion,e);
+            throw new LegendSDLCServerException("Error in fetching the patch release branch" + patchReleaseVersionId.toVersionIdString(), e);
         }
-        if (existingBranch == null)
-        {
-            return false;
-        }
-        return true;
-    }
-
-    protected static Constants.MergeRequestState getMergeRequestState(ReviewState state)
-    {
-        if (state == null)
-        {
-            return Constants.MergeRequestState.ALL;
-        }
-        switch (state)
-        {
-            case OPEN:
-            {
-                return Constants.MergeRequestState.OPENED;
-            }
-            case COMMITTED:
-            {
-                return Constants.MergeRequestState.MERGED;
-            }
-            case CLOSED:
-            {
-                return Constants.MergeRequestState.CLOSED;
-            }
-            case UNKNOWN:
-            {
-                return Constants.MergeRequestState.ALL;
-            }
-            default:
-            {
-                throw new IllegalArgumentException("Unknown review state: " + state);
-            }
-        }
-    }
-
-    protected static Review newReview(String reviewId, String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Instant createdAt, Instant lastUpdatedAt, Instant closedAt, Instant committedAt, ReviewState reviewState, User author, String commitRevisionId, String webURL, List<String> labels)
-    {
-        return new Review()
-        {
-            @Override
-            public String getId()
-            {
-                return reviewId;
-            }
-
-            @Override
-            public String getProjectId()
-            {
-                return projectId;
-            }
-
-            @Override
-            public String getWorkspaceId()
-            {
-                return workspaceId;
-            }
-
-            @Override
-            public WorkspaceType getWorkspaceType()
-            {
-                return workspaceType;
-            }
-
-            @Override
-            public String getTitle()
-            {
-                return title;
-            }
-
-            @Override
-            public String getDescription()
-            {
-                return description;
-            }
-
-            @Override
-            public Instant getCreatedAt()
-            {
-                return createdAt;
-            }
-
-            @Override
-            public Instant getLastUpdatedAt()
-            {
-                return lastUpdatedAt;
-            }
-
-            @Override
-            public Instant getClosedAt()
-            {
-                return closedAt;
-            }
-
-            @Override
-            public Instant getCommittedAt()
-            {
-                return committedAt;
-            }
-
-            @Override
-            public ReviewState getState()
-            {
-                return reviewState;
-            }
-
-            @Override
-            public User getAuthor()
-            {
-                return author;
-            }
-
-            @Override
-            public String getCommitRevisionId()
-            {
-                return commitRevisionId;
-            }
-
-            @Override
-            public String getWebURL()
-            {
-                return webURL;
-            }
-
-            @Override
-            public List<String> getLabels()
-            {
-                return labels;
-            }
-        };
-    }
-
-    protected static Review fromGitLabMergeRequest(String projectId, String patchReleaseVersion, MergeRequest mergeRequest)
-    {
-        if (mergeRequest == null)
-        {
-            return null;
-        }
-
-        String sourceBranchName = mergeRequest.getSourceBranch();
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(sourceBranchName, patchReleaseVersion);
-        if ((workspaceInfo == null) || (workspaceInfo.getWorkspaceAccessType() != ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
-        {
-            return null;
-        }
-        return newReview(mergeRequest.getIid(), projectId, workspaceInfo, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl(), mergeRequest.getLabels());
-    }
-
-    protected static Review newReview(Integer reviewId, String projectId, WorkspaceInfo workspaceInfo, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
-    {
-        return newReview(reviewId, projectId, workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), title, description, createdAt, lastUpdatedAt, closedAt, committedAt, reviewState, author, commitRevisionId, webURL, labels);
-    }
-
-    protected static Review newReview(Integer reviewId, String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
-    {
-        return newReview(toStringIfNotNull(reviewId), projectId, workspaceId, workspaceType, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL, labels);
-    }
-
-    protected Stream<Review> addReviewFilters(Stream<Review> stream, ReviewState state, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
-    {
-        return addWorkspaceIdAndTypeFilter(addLimitFilter(addTimeFilter(addStateFilter(stream, state), state, since, until), limit), workspaceIdAndTypePredicate);
-    }
-
-    public Stream<Review> addWorkspaceIdAndTypeFilter(Stream<Review> stream, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate)
-    {
-        return workspaceIdAndTypePredicate == null ? stream : stream.filter(r -> workspaceIdAndTypePredicate.test(r.getWorkspaceId(), r.getWorkspaceType()));
-    }
-
-    private Stream<Review> addStateFilter(Stream<Review> stream, ReviewState state)
-    {
-        return (state == null) ? stream : stream.filter(r -> r.getState() == state);
-    }
-
-    private Stream<Review> addTimeFilter(Stream<Review> stream, ReviewState state, Instant since, Instant until)
-    {
-        Predicate<Review> timePredicate = getTimePredicate(state, since, until);
-        return (timePredicate == null) ? stream : stream.filter(timePredicate);
-    }
-
-    private boolean isCreatedAtWithinBounds(Review review, Instant lowerBound, Instant upperBound)
-    {
-        return isReviewTimeWithinBounds(review, Review::getCreatedAt, lowerBound, upperBound, "Created at");
-    }
-
-    private boolean isClosedAtWithinBounds(Review review, Instant lowerBound, Instant upperBound)
-    {
-        return isReviewTimeWithinBounds(review, Review::getClosedAt, lowerBound, upperBound, "Closed at");
-    }
-
-    private boolean isCommittedAtWithinBounds(Review review, Instant lowerBound, Instant upperBound)
-    {
-        return isReviewTimeWithinBounds(review, Review::getCommittedAt, lowerBound, upperBound, "Committed at");
-    }
-
-    private boolean isUpdatedAtWithinBounds(Review review, Instant lowerBound, Instant upperBound)
-    {
-        return isReviewTimeWithinBounds(review, Review::getLastUpdatedAt, lowerBound, upperBound, "Last updated at");
-    }
-
-    private boolean isReviewTimeWithinBounds(Review review, Function<? super Review, ? extends Instant> function, Instant lowerBound, Instant upperBound, String descriptionForLogging)
-    {
-        Instant time = function.apply(review);
-        if (time == null)
-        {
-            if (descriptionForLogging != null)
-            {
-                LOGGER.warn("{} time missing for review {} in project {}", descriptionForLogging, review.getId(), review.getProjectId());
-            }
-            return false;
-        }
-        return isInstantWithinBounds(time, lowerBound, upperBound);
-    }
-
-    private static boolean isInstantWithinBounds(Instant time, Instant lowerBound, Instant upperBound)
-    {
-        return ((lowerBound == null) || lowerBound.compareTo(time) <= 0) && ((upperBound == null) || upperBound.compareTo(time) >= 0);
-    }
-
-    protected static Approval fromGitLabMergeRequest(MergeRequest mergeRequest)
-    {
-        if ((mergeRequest == null) || (mergeRequest.getApprovedBy() == null))
-        {
-            return null;
-        }
-        return newApproval(mergeRequest.getApprovedBy().stream().map(BaseGitLabApi::fromGitLabAbstractUser).collect(Collectors.toList()));
-    }
-
-    private static Approval newApproval(List<User> approvedBy)
-    {
-        return new Approval()
-        {
-            @Override
-            public List<User> getApprovedBy()
-            {
-                return approvedBy;
-            }
-        };
-    }
-
-    private Predicate<Review> getTimePredicate(ReviewState state, Instant since, Instant until)
-    {
-        if ((since == null) && (until == null))
-        {
-            return null;
-        }
-
-        switch ((state == null) ? ReviewState.UNKNOWN : state)
-        {
-            case OPEN:
-            {
-                return review -> isCreatedAtWithinBounds(review, since, until) || isUpdatedAtWithinBounds(review, since, until);
-            }
-            case CLOSED:
-            {
-                return review -> isClosedAtWithinBounds(review, since, until) || isUpdatedAtWithinBounds(review, since, until);
-            }
-            case COMMITTED:
-            {
-                return review -> isCommittedAtWithinBounds(review, since, until) || isUpdatedAtWithinBounds(review, since, until);
-            }
-            default:
-            {
-                return review ->
-                {
-                    if (isUpdatedAtWithinBounds(review, since, until))
-                    {
-                        return true;
-                    }
-                    if (review.getState() == null)
-                    {
-                        LOGGER.warn("State missing for review {} in project {}; cannot filter based on time", review.getId(), review.getProjectId());
-                        return false;
-                    }
-                    switch (review.getState())
-                    {
-                        case OPEN:
-                        case UNKNOWN:
-                        {
-                            return isCreatedAtWithinBounds(review, since, until);
-                        }
-                        case COMMITTED:
-                        {
-                            return isCommittedAtWithinBounds(review, since, until);
-                        }
-                        case CLOSED:
-                        {
-                            return isClosedAtWithinBounds(review, since, until);
-                        }
-                        default:
-                        {
-                            LOGGER.warn("Unhandled state for review {} in project {}: {}; cannot filter based on time", review.getId(), review.getState(), review.getProjectId());
-                            return false;
-                        }
-                    }
-                };
-            }
-        }
-    }
-
-    private Stream<Review> addLimitFilter(Stream<Review> stream, Integer limit)
-    {
-        return ((limit == null) || (limit <= 0)) ? stream : stream.limit(limit);
-    }
-
-    protected MergeRequestFilter withMergeRequestFilters(MergeRequestFilter mergeRequestFilter, ReviewState state, Instant since, Instant until)
-    {
-        if ((since != null) && (state != null))
-        {
-            switch (state)
-            {
-                case CLOSED:
-                case COMMITTED:
-                {
-                    mergeRequestFilter.setUpdatedAfter(Date.from(since));
-                    break;
-                }
-                case OPEN:
-                {
-                    mergeRequestFilter.setCreatedAfter(Date.from(since));
-                    break;
-                }
-                default:
-                {
-                    // no filter can be created for other states
-                }
-            }
-        }
-
-        if (until != null)
-        {
-            mergeRequestFilter.setCreatedBefore(Date.from(until));
-        }
-
-        return mergeRequestFilter.withState(getMergeRequestState(state));
-    }
-
-    protected List<Review> getReviews(String projectId, String patchReleaseVersion, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        Set<String> revisionIdSet;
-        if (revisionIds == null)
-        {
-            revisionIdSet = Collections.emptySet();
-        }
-        else if (revisionIds instanceof Set)
-        {
-            revisionIdSet = (Set<String>) revisionIds;
-        }
-        else
-        {
-            revisionIdSet = Sets.mutable.withAll(revisionIds);
-        }
-        Stream<MergeRequest> mergeRequestStream;
-        try
-        {
-            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            if (!revisionIdSet.isEmpty()) // Do we want to have a check here to know whether revisions belong to the protected branch?
-            {
-                // TODO: we might want to do this differently since the number of revision IDs can be huge
-                // we can have a threshold for which we change our strategy to  to make a single call for
-                // merge requests by the other criteria and then filter by revisionIds.
-                MutableIntSet mergeRequestIds = IntSets.mutable.empty();
-                CommitsApi commitsApi = getGitLabApi().getCommitsApi();
-                // Combine all MRs associated with each revision
-                mergeRequestStream = revisionIdSet.stream().flatMap(revisionId ->
-                {
-                    try
-                    {
-                        return PagerTools.stream(withRetries(() -> commitsApi.getMergeRequests(gitLabProjectId.getGitLabId(), revisionId, ITEMS_PER_PAGE)));
-                    }
-                    catch (Exception e)
-                    {
-                        throw buildException(e,
-                                () -> "User " + getCurrentUser() + " is not allowed to get reviews associated with revision " + revisionId + " for project " + projectId,
-                                () -> "Unknown revision (" + revisionId + ") or project (" + projectId + ")",
-                                () -> "Error getting reviews associated with revision " + revisionId + " for project " + projectId);
-                    }
-                }).filter(mr -> (mr.getIid() != null) && mergeRequestIds.add(mr.getIid())); // remove duplicates
-                Constants.MergeRequestState mergeRequestState = getMergeRequestState(state);
-                if (mergeRequestState != Constants.MergeRequestState.ALL)
-                {
-                    String mergeRequestStateString = mergeRequestState.toString();
-                    mergeRequestStream = mergeRequestStream.filter(mr -> mergeRequestStateString.equalsIgnoreCase(mr.getState()));
-                }
-            }
-            else
-            {
-                // if no revision ID is specified we will use the default merge request API from Gitlab to take advantage of the filter
-                MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
-                mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
-            }
-            String targetBranch = getSourceBranch(gitLabProjectId, patchReleaseVersion);
-            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch, patchReleaseVersion)).map(mr -> fromGitLabMergeRequest(projectId, patchReleaseVersion, mr));
-            return addReviewFilters(stream, state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
-        }
-        catch (Exception e)
-        {
-            throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)),
-                    () -> "Unknown project (" + projectId + ")",
-                    () -> "Error getting reviews for project " + projectId + ((state == null) ? "" : (" with state " + state)));
-        }
-    }
-
-    protected void validateMergeRequestReviewState(MergeRequest mergeRequest, ReviewState expectedState)
-    {
-        ReviewState actualState = getReviewState(mergeRequest);
-        if (expectedState != actualState)
-        {
-            throw new LegendSDLCServerException("Review is not " + expectedState.name().toLowerCase() + " (state: " + actualState.name().toLowerCase() + ")", Status.CONFLICT);
-        }
-    }
-
-    protected MergeRequest updateMergeRequestState(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String patchReleaseVersion, MergeRequest mergeRequest, Constants.StateEvent stateEvent) throws GitLabApiException
-    {
-        return mergeRequestApi.updateMergeRequest(projectId.getGitLabId(), mergeRequest.getIid(), getSourceBranch(projectId, patchReleaseVersion), null, null, null, stateEvent, null, null, null, null, null, null);
-    }
-
-    protected Review closeReview(String projectId, String patchReleaseVersion, String reviewId)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
-
-        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersion, reviewId);
-        validateMergeRequestReviewState(mergeRequest, ReviewState.OPEN);
-        try
-        {
-            MergeRequest closeMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, patchReleaseVersion, mergeRequest, Constants.StateEvent.CLOSE);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersion, closeMergeRequest);
-        }
-        catch (Exception e)
-        {
-            throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to close review " + reviewId + " in project " + projectId,
-                    () -> "Unknown review in project " + projectId + ": " + reviewId,
-                    () -> "Error closing review " + reviewId + " in project " + projectId);
-        }
+        return branchExists;
     }
 }

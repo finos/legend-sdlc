@@ -63,7 +63,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version getVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
     {
-        return this.getVersion(projectId, majorVersion, minorVersion, patchVersion);
+        return this.getProjectVersion(projectId, majorVersion, minorVersion, patchVersion);
     }
 
     @Override

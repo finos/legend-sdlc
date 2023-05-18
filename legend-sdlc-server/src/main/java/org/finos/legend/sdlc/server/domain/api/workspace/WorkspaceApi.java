@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.workspace;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -51,19 +52,19 @@ public interface WorkspaceApi
      *
      * @param projectId project id
      * @param workspaceTypes set of workspace types in scope
-     * @param patchReleaseVersion patch release version branch the workspace has to be created from
+     * @param patchReleaseVersionId patch release version branch the workspace has to be created from
      * @return all workspaces of desired type(s) in the current project for the current user
      */
-    List<Workspace> getWorkspaces(String projectId, String patchReleaseVersion, Set<WorkspaceType> workspaceTypes);
+    List<Workspace> getWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes);
 
-    List<Workspace> getWorkspacesWithConflictResolution(String projectId, String patchReleaseVersion);
+    List<Workspace> getWorkspacesWithConflictResolution(String projectId, VersionId patchReleaseVersionId);
 
     default List<Workspace> getWorkspacesWithConflictResolution(String projectId)
     {
         return this.getWorkspacesWithConflictResolution(projectId, null);
     }
 
-    List<Workspace> getBackupWorkspaces(String projectId, String patchReleaseVersion);
+    List<Workspace> getBackupWorkspaces(String projectId, VersionId patchReleaseVersionId);
 
     default List<Workspace> getBackupWorkspaces(String projectId)
     {
@@ -96,11 +97,11 @@ public interface WorkspaceApi
      * Get all workspaces of desired type(s) in the given project for all users.
      *
      * @param projectId project id
-     * @param patchReleaseVersion patch release version
+     * @param patchReleaseVersionId patch release version
      * @param workspaceTypes set of workspace types in scope
      * @return all workspaces of desired type(s) in the current project
      */
-    List<Workspace> getAllWorkspaces(String projectId, String patchReleaseVersion, Set<WorkspaceType> workspaceTypes);
+    List<Workspace> getAllWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes);
 
     /**
      * Get a workspace in the given project for the current user.
@@ -111,7 +112,7 @@ public interface WorkspaceApi
      */
     default Workspace getUserWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
+        return getWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -123,43 +124,41 @@ public interface WorkspaceApi
      */
     default Workspace getGroupWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return getWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Get a workspace in the given project for the current user.
      *
      * @param projectId   project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId workspace id
-     * @param workspaceType workspace type
+     * @param workspaceSpecification  workspace specification
      * @return user workspace
      */
-    Workspace getWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Workspace getWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, null, workspaceId, WorkspaceType.USER);
+        return getWorkspaceWithConflictResolution(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     default Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return getWorkspaceWithConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
-    Workspace getWorkspaceWithConflictResolution(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Workspace getWorkspaceWithConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default Workspace getBackupUserWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
+        return getBackupWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     default Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return getBackupWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
-    Workspace getBackupWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Workspace getBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Check if a user workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
@@ -170,7 +169,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, null, workspaceId, WorkspaceType.USER);
+        return isWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -182,43 +181,41 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return isWorkspaceOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Check if a workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
      *
      * @param projectId   project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId workspace id
-     * @param workspaceType workspace type
+     * @param workspaceSpecification  workspace specification
      * @return flag indicating if a workspace is outdated
      */
-    boolean isWorkspaceOutdated(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    boolean isWorkspaceOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, null, workspaceId, WorkspaceType.USER);
+        return isWorkspaceWithConflictResolutionOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     default boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return isWorkspaceWithConflictResolutionOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
-    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, null, workspaceId, WorkspaceType.USER);
+        return isBackupWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     default boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return isBackupWorkspaceOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
-    boolean isBackupWorkspaceOutdated(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    boolean isBackupWorkspaceOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Check if a user workspace is in conflict resolution mode
@@ -229,7 +226,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, null, workspaceId, WorkspaceType.USER);
+        return isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -241,19 +238,17 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Check if a workspace is in conflict resolution mode
      *
      * @param projectId   project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId workspace id
-     * @param workspaceType workspace type
+     * @param workspaceSpecification  workspace specification
      * @return flag indicating if a workspace is in conflict resolution mode
      */
-    boolean isWorkspaceInConflictResolutionMode(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    boolean isWorkspaceInConflictResolutionMode(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Create a new user workspace in the given project for the current user.
@@ -264,7 +259,7 @@ public interface WorkspaceApi
      */
     default Workspace newUserWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
+        return newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -276,19 +271,17 @@ public interface WorkspaceApi
      */
     default Workspace newGroupWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return newWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Create a new workspace in the given project for the current user.
      *
      * @param projectId   project id
-     * @param workspaceId new workspace id
-     * @param workspaceType workspace type
-     * @param patchReleaseVersion patch release version branch the workspace has to be created from
+     * @param workspaceSpecification  workspace specification
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Workspace newWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Delete the given user workspace.
@@ -298,7 +291,7 @@ public interface WorkspaceApi
      */
     default void deleteUserWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
+        deleteWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -309,17 +302,16 @@ public interface WorkspaceApi
      */
     default void deleteGroupWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
+        deleteWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Delete the given workspace.
      *
      * @param projectId   project id
-     * @param workspaceId id of workspace to delete
-     * @param workspaceType workspace type
+     * @param workspaceSpecification  workspace specification
      */
-    void deleteWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    void deleteWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Update the user workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
@@ -330,7 +322,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, null, workspaceId, WorkspaceType.USER);
+        return updateWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
     }
 
     /**
@@ -342,19 +334,17 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, null, workspaceId, WorkspaceType.GROUP);
+        return updateWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
     }
 
     /**
      * Update the workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
      *
      * @param projectId   project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId id of workspace to update
-     * @param workspaceType workspace type
+     * @param workspaceSpecification  workspace specification
      * @return a workspace update report
      */
-    WorkspaceUpdateReport updateWorkspace(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    WorkspaceUpdateReport updateWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
 
     interface WorkspaceUpdateReport
     {

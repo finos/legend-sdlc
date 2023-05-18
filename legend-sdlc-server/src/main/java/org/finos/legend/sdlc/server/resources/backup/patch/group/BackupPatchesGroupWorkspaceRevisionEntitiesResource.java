@@ -18,8 +18,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -32,10 +33,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/groupWorkspaces/{workspaceId}/backup/revisions/{revisionId}/entities")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/backup/revisions/{revisionId}/entities")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,7 +54,7 @@ public class BackupPatchesGroupWorkspaceRevisionEntitiesResource extends EntityA
     @GET
     @ApiOperation("Get entities of the backup group workspace at the revision for patch release version")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("revisionId")
                                        @ApiParam("Including aliases: head, latest, current, base") String revisionId,
@@ -73,22 +75,40 @@ public class BackupPatchesGroupWorkspaceRevisionEntitiesResource extends EntityA
                                        @DefaultValue("false")
                                        @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting entities in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> getEntities(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                "getting entities in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> getEntities(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the backup group workspace at the revision by its path for patch release version")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId, @PathParam("revisionId") String revisionId, @PathParam("path") String path)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId, @PathParam("revisionId") String revisionId, @PathParam("path") String path)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting entity " + path + " in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP, revisionId).getEntity(path)
+                "getting entity " + path + " in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), revisionId).getEntity(path)
         );
     }
 }

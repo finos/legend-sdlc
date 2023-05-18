@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.junit.Assert;
 import org.junit.Test;
@@ -122,10 +123,10 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
         String entityOneName = "testentityone";
         String entityTwoName = "testentitytwo";
         String entityPackageName = "testpkg";
-        String patchReleaseVersion = "1.0.1";
+        VersionId patchReleaseVersionId = VersionId.parseVersionId("1.0.1");
 
         this.backend.project(projectId).addVersionedEntities("1.0.0", InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
-        this.backend.project(projectId).addEntities(workspaceOneId, Arrays.asList(InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName)), patchReleaseVersion);
+        this.backend.project(projectId).addEntities(workspaceOneId, Arrays.asList(InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName)), patchReleaseVersionId);
 
         Response responseOne = this.clientFor("/api/projects/A/patches/1.0.1/workspaces/revisionw1").request().get();
 
@@ -166,10 +167,10 @@ public class TestWorkspaceRevisionsResource extends AbstractLegendSDLCServerReso
         String entityOneName = "testentityone";
         String entityTwoName = "testentitytwo";
         String entityPackageName = "testpkg";
-        String patchReleaseVersion = "1.0.1";
+        VersionId patchReleaseVersionId = VersionId.parseVersionId("1.0.1");
 
         this.backend.project(projectId).addVersionedEntities("1.0.0", InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName));
-        this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, Arrays.asList(InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName)), patchReleaseVersion);
+        this.backend.project(projectId).addEntities(workspaceOneId, WorkspaceType.GROUP, Arrays.asList(InMemoryEntity.newEntity(entityOneName, entityPackageName), InMemoryEntity.newEntity(entityTwoName, entityPackageName)), patchReleaseVersionId);
 
         Response responseOne = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces/revisionw2").request().get();
 

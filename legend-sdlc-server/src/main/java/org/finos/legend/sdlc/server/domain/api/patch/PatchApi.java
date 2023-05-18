@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.patch;
 
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import java.util.List;
 
@@ -25,33 +26,39 @@ public interface PatchApi
      * Create a new patch for the given project.
      *
      * @param projectId project id
-     * @param sourceVersion patch release version you want to create from
+     * @param sourceVersion source version from which patch release branch needs to be created
      * @return new patch
      */
-    Patch newPatch(String projectId, Version sourceVersion);
+    Patch newPatch(String projectId, VersionId sourceVersion);
 
     /**
      * Get the list of all patch release branches for the given project.
      *
      * @param projectId project id
-     * @return all patches
+     * @param minMajorVersion minimum major version (inclusive, null for no minimum)
+     * @param maxMajorVersion maximum major version (inclusive, null for no maximum)
+     * @param minMinorVersion minimum minor version (inclusive, null for no minimum)
+     * @param maxMinorVersion maximum minor version (inclusive, null for no maximum)
+     * @param minPatchVersion minimum patch version (inclusive, null for no minimum)
+     * @param maxPatchVersion maximum patch version (inclusive, null for no maximum)
+     * @return all patches matching the constraints
      */
-    List<Patch> getAllPatches(String projectId);
+    List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion);
 
     /**
      * Deleted the given patch release branch for the given project.
      *
      * @param projectId project id
-     * @param patchReleaseVersion patch release branch you want to delete
+     * @param patchReleaseVersionId patch release branch you want to delete
      */
-    void deletePatch(String projectId, String patchReleaseVersion);
+    void deletePatch(String projectId, VersionId patchReleaseVersionId);
 
     /**
      * Release the given patch release branch for the given project.
      *
      * @param projectId project id
-     * @param patchReleaseVersion patch release branch you want to delete
+     * @param patchReleaseVersionId patch release branch you want to release
      * @return version
      */
-    Version releasePatch(String projectId, String patchReleaseVersion);
+    Version releasePatch(String projectId, VersionId patchReleaseVersionId);
 }

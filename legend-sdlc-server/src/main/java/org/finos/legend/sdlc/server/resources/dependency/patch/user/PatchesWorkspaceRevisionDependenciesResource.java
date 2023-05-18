@@ -17,8 +17,9 @@ package org.finos.legend.sdlc.server.resources.dependency.patch.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -31,9 +32,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.Set;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workspaces/{workspaceId}/revisions/{revisionId}/upstreamProjects")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/revisions/{revisionId}/upstreamProjects")
 @Api("Dependencies")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -50,15 +52,24 @@ public class PatchesWorkspaceRevisionDependenciesResource extends BaseResource
     @GET
     @ApiOperation("Get projects that the current user workspace revision depends on. Use transitive=true for transitive dependencies for patch release version.")
     public Set<ProjectDependency> getUpstreamDependencies(@PathParam("projectId") String projectId,
-                                                          @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                                          @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                                           @PathParam("workspaceId") String workspaceId,
                                                           @PathParam("revisionId") String revisionId,
                                                           @QueryParam("transitive") @DefaultValue("false") boolean transitive)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting upstream dependencies of project " + projectId + " for patch release version " + patchReleaseVersion + ", user workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
-                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, revisionId, transitive)
+                "getting upstream dependencies of project " + projectId + " for patch release version " + patchReleaseVersionId + ", user workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
+                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId), revisionId, transitive)
         );
     }
 }

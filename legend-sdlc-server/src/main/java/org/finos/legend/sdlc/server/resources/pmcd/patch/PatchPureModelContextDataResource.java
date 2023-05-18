@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -30,8 +31,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/pureModelContextData")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/pureModelContextData")
 @Api("Pure Model Context")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -49,19 +51,28 @@ public class PatchPureModelContextDataResource extends PureModelContextDataResou
 
     @GET
     @ApiOperation("Get Pure model context data for a project (at the latest revision) for patch release version")
-    public PureModelContextData getPureModelContextData(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion)
+    public PureModelContextData getPureModelContextData(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
                 "getting Pure model context data for project " + projectId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getProjectRevisionContext(projectId, patchReleaseVersion).getCurrentRevision();
+                    Revision revision = this.revisionApi.getProjectRevisionContext(projectId, versionId).getCurrentRevision();
                     if (revision == null)
                     {
-                        throw new LegendSDLCServerException("Could not find latest revision for project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersion);
+                        throw new LegendSDLCServerException("Could not find latest revision for project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersionId);
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getProjectEntityAccessContext(projectId, patchReleaseVersion));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getProjectEntityAccessContext(projectId, versionId));
                 });
     }
 }

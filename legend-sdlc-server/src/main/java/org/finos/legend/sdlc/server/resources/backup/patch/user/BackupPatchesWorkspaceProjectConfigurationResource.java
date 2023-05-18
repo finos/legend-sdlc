@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.resources.backup.project.user;
+package org.finos.legend.sdlc.server.resources.backup.patch.user;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -29,29 +30,39 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workspaces/{workspaceId}/backup/configuration")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/backup/configuration")
 @Api("Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
-public class BackupWorkspacePatchConfigurationResource extends BaseResource
+public class BackupPatchesWorkspaceProjectConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
 
     @Inject
-    public BackupWorkspacePatchConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public BackupPatchesWorkspaceProjectConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
     {
         this.projectConfigurationApi = projectConfigurationApi;
     }
 
     @GET
     @ApiOperation("Get the configuration of a project in a backup user workspace")
-    public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId)
+    public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in backup user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER)
+                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
         );
     }
 }

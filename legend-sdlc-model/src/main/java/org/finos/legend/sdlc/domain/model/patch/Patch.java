@@ -15,9 +15,11 @@
 
 package org.finos.legend.sdlc.domain.model.patch;
 
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+
 public interface Patch
 {
     String getProjectId();
 
-    String getPatchReleaseVersion();
+    VersionId getPatchReleaseVersionId();
 }

@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources.workflow.patch;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
@@ -31,10 +32,11 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.Set;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workflows")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workflows")
 @Api("Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -51,27 +53,45 @@ public class PatchWorkflowsResource extends BaseResource
     @GET
     @ApiOperation(value = "Get workflows for a project for patch release version", notes = "Get workflows for a project. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<Workflow> getWorkflows(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @QueryParam("revisionId") @ApiParam("Only include workflows for one of the given revisions") Set<String> revisionIds,
                                        @QueryParam("status") @ApiParam("Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
                                        @QueryParam("limit") @ApiParam("Limit the number of workflows returned (if not provided or the provided value is non-positive, no filtering will be applied)") Integer limit)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workflows for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowApi.getProjectWorkflowAccessContext(projectId, patchReleaseVersion).getWorkflows(revisionIds, statuses, limit)
+                "getting workflows for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowApi.getProjectWorkflowAccessContext(projectId, versionId).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
     @GET
     @Path("{workflowId}")
     @ApiOperation("Get a workflow for patch release version")
-    public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workflowId") String workflowId)
+    public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workflowId") String workflowId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workflow " + workflowId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowApi.getProjectWorkflowAccessContext(projectId, patchReleaseVersion).getWorkflow(workflowId)
+                "getting workflow " + workflowId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowApi.getProjectWorkflowAccessContext(projectId, versionId).getWorkflow(workflowId)
         );
     }
 }

@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -34,9 +35,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/revisions")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/revisions")
 @Api("Revisions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -53,15 +55,24 @@ public class PatchRevisionsResource extends BaseResource
     @GET
     @ApiOperation("Get all revisions for the project for patch release version")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @QueryParam("since") StartInstant since,
                                        @QueryParam("until") EndInstant until,
                                        @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting revisions for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.revisionApi.getProjectRevisionContext(projectId, patchReleaseVersion).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revisions for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.revisionApi.getProjectRevisionContext(projectId, versionId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -69,13 +80,22 @@ public class PatchRevisionsResource extends BaseResource
     @Path("{revisionId}")
     @ApiOperation("Get a revision of the project for patch release version")
     public Revision getRevision(@PathParam("projectId") String projectId,
-                                @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting revision " + revisionId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.revisionApi.getProjectRevisionContext(projectId, patchReleaseVersion).getRevision(revisionId)
+                "getting revision " + revisionId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.revisionApi.getProjectRevisionContext(projectId, versionId).getRevision(revisionId)
         );
     }
 
@@ -83,13 +103,22 @@ public class PatchRevisionsResource extends BaseResource
     @Path("{revisionId}/status")
     @ApiOperation("Get the status a revision of the project for patch release version")
     public RevisionStatus getRevisionStatus(@PathParam("projectId") String projectId,
-                                            @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                            @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                             @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting the status revision " + revisionId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.revisionApi.getRevisionStatus(projectId, revisionId, patchReleaseVersion)
+                "getting the status revision " + revisionId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.revisionApi.getRevisionStatus(projectId, versionId, revisionId)
         );
     }
 }

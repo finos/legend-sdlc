@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.domain.api.comparison;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 public interface ComparisonApi
 {
@@ -55,17 +57,15 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the creation of the workspace
      * to the current revision of the workspace
      *
-     * @param projectId           project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId         workspace id
-     * @param workspaceType       workspace type
+     * @param projectId              project id
+     * @param workspaceSpecification workspace specification
      * @return comparison between workspace HEAD and BASE
      */
-    Comparison getWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Comparison getWorkspaceCreationComparison(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceCreationComparison(projectId, null, workspaceId, workspaceType);
+        return this.getWorkspaceCreationComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType));
     }
 
     /**
@@ -104,17 +104,15 @@ public interface ComparisonApi
      * Given a workspace, returns the comparison from the current revision of the
      * project to the current revision of the workspace
      *
-     * @param projectId           project id
-     * @param patchReleaseVersion patch release version
-     * @param workspaceId         workspace id
-     * @param workspaceType       workspace type
+     * @param projectId              project id
+     * @param workspaceSpecification workspace specification
      * @return comparison between workspace HEAD and project HEAD
      */
-    Comparison getWorkspaceProjectComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType);
+    Comparison getWorkspaceProjectComparison(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceProjectComparison(projectId, null, workspaceId, workspaceType);
+        return this.getWorkspaceProjectComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType));
     }
 
     /**
@@ -124,11 +122,11 @@ public interface ComparisonApi
      * Uses the diff ref (start and end revision id for review) to get revisions ids for comparison
      *
      * @param projectId           project id
-     * @param patchReleaseVersion patch release version
+     * @param patchReleaseVersionId patch release version
      * @param reviewId            review id
      * @return comparison between review workspace HEAD and project HEAD
      */
-    Comparison getReviewComparison(String projectId, String patchReleaseVersion, String reviewId);
+    Comparison getReviewComparison(String projectId, VersionId patchReleaseVersionId, String reviewId);
 
     default Comparison getReviewComparison(String projectId, String reviewId)
     {
@@ -139,11 +137,11 @@ public interface ComparisonApi
      * Get the comparison for a given review (between review workspace HEAD and workspace BASE)
      *
      * @param projectId           project id
-     * @param patchReleaseVersion patch release version
+     * @param patchReleaseVersionId patch release version
      * @param reviewId            review id
      * @return comparison between review workspace HEAD and BASE
      */
-    Comparison getReviewWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String reviewId);
+    Comparison getReviewWorkspaceCreationComparison(String projectId, VersionId patchReleaseVersionId, String reviewId);
 
     default Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId)
     {

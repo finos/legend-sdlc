@@ -18,9 +18,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -39,7 +41,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workspaces/{workspaceId}/workflows/{workflowId}/jobs")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/workflows/{workflowId}/jobs")
 @Api("Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -56,15 +58,24 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @GET
     @ApiOperation(value = "Get jobs for a workflow for patch release version", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
-                                             @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                             @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                              @PathParam("workspaceId") String workspaceId,
                                              @PathParam("workflowId") String workflowId,
                                              @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workflow jobs for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobs(workflowId, statuses)
+                "getting workflow jobs for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -72,15 +83,24 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}")
     @ApiOperation("Get a workflow job for patch release version")
     public WorkflowJob getWorkflowJob(@PathParam("projectId") String projectId,
-                                      @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                      @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                       @PathParam("workspaceId") String workspaceId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJob(workflowId, workflowJobId)
+                "getting workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -89,17 +109,26 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @ApiOperation("Get a workflow job log for patch release version")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getWorkflowJobLogs(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @PathParam("workflowId") String workflowId,
                                        @PathParam("workflowJobId") String workflowJobId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workflow job logs " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
+                "getting workflow job logs " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
@@ -111,15 +140,24 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}/run")
     @ApiOperation("Run a manual workflow job for patch release version")
     public WorkflowJob runWorkflowJob(@PathParam("projectId") String projectId,
-                                      @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                      @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                       @PathParam("workspaceId") String workspaceId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "running workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).runWorkflowJob(workflowId, workflowJobId)
+                "running workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).runWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -127,15 +165,24 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}/retry")
     @ApiOperation("Retry a failed workflow job for patch release version")
     public WorkflowJob retryWorkflowJob(@PathParam("projectId") String projectId,
-                                        @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                        @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                         @PathParam("workspaceId") String workspaceId,
                                         @PathParam("workflowId") String workflowId,
                                         @PathParam("workflowJobId") String workflowJobId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "retrying workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).retryWorkflowJob(workflowId, workflowJobId)
+                "retrying workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -144,15 +191,24 @@ public class PatchesWorkspaceWorkflowJobsResource extends BaseResource
     @Path("{workflowJobId}/cancel")
     @ApiOperation("Cancel a workflow job that is in progress for patch release version")
     public WorkflowJob cancelWorkflowJob(@PathParam("projectId") String projectId,
-                                         @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                         @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                          @PathParam("workspaceId") String workspaceId,
                                          @PathParam("workflowId") String workflowId,
                                          @PathParam("workflowJobId") String workflowJobId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "canceling workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).cancelWorkflowJob(workflowId, workflowJobId)
+                "canceling workflow job " + workflowJobId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }
 }

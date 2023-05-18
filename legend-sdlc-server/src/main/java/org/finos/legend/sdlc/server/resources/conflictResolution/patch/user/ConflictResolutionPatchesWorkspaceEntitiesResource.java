@@ -18,8 +18,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -34,8 +35,9 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/workspaces/{workspaceId}/conflictResolution/entities")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/conflictResolution/entities")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,7 +54,7 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
     @GET
     @ApiOperation("Get entities of the user workspace with conflict resolution for patch release version")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
                                        @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
@@ -71,22 +73,40 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
                                        @DefaultValue("false")
                                        @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
     @GET
     @Path("{path}")
     @ApiOperation("Get an entity of the user workspace with conflict resolution by its path for patch release version")
-    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
+    public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getEntity(path)
+                "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).getEntity(path)
         );
     }
 }

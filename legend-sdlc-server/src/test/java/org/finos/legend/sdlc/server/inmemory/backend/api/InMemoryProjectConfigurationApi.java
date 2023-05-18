@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
@@ -43,19 +44,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getProjectProjectConfiguration(String projectId, String patchReleaseVersion)
+    public ProjectConfiguration getProjectProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
         return project.getCurrentRevision().getConfiguration();
     }
 
     @Override
-    public ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String revisionId)
+    public ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String revisionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        if (patchReleaseVersion != null)
+        if (patchReleaseVersionId != null)
         {
-            InMemoryPatch patch = project.getPatch(patchReleaseVersion);
+            InMemoryPatch patch = project.getPatch(patchReleaseVersionId);
             InMemoryRevision revision = patch.getRevision(revisionId);
             return revision.getConfiguration();
         }
@@ -67,28 +68,28 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         InMemoryProject project = backend.getProject(projectId);
-        InMemoryRevision revision = workspaceType == WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceId, patchReleaseVersion).getRevision(revisionId) : project.getUserWorkspace(workspaceId, patchReleaseVersion).getRevision(revisionId);
+        InMemoryRevision revision = workspaceSpecification.getWorkspaceType() == WorkspaceType.GROUP ? project.getGroupWorkspace(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getPatchReleaseVersionId()).getRevision(revisionId) : project.getUserWorkspace(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getPatchReleaseVersionId()).getRevision(revisionId);
         return revision.getConfiguration();
     }
 
@@ -105,13 +106,13 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -124,19 +125,19 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, String patchReleaseVersion, String reviewId)
+    public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ProjectConfiguration getReviewToProjectConfiguration(String projectId, String patchReleaseVersion, String reviewId)
+    public ProjectConfiguration getReviewToProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Revision updateProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String message, ProjectConfigurationUpdater updater)
+    public Revision updateProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String message, ProjectConfigurationUpdater updater)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -148,7 +149,7 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGenerations(String projectId, String patchReleaseVersion)
+    public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGenerations(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -160,13 +161,13 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -184,7 +185,7 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, String patchReleaseVersion)
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

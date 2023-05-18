@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.review.Review;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -71,7 +72,7 @@ public class TestReviewsResource extends AbstractLegendSDLCServerResourceTest
     @Test
     public void testGetReviewsForPatchReleaseVersion() throws HttpResponseException
     {
-        this.backend.project("A").addReview("457", "1.0.1");
+        this.backend.project("A").addReview("457", VersionId.parseVersionId("1.0.1"));
 
         Response response = this.clientFor("/api/projects/A/patches/1.0.1/reviews?limit=2").request().get();
 

@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.tools;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
@@ -317,19 +318,44 @@ public class GitLabApiTools
         return createBranchAndVerify(api, projectIdOrPath, branchName, sourceBranch.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
     }
 
-    public static Branch createProtectedBranchFromSourceTagAndVerify(GitLabApi api, Object projectIdOrPath, String branchName, String sourceVersionId, int maxVerificationTries, long verificationWaitMillis) throws GitLabApiException
+    public static Branch createProtectedBranchFromSourceTagAndVerify(GitLabApi api, GitLabProjectId projectId, String branchName, String sourceTagName, int maxVerificationTries, long verificationWaitMillis) throws GitLabApiException
     {
         Tag sourceTag = null;
         try
         {
-            sourceTag =  api.getTagsApi().getTag(projectIdOrPath, sourceVersionId);
+            sourceTag =  getTag(api, projectId, sourceTagName);
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Source release version " + sourceVersionId + " does not exist", Response.Status.CONFLICT);
+            throw e;
         }
-        Branch targetBranch = createBranchAndVerify(api.getRepositoryApi(), projectIdOrPath, branchName, sourceTag.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
-        api.getProtectedBranchesApi().protectBranch(projectIdOrPath, branchName, AccessLevel.NONE, AccessLevel.MAINTAINER, AccessLevel.MAINTAINER, true);
+        if (sourceTag == null)
+        {
+            throw new LegendSDLCServerException("Source release version " + sourceTagName + " does not exist", Response.Status.CONFLICT);
+        }
+        Branch targetBranch = createBranchAndVerify(api.getRepositoryApi(), projectId.getGitLabId(), branchName, sourceTag.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
+        api.getProtectedBranchesApi().protectBranch(projectId.getGitLabId(), branchName, AccessLevel.NONE, AccessLevel.MAINTAINER, AccessLevel.MAINTAINER, true);
         return targetBranch;
+    }
+
+    public static Tag getTag(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
+    {
+        try
+        {
+           return api.getTagsApi().getTag(gitLabProjectId.getGitLabId(), tagName);
+        }
+        catch (GitLabApiException e)
+        {
+            if (isNotFoundGitLabApiException(e))
+            {
+                return null;
+            }
+            throw e;
+        }
+    }
+
+    public static Boolean tagExists(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
+    {
+        return getTag(api, gitLabProjectId, tagName) != null;
     }
 }

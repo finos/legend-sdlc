@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources.conflictResolution.patch;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -28,9 +29,10 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/conflictResolution")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/conflictResolution")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -46,12 +48,21 @@ public class ConflictResolutionPatchResource extends BaseResource
 
     @GET
     @ApiOperation("Get all workspaces with conflict resolution for the project for patch release version")
-    public List<Workspace> getWorkspacesWithConflictResolution(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion)
+    public List<Workspace> getWorkspacesWithConflictResolution(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting workspaces with conflict resolution for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.workspaceApi.getWorkspacesWithConflictResolution(projectId, patchReleaseVersion)
+                "getting workspaces with conflict resolution for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.workspaceApi.getWorkspacesWithConflictResolution(projectId, versionId)
         );
     }
 }

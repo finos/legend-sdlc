@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import org.apache.http.client.HttpResponseException;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -164,14 +165,14 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String workspaceOneId = "w1";
         String workspaceTwoId = "w2";
         String workspaceThreeId = "w3";
-        String patchReleaseVersion = "1.0.1";
+        VersionId patchReleaseVersionId = VersionId.parseVersionId("1.0.1");
 
         this.backend.project(projectId).addWorkspace(workspaceOneId, WorkspaceType.USER);
         this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER);
         this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP);
-        this.backend.project(projectId).addWorkspace(workspaceOneId, WorkspaceType.USER, patchReleaseVersion);
-        this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER, patchReleaseVersion);
-        this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP, patchReleaseVersion);
+        this.backend.project(projectId).addWorkspace(workspaceOneId, WorkspaceType.USER, patchReleaseVersionId);
+        this.backend.project(projectId).addWorkspace(workspaceTwoId, WorkspaceType.USER, patchReleaseVersionId);
+        this.backend.project(projectId).addWorkspace(workspaceThreeId, WorkspaceType.GROUP, patchReleaseVersionId);
 
         // check workspaces api for default branch doesn't return workspaces created from patchRelease branch
         Response responseOne = this.clientFor("/api/projects/B/workspaces").request().get();
@@ -290,7 +291,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String projectId = "A";
         String workspaceId = "userw1";
 
-        this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.USER, "1.0.1");
+        this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.USER, VersionId.parseVersionId("1.0.1"));
 
         Response response = this.clientFor("/api/projects/A/patches/1.0.1/workspaces/userw1").request().get();
 
@@ -322,7 +323,7 @@ public class TestWorkspacesResource extends AbstractLegendSDLCServerResourceTest
         String projectId = "A";
         String workspaceId = "groupw1";
 
-        this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.GROUP, "1.0.1");
+        this.backend.project(projectId).addWorkspace(workspaceId, WorkspaceType.GROUP, VersionId.parseVersionId("1.0.1"));
 
         Response response = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces/groupw1").request().get();
 

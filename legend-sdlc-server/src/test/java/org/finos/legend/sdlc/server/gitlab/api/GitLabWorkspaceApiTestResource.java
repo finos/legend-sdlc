@@ -26,7 +26,9 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.Version;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -441,7 +443,7 @@ public class GitLabWorkspaceApiTestResource
         String workspaceTwoId = "testworkspacetwo";
         String workspaceThreeId = "testworkspacethree";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -451,33 +453,33 @@ public class GitLabWorkspaceApiTestResource
 
         String projectId = createdProject.getProjectId();
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patch = gitlabPatchApi.newPatch(projectId, version);
-        String patchReleaseVersion = patch.getPatchReleaseVersion();
+        Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
+        VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
 
-        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
+        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceOneId, patchReleaseVersionId));
 
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
         Assert.assertNotNull(createdWorkspaceOne.getUserId());
 
-        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.USER);
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId));
 
         Assert.assertNotNull(createdWorkspaceTwo);
         Assert.assertEquals(workspaceTwoId, createdWorkspaceTwo.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceTwo.getProjectId());
         Assert.assertNotNull(createdWorkspaceTwo.getUserId());
 
-        Workspace createdWorkspaceThree = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceThreeId, WorkspaceType.GROUP);
+        Workspace createdWorkspaceThree = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceThreeId, patchReleaseVersionId));
 
         Assert.assertNotNull(createdWorkspaceThree);
         Assert.assertEquals(workspaceThreeId, createdWorkspaceThree.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceThree.getProjectId());
         Assert.assertNull(createdWorkspaceThree.getUserId());
 
-        List<Workspace> allWorkspaces = gitLabWorkspaceApi.getAllWorkspaces(projectId, patchReleaseVersion, EnumSet.allOf(WorkspaceType.class));
-        List<Workspace> allUserWorkspaces = gitLabWorkspaceApi.getWorkspaces(projectId, patchReleaseVersion, Collections.singleton(WorkspaceType.USER));
-        List<Workspace> allGroupWorkspaces = gitLabWorkspaceApi.getWorkspaces(projectId, patchReleaseVersion, Collections.singleton(WorkspaceType.GROUP));
+        List<Workspace> allWorkspaces = gitLabWorkspaceApi.getAllWorkspaces(projectId, patchReleaseVersionId, EnumSet.allOf(WorkspaceType.class));
+        List<Workspace> allUserWorkspaces = gitLabWorkspaceApi.getWorkspaces(projectId, patchReleaseVersionId, Collections.singleton(WorkspaceType.USER));
+        List<Workspace> allGroupWorkspaces = gitLabWorkspaceApi.getWorkspaces(projectId, patchReleaseVersionId, Collections.singleton(WorkspaceType.GROUP));
 
         Assert.assertNotNull(allWorkspaces);
         Assert.assertNotNull(allUserWorkspaces);
@@ -486,28 +488,28 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(2, allUserWorkspaces.size());
         Assert.assertEquals(1, allGroupWorkspaces.size());
 
-        Workspace retriedUserWorkspace = gitLabWorkspaceApi.getWorkspace(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
+        Workspace retriedUserWorkspace = gitLabWorkspaceApi.getWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceOneId, patchReleaseVersionId));
 
         Assert.assertNotNull(retriedUserWorkspace);
         Assert.assertEquals(workspaceOneId, retriedUserWorkspace.getWorkspaceId());
         Assert.assertEquals(projectId, retriedUserWorkspace.getProjectId());
         Assert.assertNotNull(retriedUserWorkspace.getUserId());
 
-        Workspace retriedGroupWorkspace = gitLabWorkspaceApi.getWorkspace(projectId, patchReleaseVersion, workspaceThreeId, WorkspaceType.GROUP);
+        Workspace retriedGroupWorkspace = gitLabWorkspaceApi.getWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceThreeId, patchReleaseVersionId));
 
         Assert.assertNotNull(retriedGroupWorkspace);
         Assert.assertEquals(workspaceThreeId, retriedGroupWorkspace.getWorkspaceId());
         Assert.assertEquals(projectId, retriedGroupWorkspace.getProjectId());
         Assert.assertNull(retriedGroupWorkspace.getUserId());
 
-        boolean isUserWorkspaceInConflictResolution = gitLabWorkspaceApi.isWorkspaceInConflictResolutionMode(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
-        boolean isGroupWorkspaceInConflictResolution = gitLabWorkspaceApi.isWorkspaceInConflictResolutionMode(projectId, patchReleaseVersion, workspaceThreeId, WorkspaceType.GROUP);
+        boolean isUserWorkspaceInConflictResolution = gitLabWorkspaceApi.isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceOneId, patchReleaseVersionId));
+        boolean isGroupWorkspaceInConflictResolution = gitLabWorkspaceApi.isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceThreeId, patchReleaseVersionId));
 
         Assert.assertFalse(isUserWorkspaceInConflictResolution);
         Assert.assertFalse(isGroupWorkspaceInConflictResolution);
 
-        boolean isUserWorkspaceOutdated = gitLabWorkspaceApi.isWorkspaceOutdated(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER);
-        boolean isGroupWorkspaceOutdated = gitLabWorkspaceApi.isWorkspaceOutdated(projectId, patchReleaseVersion, workspaceThreeId, WorkspaceType.GROUP);
+        boolean isUserWorkspaceOutdated = gitLabWorkspaceApi.isWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceOneId, patchReleaseVersionId));
+        boolean isGroupWorkspaceOutdated = gitLabWorkspaceApi.isWorkspaceOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceThreeId, patchReleaseVersionId));
 
         Assert.assertFalse(isUserWorkspaceOutdated);
         Assert.assertFalse(isGroupWorkspaceOutdated);
@@ -523,27 +525,27 @@ public class GitLabWorkspaceApiTestResource
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patch = gitlabPatchApi.newPatch(projectId, version);
-        String patchReleaseVersion = patch.getPatchReleaseVersion();
+        Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
+        VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
 
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceName, WorkspaceType.USER);
+        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceName, patchReleaseVersionId));
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersion).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
 
         // Create another workspace, commit, review, merge to move project HEAD forward -- use workspace two
         String workspaceTwoName = "workspacetwo";
-        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceTwoName, WorkspaceType.USER);
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoName, patchReleaseVersionId));
         String workspaceTwoId = createdWorkspaceTwo.getWorkspaceId();
-        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.USER).getEntities(null, null, null);
+        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceTwoEntities);
 
@@ -554,8 +556,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.USER).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.USER).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -565,9 +567,9 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
         List<String> labels = Collections.singletonList("default");
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.USER, "Add Courses.", "add two math courses", labels);
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId), "Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
-        Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, patchReleaseVersion, reviewId);
+        Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, patchReleaseVersionId, reviewId);
 
         Assert.assertNotNull(approvedReview);
         Assert.assertEquals(reviewId, approvedReview.getId());
@@ -590,7 +592,7 @@ public class GitLabWorkspaceApiTestResource
         }
         LOGGER.info("Waited {} times for merge to have status \"{}\"", callUntil.getTryCount(), requiredStatus);
 
-        gitLabCommitterReviewApi.commitReview(projectId, patchReleaseVersion, reviewId, "add two math courses");
+        gitLabCommitterReviewApi.commitReview(projectId, patchReleaseVersionId, reviewId, "add two math courses");
 
         String requiredMergedStatus = "merged";
         CallUntil<MergeRequest, GitLabApiException> callUntilMerged = CallUntil.callUntil(
@@ -617,7 +619,7 @@ public class GitLabWorkspaceApiTestResource
         }
         LOGGER.info("Waited {} times for branch {} to be deleted post merge", callUntilBranchDeleted.getTryCount(), workspaceTwoName);
 
-        List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersion).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
@@ -632,8 +634,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, patchReleaseVersionId)).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntitiesNew);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -643,8 +645,8 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateWorkspace(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER);
-        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getEntities(null, null, null);
+        gitLabWorkspaceApi.updateWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, patchReleaseVersionId));
+        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());
@@ -664,27 +666,27 @@ public class GitLabWorkspaceApiTestResource
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patch = gitlabPatchApi.newPatch(projectId, version);
-        String patchReleaseVersion = patch.getPatchReleaseVersion();
+        Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
+        VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
 
-        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceName, WorkspaceType.GROUP);
+        Workspace createdWorkspace = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceName, patchReleaseVersionId));
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersion).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
 
         // Create another workspace, commit, review, merge to move project HEAD forward -- use workspace two
         String workspaceTwoName = "workspacetwo";
-        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, patchReleaseVersion, workspaceTwoName, WorkspaceType.GROUP);
+        Workspace createdWorkspaceTwo = gitLabWorkspaceApi.newWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceTwoName, patchReleaseVersionId));
         String workspaceTwoId = createdWorkspaceTwo.getWorkspaceId();
-        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP).getEntities(null, null, null);
+        List<Entity> initialWorkspaceTwoEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceTwoEntities);
 
@@ -695,8 +697,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -706,9 +708,9 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
         List<String> labels = Collections.singletonList("default");
-        Review testReview = gitLabCommitterReviewApi.createReview(projectId, patchReleaseVersion, workspaceTwoId, WorkspaceType.GROUP, "Add Courses.", "add two math courses", labels);
+        Review testReview = gitLabCommitterReviewApi.createReview(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceTwoId, patchReleaseVersionId), "Add Courses.", "add two math courses", labels);
         String reviewId = testReview.getId();
-        Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, patchReleaseVersion, reviewId);
+        Review approvedReview = gitLabApproverReviewApi.approveReview(projectId, patchReleaseVersionId, reviewId);
 
         Assert.assertNotNull(approvedReview);
         Assert.assertEquals(reviewId, approvedReview.getId());
@@ -731,7 +733,7 @@ public class GitLabWorkspaceApiTestResource
         }
         LOGGER.info("Waited {} times for merge to have status \"{}\"", callUntil.getTryCount(), requiredStatus);
 
-        gitLabCommitterReviewApi.commitReview(projectId, patchReleaseVersion, reviewId, "add two math courses");
+        gitLabCommitterReviewApi.commitReview(projectId, patchReleaseVersionId, reviewId, "add two math courses");
 
         String requiredMergedStatus = "merged";
         CallUntil<MergeRequest, GitLabApiException> callUntilMerged = CallUntil.callUntil(
@@ -758,7 +760,7 @@ public class GitLabWorkspaceApiTestResource
         }
         LOGGER.info("Waited {} times for branch {} to be deleted post merge", callUntilBranchDeleted.getTryCount(), workspaceTwoName);
 
-        List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersion).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
@@ -773,8 +775,8 @@ public class GitLabWorkspaceApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, patchReleaseVersionId)).createEntity(entityPath, classifierPath, currentEntityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntitiesNew = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntitiesNew);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -784,8 +786,8 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateWorkspace(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP);
-        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).getEntities(null, null, null);
+        gitLabWorkspaceApi.updateWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, patchReleaseVersionId));
+        List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());

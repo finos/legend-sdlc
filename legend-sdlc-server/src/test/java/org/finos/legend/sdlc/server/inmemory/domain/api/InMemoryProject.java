@@ -23,6 +23,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -102,30 +103,30 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public Iterable<InMemoryWorkspace> getUserWorkspaces(String patchReleaseVersion)
+    public Iterable<InMemoryWorkspace> getUserWorkspaces(VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         return this.userWorkspaces.entrySet().stream().filter(w -> w.getKey().startsWith(sourceBranchName)).map(w -> w.getValue()).collect(Collectors.toList());
     }
 
     @JsonIgnore
-    public Iterable<InMemoryWorkspace> getGroupWorkspaces(String patchReleaseVersion)
+    public Iterable<InMemoryWorkspace> getGroupWorkspaces(VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         return this.groupWorkspaces.entrySet().stream().filter(w -> w.getKey().startsWith(sourceBranchName)).map(w -> w.getValue()).collect(Collectors.toList());
     }
 
     @JsonIgnore
-    public InMemoryWorkspace getUserWorkspace(String workspaceId, String patchReleaseVersion)
+    public InMemoryWorkspace getUserWorkspace(String workspaceId, VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         return this.userWorkspaces.get(sourceBranchName + "_" + workspaceId);
     }
 
     @JsonIgnore
-    public InMemoryWorkspace getGroupWorkspace(String workspaceId, String patchReleaseVersion)
+    public InMemoryWorkspace getGroupWorkspace(String workspaceId, VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         return this.groupWorkspaces.get(sourceBranchName + "_" + workspaceId);
     }
 
@@ -152,18 +153,18 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public InMemoryWorkspace addNewUserWorkspace(String workspaceId, InMemoryRevision baseRevision, String patchReleaseVersion)
+    public InMemoryWorkspace addNewUserWorkspace(String workspaceId, InMemoryRevision baseRevision, VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         InMemoryWorkspace workspace = new InMemoryWorkspace(projectId, workspaceId, baseRevision);
         this.userWorkspaces.put(sourceBranchName + "_" + workspaceId, workspace);
         return this.userWorkspaces.get(sourceBranchName + "_" + workspaceId);
     }
 
     @JsonIgnore
-    public InMemoryWorkspace addNewGroupWorkspace(String workspaceId, InMemoryRevision baseRevision, String patchReleaseVersion)
+    public InMemoryWorkspace addNewGroupWorkspace(String workspaceId, InMemoryRevision baseRevision, VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         InMemoryWorkspace workspace = new InMemoryWorkspace(projectId, workspaceId, baseRevision);
         this.groupWorkspaces.put(sourceBranchName + "_" + workspaceId, workspace);
         return this.groupWorkspaces.get(sourceBranchName + "_" + workspaceId);
@@ -176,9 +177,9 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public void deleteUserWorkspace(String workspaceId, String patchReleaseVersion)
+    public void deleteUserWorkspace(String workspaceId, VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         this.userWorkspaces.remove(sourceBranchName + "_" + workspaceId);
     }
 
@@ -189,9 +190,9 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public void deleteGroupWorkspace(String workspaceId, String patchReleaseVersion)
+    public void deleteGroupWorkspace(String workspaceId,VersionId patchReleaseVersionId)
     {
-        String sourceBranchName = getSourceBranch(patchReleaseVersion);
+        String sourceBranchName = getSourceBranch(patchReleaseVersionId);
         this.groupWorkspaces.remove(sourceBranchName + "_" + workspaceId);
     }
 
@@ -239,7 +240,7 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public MutableList<InMemoryReview> getReviews(String patchReleaseVersion, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    public MutableList<InMemoryReview> getReviews(VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         MutableList<InMemoryReview> filteredReviews = Lists.mutable.empty();
         Iterable<InMemoryReview> reviews = this.reviews.valuesView();
@@ -247,7 +248,7 @@ public class InMemoryProject implements Project
         for (InMemoryReview rev : reviews)
         {
 
-            if (((state == null) || (state == rev.getState())) && rev.getTargetBranch().equals(getSourceBranch(patchReleaseVersion)))
+            if (((state == null) || (state == rev.getState())) && rev.getTargetBranch().equals(getSourceBranch(patchReleaseVersionId)))
             {
                 filteredReviews.add(rev);
             }
@@ -257,29 +258,29 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public InMemoryReview addReview(String reviewId, String patchReleaseVersion)
+    public InMemoryReview addReview(String reviewId, VersionId patchReleaseVersionId)
     {
         InMemoryReview review = new InMemoryReview(projectId, reviewId);
-        if (patchReleaseVersion != null)
+        if (patchReleaseVersionId != null)
         {
-            review.setTargetBranch(getSourceBranch(patchReleaseVersion));
+            review.setTargetBranch(getSourceBranch(patchReleaseVersionId));
         }
         this.reviews.put(reviewId, review);
         return this.reviews.get(reviewId);
     }
 
     @JsonIgnore
-    public InMemoryPatch addPatch(String patchVersionId, InMemoryRevision baseRevision)
+    public InMemoryPatch addPatch(VersionId patchVersionId, InMemoryRevision baseRevision)
     {
         InMemoryPatch patch = new InMemoryPatch(projectId, patchVersionId, baseRevision);
-        this.patches.put(patchVersionId, patch);
+        this.patches.put(patchVersionId.toVersionIdString(), patch);
         return this.patches.get(patchVersionId);
     }
 
     @JsonIgnore
-    public InMemoryPatch getPatch(String patchReleaseVersion)
+    public InMemoryPatch getPatch(VersionId patchReleaseVersionId)
     {
-        return patchReleaseVersion != null ? this.patches.get(patchReleaseVersion) : null;
+        return patchReleaseVersionId != null ? this.patches.get(patchReleaseVersionId.toVersionIdString()) : null;
     }
 
     @JsonIgnore
@@ -289,8 +290,8 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    private String getSourceBranch(String patchReleaseVersion)
+    private String getSourceBranch(VersionId patchReleaseVersionId)
     {
-        return patchReleaseVersion == null ? "default" : "patch-" + patchReleaseVersion;
+        return patchReleaseVersionId == null ? "default" : "patch-" + patchReleaseVersionId.toVersionIdString();
     }
 }

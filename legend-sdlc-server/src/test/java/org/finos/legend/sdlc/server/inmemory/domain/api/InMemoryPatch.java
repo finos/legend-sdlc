@@ -19,6 +19,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import javax.inject.Inject;
 import java.util.Map;
@@ -29,19 +30,19 @@ public class InMemoryPatch implements Patch
     private final Map<String, InMemoryRevision> revisions = Maps.mutable.empty();
     private String currentRevisionId;
     private String projectId;
-    private String patchReleaseVersion;
+    private VersionId patchReleaseVersionId;
 
     @Inject
     public InMemoryPatch()
     {
     }
 
-    public InMemoryPatch(String projectId, String patchReleaseVersion, InMemoryRevision baseRevision)
+    public InMemoryPatch(String projectId, VersionId patchReleaseVersionId, InMemoryRevision baseRevision)
     {
         this.projectId = projectId;
-        this.patchReleaseVersion = patchReleaseVersion;
+        this.patchReleaseVersionId = patchReleaseVersionId;
 
-        InMemoryRevision revision = new InMemoryRevision(patchReleaseVersion, baseRevision);
+        InMemoryRevision revision = new InMemoryRevision("", baseRevision);
         this.currentRevisionId = revision.getId();
         this.revisions.put(revision.getId(), revision);
     }
@@ -53,9 +54,9 @@ public class InMemoryPatch implements Patch
     }
 
     @Override
-    public String getPatchReleaseVersion()
+    public VersionId getPatchReleaseVersionId()
     {
-        return this.patchReleaseVersion;
+        return this.patchReleaseVersionId;
     }
 
     @JsonIgnore

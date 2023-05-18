@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
@@ -113,15 +114,15 @@ public class InMemoryBackend
            this.addWorkspace(workspaceId, workspaceType, null);
         }
 
-        public void addWorkspace(String workspaceId, WorkspaceType workspaceType, String patchReleaseVersion)
+        public void addWorkspace(String workspaceId, WorkspaceType workspaceType, VersionId patchReleaseVersionId)
         {
             if (workspaceType == WorkspaceType.GROUP)
             {
-                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
+                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             }
             else
             {
-                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
+                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             }
         }
 
@@ -149,9 +150,9 @@ public class InMemoryBackend
             this.addEntities(workspaceId, WorkspaceType.USER, entities, null);
         }
 
-        public void addEntities(String workspaceId, List<Entity> entities, String patchReleaseVersion)
+        public void addEntities(String workspaceId, List<Entity> entities, VersionId patchReleaseVersionId)
         {
-            this.addEntities(workspaceId, WorkspaceType.USER, entities, patchReleaseVersion);
+            this.addEntities(workspaceId, WorkspaceType.USER, entities, patchReleaseVersionId);
         }
 
         private void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities)
@@ -159,13 +160,13 @@ public class InMemoryBackend
             this.addEntities(workspaceId, workspaceType, entities, null);
         }
 
-        public void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities, String patchReleaseVersion)
+        public void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities, VersionId patchReleaseVersionId)
         {
-            if (patchReleaseVersion != null)
+            if (patchReleaseVersionId != null)
             {
-                this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+                this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
             }
-            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersion);
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             workspace.getCurrentRevision().addEntities(entities);
         }
 
@@ -253,9 +254,9 @@ public class InMemoryBackend
             this.addEntities(workspaceId, entities);
         }
 
-        public void addPatch(String patchReleaseVersion)
+        public void addPatch(VersionId patchReleaseVersionId)
         {
-            this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+            this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
         }
 
         public void addDependency(String... projectDependencies)
@@ -331,13 +332,13 @@ public class InMemoryBackend
             return this.addReview(reviewId, null);
         }
 
-        public InMemoryReview addReview(String reviewId, String patchReleaseVersion)
+        public InMemoryReview addReview(String reviewId, VersionId patchReleaseVersionId)
         {
-            if (patchReleaseVersion != null)
+            if (patchReleaseVersionId != null)
             {
-                this.project.addPatch(patchReleaseVersion, this.project.getCurrentRevision());
+                this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
             }
-            return this.project.addReview(reviewId, patchReleaseVersion);
+            return this.project.addReview(reviewId, patchReleaseVersionId);
         }
     }
 

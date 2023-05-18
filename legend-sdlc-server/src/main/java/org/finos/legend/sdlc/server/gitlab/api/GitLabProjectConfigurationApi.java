@@ -25,6 +25,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -61,12 +62,12 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getProjectProjectConfiguration(String projectId, String patchReleaseVersion)
+    public ProjectConfiguration getProjectProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
-            return getProjectConfiguration(projectId, patchReleaseVersion, null, null, null, null);
+            return getProjectConfiguration(projectId, WorkspaceSpecification.newWorkspaceSpecification(null, null, null, patchReleaseVersionId), null);
         }
         catch (Exception e)
         {
@@ -78,14 +79,14 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String revisionId)
+    public ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, patchReleaseVersion, null, null, null, null));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(null, null, null, patchReleaseVersionId), null));
         }
         catch (Exception e)
         {
@@ -100,7 +101,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         }
         try
         {
-            return getProjectConfiguration(projectId, patchReleaseVersion, null, resolvedRevisionId, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
+            return getProjectConfiguration(projectId, WorkspaceSpecification.newWorkspaceSpecification(null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE, patchReleaseVersionId), resolvedRevisionId);
         }
         catch (Exception e)
         {
@@ -112,105 +113,105 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getWorkspaceProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, patchReleaseVersion, workspaceId, workspaceType, WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.WORKSPACE, workspaceSpecification.getPatchReleaseVersionId()));
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getBackupWorkspaceProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, patchReleaseVersion, workspaceId, workspaceType, WorkspaceAccessType.BACKUP);
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.BACKUP, workspaceSpecification.getPatchReleaseVersionId()));
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        return this.getWorkspaceProjectConfigurationByAccessType(projectId, patchReleaseVersion, workspaceId, workspaceType, WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceProjectConfigurationByAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.CONFLICT_RESOLUTION, workspaceSpecification.getPatchReleaseVersionId()));
     }
 
-    private ProjectConfiguration getWorkspaceProjectConfigurationByAccessType(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    private ProjectConfiguration getWorkspaceProjectConfigurationByAccessType(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceId(), "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceType(), "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
         try
         {
-            return getProjectConfiguration(projectId, patchReleaseVersion, workspaceId, null, workspaceType, workspaceAccessType);
+            return getProjectConfiguration(projectId, workspaceSpecification, null);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
-                    () -> "Unknown " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ") or project (" + projectId + ")",
-                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
+                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId(),
+                    () -> "Unknown " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " (" + workspaceSpecification.getWorkspaceId() + ") or project (" + projectId + ")",
+                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId());
         }
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
-        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, patchReleaseVersion, workspaceId, revisionId, workspaceType, WorkspaceAccessType.WORKSPACE);
+        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.WORKSPACE, workspaceSpecification.getPatchReleaseVersionId()), revisionId);
     }
 
     @Override
     public ProjectConfiguration getBackupUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, null, workspaceId, WorkspaceType.USER, revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId), revisionId);
     }
 
     @Override
     public ProjectConfiguration getBackupGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, null, workspaceId, WorkspaceType.GROUP, revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId), revisionId);
     }
 
     @Override
-    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getBackupWorkspaceRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
-        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, patchReleaseVersion, workspaceId, revisionId, workspaceType, WorkspaceAccessType.BACKUP);
+        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.BACKUP, workspaceSpecification.getPatchReleaseVersionId()), revisionId);
     }
 
     @Override
-    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public ProjectConfiguration getWorkspaceWithConflictResolutionRevisionProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
-        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, patchReleaseVersion, workspaceId, revisionId, workspaceType, WorkspaceAccessType.CONFLICT_RESOLUTION);
+        return this.getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.CONFLICT_RESOLUTION, workspaceSpecification.getPatchReleaseVersionId()), revisionId);
     }
 
-    private ProjectConfiguration getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(String projectId, String patchReleaseVersion, String workspaceId, String revisionId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    private ProjectConfiguration getWorkspaceRevisionProjectConfigurationByWorkspaceAccessType(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceId(), "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceType(), "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, null));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceSpecification, null));
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
-                    () -> "Unknown revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId,
-                    () -> "Failed to get revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get revision " + revisionId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " of project " + projectId,
+                    () -> "Unknown revision " + revisionId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " of project " + projectId,
+                    () -> "Failed to get revision " + revisionId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " of project " + projectId);
         }
         if (resolvedRevisionId == null)
         {
-            throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " of project " + projectId, Status.NOT_FOUND);
+            throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " of project " + projectId, Status.NOT_FOUND);
         }
         try
         {
-            return getProjectConfiguration(projectId, patchReleaseVersion, workspaceId, resolvedRevisionId, workspaceType, workspaceAccessType);
+            return getProjectConfiguration(projectId, workspaceSpecification, resolvedRevisionId);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId,
-                    () -> "Unknown project (" + projectId + "), " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + "), or revision (" + revisionId + ")",
-                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " at revision " + revisionId);
+                    () -> "User " + getCurrentUser() + " is not allowed to access project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " at revision " + revisionId,
+                    () -> "Unknown project (" + projectId + "), " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " (" + workspaceSpecification.getWorkspaceId() + "), or revision (" + revisionId + ")",
+                    () -> "Failed to access project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " at revision " + revisionId);
         }
     }
 
@@ -221,7 +222,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
         try
         {
-            return getProjectConfiguration(projectId, versionId);
+            return getVersionProjectConfiguration(projectId, versionId);
         }
         catch (Exception e)
         {
@@ -233,20 +234,20 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, String patchReleaseVersion, String reviewId)
+    public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersion, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
         if (diffRef != null && diffRef.getStartSha() != null && diffRef.getHeadSha() != null)
         {
             String revisionId = diffRef.getStartSha();
-            return getProjectRevisionProjectConfiguration(projectId, patchReleaseVersion, revisionId);
+            return getProjectRevisionProjectConfiguration(projectId, patchReleaseVersionId, revisionId);
         }
         else
         {
@@ -255,20 +256,20 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfiguration getReviewToProjectConfiguration(String projectId, String patchReleaseVersion, String reviewId)
+    public ProjectConfiguration getReviewToProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersion, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId);
         validateMergeRequestForComparison(mergeRequest);
         DiffRef diffRef = mergeRequest.getDiffRefs();
 
         if (diffRef != null && diffRef.getStartSha() != null && diffRef.getHeadSha() != null)
         {
             String revisionId = diffRef.getHeadSha();
-            return getProjectRevisionProjectConfiguration(projectId, patchReleaseVersion, revisionId);
+            return getProjectRevisionProjectConfiguration(projectId, patchReleaseVersionId, revisionId);
         }
         else
         {
@@ -277,36 +278,36 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public Revision updateProjectConfiguration(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String message, ProjectConfigurationUpdater updater)
+    public Revision updateProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String message, ProjectConfigurationUpdater updater)
     {
-        return updateProjectConfigurationByWorkspaceAccessType(projectId, patchReleaseVersion, workspaceId, workspaceType, WorkspaceAccessType.WORKSPACE, message, updater);
+        return updateProjectConfigurationByWorkspaceAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), WorkspaceAccessType.WORKSPACE, workspaceSpecification.getPatchReleaseVersionId()), message, updater);
     }
 
     @Override
     public Revision updateProjectConfigurationForWorkspaceWithConflictResolution(String projectId, String workspaceId, String message, ProjectConfigurationUpdater updater)
     {
-        return updateProjectConfigurationByWorkspaceAccessType(projectId, null, workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, message, updater);
+        return updateProjectConfigurationByWorkspaceAccessType(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION), message, updater);
     }
 
-    private Revision updateProjectConfigurationByWorkspaceAccessType(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String message, ProjectConfigurationUpdater updater)
+    private Revision updateProjectConfigurationByWorkspaceAccessType(String projectId, WorkspaceSpecification workspaceSpecification, String message, ProjectConfigurationUpdater updater)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceType, "workspaceType may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceId(), "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceType(), "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(message, "message may not be null");
 
         try
         {
             ProjectFileAccessProvider fileAccessProvider = getProjectFileAccessProvider();
-            Revision currentRevision = fileAccessProvider.getRevisionAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, null).getCurrentRevision();
+            Revision currentRevision = fileAccessProvider.getRevisionAccessContext(projectId, workspaceSpecification, null).getCurrentRevision();
             if (currentRevision == null)
             {
-                throw new LegendSDLCServerException("Could not find current revision for " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + projectId + ": " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " may be corrupt");
+                throw new LegendSDLCServerException("Could not find current revision for " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId() + " in project " + projectId + ": " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " may be corrupt");
             }
             return ProjectStructure.newUpdateBuilder(fileAccessProvider, projectId)
                     .withProjectConfigurationUpdater(updater)
-                    .withWorkspace(workspaceId, workspaceType, workspaceAccessType, patchReleaseVersion)
+                    .withWorkspace(workspaceSpecification)
                     .withRevisionId(currentRevision.getId())
                     .withMessage(message)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
@@ -316,9 +317,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId,
-                    () -> "Unknown project (" + projectId + ") or " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " (" + workspaceId + ")",
-                    () -> "Failed to update project configuration for project " + projectId + " in " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId);
+                    () -> "User " + getCurrentUser() + " is not allowed to update project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId(),
+                    () -> "Unknown project (" + projectId + ") or " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " (" + workspaceSpecification.getWorkspaceId() + ")",
+                    () -> "Failed to update project configuration for project " + projectId + " in " + workspaceSpecification.getWorkspaceType().getLabel() + " " + workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + workspaceSpecification.getWorkspaceId());
         }
     }
 
@@ -332,9 +333,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGenerations(String projectId, String patchReleaseVersion)
+    public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGenerations(String projectId, VersionId patchReleaseVersionId)
     {
-        return ProjectStructure.getProjectStructure(getProjectProjectConfiguration(projectId, patchReleaseVersion)).getAvailableGenerationConfigurations();
+        return ProjectStructure.getProjectStructure(getProjectProjectConfiguration(projectId, patchReleaseVersionId)).getAvailableGenerationConfigurations();
     }
 
     @Override
@@ -344,9 +345,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceRevisionAvailableArtifactGenerations(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
     {
-        return ProjectStructure.getProjectStructure(getWorkspaceRevisionProjectConfiguration(projectId, patchReleaseVersion, workspaceId, workspaceType, revisionId)).getAvailableGenerationConfigurations();
+        return ProjectStructure.getProjectStructure(getWorkspaceRevisionProjectConfiguration(projectId, workspaceSpecification, revisionId)).getAvailableGenerationConfigurations();
     }
 
     @Override
@@ -407,9 +408,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, String patchReleaseVersion)
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, VersionId patchReleaseVersionId)
     {
-        Boolean isProjectConfigured = getProjectConfiguration(projectId, patchReleaseVersion) != null;
+        Boolean isProjectConfigured = getProjectConfiguration(projectId, patchReleaseVersionId) != null;
         List<String> reviewIds = Lists.mutable.empty();
         if (!isProjectConfigured)
         {
@@ -447,8 +448,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableArtifactGenerations(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        return ProjectStructure.getProjectStructure(getWorkspaceProjectConfiguration(projectId, patchReleaseVersion, workspaceId, workspaceType)).getAvailableGenerationConfigurations();
+        return ProjectStructure.getProjectStructure(getWorkspaceProjectConfiguration(projectId, workspaceSpecification)).getAvailableGenerationConfigurations();
     }
 }

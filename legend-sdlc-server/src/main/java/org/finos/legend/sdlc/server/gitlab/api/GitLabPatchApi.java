@@ -15,8 +15,6 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.patch.Patch;
-import org.finos.legend.sdlc.domain.model.review.Review;
-import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
@@ -27,15 +25,20 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.gitlab4j.api.Constants;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.Branch;
+import org.gitlab4j.api.models.MergeRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 {
@@ -57,26 +60,44 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     }
 
     @Override
-    public Patch newPatch(String projectId, Version sourcePatchReleaseVersion)
+    public Patch newPatch(String projectId, VersionId sourceVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourcePatchReleaseVersion, "sorcePatchReleaseId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceVersionId, "source version may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
-        if (this.getProjectConfiguration(projectId, sourcePatchReleaseVersion.getId()) ==  null)
+        Boolean sourceTagExists = false;
+        try
         {
-            throw new LegendSDLCServerException("Project structure has not been set up", Response.Status.CONFLICT);
+            sourceTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(sourceVersionId));
         }
-        VersionId targetVersionId = sourcePatchReleaseVersion.getId().nextPatchVersion();
-        Version targetVersion = null;
-        if (targetVersion != null)
+        catch (Exception e)
         {
-            throw new LegendSDLCServerException(targetVersionId + "already exists", Response.Status.CONFLICT);
+            LOGGER.warn("Error in fetching release tag for version ", sourceVersionId.toVersionIdString(), projectId, e);
+        }
+        if (!sourceTagExists)
+        {
+            throw new LegendSDLCServerException("Release tag for source version " + sourceVersionId.toVersionIdString() + " doesn't exist", Response.Status.BAD_REQUEST);
+        }
+
+        VersionId targetVersionId = sourceVersionId.nextPatchVersion();
+        Boolean targetTagExists = true;
+        try
+        {
+            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(targetVersionId));
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Error in fetching release tag for version ", targetVersionId.toVersionIdString(), projectId, e);
+        }
+        if (targetTagExists)
+        {
+            throw new LegendSDLCServerException(targetVersionId.toVersionIdString() + "already exists", Response.Status.BAD_REQUEST);
         }
 
         // Check if the patch branch they want to create exists or not
-        if (isPatchReleaseBranchPresent(gitLabProjectId, targetVersionId.toVersionIdString()))
+        if (isPatchReleaseBranchPresent(gitLabProjectId, targetVersionId))
         {
             throw new LegendSDLCServerException("Patch release branch for " + targetVersionId.toVersionIdString() + " exists already", Response.Status.CONFLICT);
         }
@@ -85,7 +106,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         Branch branch;
         try
         {
-            branch = GitLabApiTools.createProtectedBranchFromSourceTagAndVerify(getGitLabApi(), gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(targetVersionId.toVersionIdString()), RELEASE_TAG_PREFIX + sourcePatchReleaseVersion.getId().toVersionIdString(), 30, 1_000);
+            branch = GitLabApiTools.createProtectedBranchFromSourceTagAndVerify(getGitLabApi(), gitLabProjectId, getPatchReleaseBranchName(targetVersionId), buildVersionTagName(sourceVersionId), 30, 1_000);
         }
         catch (Exception e)
         {
@@ -103,18 +124,105 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     }
 
     @Override
-    public List<Patch> getAllPatches(String projectId)
+    public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            String branchPrefix = getPatchReleaseBranchName("");
+            String branchPrefix = getPatchReleaseBranchPrefix();
             Pager<Branch> pager = getGitLabApi().getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), "^" + branchPrefix, ITEMS_PER_PAGE);
-            return PagerTools.stream(pager)
+            Stream<Patch> stream = PagerTools.stream(pager)
                     .filter(branch -> (branch != null) && (branch.getName() != null) && branch.getName().startsWith(branchPrefix))
-                    .map(branch -> patchBranchToPatch(projectId, branch))
-                    .collect(PagerTools.listCollector(pager));
+                    .map(branch -> patchBranchToPatch(projectId, branch));
+            // major version constraint
+            if ((minMajorVersion != null) && (maxMajorVersion != null))
+            {
+                int minMajorVersionInt = minMajorVersion;
+                int maxMajorVersionInt = maxMajorVersion;
+                if (minMajorVersionInt == maxMajorVersionInt)
+                {
+                    stream = stream.filter(p -> p.getPatchReleaseVersionId().getMajorVersion() == minMajorVersionInt);
+                }
+                else
+                {
+                    stream = stream.filter(p ->
+                    {
+                        int majorVersion = p.getPatchReleaseVersionId().getMajorVersion();
+                        return (minMajorVersionInt <= majorVersion) && (majorVersion <= maxMajorVersionInt);
+                    });
+                }
+            }
+            else if (minMajorVersion != null)
+            {
+                int minMajorVersionInt = minMajorVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getMajorVersion() >= minMajorVersionInt);
+            }
+            else if (maxMajorVersion != null)
+            {
+                int maxMajorVersionInt = maxMajorVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getMajorVersion() <= maxMajorVersionInt);
+            }
+
+            // minor version constraint
+            if ((minMinorVersion != null) && (maxMinorVersion != null))
+            {
+                int minMinorVersionInt = minMinorVersion;
+                int maxMinorVersionInt = maxMinorVersion;
+                if (minMinorVersionInt == maxMinorVersionInt)
+                {
+                    stream = stream.filter(p -> p.getPatchReleaseVersionId().getMinorVersion() == minMinorVersionInt);
+                }
+                else
+                {
+                    stream = stream.filter(p ->
+                    {
+                        int minorVersion = p.getPatchReleaseVersionId().getMinorVersion();
+                        return (minMinorVersionInt <= minorVersion) && (minorVersion <= maxMinorVersionInt);
+                    });
+                }
+            }
+            else if (minMinorVersion != null)
+            {
+                int minMinorVersionInt = minMinorVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getMinorVersion() >= minMinorVersionInt);
+            }
+            else if (maxMinorVersion != null)
+            {
+                int maxMinorVersionInt = maxMinorVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getMinorVersion() <= maxMinorVersionInt);
+            }
+
+
+            // patch version constraint
+            if ((minPatchVersion != null) && (maxPatchVersion != null))
+            {
+                int minPatchVersionInt = minPatchVersion;
+                int maxPatchVersionInt = maxPatchVersion;
+                if (minPatchVersionInt == maxPatchVersionInt)
+                {
+                    stream = stream.filter(p -> p.getPatchReleaseVersionId().getPatchVersion() == minPatchVersionInt);
+                }
+                else
+                {
+                    stream = stream.filter(p ->
+                    {
+                        int patchVersion = p.getPatchReleaseVersionId().getPatchVersion();
+                        return (minPatchVersionInt <= patchVersion) && (patchVersion <= maxPatchVersionInt);
+                    });
+                }
+            }
+            else if (minPatchVersion != null)
+            {
+                int minPatchVersionInt = minPatchVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getPatchVersion() >= minPatchVersionInt);
+            }
+            else if (maxPatchVersion != null)
+            {
+                int maxPatchVersionInt = maxPatchVersion;
+                stream = stream.filter(p -> p.getPatchReleaseVersionId().getPatchVersion() <= maxPatchVersionInt);
+            }
+            return stream.collect(Collectors.toList());
         }
         catch (Exception e)
         {
@@ -128,7 +236,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     private Patch fromPatchBranchName(String projectId, String branchName)
     {
         int index = branchName.lastIndexOf(BRANCH_DELIMITER);
-        String patchReleaseId = branchName.substring(index + 1, branchName.length());
+        VersionId patchReleaseVersionId = parseVersionIdString(branchName.substring(index + 1, branchName.length()));
         return new Patch()
         {
             @Override
@@ -138,18 +246,18 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             }
 
             @Override
-            public String getPatchReleaseVersion()
+            public VersionId getPatchReleaseVersionId()
             {
-                return patchReleaseId;
+                return patchReleaseVersionId;
             }
         };
     }
 
     @Override
-    public void deletePatch(String projectId, String patchReleaseVersion)
+    public void deletePatch(String projectId, VersionId patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
@@ -158,90 +266,90 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         boolean patchBranchDeleted;
         try
         {
-            patchBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersion), 20, 1_000);
+            patchBranchDeleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersionId), 20, 1_000);
             // close merge requests created for patch release branch
-            submitBackgroundRetryableTask(() -> closeMergeRequestsCreatedForPatchReleaseBranch(projectId, patchReleaseVersion), 5000L, "close merge requests created for branch " + getPatchReleaseBranchName(patchReleaseVersion));
+            submitBackgroundRetryableTask(() -> closeMergeRequestsCreatedForPatchReleaseBranch(gitLabProjectId, patchReleaseVersionId), 5000L, "close merge requests created for branch " + getPatchReleaseBranchName(patchReleaseVersionId));
         }
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete patch release branch " + patchReleaseVersion + " in project " + projectId,
-                    () -> "Unknown patch release branch " + patchReleaseVersion + " or project (" + projectId + ")",
-                    () -> "Error deleting patch release branch " + patchReleaseVersion + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete patch release branch " + patchReleaseVersionId + " in project " + projectId,
+                    () -> "Unknown patch release branch " + patchReleaseVersionId + " or project (" + projectId + ")",
+                    () -> "Error deleting patch release branch " + patchReleaseVersionId + " in project " + projectId);
         }
         if (!patchBranchDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete patch release branch " + patchReleaseVersion + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete patch release branch " + patchReleaseVersionId + " in project " + projectId);
         }
     }
 
     @Override
-    public Version releasePatch(String projectId, String patchReleaseVersion)
+    public Version releasePatch(String projectId, VersionId patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
         // check if the version you want to create exists or not
-        VersionId targetVersionId;
-        try
-        {
-            targetVersionId = VersionId.parseVersionId(patchReleaseVersion);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
-        }
         Version targetVersion = null;
         try
         {
-            targetVersion = getVersion(projectId, targetVersionId.getMajorVersion(), targetVersionId.getMinorVersion(), targetVersionId.getPatchVersion());
-            throw new LegendSDLCServerException(targetVersionId + "already exists", Response.Status.BAD_REQUEST);
+            targetVersion = getProjectVersion(projectId, patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion());
+            throw new LegendSDLCServerException(patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in creating release tag for the patch relase version ", patchReleaseVersion, projectId, e);
+            LOGGER.warn("Error in fetching release tag for version ", patchReleaseVersionId, projectId, e);
         }
         if (targetVersion != null)
         {
-            throw new LegendSDLCServerException(targetVersionId + "already exists", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException(patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
         }
 
-        // Check if the patch branch they want to release exists or not
+        // Check if the patch branch we want to release exists or not
         Branch patchBranch = null;
         try
         {
-            patchBranch = getGitLabApi().getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersion));
+            patchBranch = getGitLabApi().getRepositoryApi().getBranch(gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersionId));
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching the patch release branch ", patchReleaseVersion, projectId, e);
+            LOGGER.warn("Error in fetching the patch release branch ", patchReleaseVersionId, projectId, e);
         }
         if (patchBranch == null)
         {
-            throw new LegendSDLCServerException("Patch release branch for " + patchReleaseVersion + " doesn not exist for the project " + projectId, Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Patch release branch for " + patchReleaseVersionId + " doesn not exist for the project " + projectId, Response.Status.BAD_REQUEST);
         }
-        Version releaseVersion =  newVersion(gitLabProjectId, patchReleaseVersion, patchBranch.getCommit().getId(), VersionId.newVersionId(targetVersionId.getMajorVersion(), targetVersionId.getMinorVersion(), targetVersionId.getPatchVersion()), "");
+        Version releaseVersion =  newVersion(gitLabProjectId, patchReleaseVersionId, patchBranch.getCommit().getId(), VersionId.newVersionId(patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion()), "");
 
         // delete the patch release branch and close the MRs created for this branch
-        submitBackgroundRetryableTask(() -> GitLabApiTools.deleteBranchAndVerify(getGitLabApi().getRepositoryApi(), gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersion), 20, 1_000), 5000L, "delete " + getPatchReleaseBranchName(patchReleaseVersion));
-        submitBackgroundRetryableTask(() -> closeMergeRequestsCreatedForPatchReleaseBranch(projectId, patchReleaseVersion), 5000L, "close merge requests created for branch " + getPatchReleaseBranchName(patchReleaseVersion));
+        submitBackgroundRetryableTask(() -> GitLabApiTools.deleteBranchAndVerify(getGitLabApi().getRepositoryApi(), gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersionId), 20, 1_000), 5000L, "delete " + getPatchReleaseBranchName(patchReleaseVersionId));
+        submitBackgroundRetryableTask(() -> closeMergeRequestsCreatedForPatchReleaseBranch(gitLabProjectId, patchReleaseVersionId), 5000L, "close merge requests created for branch " + getPatchReleaseBranchName(patchReleaseVersionId));
         return releaseVersion;
     }
 
-    private boolean closeMergeRequestsCreatedForPatchReleaseBranch(String projectId, String patchReleaseVersion)
+    private boolean closeMergeRequestsCreatedForPatchReleaseBranch(GitLabProjectId projectId, VersionId patchReleaseVersionId)
     {
-        List<Review> reviews = getReviews(projectId, patchReleaseVersion, ReviewState.OPEN, null, null, null, null, null);
-        for (Review review : reviews)
+        List<MergeRequest> mergeRequests = Collections.emptyList();
+        String branchName = getSourceBranch(projectId, patchReleaseVersionId);
+        try
+        {
+           mergeRequests = getGitLabApi().getMergeRequestApi().getMergeRequests(projectId.getGitLabId()).stream().filter(mr -> branchName.equals(mr.getTargetBranch())).collect(Collectors.toList());
+        }
+        catch (Exception e)
+        {
+            LOGGER.warn("Unable to fetch merge requests for the project " + projectId.getGitLabId(), e);
+        }
+        for (MergeRequest mergeRequest : mergeRequests)
         {
             try
             {
-                closeReview(projectId, patchReleaseVersion, review.getId());
+                getGitLabApi().getMergeRequestApi().updateMergeRequest(projectId.getGitLabId(), mergeRequest.getIid(), branchName, null, null, null, Constants.StateEvent.CLOSE, null, null, null, null, null, null);
             }
             catch (Exception e)
             {
-                throw e;
+                LOGGER.warn("Unable to close merge request " + mergeRequest.getId() + " of the project " + projectId.getGitLabId(), e);
             }
         }
         return true;

@@ -16,7 +16,9 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import javax.inject.Inject;
 
@@ -28,25 +30,25 @@ public class InMemoryComparisonApi implements ComparisonApi
     }
 
     @Override
-    public Comparison getWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public Comparison getWorkspaceCreationComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Comparison getWorkspaceProjectComparison(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType)
+    public Comparison getWorkspaceProjectComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Comparison getReviewComparison(String projectId, String patchReleaseVersion, String reviewId)
+    public Comparison getReviewComparison(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Comparison getReviewWorkspaceCreationComparison(String projectId, String patchReleaseVersion, String reviewId)
+    public Comparison getReviewWorkspaceCreationComparison(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

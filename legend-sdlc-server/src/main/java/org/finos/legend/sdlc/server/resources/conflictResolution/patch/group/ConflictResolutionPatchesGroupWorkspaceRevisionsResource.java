@@ -18,7 +18,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
@@ -33,9 +35,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/groupWorkspaces/{workspaceId}/conflictResolution/revisions")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/conflictResolution/revisions")
 @Api("Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -52,16 +55,25 @@ public class ConflictResolutionPatchesGroupWorkspaceRevisionsResource extends Ba
     @GET
     @ApiOperation("Get all revisions for a group workspace with conflict resolution for patch release version")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
-                                       @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("since") StartInstant since,
                                        @QueryParam("until") EndInstant until,
                                        @QueryParam("limit") Integer limit)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting revision for group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.revisionApi.getGroupWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                "getting revision for group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -69,14 +81,23 @@ public class ConflictResolutionPatchesGroupWorkspaceRevisionsResource extends Ba
     @Path("{revisionId}")
     @ApiOperation("Get a revision of the group workspace with conflict resolution for patch release version")
     public Revision getRevision(@PathParam("projectId") String projectId,
-                                @PathParam("patchReleaseVersion") String patchReleaseVersion,
+                                @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                 @PathParam("workspaceId") String workspaceId,
                                 @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting revision " + revisionId + " for group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersion,
-                () -> this.revisionApi.getGroupWorkspaceWithConflictResolutionRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                "getting revision " + revisionId + " for group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)).getRevision(revisionId)
         );
     }
 }

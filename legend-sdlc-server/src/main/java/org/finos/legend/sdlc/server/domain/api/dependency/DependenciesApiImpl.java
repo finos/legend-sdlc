@@ -20,11 +20,12 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -47,16 +48,16 @@ public class DependenciesApiImpl implements DependenciesApi
     }
 
     @Override
-    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive)
+    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, patchReleaseVersion, workspaceId, workspaceType, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, workspaceSpecification, revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 
     @Override
-    public Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String patchReleaseVersion, String revisionId, boolean transitive)
+    public Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, VersionId patchReleaseVersionId, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectRevisionProjectConfiguration(projectId, patchReleaseVersion, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectRevisionProjectConfiguration(projectId, patchReleaseVersionId, revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 

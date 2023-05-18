@@ -18,10 +18,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectConfigurationCommand;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -34,8 +35,9 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
-@Path("/projects/{projectId}/patches/{patchReleaseVersion}/groupWorkspaces/{workspaceId}/configuration")
+@Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/configuration")
 @Api("Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -51,36 +53,63 @@ public class PatchesGroupWorkspaceProjectConfigurationResource extends BaseResou
 
     @GET
     @ApiOperation("Get the configuration of a project in a group workspace for patch release version for patch release version")
-    public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId)
+    public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersion,
-                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP)
+                "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
         );
     }
 
     @POST
     @ApiOperation("Update the project configuration of a project in a group workspace for patch release version")
-    public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
+    public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "updating configuration for project " + projectId + " in group workspace " + workspaceId + " for patch release version " + patchReleaseVersion,
-                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP, command.getMessage(), command.getProjectConfigurationUpdater())
+                "updating configuration for project " + projectId + " in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), command.getMessage(), command.getProjectConfigurationUpdater())
         );
     }
 
     @GET
     @Path("/availableGenerations")
     @ApiOperation("Get the available generation types of a project in a group workspace for patch release version")
-    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersion") String patchReleaseVersion, @PathParam("workspaceId") String workspaceId)
+    public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersion, "patchReleaseVersion may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
         return executeWithLogging(
-                "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersion,
-                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP)
+                "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
         );
     }
 }

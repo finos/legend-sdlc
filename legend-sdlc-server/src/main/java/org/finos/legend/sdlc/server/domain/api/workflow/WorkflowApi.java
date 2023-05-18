@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.workflow;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -23,18 +24,18 @@ import javax.ws.rs.core.Response;
 
 public interface WorkflowApi
 {
-    WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, String patchReleaseVersion);
+    WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId);
 
     default WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
     {
         return this.getProjectWorkflowAccessContext(projectId, null);
     }
 
-    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, WorkspaceSpecification workspaceSpecification);
 
     default WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return this.getWorkspaceWorkflowAccessContext(projectId, null, workspaceId, workspaceType, workspaceAccessType);
+        return this.getWorkspaceWorkflowAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType));
     }
 
     default WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, String versionIdString)
@@ -53,7 +54,7 @@ public interface WorkflowApi
 
     WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, VersionId versionId);
 
-    WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String patchReleaseVersion, String reviewId);
+    WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId);
 
     default WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
     {

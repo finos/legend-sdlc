@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -52,7 +53,7 @@ public class GitLabPatchApiTestResource
         String artifactId = "testpatchprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -62,11 +63,11 @@ public class GitLabPatchApiTestResource
 
         String projectId = createdProject.getProjectId();
         Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patch = gitLabPatchApi.newPatch(projectId, version);
+        Patch patch = gitLabPatchApi.newPatch(projectId, version.getId());
 
         Assert.assertNotNull(patch);
         Assert.assertEquals(projectId, patch.getProjectId());
-        Assert.assertEquals("0.0.2", patch.getPatchReleaseVersion());
+        Assert.assertEquals("0.0.2", patch.getPatchReleaseVersionId().toVersionIdString());
     }
 
     public void runGetPatchesTest() throws LegendSDLCServerException
@@ -77,7 +78,7 @@ public class GitLabPatchApiTestResource
         String artifactId = "testpatchprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -87,20 +88,20 @@ public class GitLabPatchApiTestResource
 
         String projectId = createdProject.getProjectId();
         Version versionOne = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patchOne = gitLabPatchApi.newPatch(projectId, versionOne);
+        Patch patchOne = gitLabPatchApi.newPatch(projectId, versionOne.getId());
 
         Assert.assertNotNull(patchOne);
         Assert.assertEquals(projectId, patchOne.getProjectId());
-        Assert.assertEquals("0.0.2", patchOne.getPatchReleaseVersion());
+        Assert.assertEquals("0.0.2", patchOne.getPatchReleaseVersionId().toVersionIdString());
 
         Version versionTwo = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
-        Patch patchTwo = gitLabPatchApi.newPatch(projectId, versionTwo);
+        Patch patchTwo = gitLabPatchApi.newPatch(projectId, versionTwo.getId());
 
         Assert.assertNotNull(patchTwo);
         Assert.assertEquals(projectId, patchTwo.getProjectId());
-        Assert.assertEquals("0.0.3", patchTwo.getPatchReleaseVersion());
+        Assert.assertEquals("0.0.3", patchTwo.getPatchReleaseVersionId().toVersionIdString());
 
-        List<Patch> patches = gitLabPatchApi.getAllPatches(projectId);
+        List<Patch> patches = gitLabPatchApi.getPatches(projectId, null, null, null, null, null, null);
 
         Assert.assertEquals(2, patches.size());
     }
