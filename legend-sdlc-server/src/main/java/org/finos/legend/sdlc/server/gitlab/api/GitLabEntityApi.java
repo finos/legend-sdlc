@@ -75,7 +75,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             @Override
             protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
             {
-                return projectFileAccessProvider.getFileAccessContext(projectId, null, null, null, null, patchReleaseVersion);
+                return projectFileAccessProvider.getFileAccessContext(projectId, patchReleaseVersion, null, null, null, null);
             }
 
             @Override

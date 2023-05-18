@@ -316,7 +316,7 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
     }
 
-    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String patchReleaseVersion, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    public static ProjectStructure getProjectStructure(String projectId, String patchReleaseVersion, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
         return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, revisionId));
     }

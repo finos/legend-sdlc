@@ -202,10 +202,10 @@ public class GitLabComparisonApiTestResource
 
     public void runUserWorkspaceComparisonTestForPatchReleaseVersion()
     {
-        String projectName = "ComparisonTestProjectOne";
+        String projectName = "ComparisonTestProjectThree";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "comptestprojone";
+        String artifactId = "comptestprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
@@ -275,10 +275,10 @@ public class GitLabComparisonApiTestResource
 
     public void runGroupWorkspaceComparisonTestForPatchReleaseVersion()
     {
-        String projectName = "ComparisonTestProjectOne";
+        String projectName = "ComparisonTestProjectFour";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "comptestprojone";
+        String artifactId = "comptestprojfour";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
@@ -300,7 +300,7 @@ public class GitLabComparisonApiTestResource
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
-        Assert.assertNotNull(createdWorkspaceOne.getUserId());
+        Assert.assertNull(createdWorkspaceOne.getUserId());
 
         String entityPath = "test::entity";
         String classifierPath = "meta::test::mathematicsDepartment";

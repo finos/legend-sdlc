@@ -242,10 +242,10 @@ public class GitLabRevisionApiTestResource
 
     public void runUserWorkspaceRevisionTestForPatchReleaseVersion()
     {
-        String projectName = "RevisionTestProjectOne";
+        String projectName = "RevisionTestProjectThree";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "revisiontestprojone";
+        String artifactId = "revisiontestprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
@@ -337,10 +337,10 @@ public class GitLabRevisionApiTestResource
 
     public void runGroupWorkspaceRevisionTestForPatchReleaseVersion()
     {
-        String projectName = "RevisionTestProjectOne";
+        String projectName = "RevisionTestProjectFour";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "revisiontestprojone";
+        String artifactId = "revisiontestprojfour";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
@@ -361,7 +361,7 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
-        Assert.assertNotNull(createdWorkspaceOne.getUserId());
+        Assert.assertNull(createdWorkspaceOne.getUserId());
 
         List<Revision> workspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.GROUP).getRevisions();
 
@@ -405,8 +405,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentRevision.getAuthoredTimestamp());
         Assert.assertNotNull(currentRevision.getCommittedTimestamp());
 
-        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER, entityPath).getRevisions();
-        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.USER, entityPath).getCurrentRevision();
+        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.GROUP, entityPath).getRevisions();
+        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, patchReleaseVersion, workspaceOneId, WorkspaceType.GROUP, entityPath).getCurrentRevision();
 
         Assert.assertNotNull(entityRevisions);
         Assert.assertEquals(1, entityRevisions.size());

@@ -432,10 +432,10 @@ public class GitLabWorkspaceApiTestResource
 
     public void runUserAndGroupWorkspaceNormalWorkflowTestForPatchReleaseVersion()
     {
-        String projectName = "WorkspaceTestProjectOne";
+        String projectName = "WorkspaceTestProjectFour";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "worktestprojone";
+        String artifactId = "worktestprojfour";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
         String workspaceTwoId = "testworkspacetwo";
@@ -516,10 +516,10 @@ public class GitLabWorkspaceApiTestResource
     public void runUpdateUserWorkspaceWithRebaseNoConflictTestForPatchReleaseVersion() throws GitLabApiException
     {
         // Create new workspace from previous HEAD
-        String projectName = "WorkspaceTestProjectThree";
+        String projectName = "WorkspaceTestProjectFive";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "testworkprojthree";
+        String artifactId = "testworkprojfive";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
@@ -643,7 +643,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateGroupWorkspace(projectId, workspaceId);
+        gitLabWorkspaceApi.updateWorkspace(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER);
         List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.USER).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
@@ -657,10 +657,10 @@ public class GitLabWorkspaceApiTestResource
     public void runUpdateGroupWorkspaceWithRebaseNoConflictTestForPatchReleaseVersion() throws GitLabApiException
     {
         // Create new workspace from previous HEAD
-        String projectName = "WorkspaceTestProjectThree";
+        String projectName = "WorkspaceTestProjectSix";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "testworkprojthree";
+        String artifactId = "testworkprojsix";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "workspaceone";
 
@@ -784,7 +784,7 @@ public class GitLabWorkspaceApiTestResource
         Assert.assertEquals(initalEntityNew.getContent(), currentEntityContentMap);
 
         // Update workspace branch and trigger rebase
-        gitLabWorkspaceApi.updateGroupWorkspace(projectId, workspaceId);
+        gitLabWorkspaceApi.updateWorkspace(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP);
         List<Entity> updatedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, patchReleaseVersion, workspaceId, WorkspaceType.GROUP).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);

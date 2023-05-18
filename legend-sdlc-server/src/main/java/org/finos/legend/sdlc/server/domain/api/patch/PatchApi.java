@@ -43,7 +43,6 @@ public interface PatchApi
      *
      * @param projectId project id
      * @param patchReleaseVersion patch release branch you want to delete
-     * @return void
      */
     void deletePatch(String projectId, String patchReleaseVersion);
 

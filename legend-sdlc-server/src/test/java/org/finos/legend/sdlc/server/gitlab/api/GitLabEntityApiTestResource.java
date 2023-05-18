@@ -372,10 +372,10 @@ public class GitLabEntityApiTestResource
 
     public void runEntitiesInNormalUserWorkspaceWorkflowTestForPatchRelaseVersion() throws GitLabApiException
     {
-        String projectName = "CommitFlowTestProject";
+        String projectName = "CommitFlowTestProjectThree";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "entitytestproj";
+        String artifactId = "entitytestprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "entitytestworkspace";
 
@@ -524,10 +524,10 @@ public class GitLabEntityApiTestResource
 
     public void runEntitiesInNormalGroupWorkspaceWorkflowTestForPatchRelaseVersion() throws GitLabApiException
     {
-        String projectName = "CommitFlowTestProject";
+        String projectName = "CommitFlowTestProjectFour";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "entitytestproj";
+        String artifactId = "entitytestprojfour";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceName = "entitytestworkspace";
 

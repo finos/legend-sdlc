@@ -46,10 +46,10 @@ public class GitLabPatchApiTestResource
 
     public void runCreatePatchTest() throws LegendSDLCServerException
     {
-        String projectName = "TestProjectOne";
+        String projectName = "PatchTestProjectOne";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "testprojone";
+        String artifactId = "testpatchprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
@@ -71,10 +71,10 @@ public class GitLabPatchApiTestResource
 
     public void runGetPatchesTest() throws LegendSDLCServerException
     {
-        String projectName = "TestProjectTwo";
+        String projectName = "PatchTestProjectTwo";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "testprojtwo";
+        String artifactId = "testpatchprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
         Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);

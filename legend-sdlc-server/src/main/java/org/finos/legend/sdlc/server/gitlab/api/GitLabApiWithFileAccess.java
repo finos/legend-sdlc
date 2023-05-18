@@ -147,7 +147,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     private String getCurrentRevisionId(GitLabProjectId projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        Revision revision = new GitLabRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, null, patchReleaseVersion).getCurrentRevision();
+        Revision revision = new GitLabRevisionAccessContext(projectId, patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, null).getCurrentRevision();
         return (revision == null) ? null : revision.getId();
     }
 
@@ -178,7 +178,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         public RevisionAccessContext getRevisionAccessContext(String projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
         {
-            return new GitLabRevisionAccessContext(parseProjectId(projectId), workspaceId, workspaceType, workspaceAccessType, paths, patchReleaseVersion);
+            return new GitLabRevisionAccessContext(parseProjectId(projectId), patchReleaseVersion, workspaceId, workspaceType, workspaceAccessType, paths);
         }
 
         @Override
@@ -851,7 +851,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         private final WorkspaceType workspaceType;
         private final WorkspaceAccessType workspaceAccessType;
 
-        private GitLabRevisionAccessContext(GitLabProjectId projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths, String patchReleaseVersion)
+        private GitLabRevisionAccessContext(GitLabProjectId projectId, String patchReleaseVersion, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
         {
             super(projectId, paths);
             this.workspaceId = workspaceId;

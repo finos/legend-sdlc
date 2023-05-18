@@ -105,10 +105,10 @@ public class GitLabProjectConfigurationApiTestResource
 
     public void runUserAndGroupWorkspaceProjectConfigurationTestForPatchReleaseVersion()
     {
-        String projectName = "PCTestProjectOne";
+        String projectName = "PCTestProjectTwo";
         String description = "A test project.";
         String groupId = "org.finos.sdlc.test";
-        String artifactId = "pctestprojone";
+        String artifactId = "pctestprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
         String workspaceTwoId = "testworkspacetwo";
