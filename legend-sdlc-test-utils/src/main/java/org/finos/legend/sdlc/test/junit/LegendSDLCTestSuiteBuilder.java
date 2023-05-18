@@ -242,6 +242,13 @@ public class LegendSDLCTestSuiteBuilder
         return new LegendSDLCTestSuiteBuilder(name, null).buildSuiteFromDirectories(entitiesDirectories);
     }
 
+    @Deprecated
+    public static TestSuite buildTestSuite(String name, EntityLoader entityLoader)
+    {
+        MutableSet<String> entityPaths = entityLoader.getAllEntities().map(Entity::getPath).collect(Collectors.toCollection(Sets.mutable::empty));
+        return new LegendSDLCTestSuiteBuilder(name, null).buildSuiteFromEntityPaths(entityPaths);
+    }
+
     private static MutableList<Entity> getEntities(ClassLoader classLoader)
     {
         try (EntityLoader entityLoader = EntityLoader.newEntityLoader(classLoader))
