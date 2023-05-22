@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.server;
 
 import com.codahale.metrics.health.HealthCheck;
-import com.fasterxml.jackson.databind.SerializationFeature;
 import io.dropwizard.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
@@ -114,13 +113,15 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
 
         // Temporal configuration
         environment.jersey().getResourceConfig().register(new TemporalConverterProvider());
-        environment.getObjectMapper().configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
 
         // Error handling
         boolean includeStackTraces = Optional.ofNullable(configuration.getErrorHandlingConfiguration()).map(ErrorHandlingConfiguration::getIncludeStackTrace).orElse(false);
         environment.jersey().register(new JsonProcessingExceptionMapper(includeStackTraces));
         environment.jersey().register(new LegendSDLCServerExceptionMapper(includeStackTraces));
         environment.jersey().register(new CatchAllExceptionMapper(includeStackTraces));
+
+        // Serialization
+        environment.jersey().register(BaseServerJacksonJsonProvider.class);
     }
 
     public ServerInfo getServerInfo()

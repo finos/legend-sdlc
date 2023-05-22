@@ -524,26 +524,26 @@ abstract class BaseGitLabApi
         return (instant == null) ? null : Date.from(instant);
     }
 
-    protected static Integer parseIntegerIdIfNotNull(String id)
+    protected static Long parseNumericIdIfNotNull(String id)
     {
-        return parseIntegerIdIfNotNull(id, null);
+        return parseNumericIdIfNotNull(id, null);
     }
 
-    protected static Integer parseIntegerIdIfNotNull(String id, Status errorStatus)
+    protected static Long parseNumericIdIfNotNull(String id, Status errorStatus)
     {
-        return (id == null) ? null : parseIntegerId(id, errorStatus);
+        return (id == null) ? null : parseNumericId(id, errorStatus);
     }
 
-    protected static int parseIntegerId(String id)
+    protected static long parseNumericId(String id)
     {
-        return parseIntegerId(id, null);
+        return parseNumericId(id, null);
     }
 
-    protected static int parseIntegerId(String id, Status errorStatus)
+    protected static long parseNumericId(String id, Status errorStatus)
     {
         try
         {
-            return Integer.parseInt(id);
+            return Long.parseLong(id);
         }
         catch (NumberFormatException e)
         {
@@ -796,7 +796,7 @@ abstract class BaseGitLabApi
 
     protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId, boolean includeRebaseInProgress)
     {
-        int mergeRequestId = parseIntegerId(reviewId);
+        long mergeRequestId = parseNumericId(reviewId);
         MergeRequest mergeRequest;
         try
         {
@@ -830,7 +830,7 @@ abstract class BaseGitLabApi
 
     protected MergeRequest getReviewMergeRequestApprovals(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId)
     {
-        int mergeRequestId = parseIntegerId(reviewId);
+        long mergeRequestId = parseNumericId(reviewId);
         MergeRequest mergeRequest;
         try
         {

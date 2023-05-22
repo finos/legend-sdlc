@@ -16,19 +16,10 @@ package org.finos.legend.sdlc.server;
 
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.setup.Bootstrap;
-import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.InMemoryModule;
-import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
-import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
-import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
-import org.finos.legend.sdlc.domain.model.review.Review;
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
@@ -43,14 +34,6 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         super.configureApis(bootstrap);
-
-        bootstrap.getObjectMapper().addMixIn(Project.class, InMemoryMixins.Project.class);
-        bootstrap.getObjectMapper().addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-        bootstrap.getObjectMapper().addMixIn(Entity.class, InMemoryMixins.Entity.class);
-        bootstrap.getObjectMapper().addMixIn(Revision.class, InMemoryMixins.Revision.class);
-        bootstrap.getObjectMapper().addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-        bootstrap.getObjectMapper().addMixIn(VersionId.class, VersionIdMixin.class);
-        bootstrap.getObjectMapper().addMixIn(Review.class, InMemoryMixins.Review.class);
     }
 
     @Override
@@ -58,6 +41,13 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     {
         this.guiceBundle = super.buildGuiceBundle();
         return this.guiceBundle;
+    }
+
+    @Override
+    public void run(LegendSDLCServerConfiguration configuration, Environment environment)
+    {
+        super.run(configuration, environment);
+        environment.jersey().register(LegendSDLCServerForTestJacksonJsonProvider.class);
     }
 
     @Override
