@@ -58,8 +58,6 @@ import org.gitlab4j.api.models.MergeRequestParams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Collections;
@@ -71,6 +69,8 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response.Status;
 
 public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewApi
 {
@@ -436,6 +436,13 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 case 401:
                 case 403:
                 {
+                    StringBuilder builder = new StringBuilder().append("User ").append(getCurrentUser()).append(" is not allowed to approve review ").append(reviewId).append(" in project ").append(projectId);
+                    String url = mergeRequest.getWebUrl();
+                    if (url != null)
+                    {
+                        builder.append(" (see ").append(url).append(" for more details)");
+                    }
+                    StringTools.appendThrowableMessageIfPresent(builder, e);
                     throw new LegendSDLCServerException("User " + getCurrentUser() + " is not allowed to approve review " + reviewId + " in project " + projectId, Status.FORBIDDEN, e);
                 }
                 case 404:
@@ -445,11 +452,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 default:
                 {
                     StringBuilder builder = new StringBuilder("Error approving review ").append(reviewId).append(" in project ").append(projectId);
-                    String eMessage = e.getMessage();
-                    if (eMessage != null)
-                    {
-                        builder.append(": ").append(eMessage);
-                    }
+                    StringTools.appendThrowableMessageIfPresent(builder, e);
                     throw new LegendSDLCServerException(builder.toString(), e);
                 }
             }
@@ -461,11 +464,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         catch (Exception e)
         {
             StringBuilder builder = new StringBuilder("Error approving review ").append(reviewId).append(" in project ").append(projectId);
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append(": ").append(eMessage);
-            }
+            StringTools.appendThrowableMessageIfPresent(builder, e);
             throw new LegendSDLCServerException(builder.toString(), e);
         }
     }
@@ -614,6 +613,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                     {
                         builder.append(" (see ").append(url).append(" for more details)");
                     }
+                    StringTools.appendThrowableMessageIfPresent(builder, e);
                     throw new LegendSDLCServerException(builder.toString(), Status.CONFLICT, e);
                 }
                 case 406:
@@ -625,6 +625,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                     {
                         builder.append(" (see ").append(url).append(" for more details)");
                     }
+                    StringTools.appendThrowableMessageIfPresent(builder, e);
                     throw new LegendSDLCServerException(builder.toString(), Status.CONFLICT, e);
                 }
                 default:
