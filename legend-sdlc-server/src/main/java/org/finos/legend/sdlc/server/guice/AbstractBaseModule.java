@@ -224,6 +224,7 @@ import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWor
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.server.tools.SessionProvider;
 
 import java.util.Collections;
 import java.util.List;
@@ -257,6 +258,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
+        binder.bind(SessionProvider.class).toProvider(this::getSessionProvider);
 
         bindResources(binder);
     }
@@ -537,6 +539,12 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         return builder -> builder;
+    }
+
+    //scope is set to protected - so it can be overwritten in inheriting module
+    protected SessionProvider getSessionProvider()
+    {
+        return new SessionProvider();
     }
 
     @Provides

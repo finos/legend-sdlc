@@ -17,12 +17,11 @@ package org.finos.legend.sdlc.server.guice;
 import com.google.inject.servlet.RequestScoped;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.tools.SessionUtil;
+import org.finos.legend.sdlc.server.tools.SessionProvider;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 
 @RequestScoped
 public class UserContext
@@ -37,7 +36,7 @@ public class UserContext
     {
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
-        this.session = LegendSDLCServerException.validateNonNull(SessionUtil.findSession(httpRequest), "Invalid request");
+        this.session = LegendSDLCServerException.validateNonNull(SessionProvider.findSession(httpRequest), "Invalid request");
     }
 
     public String getCurrentUser()

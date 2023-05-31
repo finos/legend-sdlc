@@ -21,33 +21,46 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabSession;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
-import org.finos.legend.sdlc.server.tools.SessionUtil;
+import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.WebContext;
 
 import javax.inject.Inject;
+import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+import java.util.Arrays;
+import java.util.Optional;
 
 @Path("/auth")
 public class GitLabAuthCheckResource extends BaseResource
 {
 
+    private static final String SESSION_COOKIE_NAME = "LegendSSO";
+
     private final HttpServletRequest httpRequest;
     private final HttpServletResponse httpResponse;
     private final GitLabAuthorizerManager authorizerManager;
     private final GitLabAppInfo appInfo;
+    private final SessionProvider sessionProvider;
 
     @Inject
-    public GitLabAuthCheckResource(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAuthorizerManager authorizerManager, GitLabAppInfo appInfo)
+    public GitLabAuthCheckResource(HttpServletRequest httpRequest,
+                                   HttpServletResponse httpResponse,
+                                   GitLabAuthorizerManager authorizerManager,
+                                   GitLabAppInfo appInfo,
+                                   SessionProvider sessionProvider)
     {
         super();
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
         this.authorizerManager = authorizerManager;
         this.appInfo = appInfo;
+        this.sessionProvider = sessionProvider;
     }
 
     @GET
@@ -57,7 +70,30 @@ public class GitLabAuthCheckResource extends BaseResource
     {
         return executeWithLogging("checking authorization", () ->
         {
-            Session session = SessionUtil.findSession(httpRequest);
+
+            if (sessionProvider.getSessionStore() != null)
+            {
+                System.out.println("Sessions storeeeeeeeee");
+            }
+
+
+            Session session = SessionProvider.findSession(httpRequest);
+
+
+            if (session == null && httpRequest.getCookies() != null)
+            {
+                Optional<Cookie> optional =
+                        Arrays.stream(httpRequest.getCookies())
+                        .filter(c -> c.getName().equals(SESSION_COOKIE_NAME))
+                        .findFirst();
+
+                if (optional.isPresent())
+                {
+                    WebContext context = new J2EContext(httpRequest, httpResponse);
+                    session = sessionProvider.getSession(context, optional.get().getValue());
+                }
+            }
+
 
             if (session instanceof GitLabSession)
             {

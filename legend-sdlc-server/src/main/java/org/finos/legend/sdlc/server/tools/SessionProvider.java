@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.tools;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,10 +26,32 @@ import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-public class SessionUtil
+public class SessionProvider
 {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionProvider.class);
+
+    private SessionStore sessionStore;
+
+    public Session getSession(WebContext context, String key)
+    {
+        if (sessionStore == null)
+        {
+            return null;
+        }
+
+        return (Session) sessionStore.get(context, key);
+    }
+
+    public SessionStore getSessionStore()
+    {
+        return sessionStore;
+    }
+
+    public void setSessionStore(SessionStore sessionStore)
+    {
+        this.sessionStore = sessionStore;
+    }
 
     public static Session findSession(ServletRequest request)
     {
