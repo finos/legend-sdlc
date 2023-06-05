@@ -96,7 +96,7 @@ jobs:
           engineVersion="${{ github.event.client_payload.legendEngineVersion }}"
           
           if [ -n "$sharedVersion" ] || [ -n "$engineVersion" ] || [ -n "$pureVersion" ]; then
-            git add .
+            git add pom.xml
             git commit -m "Legend Stack Versions upgrade"
             git push origin master
           fi    
