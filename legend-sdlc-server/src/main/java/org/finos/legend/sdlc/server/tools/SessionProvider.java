@@ -16,15 +16,21 @@ package org.finos.legend.sdlc.server.tools;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
+import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.LinkedHashMap;
 
 public class SessionProvider
 {
@@ -33,14 +39,19 @@ public class SessionProvider
 
     private SessionStore sessionStore;
 
-    public Session getSession(WebContext context, String key)
+    public Session getSession(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo, String key)
     {
         if (sessionStore == null)
         {
             return null;
         }
 
-        return (Session) sessionStore.get(context, key);
+        WebContext context = new J2EContext(httpRequest, httpResponse);
+
+        LinkedHashMap<String, OidcProfile> map = (LinkedHashMap) sessionStore.get(context, key);
+
+        GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
+        return builder.withProfile(map.get("gitlab")).build();
     }
 
     public SessionStore getSessionStore()

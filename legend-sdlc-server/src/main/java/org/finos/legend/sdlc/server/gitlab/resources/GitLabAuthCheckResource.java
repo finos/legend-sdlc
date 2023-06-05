@@ -22,8 +22,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabSession;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
-import org.pac4j.core.context.J2EContext;
-import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.servlet.http.Cookie;
@@ -35,6 +34,8 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.Arrays;
 import java.util.Optional;
+
+import static org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter.SESSION_ATTRIBUTE;
 
 @Path("/auth")
 public class GitLabAuthCheckResource extends BaseResource
@@ -70,13 +71,6 @@ public class GitLabAuthCheckResource extends BaseResource
     {
         return executeWithLogging("checking authorization", () ->
         {
-
-            if (sessionProvider.getSessionStore() != null)
-            {
-                System.out.println("Sessions storeeeeeeeee");
-            }
-
-
             Session session = SessionProvider.findSession(httpRequest);
 
 
@@ -89,8 +83,8 @@ public class GitLabAuthCheckResource extends BaseResource
 
                 if (optional.isPresent())
                 {
-                    WebContext context = new J2EContext(httpRequest, httpResponse);
-                    session = sessionProvider.getSession(context, optional.get().getValue());
+                    session = sessionProvider.getSession(httpRequest, httpResponse, appInfo, Pac4jConstants.USER_PROFILES);
+                    httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
                 }
             }
 
