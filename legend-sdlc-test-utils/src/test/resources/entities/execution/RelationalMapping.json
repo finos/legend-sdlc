@@ -334,7 +334,7 @@
     },
     "testSuites": [
       {
-        "_type": "mappingTestSuite",
+        "_type": "mappingTestDataSuite",
         "id": "testSuite1",
         "sourceInformation": {
           "endColumn": 7,
@@ -343,7 +343,7 @@
           "startColumn": 7,
           "startLine": 79
         },
-        "mappingStoreTestDatas": [
+        "storeTestData": [
           {
             "data": {
               "_type": "reference",
@@ -361,7 +361,7 @@
         ],
         "tests": [
           {
-            "_type": "mappingTest",
+            "_type": "mappingQueryTest",
             "assertions": [
               {
                 "_type": "equalToJson",
@@ -388,7 +388,7 @@
               }
             ],
             "id": "test1",
-            "query": {
+            "func": {
               "_type": "lambda",
               "body": [
                 {
