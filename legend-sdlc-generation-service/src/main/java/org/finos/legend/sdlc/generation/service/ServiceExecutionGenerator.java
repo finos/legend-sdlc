@@ -66,7 +66,7 @@ public class ServiceExecutionGenerator
     private final RichIterable<? extends Root_meta_pure_extension_Extension> extensions;
     private final MutableList<PlanTransformer> transformers;
 
-    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    private ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, String clientVersion)
     {
         this.service = service;
         this.pureModel = pureModel;
@@ -75,13 +75,13 @@ public class ServiceExecutionGenerator
         this.resourceOutputDirectory = resourceOutputDirectory;
         this.objectMapper = (jsonMapper == null) ? getDefaultJsonMapper() : jsonMapper;
         this.clientVersion = clientVersion;
-        this.extensions = extensions;
-        this.transformers = transformers;
+        this.extensions = (extensions == null) ? Lists.fixedSize.empty() : extensions;
+        this.transformers = (transformers == null) ? Lists.fixedSize.empty() : Lists.mutable.withAll(transformers);
     }
 
     public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper)
     {
-        this(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, Lists.mutable.empty(), Lists.mutable.empty(), null);
+        this(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, Lists.fixedSize.empty(), Lists.fixedSize.empty(), null);
     }
 
     public void generate() throws IOException
@@ -196,10 +196,10 @@ public class ServiceExecutionGenerator
     
     public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory)
     {
-        return newGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, null, Lists.mutable.empty(), Lists.mutable.empty(), null);
+        return newGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, null, Lists.fixedSize.empty(), Lists.fixedSize.empty(), null);
     }
 
-    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, MutableList<PlanTransformer> transformers, String clientVersion)
+    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, String clientVersion)
     {
         return new ServiceExecutionGenerator(service, pureModel, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, extensions, transformers, clientVersion);
     }
