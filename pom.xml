@@ -89,8 +89,7 @@
         <freemarker.version>2.3.30</freemarker.version>
         <gitlab4j.version>4.16.0</gitlab4j.version>
         <guava.version>31.1-jre</guava.version>
-        <guice.version>6.0.0</guice.version>
-        <h2.version>1.4.200</h2.version>
+        <guice.version>6.0.0</guice.version>        
         <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
         <hk2.version>2.5.0-b32</hk2.version>
         <jackson.version>2.10.5</jackson.version>
@@ -910,12 +909,6 @@
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
             </dependency>
 
             <dependency>
