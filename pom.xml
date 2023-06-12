@@ -69,9 +69,9 @@
         <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.15.6</legend.engine.version>
-        <legend.pure.version>4.5.6</legend.pure.version>
-        <legend.shared.version>0.23.6</legend.shared.version>
+        <legend.engine.version>4.15.7</legend.engine.version>
+        <legend.pure.version>4.5.7</legend.pure.version>
+        <legend.shared.version>0.23.7</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
