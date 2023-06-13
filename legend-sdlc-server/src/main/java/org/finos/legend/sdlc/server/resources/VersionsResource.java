@@ -17,9 +17,11 @@ package org.finos.legend.sdlc.server.resources;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
@@ -42,12 +44,14 @@ import java.util.List;
 public class VersionsResource extends BaseResource
 {
     private final VersionApi versionApi;
+    private final ProjectConfigurationApi projectConfigurationApi;
     private final LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
     @Inject
-    public VersionsResource(LegendSDLCServerFeaturesConfiguration featuresConfiguration, VersionApi versionApi)
+    public VersionsResource(LegendSDLCServerFeaturesConfiguration featuresConfiguration, ProjectConfigurationApi projectConfigurationApi, VersionApi versionApi)
     {
         this.featuresConfiguration = featuresConfiguration;
+        this.projectConfigurationApi = projectConfigurationApi;
         this.versionApi = versionApi;
     }
 
@@ -139,6 +143,11 @@ public class VersionsResource extends BaseResource
         if (!featuresConfiguration.canCreateVersion)
         {
             throw new LegendSDLCServerException("Server does not support creating project version(s)", Response.Status.METHOD_NOT_ALLOWED);
+        }
+        ProjectType type = projectConfigurationApi.getProjectProjectConfiguration(projectId).getProjectType();
+        if (type == ProjectType.EMBEDDED)
+        {
+            throw new LegendSDLCServerException("Creating a version of a project of type " + type + " is not allowed", Response.Status.CONFLICT);
         }
         return executeWithLogging(
                 "creating new " + command.getVersionType().name().toLowerCase() + " version",

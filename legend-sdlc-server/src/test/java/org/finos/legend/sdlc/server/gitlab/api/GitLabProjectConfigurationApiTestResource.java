@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
@@ -55,7 +56,7 @@ public class GitLabProjectConfigurationApiTestResource
         String workspaceOneId = "testworkspaceone";
         String workspaceTwoId = "testworkspacetwo";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -74,7 +75,7 @@ public class GitLabProjectConfigurationApiTestResource
         ProjectConfiguration projectConfiguration = gitLabProjectConfigurationApi.getUserWorkspaceProjectConfiguration(projectId, workspaceOneId);
 
         Assert.assertNotNull(projectConfiguration);
-        Assert.assertNull(projectConfiguration.getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, projectConfiguration.getProjectType());
         Assert.assertEquals(projectConfiguration.getArtifactId(), artifactId);
         Assert.assertEquals(projectConfiguration.getGroupId(), groupId);
 

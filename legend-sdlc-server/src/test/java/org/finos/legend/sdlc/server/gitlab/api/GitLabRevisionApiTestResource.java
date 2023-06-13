@@ -19,6 +19,7 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.Project;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
@@ -58,7 +59,7 @@ public class GitLabRevisionApiTestResource
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -149,7 +150,7 @@ public class GitLabRevisionApiTestResource
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
         String workspaceOneId = "testworkspaceone";
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, groupId, artifactId, tags);
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());

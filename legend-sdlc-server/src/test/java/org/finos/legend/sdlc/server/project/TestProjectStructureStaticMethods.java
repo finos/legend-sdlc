@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.project;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
@@ -160,6 +161,6 @@ public class TestProjectStructureStaticMethods
         Assert.assertEquals(0, config.getProjectStructureVersion().getVersion());
         Assert.assertNull(config.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(projectId, config.getProjectId());
-        Assert.assertNull(config.getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, config.getProjectType());
     }
 }
