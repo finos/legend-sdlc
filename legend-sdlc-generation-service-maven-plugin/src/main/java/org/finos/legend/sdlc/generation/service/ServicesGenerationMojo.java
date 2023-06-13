@@ -28,16 +28,14 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
-import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
@@ -47,13 +45,16 @@ import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.lang.model.SourceVersion;
 
-@Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = true)
+@Mojo(name = "generate-service-executions", defaultPhase = LifecyclePhase.GENERATE_SOURCES, threadSafe = false)
 public class ServicesGenerationMojo extends AbstractMojo
 {
     @Parameter
@@ -76,6 +77,9 @@ public class ServicesGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
+
+    @Parameter(defaultValue = "${org.finos.legend.sdlc.generation.service.parallel}")
+    private String parallel;
 
     @Override
     public void execute() throws MojoExecutionException
@@ -100,6 +104,9 @@ public class ServicesGenerationMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Invalid package prefix: " + this.packagePrefix);
         }
+
+        int parallelism = getParallelism();
+        getLog().info("parallelism: " + parallelism);
 
         getLog().info("Loading model");
         long modelStart = System.nanoTime();
@@ -137,46 +144,24 @@ public class ServicesGenerationMojo extends AbstractMojo
         long modelEnd = System.nanoTime();
         getLog().info(String.format("Finished loading model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
 
-        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
-                .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
-                .serializationInclusion(JsonInclude.Include.NON_NULL)
-                .build());
-
         long start = System.nanoTime();
-        Map<String, Service> servicesByPath = pureModelContextData.getElementsOfType(Service.class).stream().collect(Collectors.toMap(PackageableElement::getPath, el -> el));
+        MutableMap<String, Service> servicesByPath = Maps.mutable.empty();
+        pureModelContextData.getElements().forEach(e ->
+        {
+            if (e instanceof Service)
+            {
+                String path = e.getPath();
+                Service old = servicesByPath.put(path, (Service) e);
+                if (old != null)
+                {
+                    throw new RuntimeException("Multiple services for path '" + path + "'");
+                }
+            }
+        });
         filterServicesByIncludes(servicesByPath);
         filterServicesByExcludes(servicesByPath);
-        if (servicesByPath.isEmpty())
-        {
-            getLog().info("Found 0 services for generation");
-        }
-        else if (getLog().isInfoEnabled())
-        {
-            getLog().info(servicesByPath.keySet().stream().sorted().collect(Collectors.joining(", ", "Found " + servicesByPath.size() + " services for generation: ", "")));
-        }
 
-        for (Service service : servicesByPath.values())
-        {
-            getLog().info("Generating execution artifacts for " + service.getPath());
-            long serviceStart = System.nanoTime();
-            try
-            {
-                MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class));
-                RichIterable<? extends Root_meta_pure_extension_Extension> routerExtensions = extensions.flatCollect(e -> e.getExtraExtensions(pureModel));
-                MutableList<PlanTransformer> planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
-                ServiceExecutionGenerator.newGenerator(service, pureModel, this.packagePrefix, this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath(), jsonMapper, routerExtensions, planTransformers, null).generate();
-            }
-            catch (Exception e)
-            {
-                throw new MojoExecutionException("Error generating execution artifacts for " + service.getPath(), e);
-            }
-            long serviceEnd = System.nanoTime();
-            getLog().info(String.format("Finished generating execution artifacts for %s (%.9fs)", service.getPath(), (serviceEnd - serviceStart) / 1_000_000_000.0));
-        }
+        generateServices(servicesByPath, pureModel, parallelism);
 
         if (this.addJavaSourceOutputDirectoryAsSource)
         {
@@ -189,9 +174,9 @@ public class ServicesGenerationMojo extends AbstractMojo
         getLog().info(String.format("Finished generating execution artifacts for %d services (%.9fs)", servicesByPath.size(), (end - start) / 1_000_000_000.0));
     }
 
-    private void filterServicesByIncludes(Map<String, Service> servicesByPath) throws MojoExecutionException
+    private void filterServicesByIncludes(MutableMap<String, Service> servicesByPath) throws MojoExecutionException
     {
-        if (this.inclusions != null)
+        if ((this.inclusions != null) && servicesByPath.notEmpty())
         {
             ResolvedServicesSpecification resolvedIncluded;
             try
@@ -202,17 +187,17 @@ public class ServicesGenerationMojo extends AbstractMojo
             {
                 throw new MojoExecutionException("Error resolving included services", e);
             }
-            servicesByPath.keySet().removeIf(resolvedIncluded::notMatches);
-            if ((resolvedIncluded.servicePaths != null) && resolvedIncluded.servicePaths.stream().anyMatch(p -> !servicesByPath.containsKey(p)))
+            servicesByPath.removeIf((path, service) -> resolvedIncluded.notMatches(path));
+            if ((resolvedIncluded.servicePaths != null) && Iterate.anySatisfy(resolvedIncluded.servicePaths, p -> !servicesByPath.containsKey(p)))
             {
-                throw new MojoExecutionException(resolvedIncluded.servicePaths.stream().filter(p -> !servicesByPath.containsKey(p)).sorted().collect(Collectors.joining(", ", "Could not find included services: ", "")));
+                throw new MojoExecutionException(Iterate.reject(resolvedIncluded.servicePaths, servicesByPath::containsKey, Lists.mutable.empty()).sortThis().makeString(", ", "Could not find included services: ", ""));
             }
         }
     }
 
-    private void filterServicesByExcludes(Map<String, Service> servicesByPath) throws MojoExecutionException
+    private void filterServicesByExcludes(MutableMap<String, Service> servicesByPath) throws MojoExecutionException
     {
-        if ((this.exclusions != null) && !servicesByPath.isEmpty())
+        if ((this.exclusions != null) && servicesByPath.notEmpty())
         {
             ResolvedServicesSpecification resolvedExcluded;
             try
@@ -223,8 +208,87 @@ public class ServicesGenerationMojo extends AbstractMojo
             {
                 throw new MojoExecutionException("Error resolving excluded services", e);
             }
-            servicesByPath.keySet().removeIf(resolvedExcluded::matches);
+            servicesByPath.removeIf((path, service) -> resolvedExcluded.matches(path));
         }
+    }
+
+    private void generateServices(MutableMap<String, Service> servicesByPath, PureModel pureModel, int parallelism)
+    {
+        if (servicesByPath.isEmpty())
+        {
+            getLog().info("Found 0 services for generation");
+            return;
+        }
+
+        if (getLog().isInfoEnabled())
+        {
+            getLog().info(Lists.mutable.withAll(servicesByPath.keySet()).toSortedList().makeString("Found " + servicesByPath.size() + " services for generation: ", ", ", ""));
+        }
+
+        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+                .enable(SerializationFeature.INDENT_OUTPUT)
+                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
+                .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
+                .serializationInclusion(JsonInclude.Include.NON_NULL)
+                .build());
+
+        int effectiveParallelism = Math.min(parallelism, servicesByPath.size());
+        ForkJoinPool pool;
+        if (effectiveParallelism > 1)
+        {
+            getLog().info("Generating services in parallel with parallelism level " + effectiveParallelism);
+            pool = createForkJoinPool(effectiveParallelism);
+        }
+        else
+        {
+            pool = null;
+        }
+        try
+        {
+            ServiceExecutionGenerator.newBuilder()
+                    .withServices(servicesByPath.values())
+                    .withPureModel(pureModel)
+                    .withPackagePrefix(this.packagePrefix)
+                    .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
+                    .withJsonMapper(jsonMapper)
+                    .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                    .withExecutorService(pool)
+                    .build()
+                    .generate();
+        }
+        finally
+        {
+            if (pool != null)
+            {
+                pool.shutdown();
+            }
+        }
+    }
+
+    private int getParallelism()
+    {
+        int parallelism = parseParallel(this.parallel);
+        if (parallelism < 1)
+        {
+            getLog().warn("Specified parallelism is less than 1 (" + parallelism + "), effective parallelism will be 1");
+            return 1;
+        }
+        return parallelism;
+    }
+
+    private ForkJoinPool createForkJoinPool(int parallelism)
+    {
+        // We have to create a custom fork join thread worker factory to ensure the worker threads use this thread's
+        // context class loader. This is why we cannot use the common pool.
+        return new ForkJoinPool(
+                parallelism,
+                pool -> new ForkJoinWorkerThread(pool)
+                {
+                },
+                null,
+                false);
     }
 
     private static ResolvedServicesSpecification resolveServicesSpecification(ServicesSpecification servicesSpec) throws Exception
@@ -271,7 +335,7 @@ public class ServicesGenerationMojo extends AbstractMojo
         private ResolvedServicesSpecification(Set<String> servicePaths, Set<String> packages)
         {
             this.servicePaths = servicePaths;
-            this.packages = (packages == null) ? null : Iterate.collect(packages, p -> p + EntityPaths.PACKAGE_SEPARATOR, Lists.mutable.ofInitialCapacity(packages.size()))
+            this.packages = (packages == null) ? null : Iterate.collect(packages, p -> p.endsWith(EntityPaths.PACKAGE_SEPARATOR) ? p : (p + EntityPaths.PACKAGE_SEPARATOR), Lists.mutable.ofInitialCapacity(packages.size()))
                     .sortThis(Comparator.comparingInt(String::length).thenComparing(Comparator.naturalOrder()));
         }
 
@@ -292,12 +356,89 @@ public class ServicesGenerationMojo extends AbstractMojo
 
         private boolean inSomePackage(String servicePath)
         {
-            return this.packages.anySatisfy(servicePath::startsWith);
+            int lastSeparator = servicePath.lastIndexOf(EntityPaths.PACKAGE_SEPARATOR);
+            int pkgLen = (lastSeparator == -1) ? 0 : lastSeparator + EntityPaths.PACKAGE_SEPARATOR.length();
+            for (String pkg : this.packages)
+            {
+                if (servicePath.startsWith(pkg))
+                {
+                    return true;
+                }
+                if (pkg.length() > pkgLen)
+                {
+                    return false;
+                }
+            }
+            return false;
         }
 
         boolean notMatches(String servicePath)
         {
             return !matches(servicePath);
         }
+    }
+
+    // package private for testing
+    static int parseParallel(String parallel)
+    {
+        if ((parallel == null) || parallel.isEmpty())
+        {
+            return 1;
+        }
+
+        Pattern pattern = Pattern.compile("\\s*((?<true>true)|(?<false>false)|(?<integer>[+-]?\\d+)|(?<cpu>((?<cpux>\\d+(\\.\\d+)?)\\s*)?C(\\s*(?<cpupm>[+-])\\s*(?<cpua>\\d+))?))?\\s*", Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(parallel);
+        if (!matcher.matches())
+        {
+            throw new RuntimeException("Could not parse parallel value: \"" + parallel + "\"");
+        }
+        if (matcher.group("true") != null)
+        {
+            // by default, we use the number of available processors minus 1
+            return Math.max(Runtime.getRuntime().availableProcessors() - 1, 1);
+        }
+        if (matcher.group("false") != null)
+        {
+            return 1;
+        }
+        String integer = matcher.group("integer");
+        if (integer != null)
+        {
+            try
+            {
+                return Integer.parseInt(integer);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Could not parse parallel value: \"" + parallel + "\"", e);
+            }
+        }
+        if (matcher.group("cpu") != null)
+        {
+            int parallelism = Runtime.getRuntime().availableProcessors();
+            try
+            {
+                String multiplier = matcher.group("cpux");
+                if (multiplier != null)
+                {
+                    parallelism = Math.round(Float.parseFloat(multiplier) * parallelism);
+                }
+
+                String addendum = matcher.group("cpua");
+                if (addendum != null)
+                {
+                    int toAdd = Integer.parseInt(addendum);
+                    parallelism += "-".equals(matcher.group("cpupm")) ? -toAdd : toAdd;
+                }
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException("Could not parse parallel value: \"" + parallel + "\"", e);
+            }
+            return parallelism;
+        }
+
+        // only whitespace
+        return 1;
     }
 }
