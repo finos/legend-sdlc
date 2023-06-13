@@ -109,6 +109,7 @@ public class ProjectsResource extends BaseResource
             "creating new project \"" + command.getName() + "\"",
             () -> this.projectApi.createProject(command.getName(),
                 command.getDescription(),
+                command.getType(),
                 command.getGroupId(),
                 command.getArtifactId(),
                 command.getTags())

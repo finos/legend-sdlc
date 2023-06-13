@@ -174,12 +174,16 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public Project createProject(String name, String description, String groupId, String artifactId, Iterable<String> tags)
+    public Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags)
     {
         LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        if (type != null)
+        {
+            LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
+        }
 
         validateProjectCreation(groupId, artifactId);
 
@@ -247,10 +251,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             int projectStructureVersion = getDefaultProjectStructureVersion();
             ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
                     .withProjectId(project.getProjectId())
+                    .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId)
                     .withProjectStructureVersion(projectStructureVersion);
-            if (this.projectStructurePlatformExtensions != null)
+            if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
             {
                 configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
             }
@@ -332,11 +337,15 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public ImportReport importProject(String id, String groupId, String artifactId)
+    public ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
     {
         LegendSDLCServerException.validateNonNull(id, "id may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        if (type != null)
+        {
+            LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
+        }
 
         // Get project ID
         GitLabProjectId projectId = id.chars().allMatch(Character::isDigit) ?
@@ -389,6 +398,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), null, null, projectFileAccessProvider, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
             ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId);
             ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
@@ -400,7 +410,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             {
                 // No current project structure: build a new one
                 configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                if (this.projectStructureExtensionProvider != null)
+                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
                 {
                     configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
                 }
@@ -412,7 +422,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
                 {
                     configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                    if (this.projectStructureExtensionProvider != null)
+                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
                     {
                         configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
                     }

@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.application.project;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -31,6 +32,7 @@ public class UpdateProjectConfigurationCommand
 {
     private final String message;
     private final UpdateProjectConfigProjectStructureVersion projectStructureVersion;
+    private final ProjectType projectType;
     private final String groupId;
     private final String artifactId;
     private final UpdatePlatformConfigurationsCommand platformConfigurations;
@@ -43,6 +45,7 @@ public class UpdateProjectConfigurationCommand
     public UpdateProjectConfigurationCommand(
             @JsonProperty("message") String message,
             @JsonProperty("projectStructureVersion") UpdateProjectConfigProjectStructureVersion projectStructureVersion,
+            @JsonProperty("projectType") ProjectType projectType,
             @JsonProperty("groupId") String groupId,
             @JsonProperty("artifactId") String artifactId,
             @JsonProperty("platformConfigurations") UpdatePlatformConfigurationsCommand platformConfigurations,
@@ -53,6 +56,7 @@ public class UpdateProjectConfigurationCommand
     {
         this.message = message;
         this.projectStructureVersion = projectStructureVersion;
+        this.projectType = projectType;
         this.groupId = groupId;
         this.artifactId = artifactId;
         this.platformConfigurations = platformConfigurations;
@@ -76,6 +80,10 @@ public class UpdateProjectConfigurationCommand
                 .withProjectDependenciesToRemove(this.projectDependenciesToRemove)
                 .withArtifactGenerationsToAdd(this.artifactGenerationsToAdd)
                 .withArtifactGenerationsToRemove(this.artifactGenerationsNamesToRemove);
+        if (this.projectType != null)
+        {
+            configUpdater.withProjectType(this.projectType);
+        }
         if (this.projectStructureVersion != null)
         {
             configUpdater.withProjectStructureVersion(this.projectStructureVersion.getVersion())

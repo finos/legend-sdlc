@@ -33,6 +33,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -364,6 +365,11 @@ public abstract class ProjectStructure
         return SimpleProjectConfiguration.newConfiguration(projectId, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
     }
 
+    public static boolean isValidProjectType(ProjectType projectType)
+    {
+        return projectType == ProjectType.MANAGED || projectType == ProjectType.EMBEDDED;
+    }
+
     public static boolean isValidGroupId(String groupId)
     {
         return (groupId != null) && !groupId.isEmpty() && SourceVersion.isName(groupId);
@@ -430,12 +436,47 @@ public abstract class ProjectStructure
 
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId) : readProjectConfiguration(configFile);
+        ProjectType oldProjectType = currentConfig.getProjectType();
+        // Upgrade old project types
+        if (!ProjectStructure.isValidProjectType(oldProjectType))
+        {
+            oldProjectType = ProjectType.MANAGED;
+            if (updateBuilder.configUpdater.getProjectType() == null)
+            {
+                updateBuilder.configUpdater.setProjectType(oldProjectType);
+            }
+        }
+        ProjectType newProjectType = updateBuilder.configUpdater.getProjectType() == null ? oldProjectType : updateBuilder.configUpdater.getProjectType();
+        // For MANAGED projects
+        if (updateBuilder.projectStructureExtensionProvider != null && newProjectType != ProjectType.EMBEDDED)
+        {
+            // converted from EMBEDDED set version
+            if (oldProjectType == ProjectType.EMBEDDED && updateBuilder.configUpdater.getProjectStructureVersion() == null)
+            {
+                updateBuilder.configUpdater.setProjectStructureVersion(currentConfig.getProjectStructureVersion().getVersion());
+            }
+            // if extension version was not specified, use the latest one for given version
+            if (updateBuilder.configUpdater.getProjectStructureVersion() != null && updateBuilder.configUpdater.getProjectStructureExtensionVersion() == null)
+            {
+                updateBuilder.configUpdater.setProjectStructureExtensionVersion(updateBuilder.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(updateBuilder.configUpdater.getProjectStructureVersion()));
+            }
+        }
         ProjectConfiguration newConfig = updateLegacyDependencies(updateBuilder.getProjectConfigurationUpdater().update(currentConfig), projectFileAccessProvider);
 
         validateProjectConfiguration(newConfig);
 
+        ProjectStructureVersion oldProjectVersion = currentConfig.getProjectStructureVersion();
+        // prevent extensions on non-managed projects
+        if (newConfig.getProjectType() == ProjectType.EMBEDDED)
+        {
+            if (newConfig.getProjectStructureVersion().getExtensionVersion() != null)
+            {
+                throw new LegendSDLCServerException("Cannot set extensions on project " + projectId + " with " + newConfig.getProjectType() + " type", Status.BAD_REQUEST);
+            }
+            oldProjectVersion = ProjectStructureVersion.newProjectStructureVersion(oldProjectVersion.getVersion());
+        }
         // prevent downgrading project
-        if (newConfig.getProjectStructureVersion().compareTo(currentConfig.getProjectStructureVersion()) < 0)
+        if (newConfig.getProjectStructureVersion().compareTo(oldProjectVersion) < 0)
         {
             throw new LegendSDLCServerException("Cannot change project " + projectId + " from project structure version " + currentConfig.getProjectStructureVersion().toVersionString() + " to version " + newConfig.getProjectStructureVersion().toVersionString(), Status.BAD_REQUEST);
         }
@@ -499,7 +540,11 @@ public abstract class ProjectStructure
         }
 
         // Collect any further update operations
-        newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, operations::add);
+        if (newConfig.getProjectType() != ProjectType.EMBEDDED)
+        {
+            newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, operations::add);
+        }
+
         // Call legacy method
         newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, (x, y) ->
         {
@@ -533,6 +578,12 @@ public abstract class ProjectStructure
         if (!isValidArtifactId(config.getArtifactId()))
         {
             throw new LegendSDLCServerException("Invalid artifactId: " + config.getArtifactId(), Status.BAD_REQUEST);
+        }
+
+        // Project type
+        if (!isValidProjectType(config.getProjectType()))
+        {
+            throw new LegendSDLCServerException("Invalid projectType: " + config.getArtifactId(), Status.BAD_REQUEST);
         }
 
         // Platform configurations
@@ -1159,16 +1210,9 @@ public abstract class ProjectStructure
             {
                 throw new IllegalArgumentException("No project id specified");
             }
-            if (this.projectStructureExtensionProvider == null)
+            if (this.projectStructureExtensionProvider == null && this.configUpdater.getProjectStructureExtensionVersion() != null)
             {
-                if (this.configUpdater.getProjectStructureExtensionVersion() != null)
-                {
                     throw new IllegalArgumentException("Project structure extension version specified (" + this.configUpdater.getProjectStructureExtensionVersion() + ") with no project structure extension provider");
-                }
-            }
-            else if ((this.configUpdater.getProjectStructureVersion() != null) && (this.configUpdater.getProjectStructureExtensionVersion() == null))
-            {
-                this.configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(this.configUpdater.getProjectStructureVersion()));
             }
             return updateProjectConfiguration(this, requireRevisionId);
         }

@@ -47,13 +47,11 @@ public class CreateProjectCommand
         this.description = description;
     }
 
-    @Deprecated
     public ProjectType getType()
     {
         return this.type;
     }
 
-    @Deprecated
     public void setType(ProjectType type)
     {
         this.type = type;

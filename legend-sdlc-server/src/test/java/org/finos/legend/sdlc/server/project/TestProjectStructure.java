@@ -30,6 +30,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -41,6 +42,8 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
+import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
@@ -676,6 +679,71 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
             assertEntitiesEquivalent("convert version " + i + " to " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
         }
+    }
+
+    @Test
+    public void testConvertManagedToEmbeddedAndBack()
+    {
+        this.projectStructureExtensionVersion = 1;
+        this.projectStructureExtensionProvider = DefaultProjectStructureExtensionProvider.fromExtensions(DefaultProjectStructureExtension.newProjectStructureExtension(this.projectStructureVersion, this.projectStructureExtensionVersion, Collections.singletonMap("/PANGRAM.TXT", "THE QUICK BROWN FOX JUMPED OVER THE LAZY DOG")));
+        List<Entity> testEntities = getTestEntities();
+        ProjectStructure otherProjectStructure = buildProjectStructure(this.projectStructureVersion, this.projectStructureExtensionVersion, null, null);
+        List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, otherProjectStructure);
+        Revision revision = this.fileAccessProvider.getProjectFileModificationContext(PROJECT_ID).submit("Add entities", addEntityOperations);
+        ProjectConfiguration initialConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, initialConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, initialConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, initialConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, initialConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, initialConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(ProjectType.MANAGED, initialConfig.getProjectType());
+        Assert.assertEquals(Collections.emptyList(), initialConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.emptyList(), initialConfig.getProjectDependencies());
+        String workspaceId = "ConvertManagedToEmbedded";
+        this.fileAccessProvider.createWorkspace(PROJECT_ID, workspaceId);
+        Revision nextRevision = ProjectStructure.newUpdateBuilder(this.fileAccessProvider, PROJECT_ID)
+                .withProjectConfigurationUpdater(ProjectConfigurationUpdater.newUpdater().withProjectType(ProjectType.EMBEDDED))
+                .withWorkspace(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
+                .withRevisionId(revision.getId())
+                .withMessage("Update project structure version")
+                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                .update();
+        assertStateValid(PROJECT_ID, workspaceId, null);
+        this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
+        assertStateValid(PROJECT_ID, null, null);
+        ProjectConfiguration embeddedConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, embeddedConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, embeddedConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, embeddedConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, embeddedConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(null, embeddedConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(ProjectType.EMBEDDED, embeddedConfig.getProjectType());
+        Assert.assertEquals(Collections.emptyList(), embeddedConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.emptyList(), embeddedConfig.getProjectDependencies());
+        assertEntitiesEquivalent("convert managed to embedded " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
+        this.fileAccessProvider.createWorkspace(PROJECT_ID, workspaceId);
+        ProjectStructure.newUpdateBuilder(this.fileAccessProvider, PROJECT_ID)
+                .withProjectConfigurationUpdater(ProjectConfigurationUpdater.newUpdater().withProjectType(ProjectType.MANAGED))
+                .withWorkspace(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
+                .withRevisionId(nextRevision.getId())
+                .withMessage("Update project structure version")
+                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                .update();
+        assertStateValid(PROJECT_ID, workspaceId, null);
+        this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
+        assertStateValid(PROJECT_ID, null, null);
+        ProjectConfiguration managedConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, null, null, this.fileAccessProvider, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE);
+        Assert.assertEquals(PROJECT_ID, managedConfig.getProjectId());
+        Assert.assertEquals(GROUP_ID, managedConfig.getGroupId());
+        Assert.assertEquals(ARTIFACT_ID, managedConfig.getArtifactId());
+        Assert.assertEquals(this.projectStructureVersion, managedConfig.getProjectStructureVersion().getVersion());
+        Assert.assertEquals(this.projectStructureExtensionVersion, managedConfig.getProjectStructureVersion().getExtensionVersion());
+        Assert.assertEquals(ProjectType.MANAGED, managedConfig.getProjectType());
+        Assert.assertEquals(Collections.emptyList(), managedConfig.getMetamodelDependencies());
+        Assert.assertEquals(Collections.emptyList(), managedConfig.getProjectDependencies());
+        assertEntitiesEquivalent("convert embedded to managed " + this.projectStructureVersion, testEntities, getActualEntities(PROJECT_ID));
     }
 
     @Test
