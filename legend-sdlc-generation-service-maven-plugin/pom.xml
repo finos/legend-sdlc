@@ -27,13 +27,6 @@
     <name>Legend SDLC Service Generation Maven Plugin</name>
 
     <dependencies>
-        <!-- PURE -->
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-pure-code-compiled-core</artifactId>
-        </dependency>
-        <!-- PURE -->
-
         <!-- ENGINE -->
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
@@ -141,6 +134,12 @@
             <groupId>org.finos.legend.engine</groupId>
             <artifactId>legend-engine-xt-relationalStore-grammar</artifactId>
             <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.finos.legend.engine</groupId>
@@ -155,6 +154,10 @@
                 <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>log4j</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>jcl-over-slf4j</artifactId>
                 </exclusion>
                 <exclusion>
                     <groupId>org.bouncycastle</groupId>

@@ -29,6 +29,7 @@ import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
+import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.TemporaryFolder;
@@ -58,8 +59,8 @@ public class TestServicesGenerationMojo
     private static final String GOAL = "generate-service-executions";
     private static final String SERVICE_CLASSIFIER = "meta::legend::service::metamodel::Service";
 
-    @Rule
-    public TemporaryFolder tempFolder = new TemporaryFolder();
+    @ClassRule
+    public static TemporaryFolder TMP_FOLDER = new TemporaryFolder();
 
     @Rule
     public MojoRule mojoRule = new MojoRule();
@@ -67,8 +68,8 @@ public class TestServicesGenerationMojo
     @Test
     public void testEmptyEntitiesDirectory() throws Exception
     {
-        File[] emptyEntityDirs = {this.tempFolder.newFolder("empty1"), this.tempFolder.newFolder("empty2")};
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, emptyEntityDirs, null, null, null, "org.finos.test.test_project", null, null);
+        File[] emptyEntityDirs = {TMP_FOLDER.newFolder(), TMP_FOLDER.newFolder()};
+        File projectDir = buildSingleModuleProject("org.finos.test", "test-project", "1.0.0", null, null, emptyEntityDirs, null, null, null, "org.finos.test.test_project", null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -81,9 +82,9 @@ public class TestServicesGenerationMojo
     @Test
     public void testNonExistentEntitiesDirectory() throws Exception
     {
-        File tempPath = this.tempFolder.getRoot();
+        File tempPath = TMP_FOLDER.newFolder();
         File[] nonExistentEntityDirectories = {new File(tempPath, "nonexistent1"), new File(tempPath, "nonexistent2")};
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, nonExistentEntityDirectories, null, null, null, "org.finos.test.test_project", null, null);
+        File projectDir = buildSingleModuleProject("org.finos.test", "test-project", "1.0.0", null, null, nonExistentEntityDirectories, null, null, null, "org.finos.test.test_project", null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -96,14 +97,14 @@ public class TestServicesGenerationMojo
     @Test
     public void testNoServices() throws Exception
     {
-        File entitiesDir = this.tempFolder.newFolder("testEntities");
+        File entitiesDir = TMP_FOLDER.newFolder();
         try (EntityLoader testEntities = getTestEntities())
         {
             testEntities.getAllEntities()
                     .filter(e -> !isServiceEntity(e))
                     .forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         }
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, "org.finos.test.test_project", null, null);
+        File projectDir = buildSingleModuleProject("org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, "org.finos.test.test_project", null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -117,7 +118,7 @@ public class TestServicesGenerationMojo
     public void testWithServices() throws Exception
     {
         String packagePrefix = "org.finos.test.test_project";
-        File entitiesDir = this.tempFolder.newFolder("testEntities");
+        File entitiesDir = TMP_FOLDER.newFolder();
         List<Entity> entities;
         try (EntityLoader testEntities = getTestEntities())
         {
@@ -125,7 +126,7 @@ public class TestServicesGenerationMojo
         }
         Assert.assertEquals(5, entities.stream().filter(this::isServiceEntity).count());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, packagePrefix, null, null);
+        File projectDir = buildSingleModuleProject("org.finos.test", "test-project", "1.0.0", null, null, new File[]{entitiesDir}, null, null, null, packagePrefix, null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -143,6 +144,68 @@ public class TestServicesGenerationMojo
         MutableList<String> expectedServiceClassJavaPaths = ListIterate.collectIf(entities, this::isServiceEntity, e ->  packagePrefix.replace(".", separator) + separator + e.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java");
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(Collections.emptyList(), expectedServiceClassJavaPaths.reject(actualGeneratedSourceFiles::contains));
+    }
+
+    @Test
+    public void testParseParallel()
+    {
+        int procCount = Runtime.getRuntime().availableProcessors();
+
+        // Null, empty, whitespace
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel(null));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel(""));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("   \r\t\n  \r\n \n\r "));
+
+        // Integers
+        for (int i = 0; i < 256; i++)
+        {
+            String s = Integer.toString(i);
+            Assert.assertEquals(s, i, ServicesGenerationMojo.parseParallel(s));
+            Assert.assertEquals(s, i, ServicesGenerationMojo.parseParallel("+" + s));
+            Assert.assertEquals(s, -i, ServicesGenerationMojo.parseParallel("-" + s));
+            Assert.assertEquals(s, i, ServicesGenerationMojo.parseParallel("00000000" + s));
+            Assert.assertEquals(s, i, ServicesGenerationMojo.parseParallel("    " + s + "    "));
+        }
+
+        // False
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("false"));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("FALSE"));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("False"));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("FaLsE"));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel(" false "));
+        Assert.assertEquals(1, ServicesGenerationMojo.parseParallel("   false "));
+
+        // True
+        int defaultParallelism = procCount - 1;
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel("true"));
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel("TRUE"));
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel("True"));
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel("TrUe"));
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel(" true "));
+        Assert.assertEquals(defaultParallelism, ServicesGenerationMojo.parseParallel("   true "));
+
+        // Processor based
+        Assert.assertEquals(procCount, ServicesGenerationMojo.parseParallel("C"));
+        Assert.assertEquals(procCount, ServicesGenerationMojo.parseParallel("c"));
+        Assert.assertEquals(procCount, ServicesGenerationMojo.parseParallel(" C  "));
+        Assert.assertEquals(procCount, ServicesGenerationMojo.parseParallel("1.0C"));
+        Assert.assertEquals(procCount, ServicesGenerationMojo.parseParallel("1C"));
+        Assert.assertEquals(2 * procCount, ServicesGenerationMojo.parseParallel("2.0C"));
+        Assert.assertEquals(2 * procCount, ServicesGenerationMojo.parseParallel("2\tC"));
+        Assert.assertEquals(Math.round(2.5 * procCount), ServicesGenerationMojo.parseParallel("2.5C"));
+        Assert.assertEquals(Math.round(12.3 * procCount), ServicesGenerationMojo.parseParallel("12.3  C"));
+        Assert.assertEquals(procCount - 1, ServicesGenerationMojo.parseParallel("C-1"));
+        Assert.assertEquals(procCount - 1, ServicesGenerationMojo.parseParallel("C - 1"));
+        Assert.assertEquals(procCount + 1, ServicesGenerationMojo.parseParallel("C + 1"));
+        Assert.assertEquals(procCount + 2, ServicesGenerationMojo.parseParallel("C + 2"));
+        Assert.assertEquals(Math.round(2.5 * procCount) + 2, ServicesGenerationMojo.parseParallel("2.5C + 2"));
+        Assert.assertEquals(Math.round(3.5 * procCount) - 1, ServicesGenerationMojo.parseParallel("3.5c-1"));
+
+        for (String invalid : new String[]{"blah", "trueee", "null", "123.123", "2.5*C", "C / 5"})
+        {
+            RuntimeException e = Assert.assertThrows(RuntimeException.class, () -> ServicesGenerationMojo.parseParallel(invalid));
+            Assert.assertEquals(invalid, "Could not parse parallel value: \"" + invalid + "\"", e.getMessage());
+        }
     }
 
     private boolean isServiceEntity(Entity entity)
@@ -209,15 +272,15 @@ public class TestServicesGenerationMojo
         }
     }
 
-    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, File[] includeDirectories, Set<String> excludePaths, Set<String> excludePackages, File[] excludeDirectories, String packagePrefix, File javaSourceOutputDirectory, File resourceOutputDirectory) throws IOException
+    private File buildSingleModuleProject(String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, File[] includeDirectories, Set<String> excludePaths, Set<String> excludePackages, File[] excludeDirectories, String packagePrefix, File javaSourceOutputDirectory, File resourceOutputDirectory) throws IOException
     {
         Model mavenModel = buildMavenModelWithPlugin(groupId, artifactId, version, includePaths, includePackages, includeDirectories, excludePaths, excludePackages, excludeDirectories, packagePrefix, javaSourceOutputDirectory, resourceOutputDirectory);
-        return buildProject(projectDirName, mavenModel);
+        return buildProject(mavenModel);
     }
 
-    private File buildProject(String projectDirName, Model mainModel, Model... childModels) throws IOException
+    private File buildProject(Model mainModel, Model... childModels) throws IOException
     {
-        File projectDir = this.tempFolder.newFolder(projectDirName);
+        File projectDir = TMP_FOLDER.newFolder();
         serializeMavenModel(projectDir, mainModel);
         for (Model childModel : childModels)
         {

@@ -26,17 +26,14 @@ import org.finos.legend.engine.language.pure.dsl.service.execution.AbstractServi
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunnerInput;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceVariable;
-import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
 import org.finos.legend.engine.plan.execution.nodes.helpers.platform.JavaHelper;
 import org.finos.legend.engine.plan.execution.result.Result;
 import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
 import org.finos.legend.engine.plan.execution.result.serialization.SerializationFormat;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.LegendPlanTransformers;
-import org.finos.legend.engine.plan.platform.PlanPlatform;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
@@ -422,8 +419,16 @@ public class TestServiceExecutionGenerator
         Set<String> enumClasses = Sets.mutable.empty();
         for (Service service : services)
         {
-            ServiceExecutionGenerator.newGenerator(service, PURE_MODEL, packagePrefix, this.generatedSourcesDirectory, this.classesDirectory, null, extensions, LegendPlanTransformers.transformers, "vX_X_X").generate();
-            ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, PURE_MODEL, "vX_X_X", PlanPlatform.JAVA, null, extensions,  LegendPlanTransformers.transformers);
+            ServiceExecutionGenerator generator = ServiceExecutionGenerator.newBuilder()
+                    .withService(service)
+                    .withPureModel(PURE_MODEL)
+                    .withPackagePrefix(packagePrefix)
+                    .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
+                    .withRouterExtensions(extensions)
+                    .withPlanTransformers(LegendPlanTransformers.transformers)
+                    .withClientVersion("vX_X_X")
+                    .build();
+            generator.generate();
             ((PureExecution) service.execution).func.parameters.forEach(p ->
             {
                 if (!PrimitiveUtilities.isPrimitiveTypeName(p._class))
@@ -438,7 +443,7 @@ public class TestServiceExecutionGenerator
 
         // Check execution plan resources generated
         Set<String> expectedResources = services.stream().map(s -> "plans" + separator + getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".json").collect(Collectors.toSet());
-        expectedResources.add("META-INF" + separator + "services" + separator +  ServiceRunner.class.getCanonicalName());
+        expectedResources.add("META-INF" + separator + "services" + separator + ServiceRunner.class.getCanonicalName());
         Set<String> actualResources = Files.walk(this.classesDirectory, Integer.MAX_VALUE).filter(Files::isRegularFile).map(this.classesDirectory::relativize).map(Path::toString).collect(Collectors.toSet());
         Assert.assertEquals(expectedResources, actualResources);
 
