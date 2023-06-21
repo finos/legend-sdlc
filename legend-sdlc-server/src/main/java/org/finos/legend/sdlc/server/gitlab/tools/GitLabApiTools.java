@@ -320,15 +320,7 @@ public class GitLabApiTools
 
     public static Branch createProtectedBranchFromSourceTagAndVerify(GitLabApi api, GitLabProjectId projectId, String branchName, String sourceTagName, int maxVerificationTries, long verificationWaitMillis) throws GitLabApiException
     {
-        Tag sourceTag = null;
-        try
-        {
-            sourceTag =  getTag(api, projectId, sourceTagName);
-        }
-        catch (Exception e)
-        {
-            throw e;
-        }
+        Tag sourceTag = getTag(api, projectId, sourceTagName);
         if (sourceTag == null)
         {
             throw new LegendSDLCServerException("Source release version " + sourceTagName + " does not exist", Response.Status.CONFLICT);
@@ -354,7 +346,7 @@ public class GitLabApiTools
         }
     }
 
-    public static Boolean tagExists(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
+    public static boolean tagExists(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
     {
         return getTag(api, gitLabProjectId, tagName) != null;
     }

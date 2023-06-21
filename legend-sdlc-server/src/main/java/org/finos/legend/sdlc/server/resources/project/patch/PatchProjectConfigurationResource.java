@@ -21,7 +21,6 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;
@@ -86,27 +85,6 @@ public class PatchProjectConfigurationResource extends BaseResource
         return executeWithLogging(
                 "getting project " + projectId + " available generations configurations" +  " for patch release version " + patchReleaseVersionId,
                 () -> this.projectConfigurationApi.getProjectAvailableArtifactGenerations(projectId, versionId)
-        );
-    }
-
-    @GET
-    @Path("/projectConfigurationStatus")
-    @ApiOperation("Returns the project configuration status report for patch release version")
-    public ProjectConfigurationStatusReport checkProjectConfigurationStatus(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
-    {
-        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
-        VersionId versionId;
-        try
-        {
-            versionId = VersionId.parseVersionId(patchReleaseVersionId);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
-        }
-        return executeWithLogging(
-                "checking if project " + projectId + " is configured" + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getProjectConfigurationStatus(projectId, versionId)
         );
     }
 }

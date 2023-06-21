@@ -208,10 +208,5 @@ public interface ProjectConfigurationApi
         return Collections.emptyList();
     }
 
-    default ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
-    {
-        return  this.getProjectConfigurationStatus(projectId, null);
-    }
-
-    ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, VersionId patchReleaseVersionId);
+    ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId);
 }

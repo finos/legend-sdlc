@@ -67,33 +67,33 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
-        Boolean sourceTagExists = false;
+        boolean sourceTagExists;
         try
         {
             sourceTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(sourceVersionId));
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching release tag for version ", sourceVersionId.toVersionIdString(), projectId, e);
+            throw new LegendSDLCServerException("Error in fetching version " + sourceVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
         }
         if (!sourceTagExists)
         {
-            throw new LegendSDLCServerException("Release tag for source version " + sourceVersionId.toVersionIdString() + " doesn't exist", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Source version " + sourceVersionId.toVersionIdString() + " does not exist", Response.Status.BAD_REQUEST);
         }
 
         VersionId targetVersionId = sourceVersionId.nextPatchVersion();
-        Boolean targetTagExists = true;
+        boolean targetTagExists;
         try
         {
             targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(targetVersionId));
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching release tag for version ", targetVersionId.toVersionIdString(), projectId, e);
+            throw new LegendSDLCServerException("Error in fetching version " + targetVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
         }
         if (targetTagExists)
         {
-            throw new LegendSDLCServerException(targetVersionId.toVersionIdString() + "already exists", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Target version " + targetVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
         }
 
         // Check if the patch branch they want to create exists or not

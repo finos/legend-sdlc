@@ -18,15 +18,17 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.Objects;
+
 public class WorkspaceSpecification
 {
-    private String workspaceId;
+    private final String workspaceId;
 
-    private WorkspaceType workspaceType;
+    private final WorkspaceType workspaceType;
 
-    private ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
+    private final ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType;
 
-    private VersionId patchReleaseVersionId;
+    private final VersionId patchReleaseVersionId;
 
     private WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
@@ -41,6 +43,7 @@ public class WorkspaceSpecification
         this.workspaceId = workspaceId;
         this.workspaceType = workspaceType;
         this.patchReleaseVersionId = patchReleaseVersionId;
+        this.workspaceAccessType = null;
     }
 
     private WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
@@ -48,12 +51,15 @@ public class WorkspaceSpecification
         this.workspaceId = workspaceId;
         this.workspaceType = workspaceType;
         this.workspaceAccessType = workspaceAccessType;
+        this.patchReleaseVersionId = null;
     }
 
     public WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType)
     {
         this.workspaceId = workspaceId;
         this.workspaceType = workspaceType;
+        this.patchReleaseVersionId = null;
+        this.workspaceAccessType = null;
     }
 
     public static WorkspaceSpecification newGroupWorkspaceSpecification(String workspaceId)
@@ -119,5 +125,40 @@ public class WorkspaceSpecification
     public VersionId getPatchReleaseVersionId()
     {
         return this.patchReleaseVersionId;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getWorkspaceId(), getWorkspaceType(), getWorkspaceAccessType(), getPatchReleaseVersionId());
+    }
+
+    @Override
+    public boolean equals(Object other)
+    {
+        if (this == other)
+        {
+            return true;
+        }
+        if (!(other instanceof WorkspaceSpecification))
+        {
+            return false;
+        }
+
+        WorkspaceSpecification that = (WorkspaceSpecification) other;
+        return (this.getWorkspaceId() == that.getWorkspaceId()) &&
+                Objects.equals(this.getWorkspaceType(), that.getWorkspaceType()) &&
+                Objects.equals(this.getWorkspaceAccessType(), that.getWorkspaceAccessType()) &&
+                Objects.equals(this.getPatchReleaseVersionId(), that.getPatchReleaseVersionId());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "<WorkspaceSpecification workspaceId=" + ((getWorkspaceId() == null) ? null : getWorkspaceId()) +
+                " workspaceType=" + getWorkspaceType().toString() +
+                " workspaceAccessType=" + getWorkspaceAccessType().toString() +
+                " patchReleaseVersionId=" + getPatchReleaseVersionId().toVersionIdString() +
+                ">";
     }
 }

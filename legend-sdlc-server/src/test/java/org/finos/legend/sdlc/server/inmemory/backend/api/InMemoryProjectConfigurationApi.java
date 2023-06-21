@@ -185,7 +185,7 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
     }
 
     @Override
-    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, VersionId patchReleaseVersionId)
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

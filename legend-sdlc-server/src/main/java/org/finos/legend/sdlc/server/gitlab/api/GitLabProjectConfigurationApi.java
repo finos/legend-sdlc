@@ -408,9 +408,9 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     }
 
     @Override
-    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId, VersionId patchReleaseVersionId)
+    public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
     {
-        Boolean isProjectConfigured = getProjectConfiguration(projectId, patchReleaseVersionId) != null;
+        Boolean isProjectConfigured = getProjectConfiguration(projectId, null) != null;
         List<String> reviewIds = Lists.mutable.empty();
         if (!isProjectConfigured)
         {
