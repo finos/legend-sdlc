@@ -38,48 +38,24 @@ public class WorkspaceSpecification
         this.patchReleaseVersionId = patchReleaseVersionId;
     }
 
-    private WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, VersionId patchReleaseVersionId)
-    {
-        this.workspaceId = workspaceId;
-        this.workspaceType = workspaceType;
-        this.patchReleaseVersionId = patchReleaseVersionId;
-        this.workspaceAccessType = null;
-    }
-
-    private WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
-    {
-        this.workspaceId = workspaceId;
-        this.workspaceType = workspaceType;
-        this.workspaceAccessType = workspaceAccessType;
-        this.patchReleaseVersionId = null;
-    }
-
-    public WorkspaceSpecification(String workspaceId, WorkspaceType workspaceType)
-    {
-        this.workspaceId = workspaceId;
-        this.workspaceType = workspaceType;
-        this.patchReleaseVersionId = null;
-        this.workspaceAccessType = null;
-    }
-
     public static WorkspaceSpecification newGroupWorkspaceSpecification(String workspaceId)
     {
-        return new WorkspaceSpecification(workspaceId, WorkspaceType.GROUP);
+        return new WorkspaceSpecification(workspaceId, WorkspaceType.GROUP, null, null);
     }
 
     public static WorkspaceSpecification newUserWorkspaceSpecification(String workspaceId)
     {
-        return new WorkspaceSpecification(workspaceId, WorkspaceType.USER);
+        return new WorkspaceSpecification(workspaceId, WorkspaceType.USER, null, null);
     }
 
     public static WorkspaceSpecification newGroupWorkspaceSpecification(String workspaceId, VersionId patchReleaseVersionId)
     {
-        return new WorkspaceSpecification(workspaceId, WorkspaceType.GROUP, patchReleaseVersionId);
+        return new WorkspaceSpecification(workspaceId, WorkspaceType.GROUP, null, patchReleaseVersionId);
     }
 
     public static WorkspaceSpecification newUserWorkspaceSpecification(String workspaceId, VersionId patchReleaseVersionId)
     {
-        return new WorkspaceSpecification(workspaceId, WorkspaceType.USER, patchReleaseVersionId);
+        return new WorkspaceSpecification(workspaceId, WorkspaceType.USER, null, patchReleaseVersionId);
     }
 
     public static WorkspaceSpecification newGroupWorkspaceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
@@ -94,7 +70,7 @@ public class WorkspaceSpecification
 
     public static WorkspaceSpecification newWorkspaceSpecification(String workspaceId, WorkspaceType workspaceType)
     {
-        return new WorkspaceSpecification(workspaceId, workspaceType);
+        return new WorkspaceSpecification(workspaceId, workspaceType, null, null);
     }
 
     public static WorkspaceSpecification newWorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
@@ -104,7 +80,7 @@ public class WorkspaceSpecification
 
     public static WorkspaceSpecification newWorkspaceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return new WorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType);
+        return new WorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType, null);
     }
 
     public String getWorkspaceId()
@@ -146,19 +122,19 @@ public class WorkspaceSpecification
         }
 
         WorkspaceSpecification that = (WorkspaceSpecification) other;
-        return (this.getWorkspaceId() == that.getWorkspaceId()) &&
-                Objects.equals(this.getWorkspaceType(), that.getWorkspaceType()) &&
-                Objects.equals(this.getWorkspaceAccessType(), that.getWorkspaceAccessType()) &&
+        return (this.getWorkspaceId().equals(that.getWorkspaceId())) &&
+                this.getWorkspaceType() == that.getWorkspaceType() &&
+                this.getWorkspaceAccessType() == that.getWorkspaceAccessType() &&
                 Objects.equals(this.getPatchReleaseVersionId(), that.getPatchReleaseVersionId());
     }
 
     @Override
     public String toString()
     {
-        return "<WorkspaceSpecification workspaceId=" + ((getWorkspaceId() == null) ? null : getWorkspaceId()) +
-                " workspaceType=" + getWorkspaceType().toString() +
-                " workspaceAccessType=" + getWorkspaceAccessType().toString() +
-                " patchReleaseVersionId=" + getPatchReleaseVersionId().toVersionIdString() +
+        return "<WorkspaceSpecification workspaceId=\"" + ((getWorkspaceId() == null) ? null : getWorkspaceId()) +
+                "\" workspaceType=" + ((getWorkspaceType() == null) ? null : getWorkspaceType().toString()) +
+                " workspaceAccessType=" + ((getWorkspaceAccessType() == null) ? null : getWorkspaceAccessType().toString()) +
+                " patchReleaseVersionId=" + ((getPatchReleaseVersionId() == null) ? null : getPatchReleaseVersionId().toVersionIdString()) +
                 ">";
     }
 }

@@ -30,6 +30,7 @@ import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.MergeRequest;
+import org.gitlab4j.api.models.MergeRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -292,19 +293,18 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
         // check if the version you want to create exists or not
-        Version targetVersion = null;
+        boolean targetTagExists;
         try
         {
-            targetVersion = getProjectVersion(projectId, patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion());
-            throw new LegendSDLCServerException(patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
+            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(patchReleaseVersionId));
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching release tag for version ", patchReleaseVersionId, projectId, e);
+            throw new LegendSDLCServerException("Error in fetching version " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
         }
-        if (targetVersion != null)
+        if (targetTagExists)
         {
-            throw new LegendSDLCServerException(patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Target version " + patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
         }
 
         // Check if the patch branch we want to release exists or not
@@ -315,11 +315,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         catch (Exception e)
         {
-            LOGGER.warn("Error in fetching the patch release branch ", patchReleaseVersionId, projectId, e);
+            throw new LegendSDLCServerException("Error in fetching the patch release branch " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
         }
         if (patchBranch == null)
         {
-            throw new LegendSDLCServerException("Patch release branch for " + patchReleaseVersionId + " doesn not exist for the project " + projectId, Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Patch " + patchReleaseVersionId + " does not exist in\"\\\" the project " + projectId, Response.Status.BAD_REQUEST);
         }
         Version releaseVersion =  newVersion(gitLabProjectId, patchReleaseVersionId, patchBranch.getCommit().getId(), VersionId.newVersionId(patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion()), "");
 
@@ -335,10 +335,15 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         String branchName = getSourceBranch(projectId, patchReleaseVersionId);
         try
         {
-           mergeRequests = getGitLabApi().getMergeRequestApi().getMergeRequests(projectId.getGitLabId()).stream().filter(mr -> branchName.equals(mr.getTargetBranch())).collect(Collectors.toList());
+           MergeRequestFilter mergeRequestFilter = new MergeRequestFilter().withTargetBranch(branchName).withState(Constants.MergeRequestState.OPENED);
+           mergeRequests = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE))).collect(Collectors.toList());
         }
         catch (Exception e)
         {
+            if (GitLabApiTools.isRetryableGitLabApiException(e))
+            {
+                return false;
+            }
             LOGGER.warn("Unable to fetch merge requests for the project " + projectId.getGitLabId(), e);
         }
         for (MergeRequest mergeRequest : mergeRequests)
@@ -350,6 +355,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             catch (Exception e)
             {
                 LOGGER.warn("Unable to close merge request " + mergeRequest.getId() + " of the project " + projectId.getGitLabId(), e);
+                return false;
             }
         }
         return true;
