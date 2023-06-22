@@ -22,7 +22,7 @@ import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -355,9 +355,9 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification)
+    protected String getBranchName(GitLabProjectId projectId, SourceSpecification sourceSpecification)
     {
-        return (workspaceSpecification.getWorkspaceId() == null) ? getSourceBranch(projectId, workspaceSpecification.getPatchReleaseVersionId()) : getWorkspaceBranchName(workspaceSpecification);
+        return (sourceSpecification.getWorkspaceId() == null) ? getSourceBranch(projectId, sourceSpecification.getPatchReleaseVersionId()) : getWorkspaceBranchName(sourceSpecification);
     }
 
     protected String getDefaultBranch(GitLabProjectId projectId)
@@ -391,22 +391,22 @@ abstract class BaseGitLabApi
         return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
-    protected String getWorkspaceBranchName(WorkspaceSpecification workspaceSpecification)
+    protected String getWorkspaceBranchName(SourceSpecification sourceSpecification)
     {
-        String prefix = getWorkspaceBranchNamePrefix(workspaceSpecification.getWorkspaceType(), workspaceSpecification.getWorkspaceAccessType());
-        switch (workspaceSpecification.getWorkspaceType())
+        String prefix = getWorkspaceBranchNamePrefix(sourceSpecification.getWorkspaceType(), sourceSpecification.getWorkspaceAccessType());
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                return workspaceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, getCurrentUser(), workspaceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, workspaceSpecification.getPatchReleaseVersionId().toVersionIdString(), getCurrentUser(), workspaceSpecification.getWorkspaceId());
+                return sourceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, getCurrentUser(), sourceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, sourceSpecification.getPatchReleaseVersionId().toVersionIdString(), getCurrentUser(), sourceSpecification.getWorkspaceId());
             }
             case GROUP:
             {
-                return workspaceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, workspaceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, workspaceSpecification.getPatchReleaseVersionId().toVersionIdString(), workspaceSpecification.getWorkspaceId());
+                return sourceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, sourceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, sourceSpecification.getPatchReleaseVersionId().toVersionIdString(), sourceSpecification.getWorkspaceId());
             }
             default:
             {
-                throw new IllegalStateException("Unknown workspace type: " + workspaceSpecification.getWorkspaceType());
+                throw new IllegalStateException("Unknown workspace type: " + sourceSpecification.getWorkspaceType());
             }
         }
     }

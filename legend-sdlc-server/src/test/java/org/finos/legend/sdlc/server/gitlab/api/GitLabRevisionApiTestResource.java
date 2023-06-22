@@ -22,12 +22,11 @@ import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -262,16 +261,16 @@ public class GitLabRevisionApiTestResource
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        WorkspaceSpecification workspaceSpecification = WorkspaceSpecification.newUserWorkspaceSpecification(workspaceOneId, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.newUserSourceSpecification(workspaceOneId, patchReleaseVersionId);
 
-        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, workspaceSpecification);
+        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
         Assert.assertNotNull(createdWorkspaceOne.getUserId());
 
-        List<Revision> workspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getRevisions();
+        List<Revision> workspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getRevisions();
 
         Assert.assertNotNull(workspaceRevisions);
         Assert.assertEquals(1, workspaceRevisions.size());
@@ -291,8 +290,8 @@ public class GitLabRevisionApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceSpecification).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -301,8 +300,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        List<Revision> updatedWorkspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getRevisions();
-        Revision currentRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getCurrentRevision();
+        List<Revision> updatedWorkspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getRevisions();
+        Revision currentRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
 
         Assert.assertNotNull(updatedWorkspaceRevisions);
         Assert.assertEquals(2, updatedWorkspaceRevisions.size());
@@ -313,8 +312,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentRevision.getAuthoredTimestamp());
         Assert.assertNotNull(currentRevision.getCommittedTimestamp());
 
-        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, workspaceSpecification, entityPath).getRevisions();
-        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, workspaceSpecification, entityPath).getCurrentRevision();
+        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, sourceSpecification, entityPath).getRevisions();
+        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, sourceSpecification, entityPath).getCurrentRevision();
 
         Assert.assertNotNull(entityRevisions);
         Assert.assertEquals(1, entityRevisions.size());
@@ -325,8 +324,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentEntityRevision.getAuthoredTimestamp());
         Assert.assertNotNull(currentEntityRevision.getCommittedTimestamp());
 
-        List<Revision> packageRevisions = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, workspaceSpecification, entityPackagePath).getRevisions();
-        Revision currentPackageRevision = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, workspaceSpecification, entityPackagePath).getCurrentRevision();
+        List<Revision> packageRevisions = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, sourceSpecification, entityPackagePath).getRevisions();
+        Revision currentPackageRevision = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, sourceSpecification, entityPackagePath).getCurrentRevision();
 
         Assert.assertNotNull(packageRevisions);
         Assert.assertEquals(1, packageRevisions.size());
@@ -358,16 +357,16 @@ public class GitLabRevisionApiTestResource
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        WorkspaceSpecification workspaceSpecification = WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceOneId, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.newGroupSourceSpecification(workspaceOneId, patchReleaseVersionId);
 
-        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, workspaceSpecification);
+        Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
         Assert.assertNull(createdWorkspaceOne.getUserId());
 
-        List<Revision> workspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getRevisions();
+        List<Revision> workspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getRevisions();
 
         Assert.assertNotNull(workspaceRevisions);
         Assert.assertEquals(1, workspaceRevisions.size());
@@ -387,8 +386,8 @@ public class GitLabRevisionApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, workspaceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, workspaceSpecification).getEntities(null, null, null);
+        gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(1, modifiedWorkspaceEntities.size());
@@ -397,8 +396,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertEquals(initalEntity.getClassifierPath(), classifierPath);
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
-        List<Revision> updatedWorkspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getRevisions();
-        Revision currentRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, workspaceSpecification).getCurrentRevision();
+        List<Revision> updatedWorkspaceRevisions = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getRevisions();
+        Revision currentRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
 
         Assert.assertNotNull(updatedWorkspaceRevisions);
         Assert.assertEquals(2, updatedWorkspaceRevisions.size());
@@ -409,8 +408,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentRevision.getAuthoredTimestamp());
         Assert.assertNotNull(currentRevision.getCommittedTimestamp());
 
-        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, workspaceSpecification, entityPath).getRevisions();
-        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, workspaceSpecification, entityPath).getCurrentRevision();
+        List<Revision> entityRevisions = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, sourceSpecification, entityPath).getRevisions();
+        Revision currentEntityRevision = gitLabRevisionApi.getWorkspaceEntityRevisionContext(projectId, sourceSpecification, entityPath).getCurrentRevision();
 
         Assert.assertNotNull(entityRevisions);
         Assert.assertEquals(1, entityRevisions.size());
@@ -421,8 +420,8 @@ public class GitLabRevisionApiTestResource
         Assert.assertNotNull(currentEntityRevision.getAuthoredTimestamp());
         Assert.assertNotNull(currentEntityRevision.getCommittedTimestamp());
 
-        List<Revision> packageRevisions = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, workspaceSpecification, entityPackagePath).getRevisions();
-        Revision currentPackageRevision = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, workspaceSpecification, entityPackagePath).getCurrentRevision();
+        List<Revision> packageRevisions = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, sourceSpecification, entityPackagePath).getRevisions();
+        Revision currentPackageRevision = gitLabRevisionApi.getWorkspacePackageRevisionContext(projectId, sourceSpecification, entityPackagePath).getCurrentRevision();
 
         Assert.assertNotNull(packageRevisions);
         Assert.assertEquals(1, packageRevisions.size());

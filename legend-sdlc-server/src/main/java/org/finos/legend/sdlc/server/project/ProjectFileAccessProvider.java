@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.project;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.IOTools;
 
@@ -92,7 +92,7 @@ public interface ProjectFileAccessProvider
      */
      default FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
      {
-         return getFileAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
+         return getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
      }
 
     /**
@@ -109,11 +109,11 @@ public interface ProjectFileAccessProvider
      * results over time.
      *
      * @param projectId           project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @param revisionId          revision id (optional)
      * @return access context
      */
-    FileAccessContext getFileAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId);
+    FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId);
 
     /**
      * Get a file access context for a version of a project. Both the project and
@@ -288,12 +288,12 @@ public interface ProjectFileAccessProvider
         return getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, (String) null);
     }
 
-    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, WorkspaceSpecification workspaceSpecification)
+    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceId(), "workspaceId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceType(), "workspaceType may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
-        return getRevisionAccessContext(projectId, workspaceSpecification, null);
+        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceType(), "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
+        return getRevisionAccessContext(projectId, sourceSpecification, null);
     }
 
     default RevisionAccessContext getWorkspacePathRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
@@ -310,7 +310,7 @@ public interface ProjectFileAccessProvider
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceAccessType, "workspaceAccessType may not be null");
         LegendSDLCServerException.validateNonNull(paths, "paths may not be null");
-        return getRevisionAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), paths);
+        return getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), paths);
     }
 
     default RevisionAccessContext getVersionRevisionAccessContext(String projectId, VersionId versionId)
@@ -391,7 +391,7 @@ public interface ProjectFileAccessProvider
      */
     default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        return getRevisionAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), (Iterable<String>) null);
+        return getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), (Iterable<String>) null);
     }
 
     /**
@@ -414,7 +414,7 @@ public interface ProjectFileAccessProvider
      */
     default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
     {
-        return getRevisionAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), (path == null) ? null : Collections.singleton(path));
+        return getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), (path == null) ? null : Collections.singleton(path));
     }
 
     /**
@@ -429,11 +429,11 @@ public interface ProjectFileAccessProvider
      * slash.
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @param paths                  file or directory paths (optional)
      * @return revision access context
      */
-    RevisionAccessContext getRevisionAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, Iterable<? extends String> paths);
+    RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths);
 
     interface RevisionAccessContext
     {
@@ -495,15 +495,15 @@ public interface ProjectFileAccessProvider
      * making any modifications.
      *
      * @param projectId           project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @param revisionId          revision id (optional, for validation)
      * @return modification context
      */
-    FileModificationContext getFileModificationContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId);
+    FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId);
 
     default FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
     {
-        return this.getFileModificationContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
+        return this.getFileModificationContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
     }
 
     interface FileModificationContext

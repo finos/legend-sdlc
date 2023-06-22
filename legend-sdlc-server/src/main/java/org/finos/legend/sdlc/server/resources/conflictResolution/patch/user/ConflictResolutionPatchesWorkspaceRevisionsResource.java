@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
@@ -73,7 +73,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionsResource extends BaseRes
         }
         return executeWithLogging(
                 "getting revision for user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -97,7 +97,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionsResource extends BaseRes
         }
         return executeWithLogging(
                 "getting revision " + revisionId + " for user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).getRevision(revisionId)
+                () -> this.revisionApi.getWorkspaceWithConflictResolutionRevisionContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).getRevision(revisionId)
         );
     }
 }

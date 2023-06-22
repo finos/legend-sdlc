@@ -18,9 +18,8 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -45,26 +44,26 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
         AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
         {
             @Override
             protected SimpleInMemoryVCS getContextVCS()
             {
-                return getVCS(projectId, workspaceSpecification.getWorkspaceId());
+                return getVCS(projectId, sourceSpecification.getWorkspaceId());
             }
         };
-        if (workspaceSpecification.getWorkspaceAccessType() == null)
+        if (sourceSpecification.getWorkspaceAccessType() == null)
         {
             return abstractInMemoryFileAccessContext;
         }
-        switch (workspaceSpecification.getWorkspaceType())
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             case GROUP:
             {
-                switch (workspaceSpecification.getWorkspaceAccessType())
+                switch (sourceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
@@ -100,13 +99,13 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, Iterable<? extends String> paths)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
     {
-        switch (workspaceSpecification.getWorkspaceType())
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                switch (workspaceSpecification.getWorkspaceAccessType())
+                switch (sourceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
@@ -115,7 +114,7 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
                             @Override
                             protected SimpleInMemoryVCS getContextVCS()
                             {
-                                return getVCS(projectId, workspaceSpecification.getWorkspaceId());
+                                return getVCS(projectId, sourceSpecification.getWorkspaceId());
                             }
                         };
                     }
@@ -148,17 +147,17 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Modification Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+    public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        switch (workspaceSpecification.getWorkspaceType())
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                switch (workspaceSpecification.getWorkspaceAccessType())
+                switch (sourceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
-                        return new InMemoryFileModificationContext(projectId, workspaceSpecification.getWorkspaceId(), revisionId);
+                        return new InMemoryFileModificationContext(projectId, sourceSpecification.getWorkspaceId(), revisionId);
                     }
                     default:
                     {

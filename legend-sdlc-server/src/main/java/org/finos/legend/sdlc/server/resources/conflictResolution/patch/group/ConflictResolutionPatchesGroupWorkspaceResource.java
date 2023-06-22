@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -68,7 +68,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         return executeWithLogging(
                 "getting group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -89,7 +89,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         return executeWithLogging(
                 "checking if group workspace with conflict resolution " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -109,7 +109,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "discarding conflict resolution for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -130,7 +130,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "discarding all conflict resolution changes for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -152,7 +152,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "accept conflict resolution for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), command)
+                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId), command)
         );
     }
 }

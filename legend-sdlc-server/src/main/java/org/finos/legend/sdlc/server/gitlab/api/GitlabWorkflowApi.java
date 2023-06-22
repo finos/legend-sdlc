@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -78,23 +78,23 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, WorkspaceSpecification workspaceSpecification)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification.getWorkspaceId(), "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(projectId, getBranchName(gitLabProjectId, workspaceSpecification))
+        return new RefWorkflowAccessContext(projectId, getBranchName(gitLabProjectId, sourceSpecification))
         {
             @Override
             protected String getInfoForException()
             {
-                return workspaceSpecification.getWorkspaceType().getLabel() + " workspace " + workspaceSpecification.getWorkspaceId() + " in project " + projectId;
+                return sourceSpecification.getWorkspaceType().getLabel() + " workspace " + sourceSpecification.getWorkspaceId() + " in project " + projectId;
             }
 
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceSpecification);
+                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, sourceSpecification);
             }
         };
     }

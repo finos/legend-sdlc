@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
@@ -67,7 +67,7 @@ public abstract class TestMultiGenerationProjectStructure<T extends MultiModuleM
     @Override
     protected void assertMultiFormatGenerationStateValid(String projectId, String workspaceId, String revisionId, ArtifactType artifactType)
     {
-        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), revisionId, this.fileAccessProvider);
+        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), revisionId, this.fileAccessProvider);
         Assert.assertNotNull(configuration);
 
         T projectStructure = (T) ProjectStructure.getProjectStructure(configuration);

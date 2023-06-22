@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.PureModelContextDataResource;
 
@@ -68,12 +68,12 @@ public class PatchesGroupWorkspacePureModelContextDataResource extends PureModel
                 "getting Pure model context data for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)).getCurrentRevision();
+                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId)).getCurrentRevision();
                     if (revision == null)
                     {
                         throw new LegendSDLCServerException("Could not find latest revision for group workspace " + workspaceId + " in project " + projectId + "; project may be corrupt");
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId)));
                 });
     }
 }

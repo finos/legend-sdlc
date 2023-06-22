@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.dependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 import java.util.Set;
 
@@ -25,21 +25,21 @@ public interface DependenciesApi
 {
     default Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId), revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId, transitive);
     }
 
     default Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId), revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId, transitive);
     }
 
     default Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType), revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType), revisionId, transitive);
     }
 
     // Upstream projects: projects that the project depends on
-    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId, boolean transitive);
+    Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, SourceSpecification sourceSpecification, String revisionId, boolean transitive);
 
     default Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, String revisionId, boolean transitive)
     {

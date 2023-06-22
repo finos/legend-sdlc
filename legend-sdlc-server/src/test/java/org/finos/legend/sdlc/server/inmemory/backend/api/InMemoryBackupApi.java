@@ -14,10 +14,8 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 import javax.inject.Inject;
 
@@ -29,13 +27,13 @@ public class InMemoryBackupApi implements BackupApi
     }
 
     @Override
-    public void discardBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
+    public void discardBackupWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void recoverBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification, boolean forceRecovery)
+    public void recoverBackupWorkspace(String projectId, SourceSpecification sourceSpecification, boolean forceRecovery)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

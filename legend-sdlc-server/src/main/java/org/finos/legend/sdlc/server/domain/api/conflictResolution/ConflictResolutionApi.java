@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.conflictResolution;
 
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 public interface ConflictResolutionApi
 {
@@ -28,7 +28,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
@@ -40,7 +40,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -48,9 +48,9 @@ public interface ConflictResolutionApi
      * we created when we started conflict resolution.
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      */
-    void discardConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification);
+    void discardConflictResolution(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Discard all conflict resolution changes in a user workspace, effectively delete the workspace with conflict resolution and the original
@@ -61,7 +61,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -73,7 +73,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
@@ -81,9 +81,9 @@ public interface ConflictResolutionApi
      * workspace and create a new workspace from the current revision of the project.
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      */
-    void discardChangesConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification);
+    void discardChangesConflictResolution(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Accept the conflict resolution in a user workspace. This will apply the entity changes (to resolve conflicts) and
@@ -95,7 +95,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInUserWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId), command);
+        this.acceptConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), command);
     }
 
     /**
@@ -108,7 +108,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInGroupWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId), command);
+        this.acceptConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), command);
     }
 
     /**
@@ -116,8 +116,8 @@ public interface ConflictResolutionApi
      * replace the original workspace by the workspace with conflict resolution.
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @param command                entity changes to resolve any conflicts
      */
-    void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, PerformChangesCommand command);
+    void acceptConflictResolution(String projectId, SourceSpecification sourceSpecification, PerformChangesCommand command);
 }

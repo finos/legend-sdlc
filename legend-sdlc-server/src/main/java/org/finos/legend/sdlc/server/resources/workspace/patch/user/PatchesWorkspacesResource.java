@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -96,7 +96,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "getting user workspace " + workspaceId + " for patch release " + patchReleaseVersionId +  " for project " + projectId,
-                () -> this.workspaceApi.getWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -117,7 +117,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -138,7 +138,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " is in conflict resolution mode",
-                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -159,7 +159,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "creating new user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.newWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
 
         );
     }
@@ -181,7 +181,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         executeWithLogging(
                 "deleting user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.deleteWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.deleteWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
         );
     }
 
@@ -202,7 +202,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "updating user workspace " + workspaceId + " in project " + projectId + " to latest revision",
-                () -> this.workspaceApi.updateWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.updateWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
         );
     }
 }

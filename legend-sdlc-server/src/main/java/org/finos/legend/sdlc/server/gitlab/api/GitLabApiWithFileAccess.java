@@ -28,7 +28,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -106,12 +106,12 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     protected ProjectConfiguration getProjectConfiguration(String projectId, WorkspaceInfo workspaceInfo, String revisionId)
     {
-        return getProjectConfiguration(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType()), revisionId);
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType()), revisionId);
     }
 
-    protected ProjectConfiguration getProjectConfiguration(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+    protected ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-       ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, workspaceSpecification, revisionId, getProjectFileAccessProvider());
+       ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, sourceSpecification, revisionId, getProjectFileAccessProvider());
         if (config == null)
         {
             config = ProjectStructure.getDefaultProjectConfiguration(projectId);
@@ -121,7 +121,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     protected ProjectConfiguration getProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
-        return ProjectStructure.getProjectConfiguration(projectId, WorkspaceSpecification.newWorkspaceSpecification(null, null, null, patchReleaseVersionId), null, getProjectFileAccessProvider());
+        return ProjectStructure.getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null, getProjectFileAccessProvider());
     }
 
     protected ProjectConfiguration getVersionProjectConfiguration(String projectId, VersionId versionId)
@@ -134,9 +134,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return config;
     }
 
-    protected ProjectStructure getProjectStructure(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+    protected ProjectStructure getProjectStructure(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        return ProjectStructure.getProjectStructure(projectId, workspaceSpecification, revisionId, getProjectFileAccessProvider());
+        return ProjectStructure.getProjectStructure(projectId, sourceSpecification, revisionId, getProjectFileAccessProvider());
     }
 
     protected ProjectFileAccessProvider getProjectFileAccessProvider()
@@ -144,9 +144,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return new GitLabProjectFileAccessProvider();
     }
 
-    private String getCurrentRevisionId(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification)
+    private String getCurrentRevisionId(GitLabProjectId projectId, SourceSpecification sourceSpecification)
     {
-        Revision revision = new GitLabRevisionAccessContext(projectId, workspaceSpecification, null).getCurrentRevision();
+        Revision revision = new GitLabRevisionAccessContext(projectId, sourceSpecification, null).getCurrentRevision();
         return (revision == null) ? null : revision.getId();
     }
 
@@ -157,13 +157,13 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
         {
-            return new GitLabProjectFileAccessContext(parseProjectId(projectId), WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
+            return new GitLabProjectFileAccessContext(parseProjectId(projectId), SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
         }
 
         @Override
-        public FileAccessContext getFileAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+        public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
         {
-            return new GitLabProjectFileAccessContext(parseProjectId(projectId), workspaceSpecification, revisionId);
+            return new GitLabProjectFileAccessContext(parseProjectId(projectId), sourceSpecification, revisionId);
         }
 
         @Override
@@ -175,9 +175,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         // Revision Access Context
 
         @Override
-        public RevisionAccessContext getRevisionAccessContext(String projectId, WorkspaceSpecification workspaceSpecification, Iterable<? extends String> paths)
+        public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
         {
-            return new GitLabRevisionAccessContext(parseProjectId(projectId), workspaceSpecification, paths);
+            return new GitLabRevisionAccessContext(parseProjectId(projectId), sourceSpecification, paths);
         }
 
         @Override
@@ -189,9 +189,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         // File Modification Context
 
         @Override
-        public FileModificationContext getFileModificationContext(String projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+        public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
         {
-            return new GitLabProjectFileFileModificationContext(parseProjectId(projectId), workspaceSpecification, revisionId);
+            return new GitLabProjectFileFileModificationContext(parseProjectId(projectId), sourceSpecification, revisionId);
         }
     }
 
@@ -438,14 +438,18 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     private class GitLabProjectFileAccessContext extends AbstractGitLabFileAccessContext
     {
         private final String revisionId;
-        private final WorkspaceSpecification workspaceSpecification;
+        private final SourceSpecification sourceSpecification;
 
-        private GitLabProjectFileAccessContext(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+        private GitLabProjectFileAccessContext(GitLabProjectId projectId, SourceSpecification sourceSpecification, String revisionId)
         {
             super(projectId);
-            this.workspaceSpecification = workspaceSpecification;
+            this.sourceSpecification = sourceSpecification;
             this.revisionId = revisionId;
-            if ((this.workspaceSpecification.getWorkspaceId() != null) && ((this.workspaceSpecification.getWorkspaceType() == null) || (this.workspaceSpecification.getWorkspaceAccessType() == null)))
+            if (sourceSpecification == null)
+            {
+                throw new RuntimeException("source specification may not be null");
+            }
+            if ((this.sourceSpecification.getWorkspaceId() != null) && ((this.sourceSpecification.getWorkspaceType() == null) || (this.sourceSpecification.getWorkspaceAccessType() == null)))
             {
                 throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
@@ -454,13 +458,13 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected String getReference()
         {
-            return this.revisionId == null ? getBranchName(projectId, workspaceSpecification) : this.revisionId;
+            return this.revisionId == null ? getBranchName(projectId, sourceSpecification) : this.revisionId;
         }
 
         @Override
         protected String getDescriptionForExceptionMessage()
         {
-            return BaseGitLabApi.getReferenceInfo(this.projectId, this.workspaceSpecification.getWorkspaceId(), this.workspaceSpecification.getWorkspaceType(), this.workspaceSpecification.getWorkspaceAccessType(), this.revisionId);
+            return BaseGitLabApi.getReferenceInfo(this.projectId, this.sourceSpecification.getWorkspaceId(), this.sourceSpecification.getWorkspaceType(), this.sourceSpecification.getWorkspaceAccessType(), this.revisionId);
         }
     }
 
@@ -839,13 +843,17 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
     private class GitLabRevisionAccessContext extends AbstractGitLabRevisionAccessContext
     {
-        private final WorkspaceSpecification workspaceSpecification;
+        private final SourceSpecification sourceSpecification;
 
-        private GitLabRevisionAccessContext(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification, Iterable<? extends String> paths)
+        private GitLabRevisionAccessContext(GitLabProjectId projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
         {
             super(projectId, paths);
-            this.workspaceSpecification = workspaceSpecification;
-            if ((this.workspaceSpecification.getWorkspaceId() != null) && ((this.workspaceSpecification.getWorkspaceType() == null) || (this.workspaceSpecification.getWorkspaceAccessType() == null)))
+            this.sourceSpecification = sourceSpecification;
+            if (sourceSpecification == null)
+            {
+                throw new RuntimeException("source specification may not be null");
+            }
+            if ((this.sourceSpecification.getWorkspaceId() != null) && ((this.sourceSpecification.getWorkspaceType() == null) || (this.sourceSpecification.getWorkspaceAccessType() == null)))
             {
                 throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
@@ -854,13 +862,13 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected String getReference()
         {
-            return getBranchName(this.projectId, this.workspaceSpecification);
+            return getBranchName(this.projectId, this.sourceSpecification);
         }
 
         @Override
         protected boolean referenceExists() throws GitLabApiException
         {
-            if (this.workspaceSpecification.getWorkspaceId() == null)
+            if (this.sourceSpecification.getWorkspaceId() == null)
             {
                 return true;
             }
@@ -884,16 +892,16 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         protected void appendReferenceDescription(StringBuilder builder)
         {
-            if (this.workspaceSpecification.getWorkspaceId() != null)
+            if (this.sourceSpecification.getWorkspaceId() != null)
             {
-                builder.append(this.workspaceSpecification.getWorkspaceType().getLabel()).append(" ").append(this.workspaceSpecification.getWorkspaceAccessType().getLabel()).append(" ").append(this.workspaceSpecification.getWorkspaceId());
+                builder.append(this.sourceSpecification.getWorkspaceType().getLabel()).append(" ").append(this.sourceSpecification.getWorkspaceAccessType().getLabel()).append(" ").append(this.sourceSpecification.getWorkspaceId());
             }
         }
 
         @Override
         public Revision getBaseRevision()
         {
-            if (this.workspaceSpecification.getWorkspaceId() == null)
+            if (this.sourceSpecification.getWorkspaceId() == null)
             {
                 return super.getBaseRevision();
             }
@@ -901,7 +909,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             try
             {
                 RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
-                Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Lists.fixedSize.with(getSourceBranch(projectId, workspaceSpecification.getPatchReleaseVersionId()), getReference()))));
+                Revision workspaceBaseRevision = fromGitLabCommit(withRetries(() -> repositoryApi.getMergeBase(this.projectId.getGitLabId(), Lists.fixedSize.with(getSourceBranch(projectId, sourceSpecification.getPatchReleaseVersionId()), getReference()))));
                 if (this.paths == null)
                 {
                     return workspaceBaseRevision;
@@ -980,14 +988,18 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     {
         private final GitLabProjectId projectId;
         private final String revisionId;
-        private final WorkspaceSpecification workspaceSpecification;
+        private final SourceSpecification sourceSpecification;
 
-        private GitLabProjectFileFileModificationContext(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification, String revisionId)
+        private GitLabProjectFileFileModificationContext(GitLabProjectId projectId, SourceSpecification sourceSpecification, String revisionId)
         {
             this.projectId = projectId;
             this.revisionId = revisionId;
-            this.workspaceSpecification = workspaceSpecification;
-            if ((this.workspaceSpecification.getWorkspaceId() != null) && ((this.workspaceSpecification.getWorkspaceType() == null) || (this.workspaceSpecification.getWorkspaceAccessType() == null)))
+            this.sourceSpecification = sourceSpecification;
+            if (sourceSpecification == null)
+            {
+                throw new RuntimeException("source specification may not be null");
+            }
+            if ((this.sourceSpecification.getWorkspaceId() != null) && ((this.sourceSpecification.getWorkspaceType() == null) || (this.sourceSpecification.getWorkspaceAccessType() == null)))
             {
                 throw new RuntimeException("workspace type and access type are required when workspace id is specified");
             }
@@ -1021,7 +1033,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         {
                             LOGGER.debug("Checking that {} is at revision {}", getDescription(), referenceRevisionId);
                         }
-                        String targetBranchRevision = getCurrentRevisionId(this.projectId, this.workspaceSpecification);
+                        String targetBranchRevision = getCurrentRevisionId(this.projectId, this.sourceSpecification);
                         if (!referenceRevisionId.equals(targetBranchRevision))
                         {
                             String msg = "Expected " + getDescription() + " to be at revision " + referenceRevisionId + "; instead it was at revision " + targetBranchRevision;
@@ -1029,7 +1041,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                             throw new LegendSDLCServerException(msg, Status.CONFLICT);
                         }
                     }
-                    String branchName = getBranchName(this.projectId, this.workspaceSpecification);
+                    String branchName = getBranchName(this.projectId, this.sourceSpecification);
                     commit = getGitLabApi().getCommitsApi().createCommit(this.projectId.getGitLabId(), branchName, message, null, null, null, commitActions);
                 }
                 if (LOGGER.isDebugEnabled())
@@ -1042,7 +1054,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             {
                 // TODO improve exception handling
                 throw buildException(e,
-                        () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + this.workspaceSpecification.getWorkspaceType().getLabel() + " " + this.workspaceSpecification.getWorkspaceAccessType().getLabel() + " " + this.workspaceSpecification.getWorkspaceId() + " in project " + this.projectId,
+                        () -> "User " + getCurrentUser() + " is not allowed to perform changes on " + this.sourceSpecification.getWorkspaceType().getLabel() + " " + this.sourceSpecification.getWorkspaceAccessType().getLabel() + " " + this.sourceSpecification.getWorkspaceId() + " in project " + this.projectId,
                         () -> "Unknown " + getDescription(),
                         () -> "Failed to perform changes on " + getDescription() + " (message: " + message + ")");
             }
@@ -1109,7 +1121,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         {
                             if (referenceRevisionId == null)
                             {
-                                referenceRevisionId = getCurrentRevisionId(this.projectId, this.workspaceSpecification);
+                                referenceRevisionId = getCurrentRevisionId(this.projectId, this.sourceSpecification);
                                 LOGGER.debug("Using current revision ({}) as reference revision for filling in content for move operations", referenceRevisionId);
                             }
                             LOGGER.debug("Getting content for move from {} to {} from revision {}", commitAction.getPreviousPath(), commitAction.getFilePath(), referenceRevisionId);
@@ -1141,7 +1153,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             int totalCommitCount = ((commitActionCount - 1) / commitSize) + 1;
 
             LOGGER.debug("Committing {} changes in {} commit(s)", commitActionCount, totalCommitCount);
-            try (TemporaryBranch tempBranch = newTemporaryBranch(this.projectId, workspaceSpecification, referenceRevisionId))
+            try (TemporaryBranch tempBranch = newTemporaryBranch(this.projectId, this.sourceSpecification, referenceRevisionId))
             {
                 if (LOGGER.isDebugEnabled())
                 {
@@ -1177,7 +1189,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
         private String getDescription()
         {
-            return BaseGitLabApi.getReferenceInfo(this.projectId, this.workspaceSpecification.getWorkspaceId(), this.workspaceSpecification.getWorkspaceType(), this.workspaceSpecification.getWorkspaceAccessType(), null);
+            return BaseGitLabApi.getReferenceInfo(this.projectId, this.sourceSpecification.getWorkspaceId(), this.sourceSpecification.getWorkspaceType(), this.sourceSpecification.getWorkspaceAccessType(), null);
         }
     }
 
@@ -1221,10 +1233,10 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return ((path != null) && path.startsWith("/")) ? path.substring(1) : path;
     }
 
-    private TemporaryBranch newTemporaryBranch(GitLabProjectId projectId, WorkspaceSpecification workspaceSpecification, String referenceRevisionId)
+    private TemporaryBranch newTemporaryBranch(GitLabProjectId projectId, SourceSpecification sourceSpecification, String referenceRevisionId)
     {
-        String initialRevisionId = (referenceRevisionId == null) ? getCurrentRevisionId(projectId, workspaceSpecification) : referenceRevisionId;
-        return new TemporaryBranch(projectId, workspaceSpecification.getWorkspaceId(), workspaceSpecification.getWorkspaceType(), workspaceSpecification.getWorkspaceAccessType(), initialRevisionId);
+        String initialRevisionId = (referenceRevisionId == null) ? getCurrentRevisionId(projectId, sourceSpecification) : referenceRevisionId;
+        return new TemporaryBranch(projectId, sourceSpecification.getWorkspaceId(), sourceSpecification.getWorkspaceType(), sourceSpecification.getWorkspaceAccessType(), initialRevisionId);
     }
 
     private static boolean shouldRetryOnException(Exception e)
@@ -1422,7 +1434,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 throw new IllegalStateException("No commits on temporary branch " + this.tempBranchName + " in project " + this.projectId);
             }
 
-            String targetBranchName = GitLabApiWithFileAccess.this.getBranchName(this.projectId, WorkspaceSpecification.newWorkspaceSpecification(this.workspaceId, this.workspaceType, this.workspaceAccessType));
+            String targetBranchName = GitLabApiWithFileAccess.this.getBranchName(this.projectId, SourceSpecification.newSourceSpecification(this.workspaceId, this.workspaceType, this.workspaceAccessType));
             LOGGER.debug("Replacing target branch {} with temporary branch {} in project {}", targetBranchName, this.tempBranchName, this.projectId);
 
             RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();

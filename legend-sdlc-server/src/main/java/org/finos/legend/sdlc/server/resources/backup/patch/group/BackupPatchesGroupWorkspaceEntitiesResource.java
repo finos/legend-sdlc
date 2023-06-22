@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -85,7 +85,7 @@ public class BackupPatchesGroupWorkspaceEntitiesResource extends EntityAccessRes
         }
         return executeWithLogging(
                 "getting entities in backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -106,7 +106,7 @@ public class BackupPatchesGroupWorkspaceEntitiesResource extends EntityAccessRes
         }
         return executeWithLogging(
                 "getting entity " + path + " in backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId)).getEntity(path)
+                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId)).getEntity(path)
         );
     }
 }

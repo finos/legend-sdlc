@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -68,7 +68,7 @@ public class PatchesGroupWorkspaceRevisionProjectConfigurationResource extends B
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in group workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId), revisionId)
         );
     }
 
@@ -92,7 +92,7 @@ public class PatchesGroupWorkspaceRevisionProjectConfigurationResource extends B
         }
         return executeWithLogging(
                 "getting project " + projectId + " available generations in group workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionAvailableArtifactGenerations(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getWorkspaceRevisionAvailableArtifactGenerations(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId), revisionId)
         );
     }
 }

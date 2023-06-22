@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -93,7 +93,7 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "getting entities in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "get entities of the user workspace",
-                () -> getEntities(this.entityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -115,11 +115,11 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         return (entityPathsToDelete == null) ?
                 executeWithLogging(
                         "deleting all entities in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).deleteAllEntities(command.getMessage())
+                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).deleteAllEntities(command.getMessage())
                 ) :
                 executeWithLogging(
                         "deleting " + entityPathsToDelete.size() + " entities in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).deleteEntities(entityPathsToDelete, command.getMessage())
+                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).deleteEntities(entityPathsToDelete, command.getMessage())
                 );
     }
 
@@ -141,7 +141,7 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "updating entities in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "update entities",
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
 
@@ -162,7 +162,7 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entity " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).getEntity(path)
+                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).getEntity(path)
         );
     }
 
@@ -184,7 +184,7 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "Creating or updating entity " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
         );
     }
 
@@ -206,7 +206,7 @@ public class PatchesWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "deleting entity " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId)).deleteEntity(path, command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).deleteEntity(path, command.getMessage())
         );
     }
 }

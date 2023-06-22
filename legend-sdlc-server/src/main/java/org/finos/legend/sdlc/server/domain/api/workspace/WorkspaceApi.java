@@ -112,7 +112,7 @@ public interface WorkspaceApi
      */
     default Workspace getUserWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return getWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -124,41 +124,41 @@ public interface WorkspaceApi
      */
     default Workspace getGroupWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return getWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Get a workspace in the given project for the current user.
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @return user workspace
      */
-    Workspace getWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    Workspace getWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     default Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     default Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
-    Workspace getWorkspaceWithConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification);
+    Workspace getWorkspaceWithConflictResolution(String projectId, SourceSpecification sourceSpecification);
 
     default Workspace getBackupUserWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return getBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     default Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return getBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
-    Workspace getBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    Workspace getBackupWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Check if a user workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
@@ -169,7 +169,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return isWorkspaceOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -181,41 +181,41 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return isWorkspaceOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Check if a workspace is outdated. i.e. if the workspace base revision is the latest revision in project.
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @return flag indicating if a workspace is outdated
      */
-    boolean isWorkspaceOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
+    boolean isWorkspaceOutdated(String projectId, SourceSpecification sourceSpecification);
 
     default boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     default boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
-    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
+    boolean isWorkspaceWithConflictResolutionOutdated(String projectId, SourceSpecification sourceSpecification);
 
     default boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     default boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
-    boolean isBackupWorkspaceOutdated(String projectId, WorkspaceSpecification workspaceSpecification);
+    boolean isBackupWorkspaceOutdated(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Check if a user workspace is in conflict resolution mode
@@ -226,7 +226,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -238,17 +238,17 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Check if a workspace is in conflict resolution mode
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @return flag indicating if a workspace is in conflict resolution mode
      */
-    boolean isWorkspaceInConflictResolutionMode(String projectId, WorkspaceSpecification workspaceSpecification);
+    boolean isWorkspaceInConflictResolutionMode(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Create a new user workspace in the given project for the current user.
@@ -259,7 +259,7 @@ public interface WorkspaceApi
      */
     default Workspace newUserWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return newWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -271,17 +271,17 @@ public interface WorkspaceApi
      */
     default Workspace newGroupWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return newWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Create a new workspace in the given project for the current user.
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    Workspace newWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Delete the given user workspace.
@@ -291,7 +291,7 @@ public interface WorkspaceApi
      */
     default void deleteUserWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        deleteWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -302,16 +302,16 @@ public interface WorkspaceApi
      */
     default void deleteGroupWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        deleteWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Delete the given workspace.
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      */
-    void deleteWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    void deleteWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Update the user workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
@@ -322,7 +322,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        return updateWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -334,17 +334,17 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        return updateWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Update the workspace with the latest committed changes. Potentially, this needs to handle conflict resolution.
      *
      * @param projectId   project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @return a workspace update report
      */
-    WorkspaceUpdateReport updateWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    WorkspaceUpdateReport updateWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     interface WorkspaceUpdateReport
     {

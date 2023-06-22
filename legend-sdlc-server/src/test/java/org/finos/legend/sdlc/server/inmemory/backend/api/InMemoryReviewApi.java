@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.eclipse.collections.api.factory.Lists;
@@ -28,9 +28,7 @@ import org.eclipse.collections.api.factory.Lists;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 public class InMemoryReviewApi implements ReviewApi
 {
@@ -66,7 +64,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, WorkspaceSpecification workspaceSpecification, String title, String description, List<String> labels)
+    public Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

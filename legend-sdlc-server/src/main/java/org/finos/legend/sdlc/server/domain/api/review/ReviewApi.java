@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 import java.time.Instant;
 import java.util.List;
@@ -107,17 +107,17 @@ public interface ReviewApi
      * Create a review for changes from the given workspace.
      *
      * @param projectId     project id
-     * @param workspaceSpecification  workspace specification
+     * @param sourceSpecification  source specification
      * @param title         review title
      * @param description   review description
      * @param labels        review labels
      * @return new review
      */
-    Review createReview(String projectId, WorkspaceSpecification workspaceSpecification, String title, String description, List<String> labels);
+    Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels);
 
     default Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels)
     {
-        return this.createReview(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType), title, description, labels);
+        return this.createReview(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType), title, description, labels);
     }
 
     /**

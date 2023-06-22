@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.comparison;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 public interface ComparisonApi
 {
@@ -58,14 +58,14 @@ public interface ComparisonApi
      * to the current revision of the workspace
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @return comparison between workspace HEAD and BASE
      */
-    Comparison getWorkspaceCreationComparison(String projectId, WorkspaceSpecification workspaceSpecification);
+    Comparison getWorkspaceCreationComparison(String projectId, SourceSpecification sourceSpecification);
 
     default Comparison getWorkspaceCreationComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceCreationComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType));
+        return this.getWorkspaceCreationComparison(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType));
     }
 
     /**
@@ -105,14 +105,14 @@ public interface ComparisonApi
      * project to the current revision of the workspace
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @return comparison between workspace HEAD and project HEAD
      */
-    Comparison getWorkspaceProjectComparison(String projectId, WorkspaceSpecification workspaceSpecification);
+    Comparison getWorkspaceProjectComparison(String projectId, SourceSpecification sourceSpecification);
 
     default Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return this.getWorkspaceProjectComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType));
+        return this.getWorkspaceProjectComparison(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType));
     }
 
     /**

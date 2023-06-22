@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -82,7 +82,7 @@ public class BackupPatchesWorkspaceRevisionEntityPathsResource extends EntityAcc
         }
         return executeWithLogging(
                 "getting entity paths in revision " + revisionId + " of backup user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntityPaths(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

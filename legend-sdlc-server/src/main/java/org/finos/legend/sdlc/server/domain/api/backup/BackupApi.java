@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.backup;
 
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
 
 public interface BackupApi
 {
@@ -26,7 +26,7 @@ public interface BackupApi
      */
     default void discardBackupUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId));
+        this.discardBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
     }
 
     /**
@@ -37,16 +37,16 @@ public interface BackupApi
      */
     default void discardBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId));
+        this.discardBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
     }
 
     /**
      * Discard the backup workspace
      *
      * @param projectId           project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      */
-    void discardBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+    void discardBackupWorkspace(String projectId, SourceSpecification sourceSpecification);
 
     /**
      * Recover the backup user workspace
@@ -57,7 +57,7 @@ public interface BackupApi
      */
     default void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, WorkspaceSpecification.newUserWorkspaceSpecification(workspaceId), forceRecovery);
+        this.recoverBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), forceRecovery);
     }
 
     /**
@@ -69,15 +69,15 @@ public interface BackupApi
      */
     default void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, WorkspaceSpecification.newGroupWorkspaceSpecification(workspaceId), forceRecovery);
+        this.recoverBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), forceRecovery);
     }
 
     /**
      * Recover the backup workspace
      *
      * @param projectId              project id
-     * @param workspaceSpecification workspace specification
+     * @param sourceSpecification source specification
      * @param forceRecovery          flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification, boolean forceRecovery);
+    void recoverBackupWorkspace(String projectId, SourceSpecification sourceSpecification, boolean forceRecovery);
 }
