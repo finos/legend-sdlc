@@ -220,7 +220,7 @@ public class InMemoryProject implements Project
                 filteredReviews.add(rev);
             }
         }
-        
+
         return filteredReviews;
     }
 

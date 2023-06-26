@@ -1,0 +1,97 @@
+# Copyright 2020 Goldman Sachs
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+applicationName: Legend SDLC
+
+sessionCookie: LEGEND_SDLC_JSESSIONID
+
+cors:
+  allowedHeaders:
+    - X-Requested-With
+    - Content-Type
+    - Accept
+    - Origin
+    - Access-Control-Allow-Credentials
+    - x-b3-parentspanid
+    - x-b3-sampled
+    - x-b3-spanid
+    - x-b3-traceid
+    - legend-test-pat
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 8888
+      maxRequestHeaderSize: 128KiB
+  adminConnectors:
+    - type: http
+      port: 8889
+  gzip:
+    includedMethods:
+      - GET
+      - POST
+  requestLog:
+    type: classic
+    level: OFF
+    appenders:
+      - type: console
+        logFormat: "OFF"
+  rootPath: /api
+
+filterPriorities:
+  GitLab: 1
+  org.pac4j.j2e.filter.CallbackFilter: 2
+  org.pac4j.j2e.filter.SecurityFilter: 3
+  CORS: 4
+
+pac4j:
+  clients:
+    - org.pac4j.core.client.direct.AnonymousClient: {}
+  bypassPaths:
+    - /api/info
+    - /api/server/info
+    - /api/server/platforms
+    - /api/auth/authorized
+
+features:
+  canCreateProject: true
+  canCreateVersion: false
+
+projectStructure:
+  projectCreation:
+    groupIdPattern: ^org\.finos\.legend\..+
+
+gitLab:
+  projectTag: legendtest
+  projectIdPrefix: PROTOTYPE
+  server:
+    scheme: na
+    host: na-uat
+  app:
+    id: na
+    secret: na
+    redirectURI: na
+
+logging:
+  # Change this to affect library class logging
+  level: INFO
+  appenders:
+    - type: console
+      logFormat: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %c - %m%n"
+
+swagger:
+  resourcePackage: org.finos.legend.sdlc.server.resources
+  title: Legend SDLC
+  version: local-snapshot
+  schemes: []
