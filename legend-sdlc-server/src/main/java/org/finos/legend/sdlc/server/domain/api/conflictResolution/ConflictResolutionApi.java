@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.conflictResolution;
 
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 public interface ConflictResolutionApi
 {
@@ -28,7 +28,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -40,7 +40,7 @@ public interface ConflictResolutionApi
      */
     default void discardConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -61,7 +61,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -73,7 +73,7 @@ public interface ConflictResolutionApi
      */
     default void discardChangesConflictResolutionInGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        this.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -95,7 +95,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInUserWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), command);
+        this.acceptConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), command);
     }
 
     /**
@@ -108,7 +108,7 @@ public interface ConflictResolutionApi
      */
     default void acceptConflictResolutionInGroupWorkspace(String projectId, String workspaceId, PerformChangesCommand command)
     {
-        this.acceptConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), command);
+        this.acceptConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), command);
     }
 
     /**

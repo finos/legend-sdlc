@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -122,7 +122,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         String fromRevisionId = diffRef.getStartSha();
         String toRevisionId = diffRef.getHeadSha();
         ProjectStructure fromProjectStructure = getProjectStructure(projectId, SourceSpecification.newSourceSpecification(workspaceInfo.getWorkspaceId(),workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType(), patchReleaseVersionId), fromRevisionId);
-        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), toRevisionId);
+        ProjectStructure toProjectStructure = getProjectStructure(gitLabProjectId.toString(), SourceSpecification.newSourceSpecification(patchReleaseVersionId), toRevisionId);
         return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 

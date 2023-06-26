@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -87,7 +87,7 @@ public class PatchesWorkspaceRevisionEntitiesResource extends EntityAccessResour
         }
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -113,7 +113,7 @@ public class PatchesWorkspaceRevisionEntitiesResource extends EntityAccessResour
         }
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), revisionId).getEntity(path)
+                () -> this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId).getEntity(path)
         );
     }
 }

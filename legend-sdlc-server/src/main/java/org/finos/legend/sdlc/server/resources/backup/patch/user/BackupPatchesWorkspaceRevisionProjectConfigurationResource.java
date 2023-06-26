@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -66,7 +66,7 @@ public class BackupPatchesWorkspaceRevisionProjectConfigurationResource extends 
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in backup user workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId)
         );
     }
 }

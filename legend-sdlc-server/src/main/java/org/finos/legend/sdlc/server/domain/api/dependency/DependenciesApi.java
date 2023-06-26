@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.dependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import java.util.Set;
 
@@ -25,12 +25,12 @@ public interface DependenciesApi
 {
     default Set<ProjectDependency> getUserWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId, transitive);
     }
 
     default Set<ProjectDependency> getGroupWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, String revisionId, boolean transitive)
     {
-        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId, transitive);
+        return this.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), revisionId, transitive);
     }
 
     default Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId, boolean transitive)

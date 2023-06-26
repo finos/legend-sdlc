@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -62,7 +62,7 @@ public class ConflictResolutionPatchesWorkspaceProjectConfigurationResource exte
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
         );
     }
 }

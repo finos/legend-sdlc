@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -64,7 +64,7 @@ public class PatchesWorkspaceEntityChangesResource extends BaseResource
         }
         return executeWithLogging(
                 "performing changes in workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId)).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }
 }

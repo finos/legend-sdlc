@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.backup;
 
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 public interface BackupApi
 {
@@ -26,7 +26,7 @@ public interface BackupApi
      */
     default void discardBackupUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        this.discardBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -37,7 +37,7 @@ public interface BackupApi
      */
     default void discardBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        this.discardBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -57,7 +57,7 @@ public interface BackupApi
      */
     default void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), forceRecovery);
+        this.recoverBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), forceRecovery);
     }
 
     /**
@@ -69,7 +69,7 @@ public interface BackupApi
      */
     default void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), forceRecovery);
+        this.recoverBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), forceRecovery);
     }
 
     /**

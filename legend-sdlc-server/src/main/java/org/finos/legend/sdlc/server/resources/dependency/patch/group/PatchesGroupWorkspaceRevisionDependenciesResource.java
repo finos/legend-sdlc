@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -69,7 +69,7 @@ public class PatchesGroupWorkspaceRevisionDependenciesResource extends BaseResou
         }
         return executeWithLogging(
                 "getting upstream dependencies of project " + projectId + " for patch release version " + patchReleaseVersionId + ", group workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
-                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId, versionId), revisionId, transitive)
+                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId, transitive)
         );
     }
 }

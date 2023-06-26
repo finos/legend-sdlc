@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.entity;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 import javax.ws.rs.core.Response.Status;
@@ -41,62 +41,62 @@ public interface EntityApi
 
     default EntityAccessContext getUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return this.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default EntityAccessContext getGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return this.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     // for backward compatibility
     @Deprecated
     default EntityAccessContext getWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return getWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     EntityAccessContext getWorkspaceEntityAccessContext(String projectId, SourceSpecification sourceSpecification);
 
     default EntityAccessContext getBackupUserWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return this.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default EntityAccessContext getBackupGroupWorkspaceEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return this.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, SourceSpecification sourceSpecification);
 
     default EntityAccessContext getUserWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default EntityAccessContext getGroupWorkspaceWithConflictResolutionEntityAccessContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return this.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, SourceSpecification sourceSpecification);
 
     default EntityAccessContext getUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId);
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     default EntityAccessContext getGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId);
+        return this.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     // for backward compatibility
     @Deprecated
     default EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId);
+        return getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     default EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, String revisionId)
@@ -108,24 +108,24 @@ public interface EntityApi
 
     default EntityAccessContext getBackupUserWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId);
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     default EntityAccessContext getBackupGroupWorkspaceRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId);
+        return this.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId);
 
     default EntityAccessContext getUserWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId);
+        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     default EntityAccessContext getGroupWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, String workspaceId, String revisionId)
     {
-        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId);
+        return this.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId);
@@ -164,12 +164,12 @@ public interface EntityApi
 
     default EntityModificationContext getUserWorkspaceEntityModificationContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return this.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default EntityModificationContext getGroupWorkspaceEntityModificationContext(String projectId, String workspaceId)
     {
-        return this.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return this.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     EntityModificationContext getWorkspaceEntityModificationContext(String projectId, SourceSpecification sourceSpecification);

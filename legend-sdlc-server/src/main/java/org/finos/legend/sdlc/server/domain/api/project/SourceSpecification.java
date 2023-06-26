@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.server.domain.api.project;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -34,36 +34,40 @@ public class SourceSpecification
     {
         this.workspaceId = workspaceId;
         this.workspaceType = workspaceType;
-        this.workspaceAccessType = workspaceAccessType;
+        this.workspaceAccessType = workspaceAccessType == null ? ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE : workspaceAccessType;
         this.patchReleaseVersionId = patchReleaseVersionId;
+        if ((this.workspaceId != null) && ((this.workspaceType == null) || (this.workspaceAccessType == null)))
+        {
+            throw new RuntimeException("workspace type and access type are required when workspace id is specified");
+        }
     }
 
-    public static SourceSpecification newGroupSourceSpecification(String workspaceId)
+    public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.GROUP, null, null);
     }
 
-    public static SourceSpecification newUserSourceSpecification(String workspaceId)
+    public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.USER, null, null);
     }
 
-    public static SourceSpecification newGroupSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
+    public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.GROUP, null, patchReleaseVersionId);
     }
 
-    public static SourceSpecification newUserSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
+    public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.USER, null, patchReleaseVersionId);
     }
 
-    public static SourceSpecification newGroupSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
+    public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.GROUP, workspaceAccessType, patchReleaseVersionId);
     }
 
-    public static SourceSpecification newUserSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
+    public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
         return new SourceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType, patchReleaseVersionId);
     }
@@ -71,6 +75,11 @@ public class SourceSpecification
     public static SourceSpecification newSourceSpecification(String workspaceId, WorkspaceType workspaceType)
     {
         return new SourceSpecification(workspaceId, workspaceType, null, null);
+    }
+
+    public static SourceSpecification newSourceSpecification(VersionId patchReleaseVersionId)
+    {
+        return new SourceSpecification(null, null, null, patchReleaseVersionId);
     }
 
     public static SourceSpecification newSourceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
@@ -122,7 +131,7 @@ public class SourceSpecification
         }
 
         SourceSpecification that = (SourceSpecification) other;
-        return (this.getWorkspaceId().equals(that.getWorkspaceId())) &&
+        return  Objects.equals(this.getWorkspaceId(), that.getWorkspaceId()) &&
                 this.getWorkspaceType() == that.getWorkspaceType() &&
                 this.getWorkspaceAccessType() == that.getWorkspaceAccessType() &&
                 Objects.equals(this.getPatchReleaseVersionId(), that.getPatchReleaseVersionId());
@@ -131,10 +140,23 @@ public class SourceSpecification
     @Override
     public String toString()
     {
-        return "<SourceSpecification workspaceId=\"" + ((getWorkspaceId() == null) ? null : getWorkspaceId()) +
-                "\" workspaceType=" + ((getWorkspaceType() == null) ? null : getWorkspaceType().toString()) +
-                " workspaceAccessType=" + ((getWorkspaceAccessType() == null) ? null : getWorkspaceAccessType().toString()) +
-                " patchReleaseVersionId=" + ((getPatchReleaseVersionId() == null) ? null : getPatchReleaseVersionId().toVersionIdString()) +
-                ">";
+        StringBuilder builder = new StringBuilder("<SourceSpecification");
+        if (getWorkspaceId() != null)
+        {
+            builder.append(" workspaceId=\"").append(getWorkspaceId()).append("\"");
+        }
+        if (getWorkspaceType() != null)
+        {
+            builder.append(" workspaceType=").append(getWorkspaceType());
+        }
+        if (getWorkspaceAccessType() != null)
+        {
+            builder.append(" workspaceAccessType=").append(getWorkspaceAccessType());
+        }
+        if (getPatchReleaseVersionId() != null)
+        {
+            builder.append(" patchReleaseVersionId=").append(getPatchReleaseVersionId());
+        }
+        return builder.append('>').toString();
     }
 }

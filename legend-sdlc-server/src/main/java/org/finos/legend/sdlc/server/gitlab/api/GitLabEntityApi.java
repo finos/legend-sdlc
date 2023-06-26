@@ -27,7 +27,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -75,7 +75,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             @Override
             protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
             {
-                return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null);
+                return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null);
             }
 
             @Override
@@ -91,7 +91,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-        validateRevision(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), revisionId);
+        validateRevision(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), revisionId);
         return new GitLabEntityAccessContext()
         {
             @Override
@@ -100,7 +100,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 String resolvedRevisionId;
                 try
                 {
-                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null));
+                    resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null));
                 }
                 catch (Exception e)
                 {
@@ -113,7 +113,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 {
                     throw new LegendSDLCServerException("Failed to resolve " + getInfoForException());
                 }
-                return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), resolvedRevisionId);
+                return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), resolvedRevisionId);
             }
 
             @Override
@@ -142,7 +142,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 @Override
                 protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
                 {
-                    return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), revisionId);
+                    return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), revisionId);
                 }
 
                 @Override
@@ -176,7 +176,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 @Override
                 protected ProjectFileAccessProvider.FileAccessContext getFileAccessContext(ProjectFileAccessProvider projectFileAccessProvider)
                 {
-                    return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), revisionId);
+                    return projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), revisionId);
                 }
 
                 @Override

@@ -100,7 +100,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         // Check if the patch branch they want to create exists or not
         if (isPatchReleaseBranchPresent(gitLabProjectId, targetVersionId))
         {
-            throw new LegendSDLCServerException("Patch release branch for " + targetVersionId.toVersionIdString() + " exists already", Response.Status.CONFLICT);
+            throw new LegendSDLCServerException("Patch " + targetVersionId.toVersionIdString() + " already exists", Response.Status.CONFLICT);
         }
 
         // Create new patch release branch
@@ -114,11 +114,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to create patch release " + targetVersionId.toVersionIdString() + " in project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error creating patch release " + targetVersionId.toVersionIdString() + " in project " + projectId);
+                    () -> "Error creating patch " + targetVersionId.toVersionIdString() + " in project " + projectId);
         }
         if (branch == null)
         {
-            throw new LegendSDLCServerException("Failed to create patch release " + targetVersionId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to create patch " + targetVersionId.toVersionIdString() + " in project " + projectId);
         }
 
         return patchBranchToPatch(projectId, branch);
@@ -228,9 +228,9 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to get patch release branches for project " + projectId,
+                    () -> "User " + getCurrentUser() + " is not allowed to get patches for project " + projectId,
                     () -> "Unknown project: " + projectId,
-                    () -> "Error getting get patch release branches for project " + projectId);
+                    () -> "Error getting get patches for project " + projectId);
         }
     }
 
@@ -274,13 +274,13 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to delete patch release branch " + patchReleaseVersionId + " in project " + projectId,
-                    () -> "Unknown patch release branch " + patchReleaseVersionId + " or project (" + projectId + ")",
-                    () -> "Error deleting patch release branch " + patchReleaseVersionId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to delete patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId,
+                    () -> "Unknown patch " + patchReleaseVersionId.toVersionIdString() + " or project (" + projectId + ")",
+                    () -> "Error deleting patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId);
         }
         if (!patchBranchDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete patch release branch " + patchReleaseVersionId + " in project " + projectId);
+            throw new LegendSDLCServerException("Failed to delete patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId);
         }
     }
 
@@ -319,7 +319,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         if (patchBranch == null)
         {
-            throw new LegendSDLCServerException("Patch " + patchReleaseVersionId + " does not exist in\"\\\" the project " + projectId, Response.Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Patch " + patchReleaseVersionId.toVersionIdString() + " does not exist in the project " + projectId, Response.Status.BAD_REQUEST);
         }
         Version releaseVersion =  newVersion(gitLabProjectId, patchReleaseVersionId, patchBranch.getCommit().getId(), VersionId.newVersionId(patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion()), "");
 
@@ -331,7 +331,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 
     private boolean closeMergeRequestsCreatedForPatchReleaseBranch(GitLabProjectId projectId, VersionId patchReleaseVersionId)
     {
-        List<MergeRequest> mergeRequests = Collections.emptyList();
+        List<MergeRequest> mergeRequests;
         String branchName = getSourceBranch(projectId, patchReleaseVersionId);
         try
         {
@@ -344,8 +344,10 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             {
                 return false;
             }
-            LOGGER.warn("Unable to fetch merge requests for the project " + projectId.getGitLabId(), e);
+            mergeRequests = Collections.emptyList();
+            LOGGER.warn("Unable to fetch merge requests for target branch {} of project {}", branchName, projectId, e);
         }
+        boolean shouldRetry = false;
         for (MergeRequest mergeRequest : mergeRequests)
         {
             try
@@ -354,10 +356,13 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             }
             catch (Exception e)
             {
-                LOGGER.warn("Unable to close merge request " + mergeRequest.getId() + " of the project " + projectId.getGitLabId(), e);
-                return false;
+                LOGGER.warn("Unable to close merge request {} of project {}", mergeRequest.getIid(), projectId, e);
+                if (GitLabApiTools.isRetryableGitLabApiException(e))
+                {
+                    shouldRetry = true;
+                }
             }
         }
-        return true;
+        return !shouldRetry;
     }
 }

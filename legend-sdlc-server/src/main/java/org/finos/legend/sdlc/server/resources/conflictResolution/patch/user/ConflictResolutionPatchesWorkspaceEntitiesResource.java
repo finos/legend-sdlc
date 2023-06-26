@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -85,7 +85,7 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
         }
         return executeWithLogging(
                 "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -106,7 +106,7 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
         }
         return executeWithLogging(
                 "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId)).getEntity(path)
+                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId)).getEntity(path)
         );
     }
 }

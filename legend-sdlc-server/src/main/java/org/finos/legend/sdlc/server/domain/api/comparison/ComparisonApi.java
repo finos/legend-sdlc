@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.comparison;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 public interface ComparisonApi
 {

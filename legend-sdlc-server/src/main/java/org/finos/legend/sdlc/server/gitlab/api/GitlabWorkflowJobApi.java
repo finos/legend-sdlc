@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;

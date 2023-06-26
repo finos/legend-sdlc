@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import javax.inject.Inject;
 

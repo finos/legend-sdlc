@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.domain.api.workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -112,7 +113,7 @@ public interface WorkspaceApi
      */
     default Workspace getUserWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return getWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -124,7 +125,7 @@ public interface WorkspaceApi
      */
     default Workspace getGroupWorkspace(String projectId, String workspaceId)
     {
-        return getWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return getWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -138,24 +139,24 @@ public interface WorkspaceApi
 
     default Workspace getUserWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default Workspace getGroupWorkspaceWithConflictResolution(String projectId, String workspaceId)
     {
-        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     Workspace getWorkspaceWithConflictResolution(String projectId, SourceSpecification sourceSpecification);
 
     default Workspace getBackupUserWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return getBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default Workspace getBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        return getBackupWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return getBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     Workspace getBackupWorkspace(String projectId, SourceSpecification sourceSpecification);
@@ -169,7 +170,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return isWorkspaceOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -181,7 +182,7 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return isWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -195,24 +196,24 @@ public interface WorkspaceApi
 
     default boolean isUserWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default boolean isGroupWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId)
     {
-        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     boolean isWorkspaceWithConflictResolutionOutdated(String projectId, SourceSpecification sourceSpecification);
 
     default boolean isBackupUserWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     default boolean isBackupGroupWorkspaceOutdated(String projectId, String workspaceId)
     {
-        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     boolean isBackupWorkspaceOutdated(String projectId, SourceSpecification sourceSpecification);
@@ -226,7 +227,7 @@ public interface WorkspaceApi
      */
     default boolean isUserWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -238,7 +239,7 @@ public interface WorkspaceApi
      */
     default boolean isGroupWorkspaceInConflictResolutionMode(String projectId, String workspaceId)
     {
-        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -259,7 +260,7 @@ public interface WorkspaceApi
      */
     default Workspace newUserWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return newWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -271,7 +272,7 @@ public interface WorkspaceApi
      */
     default Workspace newGroupWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return newWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -291,7 +292,7 @@ public interface WorkspaceApi
      */
     default void deleteUserWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        deleteWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -302,7 +303,7 @@ public interface WorkspaceApi
      */
     default void deleteGroupWorkspace(String projectId, String workspaceId)
     {
-        deleteWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        deleteWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -322,7 +323,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateUserWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, SourceSpecification.newUserSourceSpecification(workspaceId));
+        return updateWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
     }
 
     /**
@@ -334,7 +335,7 @@ public interface WorkspaceApi
      */
     default WorkspaceUpdateReport updateGroupWorkspace(String projectId, String workspaceId)
     {
-        return updateWorkspace(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId));
+        return updateWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
     }
 
     /**

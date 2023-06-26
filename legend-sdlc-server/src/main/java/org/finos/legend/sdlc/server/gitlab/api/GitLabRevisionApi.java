@@ -27,7 +27,7 @@ import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -69,7 +69,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
     public RevisionAccessContext getProjectRevisionContext(String projectId, VersionId patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null));
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null));
     }
 
     @Override
@@ -82,7 +82,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
             throw new LegendSDLCServerException("Invalid entity path: " + entityPath, Status.BAD_REQUEST);
         }
         ProjectFileAccessProvider fileAccessProvider = getProjectFileAccessProvider();
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         String filePath = projectStructure.findEntityFile(entityPath, fileAccessContext);
         if (filePath == null)
@@ -90,7 +90,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
             throw new LegendSDLCServerException("Cannot find entity \"" + entityPath + "\" in project " + projectId, Status.NOT_FOUND);
         }
         String canonicalizedFilePath = ProjectPaths.canonicalizeFile(filePath);
-        return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), Collections.singleton(canonicalizedFilePath)), new PackageablePathExceptionProcessor(entityPath, canonicalizedFilePath));
+        return new ProjectFileRevisionAccessContextWrapper(fileAccessProvider.getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), Collections.singleton(canonicalizedFilePath)), new PackageablePathExceptionProcessor(entityPath, canonicalizedFilePath));
     }
 
     @Override
@@ -102,10 +102,10 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
         {
             throw new LegendSDLCServerException("Invalid package path: " + packagePath, Status.BAD_REQUEST);
         }
-        ProjectStructure projectStructure = getProjectStructure(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null);
+        ProjectStructure projectStructure = getProjectStructure(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null);
         MutableList<String> directories = Iterate.collectWith(projectStructure.getEntitySourceDirectories(), ProjectStructure.EntitySourceDirectory::packagePathToFilePath, packagePath, Lists.mutable.empty());
         MutableList<String> canonicalizedAndReducedDirectories = ProjectPaths.canonicalizeAndReduceDirectories(directories);
-        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), canonicalizedAndReducedDirectories), new PackageablePathExceptionProcessor(packagePath, canonicalizedAndReducedDirectories));
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), canonicalizedAndReducedDirectories), new PackageablePathExceptionProcessor(packagePath, canonicalizedAndReducedDirectories));
     }
 
     @Override

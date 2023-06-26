@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.project;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import java.util.Map;
 import java.util.Objects;

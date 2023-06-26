@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
@@ -74,7 +74,7 @@ public class PatchesWorkspaceEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revisions for entity " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -99,7 +99,7 @@ public class PatchesWorkspaceEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revision " + revisionId + " for entity " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newUserSourceSpecification(workspaceId, versionId), path).getRevision(revisionId)
+                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), path).getRevision(revisionId)
         );
     }
 }

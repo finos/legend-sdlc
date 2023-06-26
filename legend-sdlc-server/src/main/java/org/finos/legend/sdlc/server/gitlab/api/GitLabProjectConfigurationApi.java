@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.domain.api.workspace.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -67,7 +67,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         try
         {
-            return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null);
+            return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null);
         }
         catch (Exception e)
         {
@@ -86,7 +86,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         String resolvedRevisionId;
         try
         {
-            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(null, null, null, patchReleaseVersionId), null));
+            resolvedRevisionId = resolveRevisionId(revisionId, getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null));
         }
         catch (Exception e)
         {
@@ -158,13 +158,13 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getBackupUserWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserSourceSpecification(workspaceId), revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     @Override
     public ProjectConfiguration getBackupGroupWorkspaceRevisionProjectConfiguration(String projectId, String workspaceId, String revisionId)
     {
-        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newGroupSourceSpecification(workspaceId), revisionId);
+        return this.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), revisionId);
     }
 
     @Override
