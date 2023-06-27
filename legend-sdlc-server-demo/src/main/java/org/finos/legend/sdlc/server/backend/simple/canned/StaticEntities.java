@@ -22,20 +22,32 @@ import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.backend.simple.domain.model.entity.SimpleBackendEntity;
 
-import java.net.URL;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class StaticEntities
 {
     public static String load(String resourceName) throws Exception
     {
-        String fullName = "/backend/simple/canned/" + resourceName;
-        URL resource = StaticEntities.class.getResource(fullName);
-        byte[] bytes = Files.readAllBytes(Paths.get(resource.toURI()));
-        return new String(bytes, Charset.defaultCharset());
+        InputStream resourceAsStream = null;
+        try
+        {
+            String fullName = "/backend/simple/canned/" + resourceName;
+            resourceAsStream = StaticEntities.class.getResourceAsStream(fullName);
+            BufferedReader reader = new BufferedReader(new InputStreamReader(resourceAsStream));
+            String contents = reader.lines().collect(Collectors.joining(System.lineSeparator()));
+            return contents;
+        }
+        finally
+        {
+            if (resourceAsStream != null)
+            {
+                resourceAsStream.close();
+            }
+        }
     }
 
     public static MutableMap<String, Entity> loadEntities(String resourceName) throws Exception
