@@ -17,7 +17,6 @@ name: Build CI
 env:
   CI_DEPLOY_USERNAME: ${{ secrets.CI_DEPLOY_USERNAME }}
   CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
-  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
 on: [push, pull_request]
@@ -29,7 +28,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
+
     - name: Cache Maven dependencies
       uses: actions/cache@v2
       env:
@@ -41,6 +41,7 @@ jobs:
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
           ${{ runner.os }}-
+
     - name: Set up JDK
       uses: actions/setup-java@v1
       with:
@@ -48,29 +49,40 @@ jobs:
         server-id: ossrh
         server-username: CI_DEPLOY_USERNAME
         server-password: CI_DEPLOY_PASSWORD
+
     - name: Configure git
       run: |
         git config --global committer.email "infra@finos.org"
         git config --global committer.name "FINOS Admin"
         git config --global author.email "${GITHUB_ACTOR}@users.noreply.github.com"
         git config --global author.name "${GITHUB_ACTOR}"
+
     - name: Download deps and plugins
       run: mvn de.qaware.maven:go-offline-maven-plugin:resolve-dependencies
+
+    - name: Collect Workflow Telemetry
+      uses: runforesight/workflow-telemetry-action@v1
+      with:
+        theme: dark
+
     - name: Build + Test
       if: (github.repository != 'finos/legend-sdlc') || (github.ref != 'refs/heads/master')
       run: mvn install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+
     - name: Build + Test + Maven Deploy + Sonar + Docker Snapshot
       if: (github.repository == 'finos/legend-sdlc') && (github.ref == 'refs/heads/master')
       env:
         DOCKER_USERNAME: finos
         DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
       run: mvn javadoc:javadoc deploy -P sonar,docker-snapshot -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+
     - name: Upload Test Results
       if: always()
       uses: actions/upload-artifact@v3
       with:
         name: test-results
         path: legend-sdlc-test-reports/surefire-reports-aggregate/*.xml
+
     - name: Upload CI Event
       if: always()
       uses: actions/upload-artifact@v3

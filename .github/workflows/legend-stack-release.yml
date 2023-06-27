@@ -68,6 +68,11 @@ jobs:
             mvn versions:set-property -Dproperty=legend.engine.version -DnewVersion=${engineVersion}
           fi
 
+      - name: Collect Workflow Telemetry
+        uses: runforesight/workflow-telemetry-action@v1
+        with:
+          theme: dark
+
       - name: Build + Test
         run: mvn clean install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
 
@@ -89,7 +94,6 @@ jobs:
         run: docker stop gitlab
 
       - name: Commit Legend Stack Version Upgrade
-        if: success()
         run: |
           pureVersion="${{ github.event.client_payload.legendPureVersion }}"
           sharedVersion="${{ github.event.client_payload.legendSharedVersion }}"
@@ -102,7 +106,6 @@ jobs:
           fi    
 
       - name: Compute next development version
-        if: success()
         run: |
           releaseVersion=${{ github.event.client_payload.releaseVersion }}
           n=${releaseVersion//[!0-9]/ }
@@ -112,9 +115,7 @@ jobs:
           echo "DEVELOPMENT_VERSION=${developmentVersion}" >> $GITHUB_ENV
 
       - name: Prepare release
-        if: success()
         run: mvn -B -DpreparationGoals=clean release:prepare -DreleaseVersion=${{ github.event.client_payload.releaseVersion }} -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} -P release
 
       - name: Perform release
-        if: success()
         run: mvn -B release:perform -P release,docker
