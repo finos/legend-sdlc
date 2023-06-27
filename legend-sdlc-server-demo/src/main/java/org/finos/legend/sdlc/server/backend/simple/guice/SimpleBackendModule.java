@@ -35,8 +35,8 @@ import org.finos.legend.sdlc.server.backend.simple.api.workflow.SimpleBackendWor
 import org.finos.legend.sdlc.server.backend.simple.api.workspace.SimpleBackendWorkspaceApi;
 import org.finos.legend.sdlc.server.backend.simple.depot.SimpleBackendMetadataApi;
 import org.finos.legend.sdlc.server.backend.simple.domain.model.project.SimpleBackendProject;
-import org.finos.legend.sdlc.server.backend.simple.resource.SimpleBackendAuthCheckResource;
-import org.finos.legend.sdlc.server.backend.simple.resource.SimpleBackendAuthResource;
+import org.finos.legend.sdlc.server.resources.backend.simple.SimpleBackendAuthCheckResource;
+import org.finos.legend.sdlc.server.resources.backend.simple.SimpleBackendAuthResource;
 import org.finos.legend.sdlc.server.backend.simple.state.SimpleBackendState;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.backend.simple.resource;
+package org.finos.legend.sdlc.server.resources.backend.simple;
 
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
