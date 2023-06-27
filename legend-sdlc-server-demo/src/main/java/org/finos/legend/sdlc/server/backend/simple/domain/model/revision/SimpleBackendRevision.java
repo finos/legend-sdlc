@@ -18,11 +18,17 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class SimpleBackendRevision implements Revision
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SimpleBackendRevision.class);
+
     private String id;
     private String authorName;
     private Instant authoredTimestamp;
@@ -30,16 +36,27 @@ public class SimpleBackendRevision implements Revision
     private Instant committedTimestamp;
     private String message;
     private MutableMap<String, Entity> entities;
+    private String[] context;
 
-    public SimpleBackendRevision(MutableMap<String, Entity> entities)
+    @JsonIgnore
+    private int revisionCounter = 1;
+
+    public SimpleBackendRevision(MutableMap<String, Entity> entities, String[] context)
     {
         this.entities = entities;
-        this.id = "rev1";
+        this.context = context;
+        this.revisionCounter = 1;
+        this.id = this.makeId();
         this.authorName = "alice";
         this.authoredTimestamp = Instant.now();
         this.committerName = "alice";
         this.committedTimestamp = Instant.now();
         this.message = "message";
+    }
+
+    private String makeId()
+    {
+        return "rev" + this.revisionCounter;
     }
 
     @Override
@@ -86,6 +103,7 @@ public class SimpleBackendRevision implements Revision
 
     public void update(Iterable<? extends Entity> entities)
     {
+        this.revisionCounter += 1;
         this.delete(entities);
         this.add(entities);
         this.updateTime();
@@ -93,6 +111,7 @@ public class SimpleBackendRevision implements Revision
 
     public void add(Iterable<? extends Entity> entities)
     {
+        this.revisionCounter += 1;
         for (Entity entity : entities)
         {
             String path = fullPath(entity);
@@ -103,6 +122,7 @@ public class SimpleBackendRevision implements Revision
 
     public void delete(Iterable<? extends Entity> entities)
     {
+        this.revisionCounter += 1;
         for (Entity entity : entities)
         {
             String path = fullPath(entity);
@@ -119,5 +139,19 @@ public class SimpleBackendRevision implements Revision
     private void updateTime()
     {
         this.committedTimestamp = Instant.now();
+    }
+
+    public void logStats()
+    {
+        LOGGER.info("Revision stats. Revision=%s. Context=%s. Entities count=%d", this.id, this.contextToString(), this.entities.size());
+    }
+
+    private String contextToString()
+    {
+        if (context == null)
+        {
+            return "";
+        }
+        return Arrays.stream(this.context).collect(Collectors.joining(","));
     }
 }

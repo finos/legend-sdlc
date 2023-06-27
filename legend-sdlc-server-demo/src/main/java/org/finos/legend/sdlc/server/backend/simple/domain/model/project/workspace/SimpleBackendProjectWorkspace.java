@@ -54,7 +54,7 @@ public class SimpleBackendProjectWorkspace implements Workspace
         this.workspaceId = workspaceId;
         this.userId = userId;
         this.entities.putAll(entities.castToMap());
-        this.revision  = new SimpleBackendRevision(this.entities);
+        this.revision  = new SimpleBackendRevision(this.entities, new String[]{"project", projectId, "workspace", workspaceId});
         this.revisionAccessContext = new SimpleBackendRevisionAccessContext(this.revision);
         this.entityAccessContext = new SimpleBackendEntityAccessContext(this.revision);
         this.entityModificationContext = new SimpleBackendEntityModificationContext(this.revision);

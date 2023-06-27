@@ -82,7 +82,7 @@ public class SimpleBackendProject implements Project
         this.projectType = projectType;
         this.webUrl = webUrl;
 
-        this.revision  = new SimpleBackendRevision(this.entities);
+        this.revision  = new SimpleBackendRevision(this.entities, new String[]{"project", projectId});
         this.version = new SimpleBackendVersion(projectId, revision);
         this.revisionAccessContext = new SimpleBackendRevisionAccessContext(revision);
         this.entityAccessContext = new SimpleBackendEntityAccessContext(revision);

@@ -88,25 +88,26 @@ public class SimpleBackendState
         this.projects.remove(id);
     }
 
-
     public void initializeWithStaticProjects()
     {
+        this.initializeWithGuidedTourProject();
+    }
+
+    private void initializeWithGuidedTourProject()
+    {
+        String resourceName = "tour.json";
+        LOGGER.info("Initializing in memory backend with 'Guided Tour' project from '" + resourceName + "' (CLASSPATH) ");
         try
         {
-            Project guidedTourProject = this.buildGuidedTourProject();
-            this.projects.put(guidedTourProject.getProjectId(), (SimpleBackendProject) guidedTourProject);
+            SimpleBackendProject project = (SimpleBackendProject) this.createProject("Guided Tour", "A guided tour of Legend", ProjectType.PRODUCTION, "demo", "demo", Collections.emptyList());
+            MutableMap<String, Entity> simpleBackendEntitiesMap = StaticEntities.loadEntities(resourceName);
+            project.addEntities(simpleBackendEntitiesMap);
+
+            this.projects.put(project.getProjectId(), project);
         }
         catch (Exception e)
         {
             LOGGER.warn("Failed to initialize guided tour project", e);
         }
-    }
-
-    private SimpleBackendProject buildGuidedTourProject() throws Exception
-    {
-        SimpleBackendProject project = (SimpleBackendProject) this.createProject("Guided Tour", "A guided tour of Legend", ProjectType.PRODUCTION, "demo", "demo", Collections.emptyList());
-        MutableMap<String, Entity> simpleBackendEntitiesMap = StaticEntities.loadEntities("tour.json");
-        project.addEntities(simpleBackendEntitiesMap);
-        return project;
     }
 }

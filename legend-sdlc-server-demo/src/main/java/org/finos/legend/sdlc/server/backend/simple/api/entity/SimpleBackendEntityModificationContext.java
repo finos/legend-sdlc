@@ -46,6 +46,7 @@ public class SimpleBackendEntityModificationContext implements EntityModificatio
         {
             revision.update(entities);
         }
+        this.revision.logStats();
         return this.revision;
     }
 
@@ -79,7 +80,7 @@ public class SimpleBackendEntityModificationContext implements EntityModificatio
         revision.delete(toDelete);
         revision.update(toUpdate);
         revision.add(toAdd);
-
+        this.revision.logStats();
         return revision;
     }
 }
