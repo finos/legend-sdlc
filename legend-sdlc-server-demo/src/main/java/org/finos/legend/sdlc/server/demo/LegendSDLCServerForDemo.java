@@ -24,9 +24,13 @@ import org.finos.legend.sdlc.server.backend.simple.guice.SimpleBackendMixins;
 import org.finos.legend.sdlc.server.backend.simple.guice.SimpleBackendModule;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LegendSDLCServerForDemo extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerForDemo.class);
+
     private GuiceBundle<LegendSDLCServerConfiguration> guiceBundle;
 
     public LegendSDLCServerForDemo()
@@ -70,6 +74,7 @@ public class LegendSDLCServerForDemo extends BaseLegendSDLCServer<LegendSDLCServ
 
     public static void main(String... args) throws Exception
     {
+        LOGGER.info("Starting demo SDLC server");
         new LegendSDLCServerForDemo().run(args);
     }
 }

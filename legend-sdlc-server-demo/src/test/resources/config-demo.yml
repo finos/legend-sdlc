@@ -16,6 +16,19 @@ applicationName: Legend SDLC
 
 sessionCookie: LEGEND_SDLC_JSESSIONID
 
+cors:
+  allowedHeaders:
+    - X-Requested-With
+    - Content-Type
+    - Accept
+    - Origin
+    - Access-Control-Allow-Credentials
+    - x-b3-parentspanid
+    - x-b3-sampled
+    - x-b3-spanid
+    - x-b3-traceid
+    - legend-test-pat
+
 server:
   applicationConnectors:
     - type: http
@@ -44,28 +57,24 @@ filterPriorities:
 
 pac4j:
   clients:
-    - org.finos.legend.server.pac4j.kerberos.LocalKerberosClient: {}
+    - org.pac4j.core.client.direct.AnonymousClient: {}
   bypassPaths:
     - /api/info
+    - /api/server/info
+    - /api/server/platforms
+    - /api/auth/authorized
+
+features:
+  canCreateProject: true
+  canCreateVersion: false
 
 projectStructure:
   projectCreation:
     groupIdPattern: ^org\.finos\.legend\..+
 
-gitLab:
-  projectTag: legendtest
-  projectIdPrefix: PROTOTYPE
-  server:
-    scheme: na
-    host: na-uat
-  app:
-    id: na
-    secret: na
-    redirectURI: na
-
 logging:
   # Change this to affect library class logging
-  level: OFF
+  level: INFO
   appenders:
     - type: console
       logFormat: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5p [%thread] %c - %m%n"
