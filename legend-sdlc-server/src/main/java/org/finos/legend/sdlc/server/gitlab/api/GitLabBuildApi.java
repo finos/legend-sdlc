@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -91,7 +92,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected String getRef()
             {
-                return getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId);
+                return getBranchName(gitLabProjectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType));
             }
 
             @Override

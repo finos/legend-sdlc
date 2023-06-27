@@ -16,11 +16,14 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
 import javax.ws.rs.core.GenericType;
@@ -102,6 +105,53 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
 
         // B directly depends on A
         String url = String.format("/api/projects/B/workspaces/w1/revisions/%s/upstreamProjects", workspace1CurrentRevision);
+        Set<ProjectDependency> dependencies = readProjectDependencies(this.clientFor(url).request().get());
+
+        Assert.assertEquals(1, dependencies.size());
+        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId());
+    }
+
+    @Test
+    public void testGetProjectRevisionUpstreamDependenciesForPatchReleaseVersion()
+    {
+        this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.backend.project("B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.backend.project("A").addDependency("C:1.0.0");
+        this.backend.project("B").addDependency("A:1.0.0");
+        this.backend.project("B").addPatch(VersionId.parseVersionId("1.0.1"));
+        String patchRevisionId = this.backend.getRevisionApi().getProjectRevisionContext("B", VersionId.parseVersionId("1.0.1")).getCurrentRevision().getId();
+
+        // B directly depends on A
+        String url = String.format("/api/projects/B/patches/1.0.1/revisions/%s/upstreamProjects", patchRevisionId);
+        Set<ProjectDependency> dependencies = readProjectDependencies(this.clientFor(url).request().get());
+
+        Assert.assertEquals(1, dependencies.size());
+        Assert.assertEquals("1.0.0", findDependency(dependencies, "A").getVersionId());
+
+        // B transitively depends on A and C
+        Set<ProjectDependency> transitiveDependencies = readProjectDependencies(this.clientFor(url).queryParam("transitive", "true").request().get());
+
+        Assert.assertEquals(2, transitiveDependencies.size());
+        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "A").getVersionId());
+        Assert.assertEquals("1.0.0", findDependency(transitiveDependencies, "C").getVersionId());
+    }
+
+    @Test
+    public void testGetWorkspaceRevisionUpstreamDependenciesForPatchReleaseVersion()
+    {
+        this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.backend.project("B").addVersionedClasses("1.0.0", "b1", "b2");
+        this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
+        this.backend.project("A").addDependency("C:1.0.0");
+        this.backend.project("B").addDependency("A:1.0.0");
+
+        this.backend.project("B").addEntities("w1", Arrays.asList(TestTools.newClassEntity("b3", "B")), VersionId.parseVersionId("1.0.1"));
+
+        String workspace1CurrentRevision = this.backend.getRevisionApi().getWorkspaceRevisionContext("B", SourceSpecification.newUserWorkspaceSourceSpecification("w1", VersionId.parseVersionId("1.0.1"))).getCurrentRevision().getId();
+
+        // B directly depends on A
+        String url = String.format("/api/projects/B/patches/1.0.1/workspaces/w1/revisions/%s/upstreamProjects", workspace1CurrentRevision);
         Set<ProjectDependency> dependencies = readProjectDependencies(this.clientFor(url).request().get());
 
         Assert.assertEquals(1, dependencies.size());

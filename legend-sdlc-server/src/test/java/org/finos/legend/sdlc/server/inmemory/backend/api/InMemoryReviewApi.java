@@ -18,7 +18,9 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.eclipse.collections.api.factory.Lists;
@@ -26,9 +28,7 @@ import org.eclipse.collections.api.factory.Lists;
 import javax.inject.Inject;
 import java.time.Instant;
 import java.util.List;
-import java.util.Set;
 import java.util.function.BiPredicate;
-import java.util.function.Predicate;
 
 public class InMemoryReviewApi implements ReviewApi
 {
@@ -41,7 +41,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public Review getReview(String projectId, String reviewId)
+    public Review getReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
         Review result = inMemoryProject.getReview(reviewId);
@@ -50,11 +50,11 @@ public class InMemoryReviewApi implements ReviewApi
     }
     
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
 
-        return Lists.mutable.withAll(inMemoryProject.getReviews(state, revisionIds, since, until, limit));
+        return Lists.mutable.withAll(inMemoryProject.getReviews(patchReleaseVersionId, state, revisionIds, since, until, limit));
     }
 
     @Override
@@ -64,67 +64,67 @@ public class InMemoryReviewApi implements ReviewApi
     }
 
     @Override
-    public Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels)
+    public Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review closeReview(String projectId, String reviewId)
+    public Review closeReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review reopenReview(String projectId, String reviewId)
+    public Review reopenReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review approveReview(String projectId, String reviewId)
+    public Review approveReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review revokeReviewApproval(String projectId, String reviewId)
+    public Review revokeReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review rejectReview(String projectId, String reviewId)
+    public Review rejectReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Approval getReviewApproval(String projectId, String reviewId)
+    public Approval getReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review commitReview(String projectId, String reviewId, String message)
+    public Review commitReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String message)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId)
+    public ReviewUpdateStatus getReviewUpdateStatus(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public ReviewUpdateStatus updateReview(String projectId, String reviewId)
+    public ReviewUpdateStatus updateReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Review editReview(String projectId, String reviewId, String title, String description, List<String> labels)
+    public Review editReview(String projectId,  VersionId patchReleaseVersionId, String reviewId, String title, String description, List<String> labels)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

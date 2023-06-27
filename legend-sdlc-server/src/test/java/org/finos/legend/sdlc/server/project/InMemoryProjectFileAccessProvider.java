@@ -18,8 +18,8 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import java.io.InputStream;
 import java.time.Instant;
@@ -44,26 +44,26 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Access Context
 
     @Override
-    public FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
         AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
         {
             @Override
             protected SimpleInMemoryVCS getContextVCS()
             {
-                return getVCS(projectId, workspaceId);
+                return getVCS(projectId, sourceSpecification.getWorkspaceId());
             }
         };
-        if (workspaceAccessType == null)
+        if (sourceSpecification.getWorkspaceAccessType() == null || sourceSpecification.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE)
         {
             return abstractInMemoryFileAccessContext;
         }
-        switch (workspaceType)
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             case GROUP:
             {
-                switch (workspaceAccessType)
+                switch (sourceSpecification.getWorkspaceAccessType())
                 {
                     case WORKSPACE:
                     {
@@ -99,36 +99,47 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // Revision Access Context
 
     @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
+    public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
     {
-        switch (workspaceType)
+        if (sourceSpecification.getWorkspaceId() != null)
         {
-            case USER:
+            switch (sourceSpecification.getWorkspaceType())
             {
-                switch (workspaceAccessType)
+                case USER:
                 {
-                    case WORKSPACE:
+                    switch (sourceSpecification.getWorkspaceAccessType())
                     {
-                        return new AbstractRevisionAccessContext(paths)
+                        case WORKSPACE:
                         {
-                            @Override
-                            protected SimpleInMemoryVCS getContextVCS()
+                            return new AbstractRevisionAccessContext(paths)
                             {
-                                return getVCS(projectId, workspaceId);
-                            }
-                        };
-                    }
-                    default:
-                    {
-                        throw new UnsupportedOperationException("Special workspace access type is not supported for getting revision access context");
+                                @Override
+                                protected SimpleInMemoryVCS getContextVCS()
+                                {
+                                    return getVCS(projectId, sourceSpecification.getWorkspaceId());
+                                }
+                            };
+                        }
+                        default:
+                        {
+                            throw new UnsupportedOperationException("Special workspace access type is not supported for getting revision access context");
+                        }
                     }
                 }
-            }
-            default:
-            {
-                throw new UnsupportedOperationException("Special workspace type is not supported for getting revision access context");
+                default:
+                {
+                    throw new UnsupportedOperationException("Special workspace type is not supported for getting revision access context");
+                }
             }
         }
+        return new AbstractRevisionAccessContext(paths)
+        {
+            @Override
+            protected SimpleInMemoryVCS getContextVCS()
+            {
+                return getVCS(projectId, (String) null);
+            }
+        };
     }
 
     @Override
@@ -147,29 +158,33 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
     // File Modification Context
 
     @Override
-    public FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
+    public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        switch (workspaceType)
+        if (sourceSpecification.getWorkspaceId() != null)
         {
-            case USER:
+            switch (sourceSpecification.getWorkspaceType())
             {
-                switch (workspaceAccessType)
+                case USER:
                 {
-                    case WORKSPACE:
+                    switch (sourceSpecification.getWorkspaceAccessType())
                     {
-                        return new InMemoryFileModificationContext(projectId, workspaceId, revisionId);
-                    }
-                    default:
-                    {
-                        throw new UnsupportedOperationException("Special workspace access type is not supported for getting file modification context");
+                        case WORKSPACE:
+                        {
+                            return new InMemoryFileModificationContext(projectId, sourceSpecification.getWorkspaceId(), revisionId);
+                        }
+                        default:
+                        {
+                            throw new UnsupportedOperationException("Special workspace access type is not supported for getting file modification context");
+                        }
                     }
                 }
-            }
-            default:
-            {
-                throw new UnsupportedOperationException("Special workspace type is not supported for getting file modification context");
+                default:
+                {
+                    throw new UnsupportedOperationException("Special workspace type is not supported for getting file modification context");
+                }
             }
         }
+        return new InMemoryFileModificationContext(projectId, null, revisionId);
     }
 
     public void createWorkspace(String projectId, String workspaceId)

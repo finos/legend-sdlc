@@ -18,7 +18,9 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
@@ -37,104 +39,104 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
+    public List<Workspace> getWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
         MutableList<Workspace> result = Lists.mutable.empty();
         if (workspaceTypes.contains(WorkspaceType.GROUP))
         {
-            result.addAllIterable(inMemoryProject.getGroupWorkspaces());
+            result.addAllIterable(inMemoryProject.getGroupWorkspaces(patchReleaseVersionId));
         }
         if (workspaceTypes.contains(WorkspaceType.USER))
         {
-            result.addAllIterable(inMemoryProject.getUserWorkspaces());
+            result.addAllIterable(inMemoryProject.getUserWorkspaces(patchReleaseVersionId));
         }
         return result;
     }
 
     @Override
-    public List<Workspace> getWorkspacesWithConflictResolution(String projectId)
+    public List<Workspace> getWorkspacesWithConflictResolution(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public List<Workspace> getBackupWorkspaces(String projectId)
+    public List<Workspace> getBackupWorkspaces(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> workspaceTypes)
+    public List<Workspace> getAllWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes)
     {
-        return getWorkspaces(projectId, workspaceTypes);
+        return getWorkspaces(projectId, patchReleaseVersionId, workspaceTypes);
     }
 
     @Override
-    public Workspace getWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public Workspace getWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        return workspaceType == WorkspaceType.GROUP ? inMemoryProject.getGroupWorkspace(workspaceId) : inMemoryProject.getUserWorkspace(workspaceId);
+        return sourceSpecification.getWorkspaceType() == WorkspaceType.GROUP ? inMemoryProject.getGroupWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId()) : inMemoryProject.getUserWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
     }
 
     @Override
-    public Workspace getWorkspaceWithConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public Workspace getWorkspaceWithConflictResolution(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public Workspace getBackupWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public Workspace getBackupWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public boolean isWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public boolean isWorkspaceOutdated(String projectId, SourceSpecification sourceSpecification)
     {
         return false;
     }
 
     @Override
-    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public boolean isWorkspaceWithConflictResolutionOutdated(String projectId, SourceSpecification sourceSpecification)
     {
         return false;
     }
 
     @Override
-    public boolean isBackupWorkspaceOutdated(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public boolean isBackupWorkspaceOutdated(String projectId, SourceSpecification sourceSpecification)
     {
         return false;
     }
 
     @Override
-    public boolean isWorkspaceInConflictResolutionMode(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public boolean isWorkspaceInConflictResolutionMode(String projectId, SourceSpecification sourceSpecification)
     {
         return false;
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public Workspace newWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void deleteWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void deleteWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        if (workspaceType == WorkspaceType.GROUP)
+        if (sourceSpecification.getWorkspaceType() == WorkspaceType.GROUP)
         {
-            inMemoryProject.deleteGroupWorkspace(workspaceId);
+            inMemoryProject.deleteGroupWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
         }
         else
         {
-            inMemoryProject.deleteUserWorkspace(workspaceId);
+            inMemoryProject.deleteUserWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
         }
     }
 
     @Override
-    public WorkspaceUpdateReport updateWorkspace(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public WorkspaceUpdateReport updateWorkspace(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

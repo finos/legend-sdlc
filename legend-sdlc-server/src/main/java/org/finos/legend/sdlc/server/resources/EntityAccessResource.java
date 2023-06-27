@@ -25,7 +25,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-abstract class EntityAccessResource extends BaseResource
+public abstract class EntityAccessResource extends BaseResource
 {
     private static final char TAGGED_VALUE_DELIMITER = '/';
 

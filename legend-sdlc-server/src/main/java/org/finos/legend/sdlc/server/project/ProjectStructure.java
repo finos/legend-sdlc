@@ -48,6 +48,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
@@ -316,9 +317,9 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
     }
 
-    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    public static ProjectStructure getProjectStructure(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessor)
     {
-        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, sourceSpecification, revisionId));
     }
 
     public static ProjectStructure getProjectStructure(FileAccessContext fileAccessContext)
@@ -341,12 +342,12 @@ public abstract class ProjectStructure
     @Deprecated
     public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectConfiguration(projectId, workspaceId, revisionId, projectFileAccessProvider, WorkspaceType.USER, workspaceAccessType);
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType), revisionId, projectFileAccessProvider);
     }
 
-    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    public static ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessProvider)
     {
-        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId));
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId, ProjectFileAccessProvider projectFileAccessProvider)
@@ -398,9 +399,10 @@ public abstract class ProjectStructure
     private static Revision updateProjectConfiguration(UpdateBuilder updateBuilder, boolean requireRevisionId)
     {
         String projectId = updateBuilder.getProjectId();
-        String workspaceId = updateBuilder.getWorkspaceId();
-        WorkspaceType workspaceType = updateBuilder.getWorkspaceType();
-        WorkspaceAccessType workspaceAccessType = updateBuilder.getWorkspaceAccessType();
+        String workspaceId = updateBuilder.getSourceSpecification().getWorkspaceId();
+        VersionId patchReleaseVersionId = updateBuilder.getSourceSpecification().getPatchReleaseVersionId();
+        WorkspaceType workspaceType = updateBuilder.getSourceSpecification().getWorkspaceType();
+        WorkspaceAccessType workspaceAccessType = updateBuilder.getSourceSpecification().getWorkspaceAccessType();
         ProjectFileAccessProvider projectFileAccessProvider = updateBuilder.getProjectFileAccessProvider();
 
         String revisionId;
@@ -432,7 +434,7 @@ public abstract class ProjectStructure
             revisionId = updateBuilder.getRevisionId();
         }
 
-        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType, patchReleaseVersionId), revisionId));
 
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId) : readProjectConfiguration(configFile);
@@ -1019,10 +1021,8 @@ public abstract class ProjectStructure
     {
         private final ProjectFileAccessProvider projectFileAccessProvider;
         private final String projectId;
+        private SourceSpecification sourceSpecification;
         private ProjectConfigurationUpdater configUpdater;
-        private String workspaceId;
-        private WorkspaceType workspaceType;
-        private WorkspaceAccessType workspaceAccessType;
         private String revisionId;
         private String message;
         private ProjectStructureExtensionProvider projectStructureExtensionProvider;
@@ -1032,6 +1032,7 @@ public abstract class ProjectStructure
         {
             this.projectFileAccessProvider = projectFileAccessProvider;
             this.projectId = projectId;
+            this.sourceSpecification = SourceSpecification.newSourceSpecification(null, null, null);
             this.configUpdater = (configUpdater == null) ? getDefaultProjectConfigurationUpdater() : configUpdater;
         }
 
@@ -1040,6 +1041,11 @@ public abstract class ProjectStructure
         public String getProjectId()
         {
             return this.projectId;
+        }
+
+        public SourceSpecification getSourceSpecification()
+        {
+            return this.sourceSpecification;
         }
 
         // Project file access provider
@@ -1074,34 +1080,17 @@ public abstract class ProjectStructure
 
         // Workspace
 
-        public String getWorkspaceId()
+        public void setWorkspace(SourceSpecification sourceSpecification)
         {
-            return this.workspaceId;
+            Objects.requireNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
+            Objects.requireNonNull(sourceSpecification.getWorkspaceType(), "workspaceType may not be null");
+            Objects.requireNonNull(sourceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
+            this.sourceSpecification = sourceSpecification;
         }
 
-        public WorkspaceType getWorkspaceType()
+        public UpdateBuilder withWorkspace(SourceSpecification sourceSpecification)
         {
-            return this.workspaceType;
-        }
-
-        public WorkspaceAccessType getWorkspaceAccessType()
-        {
-            return this.workspaceAccessType;
-        }
-
-        public void setWorkspace(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-        {
-            Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-            Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-            Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-            this.workspaceId = workspaceId;
-            this.workspaceType = workspaceType;
-            this.workspaceAccessType = workspaceAccessType;
-        }
-
-        public UpdateBuilder withWorkspace(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-        {
-            setWorkspace(workspaceId, workspaceType, workspaceAccessType);
+            setWorkspace(sourceSpecification);
             return this;
         }
 

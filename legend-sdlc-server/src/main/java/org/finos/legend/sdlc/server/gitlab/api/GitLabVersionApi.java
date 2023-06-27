@@ -22,16 +22,8 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
-import org.gitlab4j.api.CommitsApi;
-import org.gitlab4j.api.GitLabApi;
-import org.gitlab4j.api.GitLabApiException;
-import org.gitlab4j.api.models.Commit;
-import org.gitlab4j.api.models.CommitRef.RefType;
-import org.gitlab4j.api.models.ReleaseParams;
-import org.gitlab4j.api.models.Tag;
 
 import java.util.Comparator;
 import java.util.List;
@@ -71,25 +63,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version getVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        if ((majorVersion < 0) || (minorVersion < 0) || (patchVersion < 0))
-        {
-            return null;
-        }
-        VersionId versionId = VersionId.newVersionId(majorVersion, minorVersion, patchVersion);
-        String name = buildVersionTagName(versionId);
-        try
-        {
-            return fromGitLabTag(projectId, getGitLabApi().getTagsApi().getTag(gitLabProjectId.getGitLabId(), name));
-        }
-        catch (Exception e)
-        {
-            throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to access version " + versionId.toVersionIdString() + " of project " + projectId,
-                () -> "Version " + versionId.toVersionIdString() + " is unknown for project " + projectId,
-                () -> "Error accessing version " + versionId.toVersionIdString() + " of project " + projectId);
-        }
+        return this.getProjectVersion(projectId, majorVersion, minorVersion, patchVersion);
     }
 
     @Override
@@ -123,7 +97,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
                 throw new LegendSDLCServerException("Unknown new version type: " + type, Status.BAD_REQUEST);
             }
         }
-        return newVersion(gitLabProjectId, revisionId, nextVersionId, notes);
+        return newVersion(gitLabProjectId, null, revisionId, nextVersionId, notes);
     }
 
     private Stream<Version> getVersions(GitLabProjectId projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
@@ -239,64 +213,5 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     private Version getLatestVersion(GitLabProjectId projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
         return getVersions(projectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).reduce(BinaryOperator.maxBy(Comparator.comparing(Version::getId))).orElse(null);
-    }
-
-    private Version newVersion(GitLabProjectId projectId, String revisionId, VersionId versionId, String notes)
-    {
-        String tagName = buildVersionTagName(versionId);
-        String message = "Release tag for version " + versionId.toVersionIdString();
-
-        try
-        {
-            GitLabApi gitLabApi = getGitLabApi();
-            CommitsApi commitsApi = gitLabApi.getCommitsApi();
-
-            Commit referenceCommit;
-            if (revisionId == null)
-            {
-                referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), getDefaultBranch(projectId)));
-                if (referenceCommit == null)
-                {
-                    throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
-                }
-            }
-            else
-            {
-                try
-                {
-                    referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), revisionId));
-                }
-                catch (GitLabApiException e)
-                {
-                    if (GitLabApiTools.isNotFoundGitLabApiException(e))
-                    {
-                        throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
-                    }
-                    throw e;
-                }
-
-                String defaultBranch = getDefaultBranch(projectId);
-                boolean isOnDefaultBranch = PagerTools.stream(withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), revisionId, RefType.BRANCH, ITEMS_PER_PAGE)))
-                        .anyMatch(ref -> defaultBranch.equals(ref.getName()));
-                if (!isOnDefaultBranch)
-                {
-                    throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
-                }
-            }
-
-            Tag tag = gitLabApi.getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceCommit.getId(), message, (String) null);
-            if (notes != null)
-            {
-                gitLabApi.getReleasesApi().createRelease(projectId.getGitLabId(), new ReleaseParams().withTagName(tagName).withDescription(notes));
-            }
-            return fromGitLabTag(projectId.toString(), tag);
-        }
-        catch (Exception e)
-        {
-            throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to create version " + versionId.toVersionIdString() + " of project " + projectId,
-                () -> "Unknown project: " + projectId,
-                () -> "Error creating version " + versionId.toVersionIdString() + " of project " + projectId);
-        }
     }
 }

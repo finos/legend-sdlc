@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.workflow;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -23,9 +24,19 @@ import javax.ws.rs.core.Response;
 
 public interface WorkflowJobApi
 {
-    WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId);
+    WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId);
 
-    WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
+    default WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
+    {
+        return this.getProjectWorkflowJobAccessContext(projectId, null);
+    }
+
+    WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification);
+
+    default WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    {
+        return this.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType));
+    }
 
     default WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, String versionIdString)
     {
@@ -43,5 +54,10 @@ public interface WorkflowJobApi
 
     WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId);
 
-    WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId);
+    WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    {
+        return this.getReviewWorkflowJobAccessContext(projectId, null, reviewId);
+    }
 }

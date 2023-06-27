@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import javax.inject.Inject;
 
@@ -28,19 +28,19 @@ public class InMemoryConflictResolutionApi implements ConflictResolutionApi
     }
 
     @Override
-    public void discardConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void discardConflictResolution(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void discardChangesConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType)
+    public void discardChangesConflictResolution(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public void acceptConflictResolution(String projectId, String workspaceId, WorkspaceType workspaceType, PerformChangesCommand command)
+    public void acceptConflictResolution(String projectId, SourceSpecification sourceSpecification, PerformChangesCommand command)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

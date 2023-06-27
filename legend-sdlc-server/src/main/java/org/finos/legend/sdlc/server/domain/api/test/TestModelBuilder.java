@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
@@ -68,10 +69,10 @@ public class TestModelBuilder
         DepotProjectId upstreamDepotProjectId = getDepotProjectId(upstreamProjectId);
         DepotProjectId downstreamDepotProjectId = DepotProjectId.parseProjectId(downstreamProjectId);
 
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId, false);
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, SourceSpecification.newSourceSpecification(upstreamWorkspaceId, type), upstreamRevisionId, false);
         Set<DepotProjectVersion> dependencies = processDependencies(upstreamDepotProjectId, downstreamDepotProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, upstreamWorkspaceId, type, upstreamRevisionId).getEntities(null, null, null);
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, SourceSpecification.newSourceSpecification(upstreamWorkspaceId, type), upstreamRevisionId).getEntities(null, null, null);
         return getEntities(downstreamDepotProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 

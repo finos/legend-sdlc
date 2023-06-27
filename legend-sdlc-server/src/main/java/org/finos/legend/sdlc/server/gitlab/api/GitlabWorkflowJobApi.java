@@ -18,17 +18,16 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.IntObjectMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.JobApi;
@@ -53,11 +52,11 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     }
 
     @Override
-    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
+    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowJobAccessContext(projectId, getDefaultBranch(gitLabProjectId))
+        return new RefWorkflowJobAccessContext(projectId, getSourceBranch(gitLabProjectId, patchReleaseVersionId))
         {
             @Override
             protected String getInfoForException()
@@ -68,17 +67,17 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     }
 
     @Override
-    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowJobAccessContext(projectId, getBranchName(workspaceId, workspaceType, workspaceAccessType, gitLabProjectId))
+        return new RefWorkflowJobAccessContext(projectId, getBranchName(gitLabProjectId, sourceSpecification))
         {
             @Override
             protected String getInfoForException()
             {
-                return "workspace " + workspaceId + " in project " + projectId;
+                return "workspace " + sourceSpecification.getWorkspaceId() + " in project " + projectId;
             }
         };
     }
@@ -99,13 +98,13 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     }
 
     @Override
-    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId, true);
 
         return new GitLabWorkflowJobAccessContext(projectId)
         {

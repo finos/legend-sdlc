@@ -20,26 +20,34 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.user.User;
+import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
+import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.server.tools.ThrowingRunnable;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
+import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;
 import org.gitlab4j.api.ProjectApi;
 import org.gitlab4j.api.models.AbstractUser;
+import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.CommitRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Project;
+import org.gitlab4j.api.models.Release;
+import org.gitlab4j.api.models.ReleaseParams;
 import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +65,7 @@ import java.util.function.Function;
 import java.util.function.LongUnaryOperator;
 import java.util.function.Supplier;
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 abstract class BaseGitLabApi
@@ -77,6 +86,8 @@ abstract class BaseGitLabApi
     private static final String GROUP_BRANCH_PREFIX = "group";
     private static final String GROUP_CONFLICT_RESOLUTION_BRANCH_PREFIX = "group-resolution";
     private static final String GROUP_BACKUP_BRANCH_PREFIX = "group-backup";
+    private static final String PATCH_RELEASE_BRANCH_PREFIX = "patch/main";
+    protected static final String PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX = "patch";
 
     private static final String MR_STATE_OPENED = "opened";
     private static final String MR_STATE_CLOSED = "closed";
@@ -242,16 +253,38 @@ abstract class BaseGitLabApi
 
     protected static WorkspaceInfo parseWorkspaceBranchName(String branchName)
     {
+        String branchType;
+        int branchInfoDelimiter;
         int firstDelimiter = branchName.indexOf(BRANCH_DELIMITER);
         if (firstDelimiter == -1)
         {
             return null;
         }
+        int secondDelimiter = branchName.indexOf(BRANCH_DELIMITER, firstDelimiter + 1);
+        if (secondDelimiter == -1)
+        {
+            branchInfoDelimiter = firstDelimiter;
+            branchType = branchName.substring(0, firstDelimiter);
+        }
+        else
+        {
+            int thirdDelimter = branchName.indexOf(BRANCH_DELIMITER, secondDelimiter + 1);
+            if (thirdDelimter == -1)
+            {
+                branchInfoDelimiter = firstDelimiter;
+                branchType = branchName.substring(0, firstDelimiter);
+            }
+            else
+            {
+                branchInfoDelimiter = thirdDelimter;
+                branchType = branchName.substring(firstDelimiter + 1, secondDelimiter);
+            }
+        }
 
         WorkspaceType type;
         WorkspaceAccessType accessType;
 
-        switch (branchName.substring(0, firstDelimiter))
+        switch (branchType)
         {
             case WORKSPACE_BRANCH_PREFIX:
             {
@@ -300,19 +333,19 @@ abstract class BaseGitLabApi
             case USER:
             {
                 // <prefix>/<userId>/<workspaceId>
-                int nextDelimiter = branchName.indexOf(BRANCH_DELIMITER, firstDelimiter + 1);
+                int nextDelimiter = branchName.indexOf(BRANCH_DELIMITER, branchInfoDelimiter + 1);
                 if (nextDelimiter == -1)
                 {
                     return null;
                 }
                 String workspaceId = branchName.substring(nextDelimiter + 1);
-                String userId = branchName.substring(firstDelimiter + 1, nextDelimiter);
+                String userId = branchName.substring(branchInfoDelimiter + 1, nextDelimiter);
                 return new WorkspaceInfo(workspaceId, type, accessType, userId);
             }
             case GROUP:
             {
                 // <prefix>/<workspaceId>
-                String workspaceId = branchName.substring(firstDelimiter + 1);
+                String workspaceId = branchName.substring(branchInfoDelimiter + 1);
                 return new WorkspaceInfo(workspaceId, type, accessType, null);
             }
             default:
@@ -322,9 +355,9 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected String getBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, GitLabProjectId projectId)
+    protected String getBranchName(GitLabProjectId projectId, SourceSpecification sourceSpecification)
     {
-        return (workspaceId == null) ? getDefaultBranch(projectId) : getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType);
+        return (sourceSpecification.getWorkspaceId() == null) ? getSourceBranch(projectId, sourceSpecification.getPatchReleaseVersionId()) : getWorkspaceBranchName(sourceSpecification);
     }
 
     protected String getDefaultBranch(GitLabProjectId projectId)
@@ -340,30 +373,52 @@ abstract class BaseGitLabApi
         }
     }
 
+    protected String getSourceBranch(GitLabProjectId projectId, VersionId patchReleaseVersionId)
+    {
+        if (patchReleaseVersionId == null)
+        {
+            return getDefaultBranch(projectId);
+        }
+        else
+        {
+            return getPatchReleaseBranchName(patchReleaseVersionId);
+        }
+    }
+
     protected String getDefaultBranch(Project project)
     {
         String defaultBranch = project.getDefaultBranch();
         return (defaultBranch == null) ? MASTER_BRANCH : defaultBranch;
     }
 
-    protected String getWorkspaceBranchName(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected String getWorkspaceBranchName(SourceSpecification sourceSpecification)
     {
-        String prefix = getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType);
-        switch (workspaceType)
+        String prefix = getWorkspaceBranchNamePrefix(sourceSpecification.getWorkspaceType(), sourceSpecification.getWorkspaceAccessType());
+        switch (sourceSpecification.getWorkspaceType())
         {
             case USER:
             {
-                return createBranchName(prefix, getCurrentUser(), workspaceId);
+                return sourceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, getCurrentUser(), sourceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, sourceSpecification.getPatchReleaseVersionId().toVersionIdString(), getCurrentUser(), sourceSpecification.getWorkspaceId());
             }
             case GROUP:
             {
-                return createBranchName(prefix, workspaceId);
+                return sourceSpecification.getPatchReleaseVersionId() == null ? createBranchName(prefix, sourceSpecification.getWorkspaceId()) : createBranchName(PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX, prefix, sourceSpecification.getPatchReleaseVersionId().toVersionIdString(), sourceSpecification.getWorkspaceId());
             }
             default:
             {
-                throw new IllegalStateException("Unknown workspace type: " + workspaceType);
+                throw new IllegalStateException("Unknown workspace type: " + sourceSpecification.getWorkspaceType());
             }
         }
+    }
+
+    protected String getPatchReleaseBranchPrefix()
+    {
+        return PATCH_RELEASE_BRANCH_PREFIX + BRANCH_DELIMITER;
+    }
+
+    protected String getPatchReleaseBranchName(VersionId patchRelaseVersionId)
+    {
+        return patchRelaseVersionId.appendVersionIdString(new StringBuilder(PATCH_RELEASE_BRANCH_PREFIX).append(BRANCH_DELIMITER)).toString();
     }
 
     protected String newUserTemporaryBranchName()
@@ -403,6 +458,11 @@ abstract class BaseGitLabApi
     private static String createBranchName(String first, String second, String third, String fourth)
     {
         return first + BRANCH_DELIMITER + second + BRANCH_DELIMITER + third + BRANCH_DELIMITER + fourth;
+    }
+
+    private static String createBranchName(String first, String second, String third, String fourth, String fifth)
+    {
+        return first + BRANCH_DELIMITER + second + BRANCH_DELIMITER + third + BRANCH_DELIMITER + fourth + BRANCH_DELIMITER + fifth;
     }
 
     protected static boolean isWorkspaceBranchName(String branchName, WorkspaceAccessType workspaceAccessType)
@@ -464,6 +524,20 @@ abstract class BaseGitLabApi
     protected static VersionId parseVersionTagName(String name)
     {
         return VersionId.parseVersionId(name, RELEASE_TAG_PREFIX.length(), name.length());
+    }
+
+    protected static VersionId parseVersionIdString(String versionIdString)
+    {
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(versionIdString);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
+        return versionId;
     }
 
     protected static boolean isVersionTag(Tag tag)
@@ -761,10 +835,10 @@ abstract class BaseGitLabApi
         };
     }
 
-    protected static Workspace fromWorkspaceBranchName(String projectId, String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    protected static Workspace fromWorkspaceBranchName(String projectId, VersionId patchReleaseVersionId, String branchName, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
     {
-        int userIdStartIndex = getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1;
-        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, workspaceType == WorkspaceType.GROUP ? 0 : userIdStartIndex);
+        int userIdStartIndex = patchReleaseVersionId == null ? getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 1 : PATCH_RELEASE_WORKSPACE_BRANCH_PREFIX.length() + getWorkspaceBranchNamePrefix(workspaceType, workspaceAccessType).length() + 8;
+        int userIdEndIndex = branchName.indexOf(BRANCH_DELIMITER, workspaceType == WorkspaceType.GROUP ? userIdStartIndex - 1 : userIdStartIndex);
         String userId = workspaceType == WorkspaceType.GROUP ? null : branchName.substring(userIdStartIndex, userIdEndIndex);
         String workspaceId = branchName.substring(userIdEndIndex + 1);
         return new Workspace()
@@ -789,12 +863,12 @@ abstract class BaseGitLabApi
         };
     }
 
-    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId)
+    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, VersionId patchReleaseVersionId, String reviewId)
     {
-        return getReviewMergeRequest(mergeRequestApi, projectId, reviewId, false);
+        return getReviewMergeRequest(mergeRequestApi, projectId, patchReleaseVersionId, reviewId, false);
     }
 
-    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId, boolean includeRebaseInProgress)
+    protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, VersionId patchReleaseVersionId, String reviewId, boolean includeRebaseInProgress)
     {
         int mergeRequestId = parseIntegerId(reviewId);
         MergeRequest mergeRequest;
@@ -810,7 +884,7 @@ abstract class BaseGitLabApi
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
 
-        if (!isReviewMergeRequest(mergeRequest, getDefaultBranch(projectId)))
+        if (!isReviewMergeRequest(mergeRequest, getSourceBranch(projectId, patchReleaseVersionId)))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
@@ -819,7 +893,6 @@ abstract class BaseGitLabApi
 
     protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String targetBranch)
     {
-
         if ((mergeRequest == null) || !targetBranch.equals(mergeRequest.getTargetBranch()))
         {
             return false;
@@ -993,5 +1066,139 @@ abstract class BaseGitLabApi
         {
             return this.userId;
         }
+    }
+
+    protected static Version fromGitLabTag(String projectId, Tag tag)
+    {
+        if (tag == null)
+        {
+            return null;
+        }
+
+        VersionId versionId = parseVersionTagName(tag.getName());
+        String revisionId = tag.getCommit().getId();
+        String notes = applyIfNotNull(Release::getDescription, tag.getRelease());
+        return new Version()
+        {
+            @Override
+            public VersionId getId()
+            {
+                return versionId;
+            }
+
+            @Override
+            public String getProjectId()
+            {
+                return projectId;
+            }
+
+            @Override
+            public String getRevisionId()
+            {
+                return revisionId;
+            }
+
+            @Override
+            public String getNotes()
+            {
+                return notes;
+            }
+        };
+    }
+
+    protected Version getProjectVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+        if ((majorVersion < 0) || (minorVersion < 0) || (patchVersion < 0))
+        {
+            return null;
+        }
+        VersionId versionId = VersionId.newVersionId(majorVersion, minorVersion, patchVersion);
+        String name = buildVersionTagName(versionId);
+        try
+        {
+            return fromGitLabTag(projectId, getGitLabApi().getTagsApi().getTag(gitLabProjectId.getGitLabId(), name));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to access version " + versionId.toVersionIdString() + " of project " + projectId,
+                    () -> "Version " + versionId.toVersionIdString() + " is unknown for project " + projectId,
+                    () -> "Error accessing version " + versionId.toVersionIdString() + " of project " + projectId);
+        }
+    }
+
+    protected Version newVersion(GitLabProjectId projectId, VersionId patchReleaseVersionId, String revisionId, VersionId versionId, String notes)
+    {
+        String tagName = buildVersionTagName(versionId);
+        String message = "Release tag for version " + versionId.toVersionIdString();
+
+        try
+        {
+            GitLabApi gitLabApi = getGitLabApi();
+            CommitsApi commitsApi = gitLabApi.getCommitsApi();
+
+            Commit referenceCommit;
+            if (revisionId == null)
+            {
+                referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), getSourceBranch(projectId, patchReleaseVersionId)));
+                if (referenceCommit == null)
+                {
+                    throw new LegendSDLCServerException("Cannot create version " + versionId.toVersionIdString() + " of project " + projectId + ": cannot find current revision (project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
+                }
+            }
+            else
+            {
+                try
+                {
+                    referenceCommit = withRetries(() -> commitsApi.getCommit(projectId.getGitLabId(), revisionId));
+                }
+                catch (GitLabApiException e)
+                {
+                    if (GitLabApiTools.isNotFoundGitLabApiException(e))
+                    {
+                        throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
+                    }
+                    throw e;
+                }
+
+                String sourceBranch = getSourceBranch(projectId, patchReleaseVersionId);
+                boolean isOnSourceBranch = PagerTools.stream(withRetries(() -> commitsApi.getCommitRefs(projectId.getGitLabId(), revisionId, CommitRef.RefType.BRANCH, ITEMS_PER_PAGE)))
+                        .anyMatch(ref -> sourceBranch.equals(ref.getName()));
+                if (!isOnSourceBranch)
+                {
+                    throw new LegendSDLCServerException("Revision " + revisionId + " is unknown in project " + projectId, Status.BAD_REQUEST);
+                }
+            }
+
+            Tag tag = gitLabApi.getTagsApi().createTag(projectId.getGitLabId(), tagName, referenceCommit.getId(), message, (String) null);
+            if (notes != null)
+            {
+                gitLabApi.getReleasesApi().createRelease(projectId.getGitLabId(), new ReleaseParams().withTagName(tagName).withDescription(notes));
+            }
+            return fromGitLabTag(projectId.toString(), tag);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to create version " + versionId.toVersionIdString() + " of project " + projectId,
+                    () -> "Unknown project: " + projectId,
+                    () -> "Error creating version " + versionId.toVersionIdString() + " of project " + projectId);
+        }
+    }
+
+    protected boolean isPatchReleaseBranchPresent(GitLabProjectId projectId, VersionId patchReleaseVersionId)
+    {
+        boolean branchExists = false;
+        try
+        {
+            branchExists = GitLabApiTools.branchExists(getGitLabApi().getRepositoryApi(), projectId.getGitLabId(), getPatchReleaseBranchName(patchReleaseVersionId));
+        }
+        catch (Exception e)
+        {
+            throw new LegendSDLCServerException("Error in fetching the patch release branch" + patchReleaseVersionId.toVersionIdString(), e);
+        }
+        return branchExists;
     }
 }

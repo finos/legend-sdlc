@@ -19,6 +19,8 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,11 +32,17 @@ public interface ReviewApi
     /**
      * Get a particular review for the given project.
      *
-     * @param projectId project id
-     * @param reviewId  review id
+     * @param projectId           project id
+     * @param patchReleaseVersionId patch release version
+     * @param reviewId            review id
      * @return review
      */
-    Review getReview(String projectId, String reviewId);
+    Review getReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review getReview(String projectId, String reviewId)
+    {
+        return this.getReview(projectId, null, reviewId);
+    }
 
     /**
      * Get all reviews for the given project with the given state.
@@ -45,6 +53,7 @@ public interface ReviewApi
      * If the limit equals to 0, effectively no limit is applied.
      *
      * @param projectId   project id
+     * @param patchReleaseVersionId patch release version
      * @param state       review state
      * @param revisionIds a set of revision IDs, with each we will get the reviews are associated
      * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
@@ -53,7 +62,12 @@ public interface ReviewApi
      * @param limit       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit);
+
+    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    {
+        return this.getReviews(projectId, null, state, revisionIds, workspaceIdAndTypePredicate, since, until, limit);
+    }
 
     @Deprecated
     default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
@@ -93,81 +107,127 @@ public interface ReviewApi
      * Create a review for changes from the given workspace.
      *
      * @param projectId     project id
-     * @param workspaceId   workspace id
-     * @param workspaceType workspace type
+     * @param sourceSpecification  source specification
      * @param title         review title
      * @param description   review description
      * @param labels        review labels
      * @return new review
      */
-    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels);
+    Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels);
+
+    default Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels)
+    {
+        return this.createReview(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType), title, description, labels);
+    }
 
     /**
      * Close a review. This is only valid if the review is open.
      *
-     * @param projectId project id
-     * @param reviewId  review id
-     * @return updated review
+     * @param projectId           project id
+     * @param patchReleaseVersionId patch release version
+     * @param reviewId            review id
+     * @return updated            review
      */
-    Review closeReview(String projectId, String reviewId);
+    Review closeReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review closeReview(String projectId, String reviewId)
+    {
+        return this.closeReview(projectId, null, reviewId);
+    }
 
     /**
      * Reopen a review. This is only valid if the review is closed.
      *
-     * @param projectId project id
-     * @param reviewId  review id
-     * @return updated review
+     * @param projectId           project id
+     * @param patchReleaseVersionId patch release version
+     * @param reviewId            review id
+     * @return updated            review
      */
-    Review reopenReview(String projectId, String reviewId);
+    Review reopenReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review reopenReview(String projectId, String reviewId)
+    {
+        return this.reopenReview(projectId, null, reviewId);
+    }
 
     /**
      * Approve a review. This is only valid if the review is open.
      *
-     * @param projectId project id
-     * @param reviewId  review id
-     * @return updated review
+     * @param projectId           project id
+     * @param patchReleaseVersionId patch release version
+     * @param reviewId            review id
+     * @return updated            review
      */
-    Review approveReview(String projectId, String reviewId);
+    Review approveReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review approveReview(String projectId, String reviewId)
+    {
+        return this.approveReview(projectId, null, reviewId);
+    }
 
     /**
      * Revoke approval of a review. This is only valid if the review
      * is open and the user has previously approved it.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @return updated review
      */
-    Review revokeReviewApproval(String projectId, String reviewId);
+    Review revokeReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review revokeReviewApproval(String projectId, String reviewId)
+    {
+        return this.revokeReviewApproval(projectId, null, reviewId);
+    }
 
     /**
      * Reject a review. This is only valid if the review is open. It
      * may cause the review to be closed.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @return updated review
      */
-    Review rejectReview(String projectId, String reviewId);
+    Review rejectReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Review rejectReview(String projectId, String reviewId)
+    {
+        return this.rejectReview(projectId, null, reviewId);
+    }
 
     /**
      * Get the approval information for a particular review in the given project.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @return approval
      */
-    Approval getReviewApproval(String projectId, String reviewId);
+    Approval getReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default Approval getReviewApproval(String projectId, String reviewId)
+    {
+        return this.getReviewApproval(projectId, null, reviewId);
+    }
 
     /**
      * Commit changes from a review. This is only valid if the
      * review is open and has sufficient approvals.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @param message   commit message
      * @return committed review
      */
-    Review commitReview(String projectId, String reviewId, String message);
+    Review commitReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String message);
+
+    default  Review commitReview(String projectId, String reviewId, String message)
+    {
+        return this.commitReview(projectId, null, reviewId, message);
+    }
 
     /**
      * Get the current update status of an open review. See {@link ReviewUpdateStatus}
@@ -175,10 +235,16 @@ public interface ReviewApi
      * open, this method will throw an exception.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @return update status
      */
-    ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId);
+    ReviewUpdateStatus getReviewUpdateStatus(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId)
+    {
+        return this.getReviewUpdateStatus(projectId, null, reviewId);
+    }
 
     /**
      * Try to update an open review. That is, try to bring the review up to date
@@ -196,22 +262,34 @@ public interface ReviewApi
      * the review will be left in the pre-update state.
      *
      * @param projectId project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId  review id
      * @return update status
      */
-    ReviewUpdateStatus updateReview(String projectId, String reviewId);
+    ReviewUpdateStatus updateReview(String projectId, VersionId patchReleaseVersionId, String reviewId);
+
+    default ReviewUpdateStatus updateReview(String projectId, String reviewId)
+    {
+        return this.updateReview(projectId, null, reviewId);
+    }
 
     /**
      * Edit review, update the review  title, description and labels
      *
      * @param projectId   project id
+     * @param patchReleaseVersionId patch release version
      * @param reviewId    review id
      * @param title       updated Title
      * @param description description
      * @param labels      review labels
      * @return edited review
      */
-    Review editReview(String projectId, String reviewId, String title, String description, List<String> labels);
+    Review editReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String title, String description, List<String> labels);
+
+    default Review editReview(String projectId, String reviewId, String title, String description, List<String> labels)
+    {
+        return this.editReview(projectId, null, reviewId, title, description, labels);
+    }
 
     interface ReviewUpdateStatus
     {

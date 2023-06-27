@@ -15,10 +15,9 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import javax.inject.Inject;
 
@@ -30,13 +29,13 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
+    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
+    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -48,7 +47,7 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
+    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
