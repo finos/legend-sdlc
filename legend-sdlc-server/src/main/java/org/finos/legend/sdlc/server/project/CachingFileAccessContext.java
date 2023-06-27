@@ -27,7 +27,7 @@ public class CachingFileAccessContext extends AbstractFileAccessContext
 {
     private final FileAccessContext delegate;
     private final MutableMap<String, byte[]> cache = Maps.mutable.empty();
-    private volatile boolean isCacheFull = false;
+    private boolean isCacheFull = false;
 
     private CachingFileAccessContext(FileAccessContext delegate)
     {
@@ -62,41 +62,34 @@ public class CachingFileAccessContext extends AbstractFileAccessContext
     public ProjectFile getFile(String path)
     {
         String canonicalPath = canonicalizePath(path);
-        byte[] bytes;
-        if (this.isCacheFull)
-        {
-            bytes = this.cache.get(canonicalPath);
-        }
-        else
-        {
-            synchronized (this.cache)
-            {
-                bytes = this.cache.get(canonicalPath);
-                if ((bytes == null) && !this.isCacheFull)
-                {
-                    ProjectFile file = this.delegate.getFile(canonicalPath);
-                    if (file != null)
-                    {
-                        bytes = file.getContentAsBytes();
-                        this.cache.put(canonicalPath, bytes);
-                    }
-                }
-            }
-        }
+        byte[] bytes = getFileBytes(canonicalPath);
         return (bytes == null) ? null : ProjectFiles.newByteArrayProjectFile(canonicalPath, bytes);
+    }
+
+    private byte[] getFileBytes(String canonicalPath)
+    {
+        synchronized (this.cache)
+        {
+            return this.isCacheFull ?
+                    this.cache.get(canonicalPath) :
+                    this.cache.getIfAbsentPutWithKey(canonicalPath, this::getFileBytesFromDelegate);
+        }
+    }
+
+    private byte[] getFileBytesFromDelegate(String canonicalPath)
+    {
+        ProjectFile file = this.delegate.getFile(canonicalPath);
+        return (file == null) ? null : file.getContentAsBytes();
     }
 
     public void fillCache()
     {
-        if (!this.isCacheFull)
+        synchronized (this.cache)
         {
-            synchronized (this.cache)
+            if (!this.isCacheFull)
             {
-                if (!this.isCacheFull)
-                {
-                    this.delegate.getFiles().forEach(pf -> this.cache.getIfAbsentPut(pf.getPath(), pf::getContentAsBytes));
-                    this.isCacheFull = true;
-                }
+                this.delegate.getFiles().forEach(pf -> this.cache.getIfAbsentPut(pf.getPath(), pf::getContentAsBytes));
+                this.isCacheFull = true;
             }
         }
     }
