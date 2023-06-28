@@ -18,14 +18,12 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.junit.Assert;
 
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -49,7 +47,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, null, groupId, artifactId, tags);
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, null, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -60,9 +58,9 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, this.gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json",
                 "/PANGRAM.TXT",
@@ -72,7 +70,7 @@ public class GitLabProjectApiTestResource
                 "/testprojone-file-generation/pom.xml",
                 "/testprojone-service-execution/pom.xml",
                 "/testprojone-versioned-entities/pom.xml"
-        ), gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
+        ), this.gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
     public void runCreateManagedProjectTest() throws LegendSDLCServerException
@@ -83,7 +81,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -94,9 +92,9 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.MANAGED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
+        Assert.assertEquals(ProjectType.MANAGED, this.gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNotNull(gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json",
                 "/PANGRAM.TXT",
@@ -106,7 +104,7 @@ public class GitLabProjectApiTestResource
                 "/testprojone-file-generation/pom.xml",
                 "/testprojone-service-execution/pom.xml",
                 "/testprojone-versioned-entities/pom.xml"
-        ), gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
+        ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
     public void runCreateProductionProjectTest() throws LegendSDLCServerException
@@ -117,7 +115,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> gitLabProjectApi.createProject(projectName, description, ProjectType.PRODUCTION, groupId, artifactId, tags));
+        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> this.gitLabProjectApi.createProject(projectName, description, ProjectType.PRODUCTION, groupId, artifactId, tags));
         Assert.assertEquals("Invalid type: PRODUCTION", e.getMessage());
     }
 
@@ -129,7 +127,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.EMBEDDED, groupId, artifactId, tags);
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.EMBEDDED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -140,12 +138,12 @@ public class GitLabProjectApiTestResource
         String projectId = createdProject.getProjectId();
         Assert.assertNotNull(projectId);
 
-        Assert.assertEquals(ProjectType.EMBEDDED, gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectType());
+        Assert.assertEquals(ProjectType.EMBEDDED, this.gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectType());
         Assert.assertNull(gitLabProjectApi.getProject(projectId).getProjectType());
-        Assert.assertNull(gitLabProjectApi.getProjectConfiguration(projectId, null).getProjectStructureVersion().getExtensionVersion());
+        Assert.assertNull(gitLabProjectApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectStructureVersion().getExtensionVersion());
 
         Assert.assertEquals(Sets.mutable.with("/project.json"
-        ), gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
+        ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
     public void runGetProjectTest() throws LegendSDLCServerException
@@ -156,7 +154,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojtwo";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -164,7 +162,7 @@ public class GitLabProjectApiTestResource
         Assert.assertNull(createdProject.getProjectType());
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
-        Project retrievedProject = gitLabProjectApi.getProject(createdProject.getProjectId());
+        Project retrievedProject = this.gitLabProjectApi.getProject(createdProject.getProjectId());
 
         Assert.assertNotNull(retrievedProject);
         Assert.assertEquals(projectName, retrievedProject.getName());
@@ -180,7 +178,7 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojthree";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         Assert.assertNotNull(createdProject);
         Assert.assertEquals(projectName, createdProject.getName());
@@ -196,12 +194,12 @@ public class GitLabProjectApiTestResource
         List<String> tagsToRemove = Lists.mutable.with("doe", "moffitt");
         List<String> expectedTags = Lists.mutable.with("main-stacks", "bancroft", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        gitLabProjectApi.changeProjectName(projectId, newProjectName);
-        gitLabProjectApi.changeProjectDescription(projectId, newProjectDescription);
-        gitLabProjectApi.setProjectTags(projectId, newTags);
-        gitLabProjectApi.updateProjectTags(projectId, tagsToRemove, tagsToAdd);
+        this.gitLabProjectApi.changeProjectName(projectId, newProjectName);
+        this.gitLabProjectApi.changeProjectDescription(projectId, newProjectDescription);
+        this.gitLabProjectApi.setProjectTags(projectId, newTags);
+        this.gitLabProjectApi.updateProjectTags(projectId, tagsToRemove, tagsToAdd);
 
-        Project reRetrievedProject = gitLabProjectApi.getProject(projectId);
+        Project reRetrievedProject = this.gitLabProjectApi.getProject(projectId);
 
         Assert.assertEquals(newProjectName, reRetrievedProject.getName());
         Assert.assertEquals(newProjectDescription, reRetrievedProject.getDescription());
@@ -210,6 +208,6 @@ public class GitLabProjectApiTestResource
 
     public GitLabProjectApi getGitLabProjectApi()
     {
-        return gitLabProjectApi;
+        return this.gitLabProjectApi;
     }
 }

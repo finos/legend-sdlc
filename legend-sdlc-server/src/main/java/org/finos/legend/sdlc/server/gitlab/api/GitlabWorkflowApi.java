@@ -19,12 +19,12 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -57,79 +57,38 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     }
 
     @Override
-    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId)
+    public WorkflowAccessContext getWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
+
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(projectId, getSourceBranch(gitLabProjectId, patchReleaseVersionId))
+        return new RefWorkflowAccessContext(gitLabProjectId, getBranchName(gitLabProjectId, sourceSpecification))
         {
             @Override
             protected String getInfoForException()
             {
-                return "project " + projectId;
+                return getReferenceInfo(projectId, sourceSpecification);
             }
 
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getProjectRevisionAccessContext(projectId);
+                return getProjectFileAccessProvider().getRevisionAccessContext(projectId, sourceSpecification);
             }
         };
     }
 
     @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
-        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(projectId, getBranchName(gitLabProjectId, sourceSpecification))
-        {
-            @Override
-            protected String getInfoForException()
-            {
-                return sourceSpecification.getWorkspaceType().getLabel() + " workspace " + sourceSpecification.getWorkspaceId() + " in project " + projectId;
-            }
-
-            @Override
-            protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
-            {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, sourceSpecification);
-            }
-        };
-    }
-
-    @Override
-    public WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, VersionId versionId)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
-        return new RefWorkflowAccessContext(projectId, buildVersionTagName(versionId))
-        {
-            @Override
-            protected String getInfoForException()
-            {
-                return "version " + versionId.toVersionIdString() + " of project " + projectId;
-            }
-
-            @Override
-            protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
-            {
-                return getProjectFileAccessProvider().getVersionRevisionAccessContext(projectId, versionId);
-            }
-        };
-    }
-
-    @Override
-    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId, true);
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
-        if (workspaceInfo == null)
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceSpec == null)
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
         }
@@ -157,7 +116,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), workspaceInfo.getWorkspaceAccessType());
+                return getProjectFileAccessProvider().getRevisionAccessContext(projectId, workspaceSpec.getSourceSpecification(), null);
             }
         };
     }
@@ -169,11 +128,6 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         protected GitLabWorkflowAccessContext(GitLabProjectId projectId)
         {
             this.gitLabProjectId = projectId;
-        }
-
-        protected GitLabWorkflowAccessContext(String projectId)
-        {
-            this(parseProjectId(projectId));
         }
 
         @Override
@@ -328,7 +282,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     {
         private final String ref;
 
-        private RefWorkflowAccessContext(String projectId, String ref)
+        private RefWorkflowAccessContext(GitLabProjectId projectId, String ref)
         {
             super(projectId);
             this.ref = ref;

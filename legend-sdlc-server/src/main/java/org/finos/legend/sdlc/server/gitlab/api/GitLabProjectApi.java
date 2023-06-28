@@ -30,7 +30,8 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -372,13 +373,12 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         // Create a workspace for project configuration
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
         String workspaceId = PROJECT_CONFIGURATION_WORKSPACE_ID_PREFIX + getRandomIdString();
-        WorkspaceType workspaceType = WorkspaceType.USER;
-        WorkspaceAccessType workspaceAccessType = WorkspaceAccessType.WORKSPACE;
+        WorkspaceSpecification workspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
         Branch workspaceBranch;
         String defaultBranch = getDefaultBranch(projectId);
         try
         {
-            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType)), defaultBranch, 30, 1_000);
+            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), defaultBranch, 30, 1_000);
         }
         catch (Exception e)
         {
@@ -397,13 +397,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         Revision configRevision;
         try
         {
-            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.newSourceSpecification(null, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE), null, projectFileAccessProvider);
+            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
             ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
                     .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId);
             ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
-                    .withWorkspace(SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType))
+                    .withWorkspace(workspaceSpec)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
             int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
@@ -434,7 +434,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             // Try to delete the branch in case of exception
-            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
             throw e;
         }
 
@@ -446,22 +446,22 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             reviewId = null;
 
             // Try to delete the branch
-            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
         }
         else
         {
             MergeRequest mergeRequest;
             try
             {
-                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType)), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
+                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+                deleteWorkspace(projectId, repositoryApi, workspaceSpec);
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id,
-                        () -> "Could not find " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + id,
+                        () -> "Could not find " + getReferenceInfo(id, workspaceSpec),
                         () -> "Failed to create a review for configuration of project " + id);
             }
             reviewId = toStringIfNotNull(mergeRequest.getIid());
@@ -491,7 +491,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+                deleteWorkspace(projectId, repositoryApi, workspaceSpec);
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to import project " + id,
                         () -> "Could not find project " + id,
@@ -515,20 +515,20 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         };
     }
 
-    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, WorkspaceSpecification workspaceSpec)
     {
         try
         {
-            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType)), 30, 1_000);
+            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), 30, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} {} in project {}", workspaceSpec.getType().getLabel(), workspaceSpec.getAccessType().getLabel(), workspaceSpec.getId(), projectId);
             }
         }
         catch (Exception e)
         {
             // Possibly failed to delete branch - unfortunate, but ignore it
-            LOGGER.error("Error deleting {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId, e);
+            LOGGER.error("Error deleting {} {} {} in project {}", workspaceSpec.getType().getLabel(), workspaceSpec.getAccessType().getLabel(), workspaceSpec.getId(), projectId, e);
         }
     }
 

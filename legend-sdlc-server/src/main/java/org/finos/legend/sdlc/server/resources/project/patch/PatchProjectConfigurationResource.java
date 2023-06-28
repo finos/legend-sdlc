@@ -20,9 +20,11 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -31,7 +33,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/configuration")
 @Api("Project Configuration")
@@ -49,7 +50,7 @@ public class PatchProjectConfigurationResource extends BaseResource
 
     @GET
     @ApiOperation("Get the configuration of a project for patch release version")
-    public ProjectConfiguration getProjectProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
+    public ProjectConfiguration getPatchProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;
@@ -62,8 +63,8 @@ public class PatchProjectConfigurationResource extends BaseResource
             throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
         }
         return executeWithLogging(
-                "getting project " + projectId + " configuration" + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getProjectProjectConfiguration(projectId, versionId)
+                "getting project " + projectId + " configuration for patch version " + patchReleaseVersionId,
+                () -> this.projectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.patchSourceSpecification(versionId))
         );
     }
 
@@ -84,7 +85,7 @@ public class PatchProjectConfigurationResource extends BaseResource
         }
         return executeWithLogging(
                 "getting project " + projectId + " available generations configurations" +  " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getProjectAvailableArtifactGenerations(projectId, versionId)
+                () -> this.projectConfigurationApi.getAvailableArtifactGenerations(projectId, SourceSpecification.patchSourceSpecification(versionId))
         );
     }
 }

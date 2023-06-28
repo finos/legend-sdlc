@@ -18,12 +18,11 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.IntObjectMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -52,59 +51,30 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     }
 
     @Override
-    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId)
+    public WorkflowJobAccessContext getWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
+
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowJobAccessContext(projectId, getSourceBranch(gitLabProjectId, patchReleaseVersionId))
+        return new RefWorkflowJobAccessContext(gitLabProjectId, getBranchName(gitLabProjectId, sourceSpecification))
         {
             @Override
             protected String getInfoForException()
             {
-                return "project " + projectId;
+                return getReferenceInfo(projectId, sourceSpecification);
             }
         };
     }
 
     @Override
-    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
-        GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowJobAccessContext(projectId, getBranchName(gitLabProjectId, sourceSpecification))
-        {
-            @Override
-            protected String getInfoForException()
-            {
-                return "workspace " + sourceSpecification.getWorkspaceId() + " in project " + projectId;
-            }
-        };
-    }
-
-    @Override
-    public WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId)
-    {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
-        return new RefWorkflowJobAccessContext(projectId, buildVersionTagName(versionId))
-        {
-            @Override
-            protected String getInfoForException()
-            {
-                return "version " + versionId.toVersionIdString() + " of project " + projectId;
-            }
-        };
-    }
-
-    @Override
-    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId, true);
+        MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
 
         return new GitLabWorkflowJobAccessContext(projectId)
         {
@@ -133,7 +103,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             {
                 if (this.pipelinesById == null)
                 {
-                    this.pipelinesById = indexPipelinesById(getMergeRequestPipelines(gitLabProjectId.getGitLabId(), mergeRequest.getIid()), true, false);
+                    this.pipelinesById = indexPipelinesById(getMergeRequestPipelines(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid()), true, false);
                 }
                 return this.pipelinesById;
             }
@@ -142,11 +112,11 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
 
     private abstract class GitLabWorkflowJobAccessContext implements WorkflowJobAccessContext
     {
-        protected final GitLabProjectId projectId;
+        protected final GitLabProjectId gitLabProjectId;
 
         protected GitLabWorkflowJobAccessContext(GitLabProjectId projectId)
         {
-            this.projectId = projectId;
+            this.gitLabProjectId = projectId;
         }
 
         protected GitLabWorkflowJobAccessContext(String projectId)
@@ -174,7 +144,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             List<Job> jobs;
             try
             {
-                jobs = withRetries(() -> jobApi.getJobsForPipeline(this.projectId.getGitLabId(), pipelineId));
+                jobs = withRetries(() -> jobApi.getJobsForPipeline(this.gitLabProjectId.getGitLabId(), pipelineId));
             }
             catch (Exception e)
             {
@@ -205,7 +175,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             JobApi jobApi = getGitLabApi().getJobApi();
             try
             {
-                return withRetries(() -> jobApi.getTrace(this.projectId.getGitLabId(), job.getId()));
+                return withRetries(() -> jobApi.getTrace(this.gitLabProjectId.getGitLabId(), job.getId()));
             }
             catch (Exception e)
             {
@@ -233,7 +203,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             Job result;
             try
             {
-                result = withRetries(() -> jobApi.playJob(this.projectId.getGitLabId(), job.getId()));
+                result = withRetries(() -> jobApi.playJob(this.gitLabProjectId.getGitLabId(), job.getId()));
             }
             catch (Exception e)
             {
@@ -261,7 +231,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             Job result;
             try
             {
-                result = withRetries(() -> jobApi.retryJob(this.projectId.getGitLabId(), job.getId()));
+                result = withRetries(() -> jobApi.retryJob(this.gitLabProjectId.getGitLabId(), job.getId()));
             }
             catch (Exception e)
             {
@@ -290,7 +260,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             Job result;
             try
             {
-                result = withRetries(() -> jobApi.cancelJob(this.projectId.getGitLabId(), job.getId()));
+                result = withRetries(() -> jobApi.cancelJob(this.gitLabProjectId.getGitLabId(), job.getId()));
             }
             catch (Exception e)
             {
@@ -352,13 +322,13 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         protected Job getJob(int pipelineId, int jobId) throws GitLabApiException
         {
             JobApi jobApi = getGitLabApi().getJobApi();
-            Job job = withRetries(() -> jobApi.getJob(this.projectId.getGitLabId(), jobId));
+            Job job = withRetries(() -> jobApi.getJob(this.gitLabProjectId.getGitLabId(), jobId));
             return ((job.getPipeline() != null) && (job.getPipeline().getId() != null) && (pipelineId == job.getPipeline().getId())) ? job : null;
         }
 
         protected WorkflowJob fromGitLabJob(Job job)
         {
-            return GitlabWorkflowJobApi.fromGitLabJob(this.projectId.toString(), job);
+            return GitlabWorkflowJobApi.fromGitLabJob(this.gitLabProjectId.toString(), job);
         }
 
         protected abstract String getInfoForException();
@@ -368,7 +338,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     {
         private final String ref;
 
-        private RefWorkflowJobAccessContext(String projectId, String ref)
+        private RefWorkflowJobAccessContext(GitLabProjectId projectId, String ref)
         {
             super(projectId);
             this.ref = ref;
@@ -377,7 +347,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
         {
-            return getRefPipeline(this.projectId.getGitLabId(), this.ref, pipelineId);
+            return getRefPipeline(this.gitLabProjectId.getGitLabId(), this.ref, pipelineId);
         }
 
         @Override

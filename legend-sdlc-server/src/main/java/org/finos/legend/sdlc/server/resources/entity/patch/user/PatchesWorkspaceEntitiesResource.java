@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 

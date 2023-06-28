@@ -34,12 +34,11 @@ import org.gitlab4j.api.models.MergeRequestFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.inject.Inject;
+import javax.ws.rs.core.Response;
 
 public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 {
@@ -49,15 +48,6 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     public GitLabPatchApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
-    }
-
-    private Patch patchBranchToPatch(String projectId, Branch patchBranch)
-    {
-        if (patchBranch != null)
-        {
-           return fromPatchBranchName(projectId, patchBranch.getName());
-        }
-        return null;
     }
 
     @Override
@@ -71,11 +61,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         boolean sourceTagExists;
         try
         {
-            sourceTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(sourceVersionId));
+            sourceTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId.getGitLabId(), buildVersionTagName(sourceVersionId));
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching version " + sourceVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException("Error in fetching version " + sourceVersionId.toVersionIdString() + " for project " + projectId, e);
         }
         if (!sourceTagExists)
         {
@@ -86,11 +76,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         boolean targetTagExists;
         try
         {
-            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(targetVersionId));
+            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId.getGitLabId(), buildVersionTagName(targetVersionId));
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching version " + targetVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
+            throw new LegendSDLCServerException("Error in fetching version " + targetVersionId.toVersionIdString() + " for project " + projectId, e);
         }
         if (targetTagExists)
         {
@@ -107,7 +97,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         Branch branch;
         try
         {
-            branch = GitLabApiTools.createProtectedBranchFromSourceTagAndVerify(getGitLabApi(), gitLabProjectId, getPatchReleaseBranchName(targetVersionId), buildVersionTagName(sourceVersionId), 30, 1_000);
+            branch = GitLabApiTools.createProtectedBranchFromSourceTagAndVerify(getGitLabApi(), gitLabProjectId.getGitLabId(), getPatchReleaseBranchName(targetVersionId), buildVersionTagName(sourceVersionId), 30, 1_000);
         }
         catch (Exception e)
         {
@@ -121,7 +111,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             throw new LegendSDLCServerException("Failed to create patch " + targetVersionId.toVersionIdString() + " in project " + projectId);
         }
 
-        return patchBranchToPatch(projectId, branch);
+        return fromPatchBranchName(projectId, branch.getName());
     }
 
     @Override
@@ -135,7 +125,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             Pager<Branch> pager = getGitLabApi().getRepositoryApi().getBranches(gitLabProjectId.getGitLabId(), "^" + branchPrefix, ITEMS_PER_PAGE);
             Stream<Patch> stream = PagerTools.stream(pager)
                     .filter(branch -> (branch != null) && (branch.getName() != null) && branch.getName().startsWith(branchPrefix))
-                    .map(branch -> patchBranchToPatch(projectId, branch));
+                    .map(branch -> fromPatchBranchName(projectId, branch.getName()));
             // major version constraint
             if ((minMajorVersion != null) && (maxMajorVersion != null))
             {
@@ -234,26 +224,6 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
     }
 
-    private Patch fromPatchBranchName(String projectId, String branchName)
-    {
-        int index = branchName.lastIndexOf(BRANCH_DELIMITER);
-        VersionId patchReleaseVersionId = parseVersionIdString(branchName.substring(index + 1, branchName.length()));
-        return new Patch()
-        {
-            @Override
-            public String getProjectId()
-            {
-                return projectId;
-            }
-
-            @Override
-            public VersionId getPatchReleaseVersionId()
-            {
-                return patchReleaseVersionId;
-            }
-        };
-    }
-
     @Override
     public void deletePatch(String projectId, VersionId patchReleaseVersionId)
     {
@@ -296,7 +266,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         boolean targetTagExists;
         try
         {
-            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId, buildVersionTagName(patchReleaseVersionId));
+            targetTagExists = GitLabApiTools.tagExists(getGitLabApi(), gitLabProjectId.getGitLabId(), buildVersionTagName(patchReleaseVersionId));
         }
         catch (Exception e)
         {
@@ -331,8 +301,8 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 
     private boolean closeMergeRequestsCreatedForPatchReleaseBranch(GitLabProjectId projectId, VersionId patchReleaseVersionId)
     {
+        String branchName = getPatchReleaseBranchName(patchReleaseVersionId);
         List<MergeRequest> mergeRequests;
-        String branchName = getSourceBranch(projectId, patchReleaseVersionId);
         try
         {
            MergeRequestFilter mergeRequestFilter = new MergeRequestFilter().withTargetBranch(branchName).withState(Constants.MergeRequestState.OPENED);
@@ -344,8 +314,8 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
             {
                 return false;
             }
-            mergeRequests = Collections.emptyList();
             LOGGER.warn("Unable to fetch merge requests for target branch {} of project {}", branchName, projectId, e);
+            return true;
         }
         boolean shouldRetry = false;
         for (MergeRequest mergeRequest : mergeRequests)

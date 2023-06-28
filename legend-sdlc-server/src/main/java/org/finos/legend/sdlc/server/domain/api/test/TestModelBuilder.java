@@ -32,7 +32,7 @@ import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
@@ -181,7 +181,7 @@ public class TestModelBuilder
 
     private DepotProjectId getDepotProjectId(String gitLabProjectId)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectProjectConfiguration(gitLabProjectId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(gitLabProjectId, SourceSpecification.projectSourceSpecification());
         return DepotProjectId.newDepotProjectId(projectConfiguration.getGroupId(), projectConfiguration.getArtifactId());
     }
 

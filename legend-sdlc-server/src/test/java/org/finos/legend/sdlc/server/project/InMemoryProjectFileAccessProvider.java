@@ -16,22 +16,28 @@ package org.finos.legend.sdlc.server.project;
 
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
+import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.io.InputStream;
 import java.time.Instant;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvider
 {
-    private final Map<String, SimpleInMemoryVCS> projects = Maps.mutable.empty();
+    private final MutableMap<String, SimpleInMemoryVCS> projects = Maps.mutable.empty();
     private final String defaultAuthor;
     private final String defaultCommitter;
 
@@ -41,150 +47,130 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
         this.defaultCommitter = defaultCommitter;
     }
 
-    // File Access Context
-
     @Override
     public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        AbstractInMemoryFileAccessContext abstractInMemoryFileAccessContext = new AbstractInMemoryFileAccessContext(revisionId)
+        return sourceSpecification.visit(new SourceSpecificationVisitor<FileAccessContext>()
         {
             @Override
-            protected SimpleInMemoryVCS getContextVCS()
+            public FileAccessContext visit(ProjectSourceSpecification sourceSpec)
             {
-                return getVCS(projectId, sourceSpecification.getWorkspaceId());
-            }
-        };
-        if (sourceSpecification.getWorkspaceAccessType() == null || sourceSpecification.getWorkspaceAccessType() == WorkspaceAccessType.WORKSPACE)
-        {
-            return abstractInMemoryFileAccessContext;
-        }
-        switch (sourceSpecification.getWorkspaceType())
-        {
-            case USER:
-            case GROUP:
-            {
-                switch (sourceSpecification.getWorkspaceAccessType())
+                return new AbstractInMemoryFileAccessContext(revisionId)
                 {
-                    case WORKSPACE:
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
                     {
-                        return abstractInMemoryFileAccessContext;
+                        return getVCS(projectId);
                     }
-                    default:
-                    {
-                        throw new UnsupportedOperationException("Special workspace access type is not supported for getting file access context");
-                    }
-                }
+                };
             }
-            default:
-            {
-                throw new UnsupportedOperationException("Special workspace type is not supported for getting file access context");
-            }
-        }
-    }
 
-    @Override
-    public FileAccessContext getFileAccessContext(String projectId, VersionId versionId)
-    {
-        return new AbstractInMemoryFileAccessContext()
-        {
             @Override
-            protected SimpleInMemoryVCS getContextVCS()
+            public FileAccessContext visit(VersionSourceSpecification sourceSpec)
             {
-                return getVCS(projectId, versionId);
+                return new AbstractInMemoryFileAccessContext(revisionId)
+                {
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
+                    {
+                        return getVCS(projectId, sourceSpec.getVersionId());
+                    }
+                };
             }
-        };
+
+            @Override
+            public FileAccessContext visit(WorkspaceSourceSpecification sourceSpec)
+            {
+                WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
+                if (workspaceSpec.getAccessType() != WorkspaceAccessType.WORKSPACE)
+                {
+                    throw new UnsupportedOperationException("Unsupported workspace specification: " + workspaceSpec);
+                }
+                return new AbstractInMemoryFileAccessContext(revisionId)
+                {
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
+                    {
+                        return getVCS(projectId, workspaceSpec.getId());
+                    }
+                };
+            }
+        });
     }
-
-
-    // Revision Access Context
 
     @Override
     public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
     {
-        if (sourceSpecification.getWorkspaceId() != null)
+        return sourceSpecification.visit(new SourceSpecificationVisitor<RevisionAccessContext>()
         {
-            switch (sourceSpecification.getWorkspaceType())
+            @Override
+            public RevisionAccessContext visit(ProjectSourceSpecification sourceSpec)
             {
-                case USER:
+                return new AbstractRevisionAccessContext(paths)
                 {
-                    switch (sourceSpecification.getWorkspaceAccessType())
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
                     {
-                        case WORKSPACE:
-                        {
-                            return new AbstractRevisionAccessContext(paths)
-                            {
-                                @Override
-                                protected SimpleInMemoryVCS getContextVCS()
-                                {
-                                    return getVCS(projectId, sourceSpecification.getWorkspaceId());
-                                }
-                            };
-                        }
-                        default:
-                        {
-                            throw new UnsupportedOperationException("Special workspace access type is not supported for getting revision access context");
-                        }
+                        return getVCS(projectId);
                     }
-                }
-                default:
+                };
+            }
+
+            @Override
+            public RevisionAccessContext visit(VersionSourceSpecification sourceSpec)
+            {
+                return new AbstractRevisionAccessContext(paths)
                 {
-                    throw new UnsupportedOperationException("Special workspace type is not supported for getting revision access context");
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
+                    {
+                        return getVCS(projectId, sourceSpec.getVersionId());
+                    }
+                };
+            }
+
+            @Override
+            public RevisionAccessContext visit(WorkspaceSourceSpecification sourceSpec)
+            {
+                WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
+                if ((workspaceSpec.getType() != WorkspaceType.USER) || (workspaceSpec.getAccessType() != WorkspaceAccessType.WORKSPACE))
+                {
+                    throw new UnsupportedOperationException("Unsupported workspace specification: " + workspaceSpec);
                 }
+                return new AbstractRevisionAccessContext(paths)
+                {
+                    @Override
+                    protected SimpleInMemoryVCS getContextVCS()
+                    {
+                        return getVCS(projectId, workspaceSpec.getId());
+                    }
+                };
             }
-        }
-        return new AbstractRevisionAccessContext(paths)
-        {
-            @Override
-            protected SimpleInMemoryVCS getContextVCS()
-            {
-                return getVCS(projectId, (String) null);
-            }
-        };
+        });
     }
-
-    @Override
-    public RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
-    {
-        return new AbstractRevisionAccessContext(paths)
-        {
-            @Override
-            protected SimpleInMemoryVCS getContextVCS()
-            {
-                return getVCS(projectId, versionId);
-            }
-        };
-    }
-
-    // File Modification Context
 
     @Override
     public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        if (sourceSpecification.getWorkspaceId() != null)
+        return sourceSpecification.visit(new SourceSpecificationVisitor<FileModificationContext>()
         {
-            switch (sourceSpecification.getWorkspaceType())
+            @Override
+            public FileModificationContext visit(ProjectSourceSpecification sourceSpec)
             {
-                case USER:
-                {
-                    switch (sourceSpecification.getWorkspaceAccessType())
-                    {
-                        case WORKSPACE:
-                        {
-                            return new InMemoryFileModificationContext(projectId, sourceSpecification.getWorkspaceId(), revisionId);
-                        }
-                        default:
-                        {
-                            throw new UnsupportedOperationException("Special workspace access type is not supported for getting file modification context");
-                        }
-                    }
-                }
-                default:
-                {
-                    throw new UnsupportedOperationException("Special workspace type is not supported for getting file modification context");
-                }
+                return new InMemoryFileModificationContext(projectId, null, revisionId);
             }
-        }
-        return new InMemoryFileModificationContext(projectId, null, revisionId);
+
+            @Override
+            public FileModificationContext visit(WorkspaceSourceSpecification sourceSpec)
+            {
+                WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
+                if ((workspaceSpec.getType() != WorkspaceType.USER) || (workspaceSpec.getAccessType() != WorkspaceAccessType.WORKSPACE))
+                {
+                    throw new UnsupportedOperationException("Unsupported workspace specification: " + workspaceSpec);
+                }
+                return new InMemoryFileModificationContext(projectId, workspaceSpec.getId(), revisionId);
+            }
+        });
     }
 
     public void createWorkspace(String projectId, String workspaceId)
@@ -214,21 +200,15 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
 
     private SimpleInMemoryVCS getVCS(String projectId)
     {
-        return this.projects.computeIfAbsent(projectId, pid -> new SimpleInMemoryVCS());
+        return this.projects.getIfAbsentPut(projectId, SimpleInMemoryVCS::new);
     }
 
     private SimpleInMemoryVCS getVCS(String projectId, String workspaceId)
     {
-        SimpleInMemoryVCS vcs = this.projects.computeIfAbsent(projectId, pid -> new SimpleInMemoryVCS());
-        if (workspaceId != null)
-        {
-            vcs = vcs.getBranch(workspaceId);
-            if (vcs == null)
-            {
-                throw new RuntimeException("Unknown workspace in project " + projectId + ": " + workspaceId);
-            }
-        }
-        return vcs;
+        SimpleInMemoryVCS vcs = getVCS(projectId);
+        return (workspaceId == null) ?
+                vcs :
+                Objects.requireNonNull(vcs.getBranch(workspaceId), () -> "Unknown workspace in project " + projectId + ": " + workspaceId);
     }
 
     private SimpleInMemoryVCS getVCS(String projectId, VersionId versionId)

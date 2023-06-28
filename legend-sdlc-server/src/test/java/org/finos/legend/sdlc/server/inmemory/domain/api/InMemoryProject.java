@@ -16,19 +16,19 @@ package org.finos.legend.sdlc.server.inmemory.domain.api;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.eclipse.collections.api.factory.Maps;
-import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
+import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 
-import javax.inject.Inject;
-import java.util.List;
 import java.time.Instant;
+import java.util.List;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryProject implements Project
@@ -240,21 +240,9 @@ public class InMemoryProject implements Project
     }
 
     @JsonIgnore
-    public MutableList<InMemoryReview> getReviews(VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    public MutableList<InMemoryReview> getReviews(ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
-        MutableList<InMemoryReview> filteredReviews = Lists.mutable.empty();
-        Iterable<InMemoryReview> reviews = this.reviews.valuesView();
-
-        for (InMemoryReview rev : reviews)
-        {
-
-            if (((state == null) || (state == rev.getState())) && rev.getTargetBranch().equals(getSourceBranch(patchReleaseVersionId)))
-            {
-                filteredReviews.add(rev);
-            }
-        }
-        
-        return filteredReviews;
+        return this.reviews.select(r -> (state == null) || (state == r.getState()), Lists.mutable.empty());
     }
 
     @JsonIgnore
