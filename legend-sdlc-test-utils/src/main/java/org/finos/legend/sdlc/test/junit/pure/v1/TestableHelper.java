@@ -28,9 +28,11 @@ import org.finos.legend.engine.protocol.pure.v1.model.test.result.TestResult;
 import org.finos.legend.engine.testable.TestableRunner;
 import org.finos.legend.engine.testable.model.RunTestsResult;
 import org.finos.legend.engine.testable.model.RunTestsTestableInput;
+import org.finos.legend.engine.testable.service.result.MultiExecutionServiceTestResult;
 
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 class TestableHelper extends TestHelper
 {
@@ -67,6 +69,18 @@ class TestableHelper extends TestHelper
                 {
                     failures.add(executedResult);
                 }
+            }
+            else if (res instanceof MultiExecutionServiceTestResult)
+            {
+                // TODO: This would be cleaned-up. We should not have service specific logic in Testable case
+                List<TestResult> results = ((MultiExecutionServiceTestResult) res).getKeyIndexedTestResults().entrySet().stream().map(es ->
+                {
+                    TestResult updatedResult = es.getValue();
+                    updatedResult.atomicTestId = updatedResult.atomicTestId + "(" + es.getKey() + ")";
+                    return updatedResult;
+                }).collect(Collectors.toList());
+                failures.addAll(results.stream().filter(r -> r instanceof TestExecuted && ((TestExecuted) r).testExecutionStatus == TestExecutionStatus.FAIL).map(TestExecuted.class::cast).collect(Collectors.toList()));
+                errors.addAll(results.stream().filter(r -> r instanceof TestError).map(TestError.class::cast).collect(Collectors.toList()));
             }
         });
         if (failures.notEmpty() || errors.notEmpty())
