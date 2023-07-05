@@ -52,8 +52,10 @@ public class TestLegendSDLCTestSuiteBuilder
     {
         Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
                 "testTestSuites::TestService { Generic }", Sets.immutable.with("testTestSuites::TestService Test #1").castToSet(),
-                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet());
-        ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 2, 2, 0, 1, expectedTestCasesByTestSuite);
+                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet(),
+                "testTestSuites::TestService3 { Generic }", Sets.immutable.with("testTestSuites::TestService3 Test #1").castToSet(),
+                "testTestSuites::TestService4 { Generic }", Sets.immutable.with("testTestSuites::TestService4 Test #1").castToSet());
+        ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 4, 4, 0, 2, expectedTestCasesByTestSuite);
 
         testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-service-with-testSuites", "testTestSuites");
     }

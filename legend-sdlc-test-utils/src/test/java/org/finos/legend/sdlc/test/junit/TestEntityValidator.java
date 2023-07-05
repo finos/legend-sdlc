@@ -25,7 +25,7 @@ public class TestEntityValidator
     public void testEntityValidator() throws Exception
     {
         EntityValidator.ValidationReport report = EntityValidator.validateEntities(PathTools.resourceToPath("entities").getParent());
-        assertEntityValidationReport(report, 25, 0);
+        assertEntityValidationReport(report, 27, 0);
     }
 
     private void assertEntityValidationReport(EntityValidator.ValidationReport report, int expectedEntityCount, int expectedViolationCount)
