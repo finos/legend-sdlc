@@ -154,6 +154,32 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertEquals(projectConfigurationTwo.getGroupId(), groupId);
     }
 
+    public void runProjectVersionProjectConfigurationTest()
+    {
+        String projectName = "PCTestProjectThree";
+        String description = "A test project.";
+        String groupId = "org.finos.sdlc.test";
+        String artifactId = "pctestprojthree";
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
+
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+        Assert.assertNull(createdProject.getProjectType());
+
+        String projectId = createdProject.getProjectId();
+        Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+
+        ProjectConfiguration projectConfigurationTwo = gitLabProjectConfigurationApi.getVersionProjectConfiguration(projectId, version.getId());
+
+        Assert.assertNotNull(projectConfigurationTwo);
+        Assert.assertEquals(projectConfigurationTwo.getArtifactId(), artifactId);
+        Assert.assertEquals(projectConfigurationTwo.getGroupId(), groupId);
+    }
+
     public GitLabProjectApi getGitLabProjectApi()
     {
         return gitLabProjectApi;

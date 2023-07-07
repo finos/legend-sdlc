@@ -222,7 +222,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
         try
         {
-            return getVersionProjectConfiguration(projectId, versionId);
+            return getProjectVersionProjectConfiguration(projectId, versionId);
         }
         catch (Exception e)
         {
