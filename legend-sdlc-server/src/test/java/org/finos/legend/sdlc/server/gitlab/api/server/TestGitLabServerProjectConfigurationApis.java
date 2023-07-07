@@ -62,6 +62,12 @@ public class TestGitLabServerProjectConfigurationApis extends AbstractGitLabServ
         gitLabProjectConfigurationApiTestResource.runUserAndGroupWorkspaceProjectConfigurationTestForPatchReleaseVersion();
     }
 
+    @Test
+    public void testProjectVersionProjectConfigurationTest()
+    {
+        gitLabProjectConfigurationApiTestResource.runProjectVersionProjectConfigurationTest();
+    }
+
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */

@@ -124,7 +124,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return ProjectStructure.getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), null, getProjectFileAccessProvider());
     }
 
-    protected ProjectConfiguration getVersionProjectConfiguration(String projectId, VersionId versionId)
+    protected ProjectConfiguration getProjectVersionProjectConfiguration(String projectId, VersionId versionId)
     {
         ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, versionId, getProjectFileAccessProvider());
         if (config == null)

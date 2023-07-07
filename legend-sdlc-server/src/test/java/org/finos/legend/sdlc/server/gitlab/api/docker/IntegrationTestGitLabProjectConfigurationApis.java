@@ -50,6 +50,11 @@ public class IntegrationTestGitLabProjectConfigurationApis extends AbstractGitLa
         gitLabProjectConfigurationApiTestResource.runUserAndGroupWorkspaceProjectConfigurationTestForPatchReleaseVersion();
     }
 
+    @Test
+    public void testProjectVersionProjectConfiguration()
+    {
+        gitLabProjectConfigurationApiTestResource.runProjectVersionProjectConfigurationTest();
+    }
 
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
