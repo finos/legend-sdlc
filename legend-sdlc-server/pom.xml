@@ -131,16 +131,6 @@
         <!-- SHARED -->
         <dependency>
             <groupId>org.finos.legend.shared</groupId>
-            <artifactId>legend-shared-pac4j</artifactId>
-            <exclusions>
-                <exclusion>
-                    <groupId>com.zaxxer</groupId>
-                    <artifactId>HikariCP</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.shared</groupId>
             <artifactId>legend-shared-pac4j-kerberos</artifactId>
         </dependency>
         <dependency>

@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,9 +50,17 @@ public class SessionProvider
         WebContext context = new J2EContext(httpRequest, httpResponse);
 
         LinkedHashMap<String, OidcProfile> map = (LinkedHashMap) sessionStore.get(context, key);
+        CommonProfile profile = map.get("gitlab");
 
-        GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
-        return builder.withProfile(map.get("gitlab")).build();
+        if (profile != null)
+        {
+            GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
+            return builder.withProfile(profile).build();
+        }
+        else
+        {
+            return null;
+        }
     }
 
     public SessionStore getSessionStore()
