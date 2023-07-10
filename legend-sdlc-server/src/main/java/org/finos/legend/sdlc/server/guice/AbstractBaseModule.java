@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.guice;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
@@ -225,6 +226,11 @@ import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWor
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
+import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.session.J2ESessionStore;
+import org.pac4j.jax.rs.pac4j.JaxRsContext;
+import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 
 import java.util.Collections;
 import java.util.List;
@@ -544,7 +550,16 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     //scope is set to protected - so it can be overwritten in inheriting module
     protected SessionProvider getSessionProvider()
     {
-        return new SessionProvider();
+        HazelcastSessionStore hazelcastSessionStore = new HazelcastSessionStore(
+                7200,
+                ImmutableMap.of(
+                        J2EContext.class, new J2ESessionStore(),
+                        JaxRsContext.class, new ServletSessionStore()));
+
+        SessionProvider sessionProvider = new SessionProvider();
+        sessionProvider.setSessionStore(hazelcastSessionStore);
+
+        return sessionProvider;
     }
 
     @Provides
