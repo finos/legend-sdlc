@@ -42,25 +42,22 @@ public class SessionProvider
 
     public Session getSession(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo, String key)
     {
-        if (sessionStore == null)
+        if (sessionStore != null)
         {
-            return null;
+            WebContext context = new J2EContext(httpRequest, httpResponse);
+
+            LinkedHashMap<String, OidcProfile> map = (LinkedHashMap) sessionStore.get(context, key);
+            String gitlabKey = "gitlab";
+
+            if (map != null && map.containsKey(gitlabKey))
+            {
+                CommonProfile profile = map.get(gitlabKey);
+                GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
+                return builder.withProfile(profile).build();
+            }
         }
 
-        WebContext context = new J2EContext(httpRequest, httpResponse);
-
-        LinkedHashMap<String, OidcProfile> map = (LinkedHashMap) sessionStore.get(context, key);
-        CommonProfile profile = map.get("gitlab");
-
-        if (profile != null)
-        {
-            GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
-            return builder.withProfile(profile).build();
-        }
-        else
-        {
-            return null;
-        }
+        return null;
     }
 
     public SessionStore getSessionStore()
