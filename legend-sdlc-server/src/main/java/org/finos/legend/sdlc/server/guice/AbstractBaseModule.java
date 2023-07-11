@@ -552,6 +552,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         HazelcastSessionStore hazelcastSessionStore = new HazelcastSessionStore(
                 7200,
+                "localhost",
                 ImmutableMap.of(
                         J2EContext.class, new J2ESessionStore(),
                         JaxRsContext.class, new ServletSessionStore()));
