@@ -65,17 +65,24 @@ pac4j:
     - /api/server/platforms
     - /api/auth/authorized
 
-gitLab:
-  newProjectVisibility: public
-  projectIdPrefix: SAMPLE
-  projectTag: legend
-  server:
-    scheme: https
-    host: $GITLAB_HOST
-  app:
-    id: $APP_ID
-    secret: $APP_SECRET
-    redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
+backend:
+  inMemory:
+#    engineConfig:
+#      inMemorySizeGB: 256MB
+  fileSystem:
+#    rootDirectory: /location/to/drive
+#    maxThreads: 100
+  gitLab:
+    newProjectVisibility: public
+    projectIdPrefix: SAMPLE
+    projectTag: legend
+    server:
+      scheme: https
+      host: $GITLAB_HOST
+    app:
+      id: $APP_ID
+      secret: $APP_SECRET
+      redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
 
 projectStructure:
   extensionProvider:
