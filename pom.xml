@@ -69,7 +69,7 @@
         <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.17.0</legend.engine.version>
+        <legend.engine.version>4.18.2</legend.engine.version>
         <legend.pure.version>4.5.8</legend.pure.version>
         <legend.shared.version>0.23.8</legend.shared.version>
 
@@ -566,6 +566,21 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-pure-code-compiled-core</artifactId>
+                <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>jcl-over-slf4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-generation-pure</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
