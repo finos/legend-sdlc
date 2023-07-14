@@ -18,11 +18,12 @@ import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
+import org.finos.legend.server.pac4j.gitlab.GitlabClient;
 import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.profile.CommonProfile;
-import org.pac4j.oidc.profile.OidcProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,18 +41,17 @@ public class SessionProvider
 
     private SessionStore sessionStore;
 
-    public Session getSession(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo, String key)
+    public Session getSession(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
     {
         if (sessionStore != null)
         {
             WebContext context = new J2EContext(httpRequest, httpResponse);
 
-            LinkedHashMap<String, OidcProfile> map = (LinkedHashMap) sessionStore.get(context, key);
-            String gitlabKey = "gitlab";
+            LinkedHashMap<String, CommonProfile> map = (LinkedHashMap) sessionStore.get(context, Pac4jConstants.USER_PROFILES);
 
-            if (map != null && map.containsKey(gitlabKey))
+            if (map != null && map.containsKey(GitlabClient.GITLAB_CLIENT_NAME))
             {
-                CommonProfile profile = map.get(gitlabKey);
+                CommonProfile profile = map.get(GitlabClient.GITLAB_CLIENT_NAME);
                 GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
                 return builder.withProfile(profile).build();
             }

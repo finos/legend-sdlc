@@ -226,6 +226,7 @@ import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWor
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.session.J2ESessionStore;
@@ -547,18 +548,21 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         return builder -> builder;
     }
 
-    //scope is set to protected - so it can be overwritten in inheriting module
-    protected SessionProvider getSessionProvider()
+    private SessionProvider getSessionProvider()
     {
-        HazelcastSessionStore hazelcastSessionStore = new HazelcastSessionStore(
-                7200,
-                "localhost",
-                ImmutableMap.of(
-                        J2EContext.class, new J2ESessionStore(),
-                        JaxRsContext.class, new ServletSessionStore()));
-
         SessionProvider sessionProvider = new SessionProvider();
-        sessionProvider.setSessionStore(hazelcastSessionStore);
+        LegendPac4jConfiguration config = getConfiguration().getPac4jConfiguration();
+
+        if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
+        {
+            HazelcastSessionStore hazelcastSessionStore = new HazelcastSessionStore(
+                    config.getHazelcastSession().getConfigFilePath(),
+                    ImmutableMap.of(
+                            J2EContext.class, new J2ESessionStore(),
+                            JaxRsContext.class, new ServletSessionStore()));
+
+            sessionProvider.setSessionStore(hazelcastSessionStore);
+        }
 
         return sessionProvider;
     }

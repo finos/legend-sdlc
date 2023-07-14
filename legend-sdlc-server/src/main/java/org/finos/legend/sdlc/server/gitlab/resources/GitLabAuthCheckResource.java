@@ -22,7 +22,6 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabSession;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
-import org.pac4j.core.context.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.servlet.http.Cookie;
@@ -83,7 +82,7 @@ public class GitLabAuthCheckResource extends BaseResource
 
                 if (optional.isPresent())
                 {
-                    session = sessionProvider.getSession(httpRequest, httpResponse, appInfo, Pac4jConstants.USER_PROFILES);
+                    session = sessionProvider.getSession(httpRequest, httpResponse, appInfo);
                     httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
                 }
             }
