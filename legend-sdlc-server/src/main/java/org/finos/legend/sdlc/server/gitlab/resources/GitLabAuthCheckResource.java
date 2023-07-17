@@ -72,7 +72,6 @@ public class GitLabAuthCheckResource extends BaseResource
         {
             Session session = SessionProvider.findSession(httpRequest);
 
-
             if (session == null && httpRequest.getCookies() != null)
             {
                 Optional<Cookie> optional =
