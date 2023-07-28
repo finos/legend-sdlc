@@ -89,7 +89,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             String branchName = getWorkspaceBranchName(workspaceSpecification);
             RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
-            Branch branch = withRetries(() -> GitLabApiTools.getBranch(repositoryApi, gitLabProjectId.getGitLabId(), branchName));
+            Branch branch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), branchName));
             return fromWorkspaceBranchName(projectId, branch.getName());
         }
         catch (Exception e)
