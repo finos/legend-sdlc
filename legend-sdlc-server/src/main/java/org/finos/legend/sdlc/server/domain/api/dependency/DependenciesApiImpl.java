@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
@@ -64,7 +64,7 @@ public class DependenciesApiImpl implements DependenciesApi
     @Override
     public Set<ProjectDependency> getProjectVersionUpstreamProjects(String projectId, String versionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getVersionProjectConfiguration(projectId, versionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.versionSourceSpecification(versionId), versionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 
@@ -83,8 +83,8 @@ public class DependenciesApiImpl implements DependenciesApi
             String otherProjectId = otherProject.getProjectId();
             if (!projectId.equals(otherProjectId))
             {
-                Revision otherProjectRevision = this.revisionApi.getProjectRevisionContext(otherProjectId).getCurrentRevision();
-                ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectRevisionProjectConfiguration(otherProjectId, otherProjectRevision.getId());
+                Revision otherProjectRevision = this.revisionApi.getRevisionContext(otherProjectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision();
+                ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(otherProjectId, SourceSpecification.projectSourceSpecification(), otherProjectRevision.getId());
                 if (Iterate.anySatisfy(projectConfiguration.getProjectDependencies(), d -> projectId.equals(d.getProjectId())))
                 {
                     results.add(new ProjectRevision(otherProject.getProjectId(), otherProjectRevision.getId()));
@@ -108,7 +108,7 @@ public class DependenciesApiImpl implements DependenciesApi
             ProjectDependency dependency = deque.pollFirst();
             if (results.add(dependency))
             {
-                ProjectConfiguration dependencyProjectConfig = this.projectConfigurationApi.getVersionProjectConfiguration(dependency.getProjectId(), dependency.getVersionId());
+                ProjectConfiguration dependencyProjectConfig = this.projectConfigurationApi.getProjectConfiguration(dependency.getProjectId(), SourceSpecification.versionSourceSpecification(dependency.getVersionId()));
                 deque.addAll(dependencyProjectConfig.getProjectDependencies());
             }
         }

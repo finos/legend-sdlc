@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

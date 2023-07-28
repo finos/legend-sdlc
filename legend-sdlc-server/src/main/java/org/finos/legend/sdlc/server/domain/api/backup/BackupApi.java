@@ -14,30 +14,54 @@
 
 package org.finos.legend.sdlc.server.domain.api.backup;
 
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 public interface BackupApi
 {
     /**
+     * Discard the backup workspace
+     *
+     * @param projectId              project id
+     * @param workspaceSpecification workspace specification
+     */
+    void discardBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification);
+
+    /**
+     * Recover the backup workspace
+     *
+     * @param projectId              project id
+     * @param workspaceSpecification workspace specification
+     * @param forceRecovery          flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     */
+    void recoverBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification, boolean forceRecovery);
+
+    // Deprecated APIs
+
+    /**
      * Discard the backup user workspace
      *
-     * @param projectId    project id
-     * @param workspaceId  id of backup workspace
+     * @param projectId   project id
+     * @param workspaceId id of backup workspace
      */
+    @Deprecated
     default void discardBackupUserWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
+        discardBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER));
     }
 
     /**
      * Discard the backup group workspace
      *
-     * @param projectId    project id
-     * @param workspaceId  id of backup workspace
+     * @param projectId   project id
+     * @param workspaceId id of backup workspace
      */
+    @Deprecated
     default void discardBackupGroupWorkspace(String projectId, String workspaceId)
     {
-        this.discardBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
+        discardBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP));
     }
 
     /**
@@ -46,38 +70,56 @@ public interface BackupApi
      * @param projectId           project id
      * @param sourceSpecification source specification
      */
-    void discardBackupWorkspace(String projectId, SourceSpecification sourceSpecification);
+    @Deprecated
+    default void discardBackupWorkspace(String projectId, SourceSpecification sourceSpecification)
+    {
+        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
+        {
+            throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
+        }
+        discardBackupWorkspace(projectId, ((WorkspaceSourceSpecification) sourceSpecification).getWorkspaceSpecification());
+    }
 
     /**
      * Recover the backup user workspace
      *
-     * @param projectId      project id
-     * @param workspaceId    workspace id
-     * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     * @param projectId     project id
+     * @param workspaceId   workspace id
+     * @param forceRecovery flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
+    @Deprecated
     default void recoverBackupUserWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), forceRecovery);
+        recoverBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER), forceRecovery);
     }
 
     /**
      * Recover the backup group workspace
      *
-     * @param projectId      project id
-     * @param workspaceId    workspace id
-     * @param forceRecovery  flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     * @param projectId     project id
+     * @param workspaceId   workspace id
+     * @param forceRecovery flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
+    @Deprecated
     default void recoverBackupGroupWorkspace(String projectId, String workspaceId, boolean forceRecovery)
     {
-        this.recoverBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), forceRecovery);
+        recoverBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP), forceRecovery);
     }
 
     /**
      * Recover the backup workspace
      *
-     * @param projectId              project id
+     * @param projectId           project id
      * @param sourceSpecification source specification
-     * @param forceRecovery          flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
+     * @param forceRecovery       flag indicating that if the workspace and its backup both exist, we will override the workspace by its backup
      */
-    void recoverBackupWorkspace(String projectId, SourceSpecification sourceSpecification, boolean forceRecovery);
+    @Deprecated
+    default void recoverBackupWorkspace(String projectId, SourceSpecification sourceSpecification, boolean forceRecovery)
+    {
+        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
+        {
+            throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
+        }
+        recoverBackupWorkspace(projectId, ((WorkspaceSourceSpecification) sourceSpecification).getWorkspaceSpecification(), forceRecovery);
+    }
 }

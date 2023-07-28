@@ -14,50 +14,64 @@
 
 package org.finos.legend.sdlc.server.domain.api.workflow;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-
-import javax.ws.rs.core.Response;
 
 public interface WorkflowJobApi
 {
-    WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId);
+    WorkflowJobAccessContext getWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification);
 
+    WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId);
+
+    // Deprecated APIs
+
+    @Deprecated
+    default WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId)
+    {
+        return getWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+    }
+
+    @Deprecated
     default WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId)
     {
-        return this.getProjectWorkflowJobAccessContext(projectId, null);
+        return getWorkflowJobAccessContext(projectId, SourceSpecification.projectSourceSpecification());
     }
 
-    WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification);
+    @Deprecated
+    default WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
+    {
+        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
+        {
+            throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
+        }
+        return getWorkflowJobAccessContext(projectId, sourceSpecification);
+    }
 
+    @Deprecated
     default WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return this.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType));
+        return this.getWorkspaceWorkflowJobAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType).getSourceSpecification());
     }
 
+    @Deprecated
     default WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, String versionIdString)
     {
-        VersionId versionId;
-        try
-        {
-            versionId = VersionId.parseVersionId(versionIdString);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
-        }
-        return getVersionWorkflowJobAccessContext(projectId, versionId);
+        return getWorkflowJobAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionIdString));
     }
 
-    WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId);
-
-    WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId);
-
-    default WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
+    @Deprecated
+    default WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId)
     {
-        return this.getReviewWorkflowJobAccessContext(projectId, null, reviewId);
+        return getWorkflowJobAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId));
+    }
+
+    @Deprecated
+    default WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return getReviewWorkflowJobAccessContext(projectId, reviewId);
     }
 }

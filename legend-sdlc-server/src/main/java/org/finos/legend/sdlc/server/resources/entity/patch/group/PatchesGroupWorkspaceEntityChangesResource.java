@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

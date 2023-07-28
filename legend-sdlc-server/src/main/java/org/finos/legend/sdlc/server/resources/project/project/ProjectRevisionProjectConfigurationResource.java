@@ -20,8 +20,10 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -29,7 +31,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 @Path("/projects/{projectId}/revisions/{revisionId}/configuration")
 @Api("Project Configuration")
@@ -52,7 +53,7 @@ public class ProjectRevisionProjectConfigurationResource extends BaseResource
     {
         return executeWithLogging(
                 "getting project " + projectId + " configuration at revision " + revisionId,
-                () -> this.projectConfigurationApi.getProjectRevisionProjectConfiguration(projectId, revisionId)
+                () -> this.projectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification(), revisionId)
         );
     }
 
@@ -65,7 +66,7 @@ public class ProjectRevisionProjectConfigurationResource extends BaseResource
     {
         return executeWithLogging(
                 "getting project " + projectId + " available generations configurations at revision" + revisionId,
-                () -> this.projectConfigurationApi.getRevisionAvailableArtifactGenerations(projectId, revisionId)
+                () -> this.projectConfigurationApi.getAvailableArtifactGenerations(projectId, SourceSpecification.projectSourceSpecification(), revisionId)
         );
     }
 }

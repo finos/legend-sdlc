@@ -27,7 +27,7 @@ import org.finos.legend.sdlc.server.application.review.CreateReviewCommand;
 import org.finos.legend.sdlc.server.application.review.EditReviewCommand;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi.ReviewUpdateStatus;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.ReviewFilterResource;
 import org.finos.legend.sdlc.server.time.EndInstant;

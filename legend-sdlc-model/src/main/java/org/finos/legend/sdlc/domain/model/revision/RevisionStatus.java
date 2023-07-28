@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.domain.model.revision;
 
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.version.Version;
 
@@ -28,4 +29,6 @@ public interface RevisionStatus
     List<Workspace> getWorkspaces();
 
     List<Version> getVersions();
+
+    List<Patch> getPatches();
 }

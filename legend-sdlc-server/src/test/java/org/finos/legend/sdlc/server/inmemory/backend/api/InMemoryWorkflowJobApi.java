@@ -14,10 +14,9 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
 
 import javax.inject.Inject;
 
@@ -29,25 +28,13 @@ public class InMemoryWorkflowJobApi implements WorkflowJobApi
     }
 
     @Override
-    public WorkflowJobAccessContext getProjectWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId)
+    public WorkflowJobAccessContext getWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public WorkflowJobAccessContext getWorkspaceWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WorkflowJobAccessContext getVersionWorkflowJobAccessContext(String projectId, VersionId versionId)
-    {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
     {
         throw new UnsupportedOperationException();
     }

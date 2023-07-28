@@ -15,8 +15,8 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
-import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.junit.Assert;
 import org.junit.Test;
@@ -56,6 +56,6 @@ public class TestPatchesResource extends AbstractLegendSDLCServerResourceTest
 
     private Patch findPatch(List<Patch> patches, VersionId patchReleaseVersionId)
     {
-        return patches.stream().filter(patch -> patch.getPatchReleaseVersionId().equals(patchReleaseVersionId)).findFirst().get();
+        return ListIterate.detect(patches, p -> patchReleaseVersionId.equals(p.getPatchReleaseVersionId()));
     }
 }

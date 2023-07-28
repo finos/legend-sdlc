@@ -27,7 +27,7 @@ import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataBackend;
 import org.junit.Assert;
@@ -150,15 +150,8 @@ public class TestModelBuilderTest
                 .removeEntities("w1", entityB1InVersion1);
 
         // entity b1 not found in ws1
-        try
-        {
-            this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("PROD-1", "w1").getEntity("PROD-1::b1");
-            Assert.fail("Failed to get entity not found exception");
-        }
-        catch (IllegalStateException e)
-        {
-            Assert.assertEquals("Entity with path PROD-1::b1 not found", e.getMessage());
-        }
+        IllegalStateException e = Assert.assertThrows(IllegalStateException.class, () -> this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("PROD-1", "w1").getEntity("PROD-1::b1"));
+        Assert.assertEquals("Entity with path PROD-1::b1 not found", e.getMessage());
 
         List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
                 "PROD-1",

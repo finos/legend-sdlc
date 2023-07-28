@@ -14,28 +14,39 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
+import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryVersion;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
-import javax.inject.Inject;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+import javax.inject.Inject;
 
 public class InMemoryEntityApi implements EntityApi
 {
@@ -48,145 +59,141 @@ public class InMemoryEntityApi implements EntityApi
     }
 
     @Override
-    public EntityAccessContext getProjectEntityAccessContext(String projectId, VersionId patchReleaseVersionId)
+    public EntityAccessContext getEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        return new InMemoryEntityAccessContext(project.getCurrentRevision().getEntities());
+        InMemoryRevision revision = sourceSpecification.visit(new SourceSpecificationVisitor<InMemoryRevision>()
+        {
+            @Override
+            public InMemoryRevision visit(ProjectSourceSpecification sourceSpec)
+            {
+                return (revisionId == null) ? project.getCurrentRevision() : project.getRevision(revisionId);
+            }
+
+            @Override
+            public InMemoryRevision visit(VersionSourceSpecification sourceSpec)
+            {
+                if (revisionId != null)
+                {
+                    throw new UnsupportedOperationException("Not implemented");
+                }
+                InMemoryVersion version = project.getVersion(sourceSpec.getVersionId().toVersionIdString());
+                return version.getRevision();
+            }
+
+            @Override
+            public InMemoryRevision visit(PatchSourceSpecification sourceSpec)
+            {
+                InMemoryPatch patch = project.getPatch(sourceSpec.getVersionId());
+                return (revisionId == null) ? patch.getCurrentRevision() : patch.getRevision(revisionId);
+            }
+
+            @Override
+            public InMemoryRevision visit(WorkspaceSourceSpecification sourceSpec)
+            {
+                WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
+                if (workspaceSpec.getAccessType() != ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
+                {
+                    throw new UnsupportedOperationException("Not implemented");
+                }
+                VersionId patchVersionId = workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<VersionId>()
+                {
+                    @Override
+                    public VersionId visit(ProjectWorkspaceSource source)
+                    {
+                        return null;
+                    }
+
+                    @Override
+                    public VersionId visit(PatchWorkspaceSource source)
+                    {
+                        return source.getPatchVersionId();
+                    }
+                });
+                InMemoryWorkspace workspace = (workspaceSpec.getType() == WorkspaceType.GROUP) ?
+                        project.getGroupWorkspace(workspaceSpec.getId(), patchVersionId) :
+                        project.getUserWorkspace(workspaceSpec.getId(), patchVersionId);
+                return (revisionId == null) ? workspace.getCurrentRevision() : workspace.getRevision(revisionId);
+            }
+        });
+        return new InMemoryEntityAccessContext(revision);
     }
 
     @Override
-    public EntityAccessContext getProjectRevisionEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String revisionId)
-    {
-        InMemoryProject project = this.backend.getProject(projectId);
-        return new InMemoryEntityAccessContext(project.getCurrentRevision().getEntities());
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceEntityAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = sourceSpecification.getWorkspaceType() == WorkspaceType.GROUP ? project.getGroupWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId()) : project.getUserWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
-        return new InMemoryEntityAccessContext(workspace.getCurrentRevision().getEntities());
-    }
-
-    @Override
-    public EntityAccessContext getBackupWorkspaceEntityAccessContext(String projectId, SourceSpecification sourceSpecification)
+    public EntityAccessContext getReviewFromEntityAccessContext(String projectId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public EntityAccessContext getWorkspaceWithConflictResolutionEntityAccessContext(String projectId, SourceSpecification sourceSpecification)
+    public EntityAccessContext getReviewToEntityAccessContext(String projectId, String reviewId)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public EntityAccessContext getWorkspaceRevisionEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+    public EntityModificationContext getEntityModificationContext(String projectId, WorkspaceSourceSpecification sourceSpecification)
     {
+        WorkspaceSpecification workspaceSpec = sourceSpecification.getWorkspaceSpecification();
+        if (workspaceSpec.getAccessType() != ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)
+        {
+            throw new UnsupportedOperationException("Not implemented");
+        }
         InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = sourceSpecification.getWorkspaceType() == WorkspaceType.GROUP ? project.getGroupWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId()) : project.getUserWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
-        InMemoryRevision revision = workspace.getRevision(revisionId);
-        return new InMemoryEntityAccessContext(revision.getEntities());
-    }
+        VersionId patchVersionId = workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<VersionId>()
+        {
+            @Override
+            public VersionId visit(ProjectWorkspaceSource source)
+            {
+                return null;
+            }
 
-    @Override
-    public EntityAccessContext getBackupWorkspaceRevisionEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getWorkspaceWithConflictResolutionRevisionEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getReviewFromEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getReviewToEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public EntityAccessContext getVersionEntityAccessContext(String projectId, VersionId versionId)
-    {
-        InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryVersion version = project.getVersion(versionId.toVersionIdString());
-        return new InMemoryEntityAccessContext(version.getRevision().getEntities());
-    }
-
-    @Override
-    public EntityModificationContext getWorkspaceEntityModificationContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        InMemoryProject project = this.backend.getProject(projectId);
-        InMemoryWorkspace workspace = sourceSpecification.getWorkspaceType() == WorkspaceType.GROUP ? project.getGroupWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId()) : project.getUserWorkspace(sourceSpecification.getWorkspaceId(), sourceSpecification.getPatchReleaseVersionId());
+            @Override
+            public VersionId visit(PatchWorkspaceSource source)
+            {
+                return source.getPatchVersionId();
+            }
+        });
+        InMemoryWorkspace workspace = (workspaceSpec.getType() == WorkspaceType.GROUP) ?
+                project.getGroupWorkspace(workspaceSpec.getId(), patchVersionId) :
+                project.getUserWorkspace(workspaceSpec.getId(), patchVersionId);
         return new InMemoryEntityModificationContext(workspace.getCurrentRevision().getEntities());
-    }
-
-    @Override
-    public EntityModificationContext getWorkspaceWithConflictResolutionEntityModificationContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        throw new UnsupportedOperationException("Not implemented");
     }
 
     static class InMemoryEntityAccessContext implements EntityAccessContext
     {
-        private final Iterable<Entity> entities;
+        private final InMemoryRevision revision;
 
-        public InMemoryEntityAccessContext(Iterable<Entity> entities)
+        public InMemoryEntityAccessContext(InMemoryRevision revision)
         {
-            this.entities = entities;
+            this.revision = revision;
         }
 
         @Override
         public Entity getEntity(String path)
         {
-            List<Entity> matches = this.getEntities((p) -> p.equals(path), null, null);
-            if (matches.size() > 1)
+            Entity entity = this.revision.getEntity(path);
+            if (entity == null)
             {
-                throw new IllegalStateException(String.format("Found %d instead of 1 matches for entity with path %s", matches.size(), path));
+                throw new IllegalStateException("Entity with path " + path + " not found");
             }
-            if (matches.size() == 0)
-            {
-                throw new IllegalStateException(String.format("Entity with path %s not found", path));
-            }
-            return matches.get(0);
+            return entity;
         }
 
         @Override
         public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
-            Stream<Entity> stream = StreamSupport.stream(this.entities.spliterator(), false);
-            if (entityPathPredicate != null)
-            {
-                stream = stream.filter(entity -> entityPathPredicate.test(entity.getPath()));
-            }
-
-            if (classifierPathPredicate != null)
-            {
-                stream = stream.filter(entity -> classifierPathPredicate.test(entity.getClassifierPath()));
-            }
-
-            if (entityContentPredicate != null)
-            {
-                stream = stream.filter(entity -> entityContentPredicate.test(entity.getContent()));
-            }
-
-            return stream.collect(Collectors.toList());
+            return Iterate.select(this.revision.getEntities(),
+                    e -> ((entityPathPredicate == null) || entityPathPredicate.test(e.getPath())) &&
+                            ((classifierPathPredicate == null) || classifierPathPredicate.test(e.getClassifierPath())) &&
+                            ((entityContentPredicate == null) || entityContentPredicate.test(e.getContent())),
+                    Lists.mutable.empty());
         }
 
         @Override
         public List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
         {
-            List<Entity> entities = this.getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate);
-            return entities.stream().map(Entity::getPath).collect(Collectors.toList());
+            return ListIterate.collect(getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate), Entity::getPath);
         }
     }
 

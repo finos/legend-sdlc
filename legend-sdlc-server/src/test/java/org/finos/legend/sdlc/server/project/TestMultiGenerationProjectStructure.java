@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;

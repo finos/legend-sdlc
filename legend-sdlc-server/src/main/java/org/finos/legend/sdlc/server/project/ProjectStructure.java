@@ -48,7 +48,8 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
@@ -66,7 +67,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -1032,7 +1032,7 @@ public abstract class ProjectStructure
         {
             this.projectFileAccessProvider = projectFileAccessProvider;
             this.projectId = projectId;
-            this.sourceSpecification = SourceSpecification.newSourceSpecification(null, null, null);
+            this.sourceSpecification = SourceSpecification.projectSourceSpecification();
             this.configUpdater = (configUpdater == null) ? getDefaultProjectConfigurationUpdater() : configUpdater;
         }
 
@@ -1078,20 +1078,28 @@ public abstract class ProjectStructure
             return ProjectConfigurationUpdater.newUpdater().withProjectId(this.projectId);
         }
 
-        // Workspace
+        // Source specification
 
-        public void setWorkspace(SourceSpecification sourceSpecification)
+        public void setSourceSpecification(SourceSpecification sourceSpec)
         {
-            Objects.requireNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
-            Objects.requireNonNull(sourceSpecification.getWorkspaceType(), "workspaceType may not be null");
-            Objects.requireNonNull(sourceSpecification.getWorkspaceAccessType(), "workspaceAccessType may not be null");
-            this.sourceSpecification = sourceSpecification;
+            this.sourceSpecification = sourceSpec;
         }
 
+        public UpdateBuilder withSourceSpecification(SourceSpecification sourceSpec)
+        {
+            setSourceSpecification(sourceSpec);
+            return this;
+        }
+
+        public UpdateBuilder withWorkspace(WorkspaceSpecification workspaceSpec)
+        {
+            return withSourceSpecification(SourceSpecification.workspaceSourceSpecification(workspaceSpec));
+        }
+
+        @Deprecated
         public UpdateBuilder withWorkspace(SourceSpecification sourceSpecification)
         {
-            setWorkspace(sourceSpecification);
-            return this;
+            return withSourceSpecification(sourceSpecification);
         }
 
         // Revision id

@@ -28,13 +28,14 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.project.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
@@ -56,7 +57,6 @@ import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.MergeRequestFilter;
 import org.gitlab4j.api.models.MergeRequestParams;
-import org.finos.legend.sdlc.domain.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,6 +69,7 @@ import java.util.Set;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
@@ -85,7 +86,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         Set<String> revisionIdSet;
@@ -140,8 +141,9 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
                 mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
             }
-            String targetBranch = getSourceBranch(gitLabProjectId, patchReleaseVersionId);
-            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, targetBranch)).map(mr -> fromGitLabMergeRequest(projectId, patchReleaseVersionId, mr));
+            String defaultBranch = getDefaultBranch(gitLabProjectId);
+            Supplier<String> defaultBranchSupplier = () -> defaultBranch;
+            Stream<Review> stream = mergeRequestStream.filter(mr -> isReviewMergeRequest(mr, defaultBranchSupplier)).map(mr -> fromGitLabMergeRequest(projectId, mr));
             return addReviewFilters(stream, state, workspaceIdAndTypePredicate, since, until, limit).collect(Collectors.toList());
         }
         catch (Exception e)
@@ -168,24 +170,20 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
 
     private Stream<Review> getReviewStream(MergeRequestFilter mergeRequestFilter)
     {
-        MutableIntObjectMap<String> pIdTodefaultBranch = IntObjectMaps.mutable.empty();
-
+        MutableIntObjectMap<String> defaultBranchByProject = IntObjectMaps.mutable.empty();
+        String idPrefix = getGitLabConfiguration().getProjectIdPrefix();
         try
         {
             return PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)))
-                    .filter(mr ->
-                    {
-                        String defaultBranch = pIdTodefaultBranch.getIfAbsentPutWithKey(mr.getProjectId(), pid -> getDefaultBranch(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), pid)));
-                        return isReviewMergeRequest(mr, defaultBranch);
-                    })
-                      .map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(this.getGitLabConfiguration().getProjectIdPrefix(), mr.getProjectId()).toString(), null, mr));
+                    .filter(mr -> isReviewMergeRequest(mr, () -> defaultBranchByProject.getIfAbsentPut(mr.getProjectId(), () -> getDefaultBranch(GitLabProjectId.newProjectId(idPrefix, mr.getProjectId())))))
+                    .map(mr -> fromGitLabMergeRequest(GitLabProjectId.newProjectId(idPrefix, mr.getProjectId()).toString(), mr));
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get reviews",
-                null,
-                () -> "Error getting reviews");
+                    () -> "User " + getCurrentUser() + " is not allowed to get reviews",
+                    null,
+                    () -> "Error getting reviews");
         }
     }
 
@@ -318,74 +316,73 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public Review getReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review getReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-            MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, mergeRequest);
+            MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
+            return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get review " + reviewId + " for project " + projectId,
-                () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
-                () -> "Error getting review " + reviewId + " for project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get review " + reviewId + " for project " + projectId,
+                    () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
+                    () -> "Error getting review " + reviewId + " for project " + projectId);
         }
     }
 
     @Override
-    public Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels)
+    public Review createReview(String projectId, WorkspaceSpecification workspaceSpecification, String title, String description, List<String> labels)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceId(), "workspaceId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification.getWorkspaceType(), "workspaceType may not be null");
+        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
         LegendSDLCServerException.validateNonNull(title, "title may not be null");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
-        // checking if target branch exists or not
-        if (sourceSpecification.getPatchReleaseVersionId() != null && !isPatchReleaseBranchPresent(gitLabProjectId, sourceSpecification.getPatchReleaseVersionId()))
-        {
-            throw new LegendSDLCServerException("Target patch release branch " + getPatchReleaseBranchName(sourceSpecification.getPatchReleaseVersionId()) + " for which you want to create review does not exist");
-        }
+        String workspaceBranchName = getWorkspaceBranchName(workspaceSpecification);
+        String sourceBranchName = getSourceBranch(gitLabProjectId, workspaceSpecification);
 
-        ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType = ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE;
         try
         {
-            validateProjectConfigurationForCreateOrCommit(getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(sourceSpecification.getWorkspaceId(), sourceSpecification.getWorkspaceType(), workspaceAccessType, sourceSpecification.getPatchReleaseVersionId()), null));
-            String workspaceBranchName = getWorkspaceBranchName(SourceSpecification.newSourceSpecification(sourceSpecification.getWorkspaceId(), sourceSpecification.getWorkspaceType(), workspaceAccessType, sourceSpecification.getPatchReleaseVersionId()));
-            // TODO should we check for other merge requests for this workspace?
-            MergeRequest mergeRequest = getGitLabApi().getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, getSourceBranch(gitLabProjectId, sourceSpecification.getPatchReleaseVersionId()), title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
-            return fromGitLabMergeRequest(projectId, sourceSpecification.getPatchReleaseVersionId(), mergeRequest);
+            GitLabApi gitLabApi = getGitLabApi();
+            boolean sourceBranchExists = withRetries(() -> GitLabApiTools.branchExists(gitLabApi, gitLabProjectId.getGitLabId(), sourceBranchName));
+            if (!sourceBranchExists)
+            {
+                throw new LegendSDLCServerException("Review target does not exist: " + getReferenceInfo(projectId, workspaceSpecification.getSource()), Status.CONFLICT);
+            }
+
+            MergeRequest mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(gitLabProjectId.getGitLabId(), workspaceBranchName, sourceBranchName, title, description, null, null, (labels == null || labels.isEmpty()) ? null : labels.toArray(new String[0]), null, true);
+            return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + sourceSpecification.getWorkspaceType().getLabel() + " " + workspaceAccessType.getLabel() + " " + sourceSpecification.getWorkspaceId() + " in project " + projectId + " for review",
-                () -> "Unknown " + sourceSpecification.getWorkspaceType().getLabel() + " " + workspaceAccessType.getLabel() + " (" + sourceSpecification.getWorkspaceId() + ") or project (" + projectId + ")",
-                () -> "Error submitting changes from " + sourceSpecification.getWorkspaceType().getLabel() + " " + workspaceAccessType.getLabel() + " " + sourceSpecification.getWorkspaceId() + " in project " + projectId + " for review");
+                    () -> "User " + getCurrentUser() + " is not allowed to submit changes from " + getReferenceInfo(projectId, workspaceSpecification) + " for review",
+                    () -> "Unknown: " + getReferenceInfo(projectId, workspaceSpecification),
+                    () -> "Error submitting changes from " + getReferenceInfo(projectId, workspaceSpecification) + " for review");
         }
     }
 
     @Override
-    public Review closeReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review closeReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         validateMergeRequestReviewState(mergeRequest, ReviewState.OPEN);
         try
         {
-            MergeRequest closeMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, mergeRequest, Constants.StateEvent.CLOSE);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, closeMergeRequest);
+            MergeRequest closeMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, mergeRequest, Constants.StateEvent.CLOSE);
+            return fromGitLabMergeRequest(projectId, closeMergeRequest);
         }
         catch (Exception e)
         {
@@ -397,38 +394,38 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public Review reopenReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review reopenReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         validateMergeRequestReviewState(mergeRequest, ReviewState.CLOSED);
         try
         {
-            MergeRequest reopenMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, mergeRequest, StateEvent.REOPEN);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, reopenMergeRequest);
+            MergeRequest reopenMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, mergeRequest, StateEvent.REOPEN);
+            return fromGitLabMergeRequest(projectId, reopenMergeRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to reopen review " + reviewId + " in project " + projectId,
-                () -> "Unknown review in project " + projectId + ": " + reviewId,
-                () -> "Error reopening review " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to reopen review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review in project " + projectId + ": " + reviewId,
+                    () -> "Error reopening review " + reviewId + " in project " + projectId);
         }
     }
 
     @Override
-    public Review approveReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review approveReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         try
         {
             MergeRequest approvalMergeRequest = mergeRequestApi.approveMergeRequest(gitLabProjectId.getGitLabId(), mergeRequest.getIid(), mergeRequest.getSha());
@@ -436,7 +433,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             // creating a Review, as most relevant properties are null. The only useful thing we get
             // from it is the last update time.
             mergeRequest.setUpdatedAt(approvalMergeRequest.getUpdatedAt());
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, mergeRequest);
+            return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (GitLabApiException e)
         {
@@ -480,14 +477,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public Review revokeReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review revokeReviewApproval(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         try
         {
             MergeRequest revokeApprovalMergeRequest = mergeRequestApi.unapproveMergeRequest(gitLabProjectId.getGitLabId(), mergeRequest.getIid());
@@ -495,43 +492,43 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             // for creating a Review, as most relevant properties are null. The only useful thing we
             // get from it is the last update time.
             mergeRequest.setUpdatedAt(revokeApprovalMergeRequest.getUpdatedAt());
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, mergeRequest);
+            return fromGitLabMergeRequest(projectId, mergeRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to revoke approval of review " + reviewId + " in project " + projectId,
-                () -> "Unknown review in project " + projectId + ": " + reviewId,
-                () -> "Error revoking review approval " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to revoke approval of review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review in project " + projectId + ": " + reviewId,
+                    () -> "Error revoking review approval " + reviewId + " in project " + projectId);
         }
     }
 
     @Override
-    public Review rejectReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Review rejectReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         validateMergeRequestReviewState(mergeRequest, ReviewState.OPEN);
         try
         {
-            MergeRequest rejectMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, mergeRequest, StateEvent.CLOSE);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, rejectMergeRequest);
+            MergeRequest rejectMergeRequest = updateMergeRequestState(mergeRequestApi, gitLabProjectId, mergeRequest, StateEvent.CLOSE);
+            return fromGitLabMergeRequest(projectId, rejectMergeRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to reject review " + reviewId + " in project " + projectId,
-                () -> "Unknown review in project " + projectId + ": " + reviewId,
-                () -> "Error rejecting review " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to reject review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review in project " + projectId + ": " + reviewId,
+                    () -> "Error rejecting review " + reviewId + " in project " + projectId);
         }
     }
 
     @Override
-    public Approval getReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public Approval getReviewApproval(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
@@ -544,14 +541,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
-                () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
-                () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to get approval details for review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review (" + reviewId + ") or project (" + projectId + ")",
+                    () -> "Error getting approval details for review " + reviewId + " in project " + projectId);
         }
     }
 
     @Override
-    public Review commitReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String message)
+    public Review commitReview(String projectId, String reviewId, String message)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
@@ -561,7 +558,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         MergeRequestApi mergeRequestApi = getGitLabApi().getMergeRequestApi();
 
         // Find the merge request
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
 
         // Validate that the merge request is ready to be merged
 
@@ -576,12 +573,12 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
 
         // Validate the project configuration
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
-        if (workspaceInfo == null)
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        if (workspaceSpec == null)
         {
             throw new LegendSDLCServerException("Error committing review " + reviewId + " in project " + projectId + ": could not find workspace information");
         }
-        ProjectConfiguration projectConfig = getProjectConfiguration(projectId, workspaceInfo, null);
+        ProjectConfiguration projectConfig = getProjectConfiguration(projectId, workspaceSpec.getSourceSpecification(), null);
         validateProjectConfigurationForCreateOrCommit(projectConfig);
 
         // TODO add more validations
@@ -589,7 +586,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         // Accept
         try
         {
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, mergeRequestApi.acceptMergeRequest(gitLabProjectId.getGitLabId(), mergeRequest.getIid(), message, true, null, null));
+            return fromGitLabMergeRequest(projectId, mergeRequestApi.acceptMergeRequest(gitLabProjectId.getGitLabId(), mergeRequest.getIid(), message, true, null, null));
         }
         catch (GitLabApiException e)
         {
@@ -660,14 +657,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public ReviewUpdateStatus getReviewUpdateStatus(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         GitLabApi gitLabApi = getGitLabApi();
-        MergeRequest mergeRequest = getReviewMergeRequest(gitLabApi.getMergeRequestApi(), gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(gitLabApi.getMergeRequestApi(), gitLabProjectId, reviewId);
         if (!(isOpen(mergeRequest) || isLocked(mergeRequest)))
         {
             throw new LegendSDLCServerException("Cannot get update status for review " + mergeRequest.getIid() + " in project " + projectId + ": state is " + getReviewState(mergeRequest), Status.CONFLICT);
@@ -676,7 +673,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public ReviewUpdateStatus updateReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    public ReviewUpdateStatus updateReview(String projectId, String reviewId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
@@ -686,7 +683,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         MergeRequestApi mergeRequestApi = gitLabApi.getMergeRequestApi();
 
         // Check the current status of the review
-        MergeRequest initialMergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest initialMergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         if (!isOpen(initialMergeRequest))
         {
             throw new LegendSDLCServerException("Only open reviews can be updated: state of review " + initialMergeRequest.getIid() + " in project " + projectId + " is " + getReviewState(initialMergeRequest), Status.CONFLICT);
@@ -703,10 +700,10 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         try
         {
             CallUntil<MergeRequest, GitLabApiException> callUntil = CallUntil.callUntil(
-                () -> withRetries(() -> mergeRequestApi.rebaseMergeRequest(gitLabProjectId.getGitLabId(), initialMergeRequest.getIid())),
-                MergeRequest::getRebaseInProgress,
-                3,
-                500L);
+                    () -> withRetries(() -> mergeRequestApi.rebaseMergeRequest(gitLabProjectId.getGitLabId(), initialMergeRequest.getIid())),
+                    MergeRequest::getRebaseInProgress,
+                    3,
+                    500L);
             if (!callUntil.succeeded())
             {
                 throw new LegendSDLCServerException("Failed to start update for review " + reviewId + " in project " + projectId);
@@ -716,15 +713,15 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to update review " + reviewId + " in project " + projectId,
-                () -> "Unknown review in project " + projectId + ": " + reviewId,
-                () -> "Error updating review " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to update review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review in project " + projectId + ": " + reviewId,
+                    () -> "Error updating review " + reviewId + " in project " + projectId);
         }
         return getReviewUpdateStatus(gitLabProjectId, gitLabApi, rebaseMergeRequest);
     }
 
     @Override
-    public Review editReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String title, String description, List<String> labels)
+    public Review editReview(String projectId, String reviewId, String title, String description, List<String> labels)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
@@ -735,7 +732,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         GitLabApi gitLabApi = getGitLabApi();
         MergeRequestApi mergeRequestApi = gitLabApi.getMergeRequestApi();
 
-        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, patchReleaseVersionId, reviewId);
+        MergeRequest mergeRequest = getReviewMergeRequest(mergeRequestApi, gitLabProjectId, reviewId);
         if (!isOpen(mergeRequest))
         {
             throw new LegendSDLCServerException("Only open reviews can be edited: state of review " + mergeRequest.getIid() + " in project " + gitLabProjectId.toString() + " is " + getReviewState(mergeRequest));
@@ -749,14 +746,14 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             }
 
             MergeRequest editedRequest = mergeRequestApi.updateMergeRequest(gitLabProjectId.getGitLabId(), mergeRequest.getIid(), mergeRequestParams);
-            return fromGitLabMergeRequest(projectId, patchReleaseVersionId, editedRequest);
+            return fromGitLabMergeRequest(projectId, editedRequest);
         }
         catch (Exception e)
         {
             throw buildException(e,
-                () -> "User " + getCurrentUser() + " is not allowed to edit review " + reviewId + " in project " + projectId,
-                () -> "Unknown review in project " + projectId + ": " + reviewId,
-                () -> "Error editing review " + reviewId + " in project " + projectId);
+                    () -> "User " + getCurrentUser() + " is not allowed to edit review " + reviewId + " in project " + projectId,
+                    () -> "Unknown review in project " + projectId + ": " + reviewId,
+                    () -> "Error editing review " + reviewId + " in project " + projectId);
 
         }
     }
@@ -873,9 +870,9 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
     }
 
-    protected MergeRequest updateMergeRequestState(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, VersionId patchReleaseVersionId, MergeRequest mergeRequest, Constants.StateEvent stateEvent) throws GitLabApiException
+    protected MergeRequest updateMergeRequestState(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, MergeRequest mergeRequest, Constants.StateEvent stateEvent) throws GitLabApiException
     {
-        return mergeRequestApi.updateMergeRequest(projectId.getGitLabId(), mergeRequest.getIid(), getSourceBranch(projectId, patchReleaseVersionId), null, null, null, stateEvent, null, null, null, null, null, null);
+        return mergeRequestApi.updateMergeRequest(projectId.getGitLabId(), mergeRequest.getIid(), null, null, null, null, stateEvent, null, null, null, null, null, null);
     }
 
     private boolean isCreatedAtWithinBounds(Review review, Instant lowerBound, Instant upperBound)
@@ -948,7 +945,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
     }
 
-    protected static Review fromGitLabMergeRequest(String projectId, VersionId patchReleaseVersionId, MergeRequest mergeRequest)
+    protected static Review fromGitLabMergeRequest(String projectId, MergeRequest mergeRequest)
     {
         if (mergeRequest == null)
         {
@@ -956,17 +953,18 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         }
 
         String sourceBranchName = mergeRequest.getSourceBranch();
-        WorkspaceInfo workspaceInfo = parseWorkspaceBranchName(sourceBranchName);
-        if ((workspaceInfo == null) || (workspaceInfo.getWorkspaceAccessType() != ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+        WorkspaceSpecification workspaceInfo = parseWorkspaceBranchName(sourceBranchName);
+        if ((workspaceInfo == null) || (workspaceInfo.getAccessType() != ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
         {
             return null;
         }
+
         return newReview(mergeRequest.getIid(), projectId, workspaceInfo, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl(), mergeRequest.getLabels());
     }
 
-    private static Review newReview(Integer reviewId, String projectId, WorkspaceInfo workspaceInfo, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
+    private static Review newReview(Integer reviewId, String projectId, WorkspaceSpecification workspaceSpec, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
     {
-        return newReview(reviewId, projectId, workspaceInfo.getWorkspaceId(), workspaceInfo.getWorkspaceType(), title, description, createdAt, lastUpdatedAt, closedAt, committedAt, reviewState, author, commitRevisionId, webURL, labels);
+        return newReview(reviewId, projectId, workspaceSpec.getId(), workspaceSpec.getType(), title, description, createdAt, lastUpdatedAt, closedAt, committedAt, reviewState, author, commitRevisionId, webURL, labels);
     }
 
     private static Review newReview(Integer reviewId, String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)

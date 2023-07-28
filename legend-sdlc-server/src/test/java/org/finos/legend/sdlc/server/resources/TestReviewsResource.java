@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
-import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.junit.Assert;
@@ -28,43 +27,43 @@ import javax.ws.rs.core.Response;
 public class TestReviewsResource extends AbstractLegendSDLCServerResourceTest
 {
     @Test
-    public void testGetReviewForProject() throws HttpResponseException 
+    public void testGetReviewForProject() throws HttpResponseException
     {
-        this.backend.project("A").addReview("1");  
+        this.backend.project("A").addReview("1");
 
         Response response = this.clientFor("/api/projects/A/reviews/1").request().get();
 
         if (response.getStatus() != 200)
         {
             throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
-        } 
-           
+        }
+
         Review review = response.readEntity(new GenericType<Review>()
-            {
-            });
-     
-   
+        {
+        });
+
+
         Assert.assertEquals("A", review.getProjectId());
         Assert.assertEquals("111", review.getWorkspaceId());
     }
 
     @Test
-    public void testGetReviewsForProject() throws HttpResponseException 
+    public void testGetReviewsForProject() throws HttpResponseException
     {
-        this.backend.project("A").addReview("456");  
+        this.backend.project("A").addReview("456");
 
         Response response = this.clientFor("/api/projects/A/reviews?state=OPEN&limit=2").request().get();
 
         if (response.getStatus() != 200)
         {
             throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
-        } 
-        
+        }
+
         List<Review> reviews = response.readEntity(new GenericType<List<Review>>()
-            {
-            });
-    
-            
+        {
+        });
+
+
         Assert.assertNotNull(reviews);
         Assert.assertEquals(1, reviews.size());
     }

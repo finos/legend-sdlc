@@ -22,10 +22,12 @@ import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
+import java.util.List;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -36,7 +38,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.List;
 
 @Path("/projects/{projectId}/versions")
 @Api("Versions")
@@ -141,11 +142,11 @@ public class VersionsResource extends BaseResource
     public Version createVersion(@PathParam("projectId") String projectId, CreateVersionCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create version");
-        if (!featuresConfiguration.canCreateVersion)
+        if (!this.featuresConfiguration.canCreateVersion)
         {
             throw new LegendSDLCServerException("Server does not support creating project version(s)", Response.Status.METHOD_NOT_ALLOWED);
         }
-        ProjectType type = projectConfigurationApi.getProjectProjectConfiguration(projectId).getProjectType();
+        ProjectType type = this.projectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification()).getProjectType();
         if (type == ProjectType.EMBEDDED)
         {
             throw new LegendSDLCServerException("Creating a version of a project of type " + type + " is not allowed", Response.Status.CONFLICT);
