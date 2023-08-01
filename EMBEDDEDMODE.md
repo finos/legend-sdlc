@@ -1,14 +1,14 @@
 # Embedded Mode
  
 ## Objective
- 
+
 The objective of this document is to provide a definition of Embedded Mode.
  
-We are over the age when we need to explain and convince the benefits of modeling the data and contracts.  We have achieved building the models that capture the business intent and using these models to build sophisticated queries and link data.  We also use Legend/Alloy for creating versioned serializable models to build APIs, using schema and model constraints to mandate content quality.  Our focus this time has been primarily concerned with curation of the data, user journeys and development experience.
+We are over the age when we need to explain and convince the benefits of modeling the data and contracts.  We have achieved building the models that capture the business intent and using these models to build sophisticated queries and link data.  We also use Legend for creating versioned serializable models to build APIs, using schema and model constraints to mandate content quality.  Our focus this time has been primarily concerned with curation of the data, user journeys and development experience.
  
 ## What do we want to achieve with Embedded mode?
  
-**Expand usage of data models** to create a consistent and intuitive experience across all teams at GS.
+**Expand usage of data models** to create a consistent and intuitive experience acrosss multi-team products.
  
 **Enable a developer experience** that is enjoyable with minimal overhead to deal with different code bases.
  
@@ -30,8 +30,6 @@ We are over the age when we need to explain and convince the benefits of modelin
 ### **Code Generation**
  
 The code generations can be leveraged to streamline the developer experience.
-1. Java Pojos as the internal model in our microservices
-2. OpenAPI and Protobuf definitions to autogenerate the input / output parameters for API server side stubs in java for REST or gRPC
  
 ### **Data Quality - constraints/validations**
  
