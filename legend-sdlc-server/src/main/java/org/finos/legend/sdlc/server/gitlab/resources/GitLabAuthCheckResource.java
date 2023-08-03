@@ -86,7 +86,6 @@ public class GitLabAuthCheckResource extends BaseResource
                 }
             }
 
-
             if (session instanceof GitLabSession)
             {
                 GitLabUserContext gitLabUserContext = new GitLabUserContext(httpRequest, httpResponse, authorizerManager, appInfo);
