@@ -23,6 +23,7 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.api.list.ImmutableList;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
@@ -33,6 +34,7 @@ import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.plan.platform.PlanPlatform;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.pure.PureClientVersions;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
@@ -41,6 +43,7 @@ import org.finos.legend.engine.shared.core.operational.errorManagement.EngineExc
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
+import org.finos.legend.pure.m3.execution.ExecutionSupport;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.sdlc.generation.GeneratedJavaCode;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -72,10 +75,11 @@ public class ServiceExecutionGenerator
     private final Path resourceOutputDirectory;
     private final JsonMapper objectMapper;
     private final String clientVersion;
-    private final Iterable<? extends PlanGeneratorExtension> planGeneratorExtensions;
+    private final ImmutableList<Root_meta_pure_extension_Extension> extensions;
+    private final ImmutableList<PlanTransformer> transformers;
     private final ForkJoinPool executorService;
 
-    private ServiceExecutionGenerator(MutableList<Service> services, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, Iterable<? extends PlanGeneratorExtension> planGeneratorExtensions, String clientVersion, ForkJoinPool executorService)
+    private ServiceExecutionGenerator(MutableList<Service> services, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper,  String clientVersion, ImmutableList<Root_meta_pure_extension_Extension> extensions, ImmutableList<PlanTransformer> transformers, ForkJoinPool executorService)
     {
         this.services = services;
         this.pureModel = pureModel;
@@ -84,14 +88,15 @@ public class ServiceExecutionGenerator
         this.resourceOutputDirectory = resourceOutputDirectory;
         this.objectMapper = (jsonMapper == null) ? getDefaultJsonMapper() : jsonMapper;
         this.clientVersion = clientVersion;
-        this.planGeneratorExtensions = (planGeneratorExtensions == null) ? Lists.immutable.empty() : planGeneratorExtensions;
         this.executorService = executorService;
+        this.extensions = extensions;
+        this.transformers = transformers;
     }
 
     @Deprecated
     public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper)
     {
-        this(Lists.mutable.with(validateService(service)), pureModel, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, null, null, null);
+        this(Lists.mutable.with(validateService(service)), pureModel, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, null, Lists.immutable.empty(), Lists.immutable.empty(), null);
     }
 
     public void generate()
@@ -100,12 +105,12 @@ public class ServiceExecutionGenerator
         ExecClassNamesAndEnumerations execClassNamesAndEnums;
         if (this.executorService == null)
         {
-            execClassNamesAndEnums = this.services.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generateSingle(service)));
+            execClassNamesAndEnums = this.services.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generate(service)));
         }
         else
         {
             execClassNamesAndEnums = this.executorService.submit(() -> this.services.parallelStream()
-                            .map(this::generateSingle)
+                            .map(this::generate)
                             .reduce(ExecClassNamesAndEnumerations::merge))
                     .join()
                     .orElse(null);
@@ -134,11 +139,6 @@ public class ServiceExecutionGenerator
             }
         }
         LOGGER.info("Finished generation of {} services", this.services.size());
-    }
-
-    private ExecClassNamesAndEnumerations generateSingle(Service service)
-    {
-        return new Single(service).generate();
     }
 
     private void writeExecutionPlan(String servicePath, ExecutionPlan plan)
@@ -285,7 +285,7 @@ public class ServiceExecutionGenerator
     private String getExecutionPlanRelativePath(String servicePath, String separator)
     {
         StringBuilder builder = new StringBuilder("plans").append(separator);
-        if (hasPackagePrefix())
+        if (this.packagePrefix != null)
         {
             appendReplacingDelimiter(builder, this.packagePrefix, ".", separator).append(separator);
         }
@@ -300,7 +300,7 @@ public class ServiceExecutionGenerator
     private String getPlanId(String servicePath)
     {
         StringBuilder builder = new StringBuilder();
-        if (hasPackagePrefix())
+        if (this.packagePrefix != null)
         {
             appendReplacingDelimiter(builder, this.packagePrefix, ".", "_").append('_');
         }
@@ -308,129 +308,87 @@ public class ServiceExecutionGenerator
         return JavaSourceHelper.toValidJavaIdentifier(builder.toString(), '$', true);
     }
 
-    private boolean hasPackagePrefix()
+    private ExecClassNamesAndEnumerations generate(Service service)
     {
-        return this.packagePrefix != null;
-    }
+        long start = System.nanoTime();
+        String servicePath = service.getPath();
+        LOGGER.info("Starting generation for {}", servicePath);
 
-    private String getPackagePrefix()
-    {
-        return this.packagePrefix;
-    }
+        // Validate service parameter types and collect enumerations to generate
+        ListIterable<Enumeration<? extends Enum>> enumerations = validateServiceParameterTypes(service);
 
-    private PureModel getPureModel()
-    {
-        return this.pureModel;
-    }
+        // Generate plan
+        ExecutionPlan plan = generateExecutionPlan(service, servicePath);
 
-    private String getClientVersion()
-    {
-        return this.clientVersion;
-    }
+        // Write any Java classes from the plan, then remove them from the plan
+        LOGGER.debug("Writing Java source files from plan for {}", servicePath);
+        JavaSourceHelper.writeJavaSourceFiles(this.javaSourceOutputDirectory, plan);
+        LOGGER.debug("Finished writing Java source files from plan for {}", servicePath);
+        JavaSourceHelper.removeJavaImplementationClasses(plan);
 
-    private Path getJavaSourceOutputDirectory()
-    {
-        return this.javaSourceOutputDirectory;
-    }
+        // Generate execution class for service
+        LOGGER.debug("Starting generating main service execution class for {}", servicePath);
+        GeneratedJavaCode generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.packagePrefix)
+                .withPlanResourceName(getExecutionPlanResourceName(servicePath))
+                .withService(service)
+                .generate();
+        LOGGER.debug("Finished generating main service execution class for {}", servicePath);
 
-    private class Single
-    {
-        private final Service service;
-        private final MutableList<Root_meta_pure_extension_Extension> extensions = Lists.mutable.empty();
-        private final MutableList<PlanTransformer> transformers = Lists.mutable.empty();
+        // Write plan resource and execution class
+        LOGGER.debug("Starting writing execution plan for {}", servicePath);
+        writeExecutionPlan(servicePath, plan);
+        LOGGER.debug("Finished writing execution plan for {}", servicePath);
+        LOGGER.debug("Starting writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
+        writeJavaClass(generatedJavaClass);
+        LOGGER.debug("Finished writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
 
-        private Single(Service service)
+        ExecClassNamesAndEnumerations execClassNamesAndEnums = new ExecClassNamesAndEnumerations(generatedJavaClass.getClassName(), enumerations);
+        long end = System.nanoTime();
+        if (LOGGER.isInfoEnabled())
         {
-            this.service = service;
-            ServiceExecutionGenerator.this.planGeneratorExtensions.forEach(ext ->
-            {
-                this.extensions.addAllIterable(ext.getExtraExtensions(getPureModel()));
-                this.transformers.addAllIterable(ext.getExtraPlanTransformers());
-            });
+            LOGGER.info("Finished generation for {} ({}s)", servicePath, String.format("%.9f", (end - start) / 1_000_000_000.0));
+        }
+        return execClassNamesAndEnums;
+    }
+
+    private ListIterable<Enumeration<? extends Enum>> validateServiceParameterTypes(Service service)
+    {
+        if (!(service.execution instanceof PureExecution))
+        {
+            throw new RuntimeException("Only services with PureExecution are supported");
         }
 
-        ExecClassNamesAndEnumerations generate()
+        MutableList<Enumeration<? extends Enum>> enumerations = Lists.mutable.empty();
+        MutableSet<String> enumerationPaths = Sets.mutable.empty();
+        ((PureExecution) service.execution).func.parameters.forEach(var ->
         {
-            long start = System.nanoTime();
-            String servicePath = this.service.getPath();
-            LOGGER.info("Starting generation for {}", servicePath);
-
-            // Validate service parameter types and collect enumerations to generate
-            ListIterable<Enumeration<? extends Enum>> enumerations = validateServiceParameterTypes();
-
-            // Generate plan
-            ExecutionPlan plan = generateExecutionPlan(servicePath);
-
-            // Write any Java classes from the plan, then remove them from the plan
-            LOGGER.debug("Writing Java source files from plan for {}", servicePath);
-            JavaSourceHelper.writeJavaSourceFiles(getJavaSourceOutputDirectory(), plan);
-            LOGGER.debug("Finished writing Java source files from plan for {}", servicePath);
-            JavaSourceHelper.removeJavaImplementationClasses(plan);
-
-            // Generate execution class for service
-            LOGGER.debug("Starting generating main service execution class for {}", servicePath);
-            GeneratedJavaCode generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(getPackagePrefix())
-                    .withPlanResourceName(getExecutionPlanResourceName(servicePath))
-                    .withService(this.service)
-                    .generate();
-            LOGGER.debug("Finished generating main service execution class for {}", servicePath);
-
-            // Write plan resource and execution class
-            LOGGER.debug("Starting writing execution plan for {}", servicePath);
-            writeExecutionPlan(servicePath, plan);
-            LOGGER.debug("Finished writing execution plan for {}", servicePath);
-            LOGGER.debug("Starting writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
-            writeJavaClass(generatedJavaClass);
-            LOGGER.debug("Finished writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
-
-            ExecClassNamesAndEnumerations execClassNamesAndEnums = new ExecClassNamesAndEnumerations(generatedJavaClass.getClassName(), enumerations);
-            long end = System.nanoTime();
-            if (LOGGER.isInfoEnabled())
+            String type = var._class;
+            if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
             {
-                LOGGER.info("Finished generation for {} ({}s)", servicePath, String.format("%.9f", (end - start) / 1_000_000_000.0));
-            }
-            return execClassNamesAndEnums;
-        }
-
-        private ListIterable<Enumeration<? extends Enum>> validateServiceParameterTypes()
-        {
-            if (!(this.service.execution instanceof PureExecution))
-            {
-                throw new RuntimeException("Only services with PureExecution are supported");
-            }
-
-            MutableList<Enumeration<? extends Enum>> enumerations = Lists.mutable.empty();
-            MutableSet<String> enumerationPaths = Sets.mutable.empty();
-            ((PureExecution) this.service.execution).func.parameters.forEach(var ->
-            {
-                String type = var._class;
-                if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
+                Enumeration<? extends Enum> enumeration;
+                try
                 {
-                    Enumeration<? extends Enum> enumeration;
-                    try
-                    {
-                        enumeration = getPureModel().getEnumeration(type, var.sourceInformation);
-                    }
-                    catch (EngineException e)
-                    {
-                        throw new RuntimeException("Invalid type for parameter '" + var.name + "': " + type, e);
-                    }
-                    enumerations.add(enumeration);
-                    enumerationPaths.add(type);
+                    enumeration = this.pureModel.getEnumeration(type, var.sourceInformation);
                 }
-            });
-            return enumerations;
-        }
+                catch (EngineException e)
+                {
+                    throw new RuntimeException("Invalid type for parameter '" + var.name + "': " + type, e);
+                }
+                enumerations.add(enumeration);
+                enumerationPaths.add(type);
+            }
+        });
+        return enumerations;
+    }
 
-        private ExecutionPlan generateExecutionPlan(String servicePath)
-        {
-            LOGGER.debug("Starting generating execution plan for {}", servicePath);
-            String planId = getPlanId(servicePath);
-            LOGGER.debug("Plan id: {}", planId);
-            ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(this.service, null, getPureModel(), getClientVersion(), PlanPlatform.JAVA, planId, this.extensions, this.transformers);
-            LOGGER.debug("Finished generating execution plan for {}", servicePath);
-            return plan;
-        }
+    private ExecutionPlan generateExecutionPlan(Service service, String servicePath)
+    {
+        LOGGER.debug("Starting generating execution plan for {}", servicePath);
+        String planId = getPlanId(servicePath);
+        LOGGER.debug("Plan id: {}", planId);
+        ExecutionPlan plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, this.pureModel, this.clientVersion, PlanPlatform.JAVA, planId, this.extensions, this.transformers);
+        LOGGER.debug("Finished generating execution plan for {}", servicePath);
+        return plan;
     }
 
     private static class ExecClassNamesAndEnumerations
@@ -645,15 +603,35 @@ public class ServiceExecutionGenerator
 
         public ServiceExecutionGenerator build()
         {
+            Objects.requireNonNull(this.pureModel, "PureModel may not be null");
+            Objects.requireNonNull(this.javaSourceOutputDirectory, "Java source output directory may not be null");
+            Objects.requireNonNull(this.resourceOutputDirectory, "resource output directory may not be null");
+
+            String resolvedClientVersion = (this.clientVersion == null) ? PureClientVersions.production : this.clientVersion;
+
+            MutableList<Root_meta_pure_extension_Extension> extensions = Lists.mutable.empty();
+            MutableList<PlanTransformer> transformers = Lists.mutable.empty();
+            this.planGeneratorExtensions.forEach(ext ->
+            {
+                extensions.addAllIterable(ext.getExtraExtensions(this.pureModel));
+                transformers.addAllIterable(ext.getExtraPlanTransformers());
+            });
+            if (extensions.notEmpty())
+            {
+                ExecutionSupport execSupport = this.pureModel.getExecutionSupport();
+                extensions.forEach(ext -> ext.serializerExtension(resolvedClientVersion, execSupport));
+            }
+
             return new ServiceExecutionGenerator(
                     this.services,
-                    Objects.requireNonNull(this.pureModel, "PureModel may not be null"),
+                    this.pureModel,
                     this.packagePrefix,
-                    Objects.requireNonNull(this.javaSourceOutputDirectory, "Java source output directory may not be null"),
-                    Objects.requireNonNull(this.resourceOutputDirectory, "resource output directory may not be null"),
+                    this.javaSourceOutputDirectory,
+                    this.resourceOutputDirectory,
                     this.jsonMapper,
-                    this.planGeneratorExtensions,
-                    this.clientVersion,
+                    resolvedClientVersion,
+                    extensions.toImmutable(),
+                    transformers.toImmutable(),
                     this.executorService);
         }
     }
