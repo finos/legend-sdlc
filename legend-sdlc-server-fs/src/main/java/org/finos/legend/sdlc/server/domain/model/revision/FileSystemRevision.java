@@ -20,18 +20,20 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
+import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.time.Instant;
 
 public class FileSystemRevision implements Revision
 {
-    private String id;
-    private String authorName;
-    private Instant authoredTimestamp;
-    private String committerName;
-    private Instant committedTimestamp;
-    private String message;
+    private final String id;
+    private final String authorName;
+    private final Instant authoredTimestamp;
+    private final String committerName;
+    private final Instant committedTimestamp;
+    private final String message;
 
     public FileSystemRevision(String revisionId, String authorName, Instant authoredTimeStamp, String committerName, Instant committedTimeStamp, String message)
     {
@@ -43,16 +45,15 @@ public class FileSystemRevision implements Revision
         this.message = message;
     }
 
-    public static FileSystemRevision getFileSystemRevision(String projectId, String workspaceId)
+    public static FileSystemRevision getFileSystemRevision(String projectId, String branchName)
     {
         try
         {
             Repository repo = FileSystemWorkspaceApi.retrieveRepo(projectId);
-            Ref branch = FileSystemWorkspaceApi.getGitBranch(projectId, workspaceId);
+            Ref branch = FileSystemWorkspaceApi.getGitBranch(projectId, branchName);
             RevWalk revWalk = new RevWalk(repo);
             RevCommit commit = revWalk.parseCommit(branch.getObjectId());
             revWalk.dispose();
-
             String revisionId = commit.getId().getName();
             String authorName = commit.getAuthorIdent().getName();
             Instant authoredTimeStamp = commit.getAuthorIdent().getWhenAsInstant();
@@ -63,9 +64,8 @@ public class FileSystemRevision implements Revision
         }
         catch (IOException e)
         {
-            e.printStackTrace();
+            throw new LegendSDLCServerException("Repo " + projectId + " can't be found ", Response.Status.NOT_FOUND);
         }
-        return null;
     }
 
     @Override

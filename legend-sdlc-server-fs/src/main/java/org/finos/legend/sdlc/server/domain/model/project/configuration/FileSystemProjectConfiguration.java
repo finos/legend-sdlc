@@ -24,14 +24,15 @@ import java.util.List;
 
 public class FileSystemProjectConfiguration implements ProjectConfiguration
 {
-    private String projectId;
-    private ProjectStructureVersion projectStructureVersion = ProjectStructureVersion.newProjectStructureVersion(13);
-    private String groupId;
-    private String artifactId;
+    private final String projectId;
+    private final ProjectStructureVersion projectStructureVersion;
+    private final String groupId;
+    private final String artifactId;
 
-    public FileSystemProjectConfiguration(String projectId, String groupId, String artifactId)
+    public FileSystemProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId)
     {
         this.projectId = projectId;
+        this.projectStructureVersion = projectStructureVersion;
         this.groupId = groupId;
         this.artifactId = artifactId;
     }

@@ -14,20 +14,21 @@
 
 package org.finos.legend.sdlc.server.api.user;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.ImmutableMap;
-import org.eclipse.collections.impl.list.mutable.FastList;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.user.UserApi;
 import org.finos.legend.sdlc.server.domain.model.user.FileSystemUser;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class FileSystemUserApi implements UserApi
 {
-    private FileSystemUser LOCAL_USER = new FileSystemUser("local_user", "local_user");
-    private FileSystemUser DEMO_OWNER = new FileSystemUser("demo_owner", "demo_owner");
+    public static final FileSystemUser LOCAL_USER = new FileSystemUser("local_user", "local_user");
+    public static final FileSystemUser DEMO_OWNER = new FileSystemUser("demo_owner", "demo_owner");
 
     private ImmutableMap<String, FileSystemUser> users = Maps.immutable.of(
                                                                                 LOCAL_USER.getUserId(), LOCAL_USER,
@@ -42,7 +43,7 @@ public class FileSystemUserApi implements UserApi
     @Override
     public List<User> getUsers()
     {
-        return FastList.newListWith(LOCAL_USER, DEMO_OWNER);
+        return Lists.mutable.with(LOCAL_USER, DEMO_OWNER);
     }
 
     @Override
@@ -54,9 +55,7 @@ public class FileSystemUserApi implements UserApi
     @Override
     public List<User> findUsers(String searchString)
     {
-        FastList<User> users = FastList.newList();
-        this.users.forEachValue(user -> users.add(user));
-        return users;
+        return users.stream().filter(user -> user.getUserId().contains(searchString) || user.getName().contains(searchString)).collect(Collectors.toList());
     }
 
     @Override

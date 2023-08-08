@@ -65,7 +65,8 @@ pac4j:
     - /api/server/platforms
     - /api/auth/authorized
 
-fileSystemRootDirectory: /root/AlloyProjects
+fileSystem:
+  rootDirectory: /root/AlloyProjects
 
 features:
   canCreateProject: true

@@ -12,31 +12,23 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.model.user;
+package org.finos.legend.sdlc.server.startup;
 
-import org.finos.legend.sdlc.domain.model.user.User;
-
-public class FileSystemUser implements User
+public class LegendSDLCServer extends BaseLegendSDLCServer<LegendSDLCServerFSConfiguration>
 {
-    private String userId;
-    private String name;
-
-    public FileSystemUser(String userId, String name)
+    public LegendSDLCServer()
     {
-        this.userId = userId;
-        this.name = name;
+        super();
     }
 
     @Override
-    public String getUserId()
+    protected ServerPlatformInfo newServerPlatformInfo()
     {
-        return userId;
+        return new ServerPlatformInfo(null, null, null);
     }
 
-    @Override
-    public String getName()
+    public static void main(String... args) throws Exception
     {
-        return name;
+        new LegendSDLCServer().run(args);
     }
-
 }

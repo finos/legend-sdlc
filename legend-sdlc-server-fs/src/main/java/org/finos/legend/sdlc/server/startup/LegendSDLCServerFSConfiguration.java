@@ -12,31 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.model.user;
+package org.finos.legend.sdlc.server.startup;
 
-import org.finos.legend.sdlc.domain.model.user.User;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 
-public class FileSystemUser implements User
+public class LegendSDLCServerFSConfiguration extends LegendSDLCServerConfiguration
 {
-    private String userId;
-    private String name;
+    @JsonProperty("fileSystem")
+    private FSConfiguration fileSystemConfiguration;
 
-    public FileSystemUser(String userId, String name)
+    public FSConfiguration getFileSystemConfiguration()
     {
-        this.userId = userId;
-        this.name = name;
+        return this.fileSystemConfiguration;
     }
-
-    @Override
-    public String getUserId()
-    {
-        return userId;
-    }
-
-    @Override
-    public String getName()
-    {
-        return name;
-    }
-
 }

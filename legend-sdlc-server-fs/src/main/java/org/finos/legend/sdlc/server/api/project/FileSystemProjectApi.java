@@ -21,59 +21,72 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
-import org.finos.legend.sdlc.server.FSConfiguration;
+import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemEntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.UnavailableFeature;
 
 import org.eclipse.jgit.api.Git;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
+import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi.retrieveRepo;
 
-public class FileSystemProjectApi implements ProjectApi
+public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemProjectApi.class);
+    private final ProjectStructureConfiguration projectStructureConfig;
+    private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
+    private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
+
     @Inject
-    public FileSystemProjectApi()
+    public FileSystemProjectApi(ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
+        this.projectStructureConfig = projectStructureConfig;
+        this.projectStructureExtensionProvider = projectStructureExtensionProvider;
+        this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
     }
 
     @Override
     public Project getProject(String id)
     {
-        try
-        {
-            Repository repository = retrieveRepo(id);
-            System.out.println("Retrieved project: " + repository.getConfig().getString("project", null, "name"));
-            Git git = new Git(repository);
-            return gitProjectToProject(git);
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-        }
-        return null;
+        Repository repository = retrieveRepo(id);
+        Git git = new Git(repository);
+        return gitProjectToProject(git);
     }
 
     @Override
     public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
     {
         List<Project> gitRepos = new ArrayList<>();
-        File[] repoDirs = new File(FSConfiguration.getRootDirectory()).listFiles(File::isDirectory);
-        if (repoDirs != null)
+        try (Stream<Path> paths = Files.list(Paths.get(rootDirectory)))
         {
-            for (File repoDir : repoDirs)
+            paths.filter(path -> Files.isDirectory(path)).forEach(repoDir ->
             {
                 try
                 {
                     FileRepositoryBuilder repoBuilder = new FileRepositoryBuilder();
-                    Repository repository = repoBuilder.setGitDir(new File(repoDir, ".git")).readEnvironment().findGitDir().build();
+                    Repository repository = repoBuilder.setGitDir(new File(repoDir.toFile(), ".git")).readEnvironment().findGitDir().build();
                     if (repository != null)
                     {
                         gitRepos.add(gitProjectToProject(new Git(repository)));
@@ -81,9 +94,13 @@ public class FileSystemProjectApi implements ProjectApi
                 }
                 catch (IOException e)
                 {
-                    e.printStackTrace();
+                    LOGGER.error("Repository {} could not be accessed", repoDir, e);
                 }
-            }
+            });
+        }
+        catch (IOException e)
+        {
+            LOGGER.error("Exception occurred when opening the directory", rootDirectory, e);
         }
         return gitRepos;
     }
@@ -94,7 +111,7 @@ public class FileSystemProjectApi implements ProjectApi
         LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
 
-        String projectPath = FSConfiguration.getRootDirectory() + "/" + name;
+        String projectPath = rootDirectory + "/" + name;
         Git gitProject = null;
         String projectId = name;
         try
@@ -109,18 +126,78 @@ public class FileSystemProjectApi implements ProjectApi
             repository.getConfig().setString("project", null, "name", name);
             repository.getConfig().setString("project", null, "description", description);
             repository.getConfig().save();
-            System.out.println("Project created successfully at: " + projectPath);
         }
         catch (IOException | GitAPIException e)
         {
-            e.printStackTrace();
+            LOGGER.error("Failed to create project {}", name, e);
         }
         if (gitProject == null)
         {
             throw new LegendSDLCServerException("Failed to create project: " + name);
         }
         Project project = gitProjectToProject(gitProject);
+
+        // Build project structure
+        int projectStructureVersion = getDefaultProjectStructureVersion();
+        ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                .withProjectId(project.getProjectId())
+                .withProjectType(type)
+                .withGroupId(groupId)
+                .withArtifactId(artifactId)
+                .withProjectStructureVersion(projectStructureVersion);
+        if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
+        {
+            configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
+        }
+        ProjectStructure.newUpdateBuilder(FileSystemProjectApi.getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+                .withMessage("Build project structure")
+                .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
+                .build();
         return project;
+    }
+
+    public static ProjectFileAccessProvider getProjectFileAccessProvider()
+    {
+        return new ProjectFileAccessProvider()
+        {
+            @Override
+            public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+            {
+                return new FileSystemEntityApi.AbstractFileSystemFileAccessContext(projectId, sourceSpecification, revisionId);
+            }
+
+            @Override
+            public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
+            {
+                return new FileSystemEntityApi.FileSystemRevisionAccessContext(projectId, sourceSpecification, paths);
+            }
+
+            @Override
+            public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+            {
+                return new FileSystemEntityApi.FileSystemProjectFileFileModificationContext(projectId, sourceSpecification, revisionId);
+            }
+        };
+    }
+
+    private int getDefaultProjectStructureVersion()
+    {
+        ProjectCreationConfiguration projectCreationConfig = getProjectCreationConfiguration();
+        if (projectCreationConfig != null)
+        {
+            Integer defaultProjectStructureVersion = projectCreationConfig.getDefaultProjectStructureVersion();
+            if (defaultProjectStructureVersion != null)
+            {
+                return defaultProjectStructureVersion;
+            }
+        }
+        return ProjectStructure.getLatestProjectStructureVersion();
+    }
+
+    private ProjectCreationConfiguration getProjectCreationConfiguration()
+    {
+        return (this.projectStructureConfig == null) ? null : this.projectStructureConfig.getProjectCreationConfiguration();
     }
 
     private Project gitProjectToProject(Git project)

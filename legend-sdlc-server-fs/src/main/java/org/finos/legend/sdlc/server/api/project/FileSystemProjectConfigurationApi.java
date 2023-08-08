@@ -22,42 +22,52 @@ import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.model.project.configuration.FileSystemProjectConfiguration;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
+import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 
 import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
+import static org.finos.legend.sdlc.server.api.project.FileSystemProjectApi.getProjectFileAccessProvider;
+
 public class FileSystemProjectConfigurationApi implements ProjectConfigurationApi
 {
+    private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
+
     @Inject
-    public FileSystemProjectConfigurationApi()
+    public FileSystemProjectConfigurationApi(ProjectStructureExtensionProvider projectStructureExtensionProvider)
     {
+        this.projectStructureExtensionProvider = projectStructureExtensionProvider;
     }
 
     @Override
     public ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        return new FileSystemProjectConfiguration(projectId, "", "");
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(sourceSpecification, "sourceSpecification may not be null");
+        ProjectConfiguration config = ProjectStructure.getProjectConfiguration(projectId, sourceSpecification, revisionId, getProjectFileAccessProvider());
+        return (config == null) ? ProjectStructure.getDefaultProjectConfiguration(projectId) : config;
     }
 
     @Override
     public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, String reviewId)
     {
-        return new FileSystemProjectConfiguration(projectId, "", "");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public ProjectConfiguration getReviewToProjectConfiguration(String projectId, String reviewId)
     {
-        return new FileSystemProjectConfiguration(projectId, "", "");
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
     public Revision updateProjectConfiguration(String projectId, WorkspaceSourceSpecification sourceSpecification, String message, ProjectConfigurationUpdater updater)
     {
-        return null;
+        throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
@@ -69,12 +79,13 @@ public class FileSystemProjectConfigurationApi implements ProjectConfigurationAp
     @Override
     public ProjectConfigurationStatusReport getProjectConfigurationStatus(String projectId)
     {
+        boolean isProjectConfigured = (ProjectStructure.getProjectConfiguration(projectId, SourceSpecification.projectSourceSpecification(), null, getProjectFileAccessProvider()) != null);
         return new ProjectConfigurationStatusReport()
         {
             @Override
             public boolean isProjectConfigured()
             {
-                return true;
+                return isProjectConfigured;
             }
 
             @Override
@@ -88,6 +99,7 @@ public class FileSystemProjectConfigurationApi implements ProjectConfigurationAp
     @Override
     public ProjectStructureVersion getLatestProjectStructureVersion()
     {
-        return ProjectStructureVersion.newProjectStructureVersion(13);
+        int latestProjectStructureVersion = ProjectStructure.getLatestProjectStructureVersion();
+        return ProjectStructureVersion.newProjectStructureVersion(latestProjectStructureVersion, this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(latestProjectStructureVersion));
     }
 }

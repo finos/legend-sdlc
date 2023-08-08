@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.server.api.entity;
 
-import java.nio.charset.StandardCharsets;
-
 public class LocalCommitAction
 {
 
@@ -26,7 +24,6 @@ public class LocalCommitAction
 
     private Action action;
     private String filePath;
-    private String previousPath;
     private byte[] content;
 
     public Action getAction()
@@ -51,17 +48,6 @@ public class LocalCommitAction
         return this;
     }
 
-    public String getPreviousPath()
-    {
-        return previousPath;
-    }
-
-    public LocalCommitAction withPreviousPath(String previousPath)
-    {
-        this.previousPath = previousPath;
-        return this;
-    }
-
     public byte[] getContent()
     {
         return content;
@@ -71,11 +57,6 @@ public class LocalCommitAction
     {
         this.content = content;
         return this;
-    }
-
-    protected static String encodeBase64(byte[] content)
-    {
-        return new String(content, StandardCharsets.UTF_8);
     }
 
 }

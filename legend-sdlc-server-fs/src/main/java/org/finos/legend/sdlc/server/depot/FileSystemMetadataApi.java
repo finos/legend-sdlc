@@ -18,8 +18,8 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
+import org.finos.legend.sdlc.server.exception.UnavailableFeature;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import javax.inject.Inject;
@@ -34,12 +34,12 @@ public class FileSystemMetadataApi implements MetadataApi
     @Override
     public List<Entity> getEntities(DepotProjectId projectId, String versionId)
     {
-        return Collections.emptyList();
+        throw UnavailableFeature.exception();
     }
 
     @Override
     public Set<DepotProjectVersion> getProjectDependencies(DepotProjectId projectId, String versionId, boolean transitive)
     {
-        return Collections.emptySet();
+        throw UnavailableFeature.exception();
     }
 }
