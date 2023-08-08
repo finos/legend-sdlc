@@ -14,9 +14,6 @@
 
 package org.finos.legend.sdlc.server.api.entity;
 
-import org.apache.commons.compress.archivers.tar.TarArchiveEntry;
-import org.apache.commons.compress.archivers.tar.TarArchiveInputStream;
-import org.apache.commons.compress.compressors.gzip.GzipCompressorInputStream;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
@@ -61,7 +58,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 public class FileSystemEntityApi extends BaseFSApi implements EntityApi
 {
@@ -804,21 +800,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
                 Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
                 Git git = new Git(repo);
                 git.checkout().setName(branchName).call();
-                ObjectId commitId;
-//                if (resolvedRevisionId.equalsIgnoreCase("HEAD"))
-//                {
-//                    commitId = repo.resolve("HEAD");
-//                }
-//                else if (resolvedRevisionId.equalsIgnoreCase("BASE"))
-//                {
-//                    String remoteName = repo.getConfig().getString("branch", branchName, "remote");
-//                    String remoteBranch = repo.getConfig().getString("branch", branchName, "merge");
-//                    commitId = (remoteName != null && remoteBranch != null) ? repo.resolve("BASE.." + remoteName + "/" + remoteBranch) : repo.resolve("HEAD");
-//                }
-//                else
-//                {
-                    commitId = ObjectId.fromString(resolvedRevisionId);
-                //}
+                ObjectId commitId = ObjectId.fromString(resolvedRevisionId);
                 RevWalk revWalk = new RevWalk(repo);
                 RevCommit commit = revWalk.parseCommit(commitId);
                 revWalk.dispose();
@@ -999,47 +981,38 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         @Override
         protected Stream<ProjectFileAccessProvider.ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
         {
-            String branchName = getRefBranchName(sourceSpecification);
             Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
             Git git = new Git(repo);
-                try
-                {
-                    ByteArrayOutputStream out = new ByteArrayOutputStream();
-                    git.archive().setFormat("tar").setTree(repo.resolve(branchName)).setOutputStream(out).call();
-                    InputStream inStream = new ByteArrayInputStream(out.toByteArray());
-                    final TarArchiveInputStream archiveInputStream = new TarArchiveInputStream(new GzipCompressorInputStream(inStream));
-                    Iterator<TarArchiveEntry> entryIterator = new Iterator<TarArchiveEntry>()
-                    {
-                        TarArchiveEntry nextEntry;
-                        @Override
-                        public boolean hasNext()
-                        {
-                            try
-                            {
-                                nextEntry = archiveInputStream.getNextTarEntry();
-                                return nextEntry != null;
-                            }
-                            catch (IOException e)
-                            {
-                                return false;
-                            }
-                        }
+            String branchName = getRefBranchName(sourceSpecification);
+            try
+            {
+                git.checkout().setName(branchName).call();
 
-                        @Override
-                        public TarArchiveEntry next()
-                        {
-                            return nextEntry;
-                        }
-                    };
-                    Iterable<TarArchiveEntry> entryIterable = () -> entryIterator;
-                    Stream<TarArchiveEntry> entryStream = StreamSupport.stream(entryIterable.spliterator(), false);
-                    return entryStream.map(TarArchiveEntry::getName).filter(entryName -> directories.stream().anyMatch(entryName::startsWith)).map(filePath -> getFile(filePath));
-                }
-                catch (Exception e)
+                ObjectId commitId = ObjectId.fromString(revisionId);
+                RevCommit commit = repo.parseCommit(commitId);
+                RevTree tree = commit.getTree();
+                List<String> files = new ArrayList<>();
+                TreeWalk treeWalk = new TreeWalk(repo);
+                treeWalk.addTree(tree);
+                treeWalk.setRecursive(true);
+
+                for (String dir : directories)
                 {
-                    LOGGER.error("Error getting files in directories for " + projectId, e);
+                    while (treeWalk.next())
+                    {
+                        String path = treeWalk.getPathString();
+                        if (path.startsWith(dir))
+                        {
+                            files.add(path);
+                        }
+                    }
                 }
-            throw new LegendSDLCServerException("Error getting files in directories for " + projectId);
+                return files.stream().map(filePath -> getFile(filePath));
+            }
+            catch (Exception e)
+            {
+                throw new LegendSDLCServerException("Error getting files in directories for " + projectId, e);
+            }
         }
 
         @Override
