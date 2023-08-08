@@ -1039,9 +1039,9 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
             }
             catch (Exception e)
             {
-                LOGGER.error("Error occurred while parsing Git commit for workspace {}", branchName, e);
+                throw new LegendSDLCServerException("Error getting file " + path, e);
             }
-            throw new LegendSDLCServerException("Error getting file " + path);
+            return null;
         }
 
         @Override
