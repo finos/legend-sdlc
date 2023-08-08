@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.137.1-SNAPSHOT</version>
+    <version>0.138.2-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -70,7 +70,7 @@
         <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.19.0</legend.engine.version>
+        <legend.engine.version>4.21.1</legend.engine.version>
         <legend.pure.version>4.5.10</legend.pure.version>
         <legend.shared.version>0.23.8</legend.shared.version>
 
