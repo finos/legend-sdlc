@@ -19,26 +19,25 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.ListIterate;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.*;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.api.BaseFSApi;
-import org.finos.legend.sdlc.server.api.project.FileSystemProjectApi;
-import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
-import org.finos.legend.sdlc.server.domain.api.project.source.*;
-import org.finos.legend.sdlc.server.domain.model.revision.FileSystemRevision;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.project.*;
+import org.finos.legend.sdlc.server.exception.FSException;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.project.ProjectFileOperation;
+import org.finos.legend.sdlc.server.project.ProjectFiles;
+import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
@@ -48,13 +47,9 @@ import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Instant;
 import java.util.*;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -62,7 +57,6 @@ import java.util.stream.Stream;
 public class FileSystemEntityApi extends BaseFSApi implements EntityApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemEntityApi.class);
-    private static final Lock gitLock = new ReentrantLock();
 
     @Inject
     public FileSystemEntityApi()
@@ -73,7 +67,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
     public EntityAccessContext getEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
         String branchName = getRefBranchName(sourceSpecification);
-        Repository repo = FileSystemWorkspaceApi.retrieveRepo(projectId);
+        Repository repo = retrieveRepo(projectId);
         return new FileSystemEntityAccessContext(branchName, repo)
         {
             @Override
@@ -102,23 +96,6 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         return new FileSystemEntityModificationContext(projectId, sourceSpecification);
     }
 
-    public static String getRefBranchName(SourceSpecification sourceSpecification)
-    {
-        if (sourceSpecification.getClass() == ProjectSourceSpecification.class)
-        {
-            return "master";
-        }
-        else
-        {
-            return sourceSpecification.visit(new SourceSpecificationVisitor<String>()
-            {
-                public String visit(WorkspaceSourceSpecification workspaceSourceSpecification)
-                {
-                    return FileSystemWorkspaceApi.getWorkspaceBranchName(workspaceSourceSpecification.getWorkspaceSpecification());
-                }
-            });
-        }
-    }
 
     public abstract class FileSystemEntityAccessContext implements EntityAccessContext
     {
@@ -134,38 +111,38 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         @Override
         public Entity getEntity(String path)
         {
-                ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(FileSystemProjectApi.getProjectFileAccessProvider());
-                ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+            ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
+            ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+            for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+            {
+                String filePath = sourceDirectory.entityPathToFilePath(path);
+                ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
+                if (file != null)
                 {
-                    String filePath = sourceDirectory.entityPathToFilePath(path);
-                    ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
-                    if (file != null)
+                    try
                     {
-                        try
+                        Entity localEntity = sourceDirectory.deserialize(file);
+                        if (!Objects.equals(localEntity.getPath(), path))
                         {
-                            Entity localEntity = sourceDirectory.deserialize(file);
-                            if (!Objects.equals(localEntity.getPath(), path))
-                            {
-                                throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
-                            }
-                            return localEntity;
+                            throw new RuntimeException("Expected entity path " + path + ", found " + localEntity.getPath());
                         }
-                        catch (Exception e)
-                        {
-                            StringBuilder builder = new StringBuilder("Error deserializing entity \"").append(path).append("\" from file \"").append(filePath).append('"');
-                            StringTools.appendThrowableMessageIfPresent(builder, e);
-                            throw new LegendSDLCServerException(builder.toString(), e);
-                        }
+                        return localEntity;
+                    }
+                    catch (Exception e)
+                    {
+                        StringBuilder builder = new StringBuilder("Error deserializing entity \"").append(path).append("\" from file \"").append(filePath).append('"');
+                        StringTools.appendThrowableMessageIfPresent(builder, e);
+                        throw new LegendSDLCServerException(builder.toString(), e);
                     }
                 }
+            }
             throw new LegendSDLCServerException("Unknown entity " + path, Response.Status.NOT_FOUND);
         }
 
         @Override
         public List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
         {
-            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(FileSystemProjectApi.getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid, branchName, repo))
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid, branchName, repo))
             {
                 return stream.map(excludeInvalid ? epf ->
                 {
@@ -184,7 +161,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         @Override
         public List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
         {
-            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(FileSystemProjectApi.getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
+            try (Stream<EntityProjectFile> stream = getEntityProjectFiles(getFileAccessContext(getProjectFileAccessProvider()), entityPathPredicate, classifierPathPredicate, entityContentPredicate))
             {
                 return stream.map(EntityProjectFile::getEntityPath).collect(Collectors.toList());
             }
@@ -442,7 +419,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
             throw new LegendSDLCServerException((errorMessages.size() == 1) ? errorMessages.get(0) : "There are errors with entity definitions:\n\t" + String.join("\n\t", errorMessages), Response.Status.BAD_REQUEST);
         }
 
-        ProjectFileAccessProvider fileProvider = FileSystemProjectApi.getProjectFileAccessProvider();
+        ProjectFileAccessProvider fileProvider = getProjectFileAccessProvider();
         Revision currentWorkspaceRevision = fileProvider.getRevisionAccessContext(projectId, sourceSpecification, null).getCurrentRevision();
         if (currentWorkspaceRevision == null)
         {
@@ -499,7 +476,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         return getEntityProjectFiles(accessContext, entityPathPredicate, classifierPathPredicate, contentPredicate, false, null, null);
     }
 
-    public Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String,?>> contentPredicate, boolean excludeInvalid, String branchName, Repository repo)
+    private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String,?>> contentPredicate, boolean excludeInvalid, String branchName, Repository repo)
     {
         Stream<EntityProjectFile> stream = (repo != null && branchName != null) ? getEntityProjectFiles(branchName, repo, accessContext) : getEntityProjectFiles(accessContext);
         if (entityPathPredicate != null)
@@ -541,22 +518,19 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
         return stream;
     }
 
-    public static Stream<EntityProjectFile> getEntityProjectFiles(String branchName, Repository repo, ProjectFileAccessProvider.FileAccessContext fileAccessContext)
+    private Stream<EntityProjectFile> getEntityProjectFiles(String branchName, Repository repo, ProjectFileAccessProvider.FileAccessContext fileAccessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
         return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(sd, branchName, repo, projectStructure.getProjectConfiguration().getProjectId()));
     }
 
-    private static Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectStructure.EntitySourceDirectory sourceDirectory, String branchName, Repository repo, String projectID)
+    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectStructure.EntitySourceDirectory sourceDirectory, String workspaceId, Repository repo, String projectID)
     {
         List<EntityProjectFile> files = new ArrayList<>();
         try
         {
-            gitLock.lock();
-            Git git = new Git(repo);
-            git.checkout().setName(branchName).call();
-            ObjectId headCommitId = repo.findRef(branchName).getObjectId();
+            ObjectId headCommitId = repo.findRef(workspaceId).getObjectId();
             TreeWalk treeWalk = new TreeWalk(repo);
             treeWalk.addTree(repo.parseCommit(headCommitId).getTree());
             treeWalk.setRecursive(true);
@@ -568,36 +542,33 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
                 byte[] entityContentBytes = loader.getBytes();
                 String entityContent = new String(entityContentBytes, StandardCharsets.UTF_8);
                 ProjectFileAccessProvider.ProjectFile projectFile = ProjectFiles.newStringProjectFile(file.getCanonicalPath(), entityContent);
-                if (isPossiblyEntityFilePath(sourceDirectory, file.getCanonicalPath()))
+                if (sourceDirectory.isPossiblyEntityFilePath(getEntityPath(file, projectID)))
                 {
                     files.add(new EntityProjectFile(sourceDirectory, projectFile, projectID, rootDirectory));
                 }
             }
-
         }
         catch (Exception e)
         {
-            LOGGER.error("Error occurred while parsing Git commit for workspace {}", branchName, e);
-        }
-        finally
-        {
-            gitLock.unlock();
+            LOGGER.error("Error occurred while parsing Git commit for workspace {}", workspaceId, e);
+            throw FSException.getLegendSDLCServerException("Failed to get project files for workspace " + workspaceId + " of project " + projectID, e);
         }
         return files.stream();
     }
 
-    private static boolean isPossiblyEntityFilePath(ProjectStructure.EntitySourceDirectory sourceDirectory, String filePath)
+    private String getEntityPath(File file, String projectID)
     {
-        return (filePath != null) && (filePath.length() > (sourceDirectory.getDirectory().length() + sourceDirectory.getSerializer().getDefaultFileExtension().length() + 2)) && filePathHasEntityExtension(sourceDirectory, filePath) && !filePath.endsWith("project.json");
+        Path filePath = Paths.get(file.getPath());
+        Path pathToProject = Paths.get(rootDirectory + "/" + projectID);
+        if (!filePath.startsWith(pathToProject))
+        {
+            throw new LegendSDLCServerException("Paths " + filePath + " and " + pathToProject + " are not related");
+        }
+        Path relativePath = filePath.subpath(pathToProject.getNameCount(), filePath.getNameCount());
+        return "/" + relativePath;
     }
 
-    private static boolean filePathHasEntityExtension(ProjectStructure.EntitySourceDirectory sourceDirectory, String filePath)
-    {
-        String extension = sourceDirectory.getSerializer().getDefaultFileExtension();
-        return filePath.endsWith(extension) && (filePath.length() > extension.length()) && (filePath.charAt(filePath.length() - (extension.length() + 1)) == '.');
-    }
-
-    public Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
+    private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(accessContext);
         List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
@@ -621,7 +592,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
             return null;
         }
         LOGGER.debug("Committing {} changes to {} in project {}: {}", changeCount, sourceSpecification, projectId, message);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = FileSystemProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, sourceSpecification, referenceRevisionId);
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, sourceSpecification, referenceRevisionId);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
         MutableList<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
         fileOperations.removeIf(Objects::isNull);
@@ -630,7 +601,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
             LOGGER.debug("No changes for {} in project {}", sourceSpecification, projectId);
             return null;
         }
-        return FileSystemProjectApi.getProjectFileAccessProvider().getFileModificationContext(projectId, sourceSpecification, referenceRevisionId).submit(message, fileOperations);
+        return getProjectFileAccessProvider().getFileModificationContext(projectId, sourceSpecification, referenceRevisionId).submit(message, fileOperations);
     }
 
     private ProjectFileOperation entityChangeToFileOperation(EntityChange change, ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext)
@@ -713,356 +684,6 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
             default:
             {
                 throw new RuntimeException("Unknown entity change type: " + change.getType());
-            }
-        }
-    }
-
-    public static class FileSystemRevisionAccessContext implements ProjectFileAccessProvider.RevisionAccessContext
-    {
-        private final String projectId;
-        private final SourceSpecification sourceSpecification;
-        private final MutableList<String> paths;
-
-        public FileSystemRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> canonicalPaths)
-        {
-            this.projectId = projectId;
-            this.sourceSpecification = Objects.requireNonNull(sourceSpecification, "source specification may not be null");
-            this.paths = (canonicalPaths == null) ? null : ProjectPaths.canonicalizeAndReduceDirectories(canonicalPaths);
-        }
-
-        @Override
-        public Revision getCurrentRevision()
-        {
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                gitLock.lock();
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                Git git = new Git(repo);
-                git.checkout().setName(branchName).call();
-                ObjectId commitId = repo.resolve("HEAD");
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit commit = revWalk.parseCommit(commitId);
-                revWalk.dispose();
-                return getRevisionInfo(commit);
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Failed to get current revision for branch " + branchName + " in project " + this.projectId);
-            }
-            finally
-            {
-                gitLock.unlock();
-            }
-        }
-
-        @Override
-        public Revision getBaseRevision()
-        {
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                gitLock.lock();
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                Git git = new Git(repo);
-                git.checkout().setName(branchName).call();
-                String remoteName = repo.getConfig().getString("branch", branchName, "remote");
-                String remoteBranch = repo.getConfig().getString("branch", branchName, "merge");
-                ObjectId commitId = (remoteName != null && remoteBranch != null) ? repo.resolve("BASE.." + remoteName + "/" + remoteBranch) : repo.resolve("HEAD");
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit commit = revWalk.parseCommit(commitId);
-                revWalk.dispose();
-                return getRevisionInfo(commit);
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Failed to get base revision for branch " + branchName + " in project " + this.projectId);
-            }
-            finally
-            {
-                gitLock.unlock();
-            }
-        }
-
-        @Override
-        public Revision getRevision(String revisionId)
-        {
-            LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
-            String resolvedRevisionId = resolveRevisionId(revisionId, this);
-            if (resolvedRevisionId == null)
-            {
-                throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " of project " + this.projectId, Response.Status.NOT_FOUND);
-            }
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                gitLock.lock();
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                Git git = new Git(repo);
-                git.checkout().setName(branchName).call();
-                ObjectId commitId = ObjectId.fromString(resolvedRevisionId);
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit commit = revWalk.parseCommit(commitId);
-                revWalk.dispose();
-                return getRevisionInfo(commit);
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Failed to get " + resolvedRevisionId + " revision for branch " + branchName + " in project " + this.projectId);
-            }
-            finally
-            {
-                gitLock.unlock();
-            }
-        }
-
-        @Override
-        public Stream<Revision> getAllRevisions(Predicate<? super Revision> predicate, Instant since, Instant until, Integer limit)
-        {
-            return null;
-        }
-
-        public Revision getRevisionInfo(RevCommit commit)
-        {
-            String revisionID = commit.getId().getName();
-            String authorName = commit.getAuthorIdent().getName();
-            Instant authoredTimeStamp = commit.getAuthorIdent().getWhenAsInstant();
-            String committerName = commit.getCommitterIdent().getName();
-            Instant committedTimeStamp = commit.getCommitterIdent().getWhenAsInstant();
-            String message = commit.getFullMessage();
-            return new FileSystemRevision(revisionID, authorName, authoredTimeStamp, committerName, committedTimeStamp, message);
-        }
-    }
-
-    public static class FileSystemProjectFileFileModificationContext implements ProjectFileAccessProvider.FileModificationContext
-    {
-        private final String projectId;
-        private final String revisionId;
-        private final SourceSpecification sourceSpecification;
-
-        public FileSystemProjectFileFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-        {
-            this.projectId = projectId;
-            this.revisionId = revisionId;
-            this.sourceSpecification = Objects.requireNonNull(sourceSpecification, "source specification may not be null");
-        }
-
-        @Override
-        public Revision submit(String message, List<? extends ProjectFileOperation> operations)
-        {
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                int changeCount = operations.size();
-                List<LocalCommitAction> commitActions = operations.stream().map(this::fileOperationToCommitAction).collect(Collectors.toCollection(() -> Lists.mutable.ofInitialCapacity(changeCount)));
-                String referenceRevisionId = this.revisionId;
-                if (referenceRevisionId != null)
-                {
-                    String targetBranchRevision = FileSystemRevision.getFileSystemRevision(this.projectId, branchName).getId();
-                    if (!referenceRevisionId.equals(targetBranchRevision))
-                    {
-                        String msg = "Expected " + sourceSpecification + " to be at revision " + referenceRevisionId + "; instead it was at revision " + targetBranchRevision;
-                        LOGGER.info(msg);
-                        throw new LegendSDLCServerException("Exp", Response.Status.CONFLICT);
-                    }
-                }
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                Git git = new Git(repo);
-                git.checkout().setName(branchName).call();
-                for (LocalCommitAction commitAction : commitActions)
-                {
-                    switch (commitAction.getAction())
-                    {
-                        case CREATE:
-                        {
-                            File newFile = new File(repo.getDirectory().getParent(), commitAction.getFilePath());
-                            newFile.getParentFile().mkdirs();
-                            newFile.createNewFile();
-                            Files.write(newFile.toPath(), commitAction.getContent());
-                            git.add().addFilepattern(".").call();
-                            break;
-                        }
-                        case UPDATE:
-                        {
-                            File file = new File(repo.getDirectory().getParent(), commitAction.getFilePath());
-                            if (file.exists())
-                            {
-                                Files.write(file.toPath(), commitAction.getContent());
-                            }
-                            else
-                            {
-                                throw new LegendSDLCServerException("File " + file + " does not exist");
-                            }
-                            git.add().addFilepattern(".").call();
-                            break;
-                        }
-                        case MOVE:
-                        {
-                            throw new LegendSDLCServerException("MOVE operation is not yet supported");
-                        }
-                        case DELETE:
-                        {
-                            File fileToRemove = new File(repo.getWorkTree(), commitAction.getFilePath().substring(1));
-                            if (!fileToRemove.exists())
-                            {
-                                throw new LegendSDLCServerException("File " + fileToRemove + " does not exist");
-                            }
-                            fileToRemove.delete();
-                            git.rm().addFilepattern(commitAction.getFilePath().substring(1)).call();
-                            if (git.status().call().isClean())
-                            {
-                                break;
-                            }
-                            break;
-                        }
-                        default:
-                        {
-                            break;
-                        }
-                    }
-                }
-                RevCommit revCommit = git.commit().setMessage(message).call();
-                repo.close();
-                if (LOGGER.isDebugEnabled())
-                {
-                    LOGGER.debug("Committed {} changes to {}: {}", changeCount, sourceSpecification, revCommit.getId());
-                }
-                return FileSystemRevision.getFileSystemRevision(projectId, branchName);
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Error occurred while committing changes to workspace " + branchName + " of project " + projectId, e);
-            }
-        }
-
-        private LocalCommitAction fileOperationToCommitAction(ProjectFileOperation fileOperation)
-        {
-            if (fileOperation instanceof ProjectFileOperation.AddFile)
-            {
-                return new LocalCommitAction()
-                        .withAction(LocalCommitAction.Action.CREATE)
-                        .withFilePath(fileOperation.getPath())
-                        .withContent(((ProjectFileOperation.AddFile) fileOperation).getContent());
-            }
-            if (fileOperation instanceof ProjectFileOperation.ModifyFile)
-            {
-                return new LocalCommitAction()
-                        .withAction(LocalCommitAction.Action.UPDATE)
-                        .withFilePath(fileOperation.getPath())
-                        .withContent(((ProjectFileOperation.ModifyFile) fileOperation).getNewContent());
-            }
-            if (fileOperation instanceof ProjectFileOperation.DeleteFile)
-            {
-                return new LocalCommitAction()
-                        .withAction(LocalCommitAction.Action.DELETE)
-                        .withFilePath(fileOperation.getPath());
-            }
-            if (fileOperation instanceof ProjectFileOperation.MoveFile)
-            {
-                throw new LegendSDLCServerException("MOVE operation is not yet supported");
-            }
-            throw new IllegalArgumentException("Unsupported project file operation: " + fileOperation);
-        }
-    }
-
-    public static class AbstractFileSystemFileAccessContext extends AbstractFileAccessContext
-    {
-        protected final String projectId;
-        private final SourceSpecification sourceSpecification;
-        private final String revisionId;
-
-        public AbstractFileSystemFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-        {
-            this.projectId = projectId;
-            this.sourceSpecification = sourceSpecification;
-            this.revisionId = revisionId;
-        }
-
-        @Override
-        protected Stream<ProjectFileAccessProvider.ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
-        {
-            Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-            Git git = new Git(repo);
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                git.checkout().setName(branchName).call();
-
-                ObjectId commitId = ObjectId.fromString(revisionId);
-                RevCommit commit = repo.parseCommit(commitId);
-                RevTree tree = commit.getTree();
-                List<String> files = new ArrayList<>();
-                TreeWalk treeWalk = new TreeWalk(repo);
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-
-                for (String dir : directories)
-                {
-                    while (treeWalk.next())
-                    {
-                        String path = treeWalk.getPathString();
-                        if (path.startsWith(dir))
-                        {
-                            files.add(path);
-                        }
-                    }
-                }
-                return files.stream().map(filePath -> getFile(filePath));
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Error getting files in directories for " + projectId, e);
-            }
-        }
-
-        @Override
-        public ProjectFileAccessProvider.ProjectFile getFile(String path)
-        {
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit branchCommit = revWalk.parseCommit(repo.resolve(branchName));
-                RevTree branchTree = branchCommit.getTree();
-                path = path.startsWith("/") ? path.substring(1) : path;
-                try (TreeWalk treeWalk = TreeWalk.forPath(repo, path, branchTree))
-                {
-                    if (treeWalk != null)
-                    {
-                        ObjectId objectId = treeWalk.getObjectId(0);
-                        ObjectReader objectReader = repo.newObjectReader();
-                        byte[] fileBytes = objectReader.open(objectId).getBytes();
-                        return ProjectFiles.newByteArrayProjectFile(path, fileBytes);
-                    }
-                }
-            }
-            catch (Exception e)
-            {
-                throw new LegendSDLCServerException("Error getting file " + path, e);
-            }
-            return null;
-        }
-
-        @Override
-        public boolean fileExists(String path)
-        {
-            String branchName = getRefBranchName(sourceSpecification);
-            try
-            {
-                Repository repo = FileSystemWorkspaceApi.retrieveRepo(this.projectId);
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit branchCommit = revWalk.parseCommit(repo.resolve(branchName));
-                RevTree branchTree = branchCommit.getTree();
-                path = path.startsWith("/") ? path.substring(1) : path;
-                try (TreeWalk treeWalk = TreeWalk.forPath(repo, path, branchTree))
-                {
-                    return treeWalk != null;
-                }
-            }
-            catch (IOException e)
-            {
-                throw new LegendSDLCServerException("Error occurred while parsing Git commit for workspace " + branchName, e);
             }
         }
     }

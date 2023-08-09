@@ -18,8 +18,8 @@ import org.finos.legend.sdlc.domain.model.user.User;
 
 public class FileSystemUser implements User
 {
-    private String userId;
-    private String name;
+    private final String userId;
+    private final String name;
 
     public FileSystemUser(String userId, String name)
     {

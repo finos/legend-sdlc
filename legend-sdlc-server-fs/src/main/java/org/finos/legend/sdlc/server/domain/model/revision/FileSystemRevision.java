@@ -19,11 +19,9 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.exception.FSException;
 
-import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.time.Instant;
 
 public class FileSystemRevision implements Revision
@@ -45,12 +43,12 @@ public class FileSystemRevision implements Revision
         this.message = message;
     }
 
-    public static FileSystemRevision getFileSystemRevision(String projectId, String branchName)
+    public static FileSystemRevision getFileSystemRevision(String projectId, String workspaceId)
     {
         try
         {
-            Repository repo = FileSystemWorkspaceApi.retrieveRepo(projectId);
-            Ref branch = FileSystemWorkspaceApi.getGitBranch(projectId, branchName);
+            Repository repo = BaseFSApi.retrieveRepo(projectId);
+            Ref branch = BaseFSApi.getGitBranch(projectId, workspaceId);
             RevWalk revWalk = new RevWalk(repo);
             RevCommit commit = revWalk.parseCommit(branch.getObjectId());
             revWalk.dispose();
@@ -62,9 +60,9 @@ public class FileSystemRevision implements Revision
             String message = commit.getFullMessage();
             return new FileSystemRevision(revisionId, authorName, authoredTimeStamp, committerName, committedTimeStamp, message);
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            throw new LegendSDLCServerException("Repo " + projectId + " can't be found ", Response.Status.NOT_FOUND);
+            throw FSException.getLegendSDLCServerException("Failed to get revision for workspace " + workspaceId + " in project " + projectId, e);
         }
     }
 

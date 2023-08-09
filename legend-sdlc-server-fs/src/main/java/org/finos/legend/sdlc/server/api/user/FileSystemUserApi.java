@@ -23,17 +23,12 @@ import org.finos.legend.sdlc.server.domain.model.user.FileSystemUser;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class FileSystemUserApi implements UserApi
 {
     public static final FileSystemUser LOCAL_USER = new FileSystemUser("local_user", "local_user");
-    public static final FileSystemUser DEMO_OWNER = new FileSystemUser("demo_owner", "demo_owner");
 
-    private ImmutableMap<String, FileSystemUser> users = Maps.immutable.of(
-                                                                                LOCAL_USER.getUserId(), LOCAL_USER,
-                                                                                DEMO_OWNER.getUserId(), DEMO_OWNER
-                                                                             );
+    private static final ImmutableMap<String, FileSystemUser> users = Maps.immutable.of(LOCAL_USER.getUserId(), LOCAL_USER);
 
     @Inject
     public FileSystemUserApi()
@@ -43,19 +38,19 @@ public class FileSystemUserApi implements UserApi
     @Override
     public List<User> getUsers()
     {
-        return Lists.mutable.with(LOCAL_USER, DEMO_OWNER);
+        return Lists.mutable.withAll(users.valuesView());
     }
 
     @Override
     public User getUserById(String userId)
     {
-        return this.users.get(userId);
+        return users.get(userId);
     }
 
     @Override
     public List<User> findUsers(String searchString)
     {
-        return users.stream().filter(user -> user.getUserId().contains(searchString) || user.getName().contains(searchString)).collect(Collectors.toList());
+        return Lists.mutable.withAll(users.select(user -> user.getUserId().contains(searchString) || user.getName().contains(searchString)));
     }
 
     @Override

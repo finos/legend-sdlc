@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -33,24 +33,24 @@ public class FileSystemPatchApi implements PatchApi
     @Override
     public Patch newPatch(String projectId, VersionId sourceVersion)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void deletePatch(String projectId, VersionId patchReleaseVersionId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Version releasePatch(String projectId, VersionId patchReleaseVersionId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }

@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.api.version;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 import java.util.Collections;
@@ -40,19 +40,19 @@ public class FileSystemVersionApi implements VersionApi
     @Override
     public Version getLatestVersion(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Version getVersion(String projectId, int majorVersion, int minorVersion, int patchVersion)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Version newVersion(String projectId, NewVersionType type, String revisionId, String notes)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
 }

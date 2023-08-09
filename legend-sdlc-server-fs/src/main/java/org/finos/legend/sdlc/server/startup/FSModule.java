@@ -16,14 +16,48 @@ package org.finos.legend.sdlc.server.startup;
 
 import com.google.inject.Binder;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
-import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
+import org.finos.legend.sdlc.server.BaseServer;
 import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.backup.FileSystemBackupApi;
+import org.finos.legend.sdlc.server.api.build.FileSystemBuildApi;
+import org.finos.legend.sdlc.server.api.comparison.FileSystemComparisonApi;
+import org.finos.legend.sdlc.server.api.conflictresolution.FileSystemConflictResolutionApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemEntityApi;
+import org.finos.legend.sdlc.server.api.issue.FileSystemIssueApi;
+import org.finos.legend.sdlc.server.api.patch.FileSystemPatchApi;
+import org.finos.legend.sdlc.server.api.project.FileSystemProjectApi;
+import org.finos.legend.sdlc.server.api.project.FileSystemProjectConfigurationApi;
+import org.finos.legend.sdlc.server.api.review.FileSystemReviewApi;
+import org.finos.legend.sdlc.server.api.revision.FileSystemRevisionApi;
+import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
+import org.finos.legend.sdlc.server.api.version.FileSystemVersionApi;
+import org.finos.legend.sdlc.server.api.workflow.FileSystemWorkflowApi;
+import org.finos.legend.sdlc.server.api.workflow.FileSystemWorkflowJobApi;
+import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
+import org.finos.legend.sdlc.server.depot.FileSystemMetadataApi;
+import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
+import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
+import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
+import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
+import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
+import org.finos.legend.sdlc.server.domain.api.user.UserApi;
+import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration;
@@ -32,6 +66,8 @@ import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExt
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.project.extension.VoidProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.server.resources.FileSystemAuthCheckResource;
+import org.finos.legend.sdlc.server.resources.FileSystemAuthResource;
 import org.finos.legend.sdlc.server.resources.InfoResource;
 import org.finos.legend.sdlc.server.resources.ServerResource;
 import org.finos.legend.sdlc.server.resources.backup.patch.group.*;
@@ -156,13 +192,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerFSConfiguration>
+public class FSModule extends DropwizardAwareModule<LegendSDLCServerFSConfiguration>
 {
-    protected final BaseLegendSDLCServer<?> server;
+    protected final LegendSDLCServerFS<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
     private AuthClientInjector authClientInjector;
 
-    public AbstractBaseModule(BaseLegendSDLCServer<?> server)
+    public FSModule(LegendSDLCServerFS<?> server)
     {
         this.server = server;
     }
@@ -181,7 +217,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
         binder.bind(DepotConfiguration.class).toProvider(this::getDepotConfiguration);
         binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
-        binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
+        binder.bind(BaseServer.ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
@@ -388,7 +424,33 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);
     }
 
-    protected abstract void configureApis(Binder binder);
+    protected void configureApis(Binder binder)
+    {
+        configureLegendApis(binder);
+    }
+
+    public void configureLegendApis(Binder binder)
+    {
+        binder.bind(MetadataApi.class).to(FileSystemMetadataApi.class);
+        binder.bind(ProjectApi.class).to(FileSystemProjectApi.class);
+        binder.bind(ProjectConfigurationApi.class).to(FileSystemProjectConfigurationApi.class);
+        binder.bind(UserApi.class).to(FileSystemUserApi.class);
+        binder.bind(IssueApi.class).to(FileSystemIssueApi.class);
+        binder.bind(EntityApi.class).to(FileSystemEntityApi.class);
+        binder.bind(WorkspaceApi.class).to(FileSystemWorkspaceApi.class);
+        binder.bind(RevisionApi.class).to(FileSystemRevisionApi.class);
+        binder.bind(ReviewApi.class).to(FileSystemReviewApi.class);
+        binder.bind(BuildApi.class).to(FileSystemBuildApi.class);
+        binder.bind(VersionApi.class).to(FileSystemVersionApi.class);
+        binder.bind(ComparisonApi.class).to(FileSystemComparisonApi.class);
+        binder.bind(ConflictResolutionApi.class).to(FileSystemConflictResolutionApi.class);
+        binder.bind(BackupApi.class).to(FileSystemBackupApi.class);
+        binder.bind(WorkflowApi.class).to(FileSystemWorkflowApi.class);
+        binder.bind(WorkflowJobApi.class).to(FileSystemWorkflowJobApi.class);
+        binder.bind(PatchApi.class).to(FileSystemPatchApi.class);
+        binder.bind(FileSystemAuthCheckResource.class);
+        binder.bind(FileSystemAuthResource.class);
+    }
 
     private FSConfiguration getFSConfiguration()
     {

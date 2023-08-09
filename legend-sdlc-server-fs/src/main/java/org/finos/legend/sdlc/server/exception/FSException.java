@@ -14,10 +14,18 @@
 
 package org.finos.legend.sdlc.server.exception;
 
-public class UnavailableFeature
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+
+public class FSException
 {
-    public static UnsupportedOperationException exception()
+    public static UnsupportedOperationException unavailableFeature()
     {
         return new UnsupportedOperationException("Feature unavailable");
+    }
+
+    public static LegendSDLCServerException getLegendSDLCServerException(String errorMessage, Exception e)
+    {
+        String exceptionMessage = e.getMessage();
+        return new LegendSDLCServerException(exceptionMessage != null ? errorMessage + " : " + exceptionMessage : errorMessage, e);
     }
 }

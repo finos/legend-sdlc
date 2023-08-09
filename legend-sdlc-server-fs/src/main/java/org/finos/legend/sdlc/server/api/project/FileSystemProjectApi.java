@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.api.project;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -22,20 +21,17 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 import org.finos.legend.sdlc.server.api.BaseFSApi;
-import org.finos.legend.sdlc.server.api.entity.FileSystemEntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
-
-import org.eclipse.jgit.api.Git;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+
+import org.eclipse.jgit.api.Git;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -49,8 +45,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-
-import static org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi.retrieveRepo;
 
 public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
 {
@@ -100,7 +94,8 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         }
         catch (IOException e)
         {
-            LOGGER.error("Exception occurred when opening the directory", rootDirectory, e);
+            LOGGER.error("Exception occurred when opening the directory {}", rootDirectory, e);
+            throw FSException.getLegendSDLCServerException("Failed to fetch projects", e);
         }
         return gitRepos;
     }
@@ -112,7 +107,7 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
 
         String projectPath = rootDirectory + "/" + name;
-        Git gitProject = null;
+        Git gitProject;
         String projectId = name;
         try
         {
@@ -127,13 +122,9 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
             repository.getConfig().setString("project", null, "description", description);
             repository.getConfig().save();
         }
-        catch (IOException | GitAPIException e)
+        catch (Exception e)
         {
-            LOGGER.error("Failed to create project {}", name, e);
-        }
-        if (gitProject == null)
-        {
-            throw new LegendSDLCServerException("Failed to create project: " + name);
+            throw FSException.getLegendSDLCServerException("Failed to create project: " + name, e);
         }
         Project project = gitProjectToProject(gitProject);
 
@@ -149,36 +140,12 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         {
             configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
         }
-        ProjectStructure.newUpdateBuilder(FileSystemProjectApi.getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+        ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
                 .withMessage("Build project structure")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .build();
         return project;
-    }
-
-    public static ProjectFileAccessProvider getProjectFileAccessProvider()
-    {
-        return new ProjectFileAccessProvider()
-        {
-            @Override
-            public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-            {
-                return new FileSystemEntityApi.AbstractFileSystemFileAccessContext(projectId, sourceSpecification, revisionId);
-            }
-
-            @Override
-            public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
-            {
-                return new FileSystemEntityApi.FileSystemRevisionAccessContext(projectId, sourceSpecification, paths);
-            }
-
-            @Override
-            public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-            {
-                return new FileSystemEntityApi.FileSystemProjectFileFileModificationContext(projectId, sourceSpecification, revisionId);
-            }
-        };
     }
 
     private int getDefaultProjectStructureVersion()
@@ -205,7 +172,7 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         return (project == null) ? null : new FileSystemProjectApi.ProjectWrapper(project);
     }
 
-    private class ProjectWrapper implements Project
+    private static class ProjectWrapper implements Project
     {
         private final Git gitProject;
 
@@ -254,55 +221,55 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
     @Override
     public void deleteProject(String id)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void changeProjectName(String id, String newName)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void changeProjectDescription(String id, String newDescription)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void updateProjectTags(String id, Iterable<String> tagsToRemove, Iterable<String> tagsToAdd)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void setProjectTags(String id, Iterable<String> tags)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public AccessRole getCurrentUserAccessRole(String id)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Set<AuthorizableProjectAction> checkUserAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public boolean checkUserAuthorizedAction(String id, AuthorizableProjectAction action)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
 }

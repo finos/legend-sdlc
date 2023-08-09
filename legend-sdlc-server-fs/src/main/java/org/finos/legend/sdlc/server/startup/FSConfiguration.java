@@ -17,8 +17,6 @@ package org.finos.legend.sdlc.server.startup;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.io.File;
-
 public class FSConfiguration
 {
     public final String rootDirectory;
@@ -36,12 +34,6 @@ public class FSConfiguration
     @JsonCreator
     public static FSConfiguration newConfiguration(@JsonProperty("rootDirectory") String rootDirectory)
     {
-        // Check if rootDirectory exists, and create if not
-        File localFile = new File(rootDirectory);
-        if (!localFile.exists() && !localFile.mkdirs())
-        {
-            throw new RuntimeException("Failed to create directories for rootDirectory");
-        }
         return new FSConfiguration(rootDirectory);
     }
 }

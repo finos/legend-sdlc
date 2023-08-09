@@ -19,15 +19,21 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.api.entity.FileSystemFileAccessContext;
+import org.finos.legend.sdlc.server.api.entity.FileSystemProjectFileFileModificationContext;
+import org.finos.legend.sdlc.server.api.entity.FileSystemRevisionAccessContext;
+import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
 import java.io.File;
-import java.io.IOException;
 
 public class BaseFSApi
 {
@@ -37,6 +43,12 @@ public class BaseFSApi
     public static void initRootDirectory(FSConfiguration fsConfiguration)
     {
         rootDirectory = fsConfiguration.getRootDirectory();
+        // Check if rootDirectory exists, and create if not
+        File localFile = new File(rootDirectory);
+        if (!localFile.exists() && !localFile.mkdirs())
+        {
+            throw new RuntimeException("Failed to create directories for rootDirectory");
+        }
     }
 
     public static Repository retrieveRepo(String projectId)
@@ -50,11 +62,11 @@ public class BaseFSApi
                 return FileRepositoryBuilder.create(repoDir);
             }
         }
-        catch (IOException e)
+        catch (Exception e)
         {
-            LOGGER.error("Repository {} could not be accessed", projectId, e);
+            throw FSException.getLegendSDLCServerException("Repository " + projectId + " can't be found ", e);
         }
-        throw new LegendSDLCServerException("Repo " + projectId + " can't be found ", Response.Status.NOT_FOUND);
+        return null;
     }
 
     public static Ref getGitBranch(String projectId, String branchName)
@@ -68,11 +80,51 @@ public class BaseFSApi
         catch (Exception e)
         {
             LOGGER.error("Error occurred during branch list operation for workspace {} in project {}", refBranchName, projectId, e);
+            throw FSException.getLegendSDLCServerException("Branch " + projectId + " does not exist", e);
         }
-        throw new LegendSDLCServerException("Branch " + projectId + " does not exist", Response.Status.NOT_FOUND);
     }
 
-    protected static String resolveRevisionId(String revisionId, ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext)
+    public static String getRefBranchName(SourceSpecification sourceSpecification)
+    {
+       return sourceSpecification.visit(new SourceSpecificationVisitor<String>()
+       {
+           public String visit(ProjectSourceSpecification sourceSpec)
+           {
+               return "master";
+           }
+
+           public String visit(WorkspaceSourceSpecification workspaceSourceSpecification)
+           {
+               return FileSystemWorkspaceApi.getWorkspaceBranchName(workspaceSourceSpecification.getWorkspaceSpecification());
+           }
+       });
+    }
+
+    protected ProjectFileAccessProvider getProjectFileAccessProvider()
+    {
+        return new ProjectFileAccessProvider()
+        {
+            @Override
+            public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+            {
+                return new FileSystemFileAccessContext(projectId, sourceSpecification, revisionId);
+            }
+
+            @Override
+            public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
+            {
+                return new FileSystemRevisionAccessContext(projectId, sourceSpecification);
+            }
+
+            @Override
+            public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+            {
+                return new FileSystemProjectFileFileModificationContext(projectId, sourceSpecification, revisionId);
+            }
+        };
+    }
+
+    protected String resolveRevisionId(String revisionId, ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext)
     {
         if (revisionId == null)
         {
@@ -102,7 +154,7 @@ public class BaseFSApi
         }
     }
 
-    protected static RevisionAlias getRevisionAlias(String revisionId)
+    protected RevisionAlias getRevisionAlias(String revisionId)
     {
         if (revisionId == null)
         {
@@ -118,4 +170,5 @@ public class BaseFSApi
         }
         return RevisionAlias.REVISION_ID;
     }
+
 }

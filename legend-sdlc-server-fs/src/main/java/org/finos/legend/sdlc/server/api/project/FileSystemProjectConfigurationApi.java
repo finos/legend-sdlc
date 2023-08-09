@@ -18,6 +18,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.api.BaseFSApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
@@ -31,9 +32,7 @@ import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
-import static org.finos.legend.sdlc.server.api.project.FileSystemProjectApi.getProjectFileAccessProvider;
-
-public class FileSystemProjectConfigurationApi implements ProjectConfigurationApi
+public class FileSystemProjectConfigurationApi extends BaseFSApi implements ProjectConfigurationApi
 {
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
 

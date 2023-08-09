@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.api.issue;
 
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -31,24 +31,24 @@ public class FileSystemIssueApi implements IssueApi
     @Override
     public Issue getIssue(String projectId, String issueId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public List<Issue> getIssues(String projectId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Issue createIssue(String projectId, String title, String description)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void deleteIssue(String projectId, String issueId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }

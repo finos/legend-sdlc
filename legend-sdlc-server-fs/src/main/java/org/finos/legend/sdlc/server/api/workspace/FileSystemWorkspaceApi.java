@@ -18,24 +18,24 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.ListBranchCommand;
-import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.api.BaseFSApi;
-import org.finos.legend.sdlc.server.api.entity.FileSystemEntityApi;
 import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.*;
+import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
@@ -63,7 +63,7 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
     @Override
     public Workspace getWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        String refBranchName = Constants.R_HEADS + FileSystemEntityApi.getRefBranchName(workspaceSourceSpecification(workspaceSpecification));
+        String refBranchName = Constants.R_HEADS + getRefBranchName(workspaceSourceSpecification(workspaceSpecification));
         Ref branch = getGitBranch(projectId, refBranchName);
         return workspaceBranchToWorkspace(projectId, branch, workspaceSpecification.getType());
     }
@@ -116,7 +116,7 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
         WorkspaceSpecification workspaceSpecification = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, type, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, source);
         String workspaceBranchName = getWorkspaceBranchName(workspaceSpecification);
 
-        Ref branchRef = null;
+        Ref branchRef;
         try
         {
             Repository repository = retrieveRepo(projectId);
@@ -128,7 +128,7 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
         }
         catch (Exception e)
         {
-            LOGGER.error("Failed to create workspace {} for project {}", workspaceBranchName, projectId, e);
+            throw FSException.getLegendSDLCServerException("Failed to create workspace " + workspaceBranchName + " for project " + projectId, e);
         }
         return workspaceBranchToWorkspace(projectId, branchRef, workspaceSpecification.getType());
     }
@@ -277,12 +277,12 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
     @Override
     public WorkspaceUpdateReport updateWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     private Collection<? extends Workspace> getBranchesByType(Repository repository, String branchType, String projectId, WorkspaceType wType)
     {
-        List<Ref> branchesOfType = new ArrayList<>();
+        List<Workspace> branchesOfType = new ArrayList<>();
         try
         {
             List<Ref> allBranches = Git.wrap(repository).branchList().setListMode(ListBranchCommand.ListMode.ALL).call();
@@ -291,15 +291,16 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
                 String type = repository.getConfig().getString("branch", Repository.shortenRefName(branch.getName()), "type");
                 if (type != null && type.equals(branchType))
                 {
-                    branchesOfType.add(branch);
+                    branchesOfType.add(workspaceBranchToWorkspace(projectId, branch, wType));
                 }
             }
         }
-        catch (GitAPIException e)
+        catch (Exception e)
         {
             LOGGER.error("Error occurred during branch list operation for project {}", projectId, e);
+            throw FSException.getLegendSDLCServerException("Failed to fetch " + branchType + "workspaces for project " + projectId, e);
         }
-        return branchesOfType.stream().map(branch -> workspaceBranchToWorkspace(projectId, branch, wType)).collect(Collectors.toList());
+        return branchesOfType;
     }
 
     private static Workspace workspaceBranchToWorkspace(String projectId, Ref branch, WorkspaceType workspaceType)

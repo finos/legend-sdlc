@@ -16,12 +16,12 @@ package org.finos.legend.sdlc.server.api.revision;
 
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
-import org.finos.legend.sdlc.server.api.project.FileSystemProjectApi;
+import org.finos.legend.sdlc.server.api.BaseFSApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
@@ -31,7 +31,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class FileSystemRevisionApi implements RevisionApi
+public class FileSystemRevisionApi extends BaseFSApi implements RevisionApi
 {
     @Inject
     public FileSystemRevisionApi()
@@ -41,25 +41,25 @@ public class FileSystemRevisionApi implements RevisionApi
     @Override
     public RevisionAccessContext getRevisionContext(String projectId, SourceSpecification sourceSpec)
     {
-        return new ProjectFileRevisionAccessContextWrapper(FileSystemProjectApi.getProjectFileAccessProvider().getRevisionAccessContext(projectId, sourceSpec));
+        return new ProjectFileRevisionAccessContextWrapper(getProjectFileAccessProvider().getRevisionAccessContext(projectId, sourceSpec));
     }
 
     @Override
     public RevisionAccessContext getPackageRevisionContext(String projectId, SourceSpecification sourceSpec, String packagePath)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public RevisionAccessContext getEntityRevisionContext(String projectId, SourceSpecification sourceSpec, String entityPath)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public RevisionStatus getRevisionStatus(String projectId, String revisionId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     private static class ProjectFileRevisionAccessContextWrapper implements RevisionAccessContext

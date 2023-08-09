@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -38,7 +38,7 @@ public class FileSystemReviewApi implements ReviewApi
     @Override
     public Review getReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
@@ -56,66 +56,66 @@ public class FileSystemReviewApi implements ReviewApi
     @Override
     public Review createReview(String projectId, WorkspaceSpecification workspaceSpecification, String title, String description, List<String> labels)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review editReview(String projectId, String reviewId, String title, String description, List<String> labels)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review closeReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review reopenReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review approveReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review revokeReviewApproval(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review rejectReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Approval getReviewApproval(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Review commitReview(String projectId, String reviewId, String message)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public ReviewUpdateStatus updateReview(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }

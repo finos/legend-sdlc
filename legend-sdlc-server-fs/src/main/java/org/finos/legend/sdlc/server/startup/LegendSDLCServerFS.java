@@ -29,13 +29,13 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
-public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerFSConfiguration> extends BaseServer<T>
+public class LegendSDLCServerFS<T extends LegendSDLCServerFSConfiguration> extends BaseServer<T>
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseLegendSDLCServer.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerFS.class);
 
     private BackgroundTaskProcessor backgroundTaskProcessor;
 
-    public BaseLegendSDLCServer()
+    public LegendSDLCServerFS()
     {
     }
 
@@ -71,9 +71,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerFSConfigura
                 .build();
     }
 
-    protected AbstractBaseModule buildBaseModule()
+    protected FSModule buildBaseModule()
     {
-        return new BaseModule(this);
+        return new FSModule(this);
     }
 
     @Override
@@ -112,5 +112,16 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerFSConfigura
     public BackgroundTaskProcessor getBackgroundTaskProcessor()
     {
         return this.backgroundTaskProcessor;
+    }
+
+    @Override
+    protected ServerPlatformInfo newServerPlatformInfo()
+    {
+        return new ServerPlatformInfo(null, null, null);
+    }
+
+    public static void main(String... args) throws Exception
+    {
+        new LegendSDLCServerFS().run(args);
     }
 }

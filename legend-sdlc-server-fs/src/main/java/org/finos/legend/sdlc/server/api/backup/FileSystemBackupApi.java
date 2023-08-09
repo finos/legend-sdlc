@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.api.backup;
 
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 
@@ -30,12 +30,12 @@ public class FileSystemBackupApi implements BackupApi
     @Override
     public void discardBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        UnavailableFeature.exception();
+        FSException.unavailableFeature();
     }
 
     @Override
     public void recoverBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification, boolean forceRecovery)
     {
-        UnavailableFeature.exception();
+        FSException.unavailableFeature();
     }
 }

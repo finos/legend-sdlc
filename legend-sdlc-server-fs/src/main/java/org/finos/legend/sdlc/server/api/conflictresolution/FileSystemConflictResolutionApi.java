@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.api.conflictresolution;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;
 
@@ -31,18 +31,18 @@ public class FileSystemConflictResolutionApi implements ConflictResolutionApi
     @Override
     public void discardConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void discardChangesConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, PerformChangesCommand command)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }

@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.api.build;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -33,18 +33,18 @@ public class FileSystemBuildApi implements BuildApi
     @Override
     public BuildAccessContext getProjectBuildAccessContext(String projectId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public BuildAccessContext getVersionBuildAccessContext(String projectId, VersionId versionId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }

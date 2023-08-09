@@ -47,17 +47,6 @@
                 </configuration>
             </plugin>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>test-jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
                 <artifactId>maven-shade-plugin</artifactId>
                 <executions>
                     <execution>
@@ -81,7 +70,7 @@
                             <transformers>
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer" />
                                 <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>org.finos.legend.sdlc.server.LegendSDLCServer</mainClass>
+                                    <mainClass>org.finos.legend.sdlc.server.startup.LegendSDLCServerFS</mainClass>
                                 </transformer>
                             </transformers>
                         </configuration>
@@ -99,10 +88,6 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-entity-serialization</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-server-shared</artifactId>
             <exclusions>
                 <exclusion>
@@ -115,6 +100,24 @@
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-extensions-collection-entity-serializer</artifactId>
             <scope>runtime</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-server</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>jakarta.servlet</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>jakarta.ws.rs</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.glassfish.hk2.external</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <!-- SDLC -->
 
@@ -129,9 +132,6 @@
             <scope>runtime</scope>
         </dependency>
         <!-- ENGINE -->
-
-        <!-- SHARED -->
-        <!-- SHARED -->
 
         <!-- ECLIPSE COLLECTIONS -->
         <dependency>
@@ -179,13 +179,13 @@
         </dependency>
 
         <dependency>
-            <groupId>javax.inject</groupId>
-            <artifactId>javax.inject</artifactId>
+            <groupId>io.swagger</groupId>
+            <artifactId>swagger-annotations</artifactId>
         </dependency>
 
         <dependency>
-            <groupId>io.swagger</groupId>
-            <artifactId>swagger-annotations</artifactId>
+            <groupId>javax.inject</groupId>
+            <artifactId>javax.inject</artifactId>
         </dependency>
 
         <dependency>
@@ -203,22 +203,10 @@
         </dependency>
 
         <!-- TEST -->
-
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
             <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-model</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-server</artifactId>
         </dependency>
         <!-- TEST -->
     </dependencies>

@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.api.comparison;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.exception.UnavailableFeature;
+import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 
 import javax.inject.Inject;
@@ -31,24 +31,24 @@ public class FileSystemComparisonApi implements ComparisonApi
     @Override
     public Comparison getWorkspaceCreationComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Comparison getWorkspaceSourceComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Comparison getReviewComparison(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 
     @Override
     public Comparison getReviewWorkspaceCreationComparison(String projectId, String reviewId)
     {
-        throw UnavailableFeature.exception();
+        throw FSException.unavailableFeature();
     }
 }
