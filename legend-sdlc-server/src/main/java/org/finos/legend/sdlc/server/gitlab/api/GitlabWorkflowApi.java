@@ -63,7 +63,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
-        return new RefWorkflowAccessContext(gitLabProjectId, getBranchName(gitLabProjectId, sourceSpecification))
+        return new RefWorkflowAccessContext(gitLabProjectId, getRef(gitLabProjectId, sourceSpecification))
         {
             @Override
             protected String getInfoForException()
