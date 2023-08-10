@@ -31,7 +31,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecifi
 import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationConsumer;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
 import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
@@ -196,36 +195,6 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     {
         Revision revision = new GitLabRevisionAccessContext(projectId, sourceSpecification, null).getCurrentRevision();
         return (revision == null) ? null : revision.getId();
-    }
-
-    private String getReferenceForSourceSpec(GitLabProjectId projectId, SourceSpecification sourceSpec)
-    {
-        return sourceSpec.visit(new SourceSpecificationVisitor<String>()
-        {
-            @Override
-            public String visit(ProjectSourceSpecification sourceSpec)
-            {
-                return getDefaultBranch(projectId);
-            }
-
-            @Override
-            public String visit(VersionSourceSpecification sourceSpec)
-            {
-                return buildVersionTagName(sourceSpec.getVersionId());
-            }
-
-            @Override
-            public String visit(PatchSourceSpecification sourceSpec)
-            {
-                return getPatchReleaseBranchName(sourceSpec);
-            }
-
-            @Override
-            public String visit(WorkspaceSourceSpecification sourceSpec)
-            {
-                return getWorkspaceBranchName(sourceSpec);
-            }
-        });
     }
 
     private class GitLabFileAccessContext extends AbstractFileAccessContext
@@ -458,7 +427,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
         protected String getReference()
         {
-            return (this.revisionId == null) ? getReferenceForSourceSpec(this.projectId, this.sourceSpecification) : this.revisionId;
+            return (this.revisionId == null) ? getRef(this.projectId, this.sourceSpecification) : this.revisionId;
         }
 
         protected String getDescriptionForExceptionMessage()
@@ -832,7 +801,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 
         protected String getReference()
         {
-            return getReferenceForSourceSpec(this.projectId, this.sourceSpecification);
+            return getRef(this.projectId, this.sourceSpecification);
         }
 
         protected boolean referenceExists() throws GitLabApiException

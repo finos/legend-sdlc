@@ -385,6 +385,11 @@ abstract class BaseGitLabApi
         return WorkspaceSpecification.newWorkspaceSpecification(workspaceId, type, accessType, source, userId);
     }
 
+    protected String getRef(GitLabProjectId projectId, SourceSpecification sourceSpec)
+    {
+        return getRef(sourceSpec, () -> getDefaultBranch(projectId));
+    }
+
     protected String getBranchName(GitLabProjectId projectId, SourceSpecification sourceSpec)
     {
         return getBranchName(sourceSpec, () -> getDefaultBranch(projectId));
@@ -398,6 +403,36 @@ abstract class BaseGitLabApi
     protected String getBranchName(SourceSpecification sourceSpec, String defaultBranch)
     {
         return getBranchName(sourceSpec, () -> defaultBranch);
+    }
+
+    protected String getRef(SourceSpecification sourceSpec, Supplier<String> defaultBranchSupplier)
+    {
+        return sourceSpec.visit(new SourceSpecificationVisitor<String>()
+        {
+            @Override
+            public String visit(ProjectSourceSpecification sourceSpec)
+            {
+                return defaultBranchSupplier.get();
+            }
+
+            @Override
+            public String visit(VersionSourceSpecification sourceSpec)
+            {
+                return buildVersionTagName(sourceSpec.getVersionId());
+            }
+
+            @Override
+            public String visit(PatchSourceSpecification sourceSpec)
+            {
+                return getPatchReleaseBranchName(sourceSpec);
+            }
+
+            @Override
+            public String visit(WorkspaceSourceSpecification sourceSpec)
+            {
+                return getWorkspaceBranchName(sourceSpec);
+            }
+        });
     }
 
     protected String getBranchName(SourceSpecification sourceSpec, Supplier<String> defaultBranchSupplier)
