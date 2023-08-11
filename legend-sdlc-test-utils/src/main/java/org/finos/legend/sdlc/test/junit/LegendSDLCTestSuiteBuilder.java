@@ -32,7 +32,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
+import org.finos.legend.engine.pure.code.core.PureCoreExtension;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Test;
@@ -65,7 +65,7 @@ public class LegendSDLCTestSuiteBuilder
     private final PureModelContextData pureModelContextData;
     private final MapIterable<String, PackageableElement> protocolIndex;
     private final RichIterable<? extends Root_meta_pure_extension_Extension> routerExtensions;
-    private final MutableList<PlanTransformer> planTransformers;
+    private final Iterable<? extends PlanTransformer> planTransformers;
 
     private LegendSDLCTestSuiteBuilder(String name, String pureVersion, ClassLoader classLoader)
     {
@@ -77,9 +77,8 @@ public class LegendSDLCTestSuiteBuilder
         this.pureModel = pureModelWithContextData.getPureModel();
         this.pureModelContextData = pureModelWithContextData.getPureModelContextData();
         this.protocolIndex = Iterate.groupByUniqueKey(this.pureModelContextData.getElements(), PackageableElement::getPath);
-        MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class, classLoader));
-        this.routerExtensions = PureCoreExtensionLoader.extensions().flatCollect(e -> e.extraPureCoreExtensions(this.pureModel.getExecutionSupport()));
-        this.planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
+        this.routerExtensions = Iterate.flatCollect(ServiceLoader.load(PureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(this.pureModel.getExecutionSupport()), Lists.mutable.empty());
+        this.planTransformers = Iterate.flatCollect(ServiceLoader.load(PlanGeneratorExtension.class, classLoader), PlanGeneratorExtension::getExtraPlanTransformers, Lists.mutable.empty());
     }
 
     public LegendSDLCTestSuiteBuilder(String name, String pureVersion)

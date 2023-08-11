@@ -35,8 +35,9 @@ import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
+import org.finos.legend.engine.pure.code.core.PureCoreExtension;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
@@ -235,12 +236,13 @@ public class ServicesGenerationMojo extends AbstractMojo
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
                 .build());
 
-        int effectiveParallelism = Math.min(parallelism, servicesByPath.size());
         ForkJoinPool pool;
-        if (effectiveParallelism > 1)
+        // We only create a pool if parallelism level is greater than 1 and we expect to generate multiple plans, which
+        // is true if we have multiple services or we have one or more a multi-execution service.
+        if ((parallelism > 1) && ((servicesByPath.size() > 1) || servicesByPath.anySatisfy(s -> s.execution instanceof PureMultiExecution)))
         {
-            getLog().info("Generating services in parallel with parallelism level " + effectiveParallelism);
-            pool = createForkJoinPool(effectiveParallelism);
+            getLog().info("Generating services in parallel with parallelism level " + parallelism);
+            pool = createForkJoinPool(parallelism);
         }
         else
         {
@@ -255,7 +257,7 @@ public class ServicesGenerationMojo extends AbstractMojo
                     .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
                     .withJsonMapper(jsonMapper)
                     .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
-                    .withPureCoreExtensions(PureCoreExtensionLoader.extensions())
+                    .withPureCoreExtensions(ServiceLoader.load(PureCoreExtension.class))
                     .withExecutorService(pool)
                     .build()
                     .generate();

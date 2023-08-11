@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.execution.PlanExecutor;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
@@ -29,7 +28,7 @@ public class LegacyServiceTestCase extends LegendSDLCTestCase
 {
     private final LegacyServiceTestHelper helper;
 
-    public LegacyServiceTestCase(String servicePath, PureModel pureModel, PureModelContextData pureModelContextData, Service service, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
+    public LegacyServiceTestCase(String servicePath, PureModel pureModel, PureModelContextData pureModelContextData, Service service, Iterable<? extends PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(servicePath);
         this.helper = new LegacyServiceTestHelper(3, servicePath, new ServiceTestRunner(service, null, pureModelContextData, pureModel, null, PlanExecutor.newPlanExecutorBuilder().withAvailableStoreExecutors().build(), extensions, planTransformers, pureVersion));

@@ -20,12 +20,13 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MapIterable;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
+import org.finos.legend.engine.pure.code.core.PureCoreExtension;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder.PureModelWithContextData;
@@ -94,9 +95,8 @@ class PureTestHelper
                     PROTOCOL_ELEMENT_INDEX = indexPureModelContextData(PURE_MODEL_CONTEXT_DATA);
                     PURE_MODEL = pureModelWithContextData.getPureModel();
 
-                    MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class));
-                    PLAN_TRANSFORMERS = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers).asUnmodifiable();
-                    ROUTER_EXTENSIONS = PureCoreExtensionLoader.extensions().flatCollect(e -> e.extraPureCoreExtensions(PURE_MODEL.getExecutionSupport())).asUnmodifiable();
+                    PLAN_TRANSFORMERS = Iterate.flatCollect(ServiceLoader.load(PlanGeneratorExtension.class, classLoader), PlanGeneratorExtension::getExtraPlanTransformers, Lists.mutable.empty()).asUnmodifiable();
+                    ROUTER_EXTENSIONS = Iterate.flatCollect(ServiceLoader.load(PureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(PURE_MODEL.getExecutionSupport()), Lists.mutable.empty()).asUnmodifiable();
                     LOGGER.debug("Finished initialization");
                 }
                 catch (Throwable t)
