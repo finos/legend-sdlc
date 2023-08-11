@@ -39,6 +39,7 @@ import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.pure.code.core.PureCoreExtension;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
@@ -50,6 +51,7 @@ import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.lang.model.SourceVersion;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -62,7 +64,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
-import javax.lang.model.SourceVersion;
 
 public class ServiceExecutionGenerator
 {
@@ -522,6 +523,7 @@ public class ServiceExecutionGenerator
         private Path resourceOutputDirectory;
         private JsonMapper jsonMapper;
         private final MutableList<PlanGeneratorExtension> planGeneratorExtensions = Lists.mutable.empty();
+        private final MutableList<PureCoreExtension> pureCoreExtensions = Lists.mutable.empty();
         private String clientVersion;
         private ForkJoinPool executorService;
 
@@ -583,9 +585,21 @@ public class ServiceExecutionGenerator
             return this;
         }
 
+        public Builder withPureCoreExtension(PureCoreExtension extension)
+        {
+            this.pureCoreExtensions.add(Objects.requireNonNull(extension));
+            return this;
+        }
+
         public Builder withPlanGeneratorExtensions(Iterable<? extends PlanGeneratorExtension> extensions)
         {
             extensions.forEach(this::withPlanGeneratorExtension);
+            return this;
+        }
+
+        public Builder withPureCoreExtensions(Iterable<? extends PureCoreExtension> extensions)
+        {
+            extensions.forEach(this::withPureCoreExtension);
             return this;
         }
 
@@ -611,11 +625,17 @@ public class ServiceExecutionGenerator
 
             MutableList<Root_meta_pure_extension_Extension> extensions = Lists.mutable.empty();
             MutableList<PlanTransformer> transformers = Lists.mutable.empty();
+
+            this.pureCoreExtensions.forEach(ext ->
+            {
+                extensions.addAllIterable(ext.extraPureCoreExtensions(this.pureModel.getExecutionSupport()));
+            });
+
             this.planGeneratorExtensions.forEach(ext ->
             {
-                extensions.addAllIterable(ext.getExtraExtensions(this.pureModel));
                 transformers.addAllIterable(ext.getExtraPlanTransformers());
             });
+
             if (extensions.notEmpty())
             {
                 ExecutionSupport execSupport = this.pureModel.getExecutionSupport();
@@ -665,9 +685,11 @@ public class ServiceExecutionGenerator
                     {
                         return transformersList;
                     }
-
+                })
+                .withPureCoreExtension(new PureCoreExtension()
+                {
                     @Override
-                    public RichIterable<? extends Root_meta_pure_extension_Extension> getExtraExtensions(PureModel pureModel)
+                    public RichIterable<? extends Root_meta_pure_extension_Extension> extraPureCoreExtensions(ExecutionSupport es)
                     {
                         return extensions;
                     }

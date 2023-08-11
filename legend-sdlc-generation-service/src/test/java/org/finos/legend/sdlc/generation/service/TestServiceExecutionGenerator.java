@@ -38,6 +38,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
@@ -46,14 +47,10 @@ import org.finos.legend.pure.runtime.java.compiled.generation.orchestrator.VoidL
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
-import org.junit.AfterClass;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.TemporaryFolder;
 
+import javax.tools.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -71,23 +68,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
-import javax.tools.DiagnosticCollector;
-import javax.tools.JavaCompiler;
-import javax.tools.JavaFileObject;
-import javax.tools.SimpleJavaFileObject;
-import javax.tools.ToolProvider;
 
 public class TestServiceExecutionGenerator
 {
@@ -420,11 +403,12 @@ public class TestServiceExecutionGenerator
                 .withPackagePrefix(packagePrefix)
                 .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
                 .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                .withPureCoreExtensions(PureCoreExtensionLoader.extensions())
                 .withClientVersion("vX_X_X")
                 .build();
         generator.generate();
 
-        ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class)).flatCollect(e -> e.getExtraExtensions(PURE_MODEL)).toImmutable();
+        ImmutableList<? extends Root_meta_pure_extension_Extension> extensions = Lists.mutable.withAll(PureCoreExtensionLoader.extensions()).flatCollect(e -> e.extraPureCoreExtensions(PURE_MODEL.getExecutionSupport())).toImmutable();
         // Generate
         Set<String> enumClasses = LazyIterate.flatCollect(services, s -> ((PureExecution) s.execution).func.parameters)
                 .collectIf(
