@@ -32,6 +32,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Test;
@@ -77,7 +78,7 @@ public class LegendSDLCTestSuiteBuilder
         this.pureModelContextData = pureModelWithContextData.getPureModelContextData();
         this.protocolIndex = Iterate.groupByUniqueKey(this.pureModelContextData.getElements(), PackageableElement::getPath);
         MutableList<PlanGeneratorExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(PlanGeneratorExtension.class, classLoader));
-        this.routerExtensions = extensions.flatCollect(e -> e.getExtraExtensions(this.pureModel));
+        this.routerExtensions = PureCoreExtensionLoader.extensions().flatCollect(e -> e.extraPureCoreExtensions(this.pureModel.getExecutionSupport()));
         this.planTransformers = extensions.flatCollect(PlanGeneratorExtension::getExtraPlanTransformers);
     }
 

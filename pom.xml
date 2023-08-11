@@ -69,7 +69,7 @@
         <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.22.1</legend.engine.version>
+        <legend.engine.version>4.23.0</legend.engine.version>
         <legend.pure.version>4.5.10</legend.pure.version>
         <legend.shared.version>0.23.8</legend.shared.version>
 
@@ -565,6 +565,26 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-code-core-extension</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-platform-store-relational-java</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-relationalStore-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-pure-code-compiled-core</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
@@ -822,6 +842,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-serviceStore-grammar</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
@@ -843,6 +868,21 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-dsl-service-generation</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-serviceStore-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-serviceStore-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-json-javaPlatformBinding-pure</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
