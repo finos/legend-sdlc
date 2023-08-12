@@ -17,7 +17,6 @@ package org.finos.legend.sdlc.server.startup;
 import com.google.inject.Binder;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import org.finos.legend.sdlc.server.BaseServer;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
 import org.finos.legend.sdlc.server.api.backup.FileSystemBackupApi;
 import org.finos.legend.sdlc.server.api.build.FileSystemBuildApi;
 import org.finos.legend.sdlc.server.api.comparison.FileSystemComparisonApi;
@@ -188,6 +187,7 @@ import org.finos.legend.sdlc.server.resources.workspace.project.group.GroupWorks
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 
+import java.io.File;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -208,7 +208,7 @@ public class FSModule extends DropwizardAwareModule<LegendSDLCServerFSConfigurat
     {
         configureCommonApis(binder);
         configureApis(binder);
-        BaseFSApi.initRootDirectory(getFSConfiguration());
+        initRootDirectory(getFSConfiguration());
 
         binder.bind(UserContext.class);
         binder.bind(TestModelBuilder.class);
@@ -419,6 +419,16 @@ public class FSModule extends DropwizardAwareModule<LegendSDLCServerFSConfigurat
         binder.bind(PatchesWorkspaceRevisionProjectConfigurationResource.class);
     }
 
+    public void initRootDirectory(FSConfiguration fsConfiguration)
+    {
+        // Check if rootDirectory exists, and create if not
+        File localFile = new File(fsConfiguration.getRootDirectory());
+        if (!localFile.exists() && !localFile.mkdirs())
+        {
+            throw new RuntimeException("Failed to create directories for rootDirectory");
+        }
+    }
+    
     private void configureCommonApis(Binder binder)
     {
         binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);

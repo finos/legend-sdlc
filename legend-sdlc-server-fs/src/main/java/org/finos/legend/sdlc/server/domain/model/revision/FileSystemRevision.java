@@ -19,7 +19,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
 import org.finos.legend.sdlc.server.exception.FSException;
 
 import java.time.Instant;
@@ -43,14 +42,12 @@ public class FileSystemRevision implements Revision
         this.message = message;
     }
 
-    public static FileSystemRevision getFileSystemRevision(String projectId, String workspaceId)
+    public static FileSystemRevision getFileSystemRevision(String projectId, String workspaceId, Repository repo, Ref branchRef)
     {
         try
         {
-            Repository repo = BaseFSApi.retrieveRepo(projectId);
-            Ref branch = BaseFSApi.getGitBranch(projectId, workspaceId);
             RevWalk revWalk = new RevWalk(repo);
-            RevCommit commit = revWalk.parseCommit(branch.getObjectId());
+            RevCommit commit = revWalk.parseCommit(branchRef.getObjectId());
             revWalk.dispose();
             String revisionId = commit.getId().getName();
             String authorName = commit.getAuthorIdent().getName();

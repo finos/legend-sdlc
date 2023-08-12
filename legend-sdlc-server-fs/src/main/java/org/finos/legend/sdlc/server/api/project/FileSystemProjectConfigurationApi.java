@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGene
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
@@ -27,18 +27,20 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.server.startup.FSConfiguration;
 
 import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 
-public class FileSystemProjectConfigurationApi extends BaseFSApi implements ProjectConfigurationApi
+public class FileSystemProjectConfigurationApi extends FileSystemApiWithFileAccess implements ProjectConfigurationApi
 {
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
 
     @Inject
-    public FileSystemProjectConfigurationApi(ProjectStructureExtensionProvider projectStructureExtensionProvider)
+    public FileSystemProjectConfigurationApi(FSConfiguration fsConfiguration, ProjectStructureExtensionProvider projectStructureExtensionProvider)
     {
+        super(fsConfiguration);
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
     }
 

@@ -19,9 +19,6 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
-import org.finos.legend.sdlc.server.api.entity.FileSystemFileAccessContext;
-import org.finos.legend.sdlc.server.api.entity.FileSystemProjectFileFileModificationContext;
-import org.finos.legend.sdlc.server.api.entity.FileSystemRevisionAccessContext;
 import org.finos.legend.sdlc.server.api.workspace.FileSystemWorkspaceApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
@@ -38,20 +35,19 @@ import java.io.File;
 public class BaseFSApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseFSApi.class);
-    protected static String rootDirectory;
+    private final String rootDirectory;
 
-    public static void initRootDirectory(FSConfiguration fsConfiguration)
+    protected BaseFSApi(FSConfiguration fsConfiguration)
     {
-        rootDirectory = fsConfiguration.getRootDirectory();
-        // Check if rootDirectory exists, and create if not
-        File localFile = new File(rootDirectory);
-        if (!localFile.exists() && !localFile.mkdirs())
-        {
-            throw new RuntimeException("Failed to create directories for rootDirectory");
-        }
+        this.rootDirectory = fsConfiguration.getRootDirectory();
     }
 
-    public static Repository retrieveRepo(String projectId)
+    protected String getRootDirectory()
+    {
+        return this.rootDirectory;
+    }
+
+    public Repository retrieveRepo(String projectId)
     {
         try
         {
@@ -69,7 +65,7 @@ public class BaseFSApi
         return null;
     }
 
-    public static Ref getGitBranch(String projectId, String branchName)
+    public Ref getGitBranch(String projectId, String branchName)
     {
         String refBranchName = branchName;
         try
@@ -84,7 +80,7 @@ public class BaseFSApi
         }
     }
 
-    public static String getRefBranchName(SourceSpecification sourceSpecification)
+    public String getRefBranchName(SourceSpecification sourceSpecification)
     {
        return sourceSpecification.visit(new SourceSpecificationVisitor<String>()
        {
@@ -98,30 +94,6 @@ public class BaseFSApi
                return FileSystemWorkspaceApi.getWorkspaceBranchName(workspaceSourceSpecification.getWorkspaceSpecification());
            }
        });
-    }
-
-    protected ProjectFileAccessProvider getProjectFileAccessProvider()
-    {
-        return new ProjectFileAccessProvider()
-        {
-            @Override
-            public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-            {
-                return new FileSystemFileAccessContext(projectId, sourceSpecification, revisionId);
-            }
-
-            @Override
-            public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
-            {
-                return new FileSystemRevisionAccessContext(projectId, sourceSpecification);
-            }
-
-            @Override
-            public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
-            {
-                return new FileSystemProjectFileFileModificationContext(projectId, sourceSpecification, revisionId);
-            }
-        };
     }
 
     protected String resolveRevisionId(String revisionId, ProjectFileAccessProvider.RevisionAccessContext revisionAccessContext)
@@ -170,5 +142,4 @@ public class BaseFSApi
         }
         return RevisionAlias.REVISION_ID;
     }
-
 }

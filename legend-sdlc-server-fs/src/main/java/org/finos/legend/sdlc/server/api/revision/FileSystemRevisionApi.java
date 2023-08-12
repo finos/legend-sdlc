@@ -16,13 +16,14 @@ package org.finos.legend.sdlc.server.api.revision;
 
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.startup.FSConfiguration;
 
 import javax.inject.Inject;
 import java.time.Instant;
@@ -31,11 +32,12 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-public class FileSystemRevisionApi extends BaseFSApi implements RevisionApi
+public class FileSystemRevisionApi extends FileSystemApiWithFileAccess implements RevisionApi
 {
     @Inject
-    public FileSystemRevisionApi()
+    public FileSystemRevisionApi(FSConfiguration fsConfiguration)
     {
+        super(fsConfiguration);
     }
 
     @Override

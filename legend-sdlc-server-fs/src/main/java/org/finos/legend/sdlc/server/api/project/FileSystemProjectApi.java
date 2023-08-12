@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 
 import org.eclipse.jgit.api.Git;
+import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,7 +47,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
+public class FileSystemProjectApi extends FileSystemApiWithFileAccess implements ProjectApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemProjectApi.class);
     private final ProjectStructureConfiguration projectStructureConfig;
@@ -54,8 +55,9 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
     private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
     @Inject
-    public FileSystemProjectApi(ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
+    public FileSystemProjectApi(FSConfiguration fsConfiguration, ProjectStructureConfiguration projectStructureConfig, ProjectStructureExtensionProvider projectStructureExtensionProvider, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
+        super(fsConfiguration);
         this.projectStructureConfig = projectStructureConfig;
         this.projectStructureExtensionProvider = projectStructureExtensionProvider;
         this.projectStructurePlatformExtensions = projectStructurePlatformExtensions;
@@ -73,7 +75,7 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
     public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
     {
         List<Project> gitRepos = new ArrayList<>();
-        try (Stream<Path> paths = Files.list(Paths.get(rootDirectory)))
+        try (Stream<Path> paths = Files.list(Paths.get(getRootDirectory())))
         {
             paths.filter(path -> Files.isDirectory(path)).forEach(repoDir ->
             {
@@ -94,7 +96,7 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         }
         catch (IOException e)
         {
-            LOGGER.error("Exception occurred when opening the directory {}", rootDirectory, e);
+            LOGGER.error("Exception occurred when opening the directory {}", getRootDirectory(), e);
             throw FSException.getLegendSDLCServerException("Failed to fetch projects", e);
         }
         return gitRepos;
@@ -106,7 +108,7 @@ public class FileSystemProjectApi extends BaseFSApi implements ProjectApi
         LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
 
-        String projectPath = rootDirectory + "/" + name;
+        String projectPath = getRootDirectory() + "/" + name;
         Git gitProject;
         String projectId = name;
         try

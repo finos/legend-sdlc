@@ -23,7 +23,7 @@ import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
+import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,7 +42,7 @@ import javax.ws.rs.core.Response;
 
 import static org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification.workspaceSourceSpecification;
 
-public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
+public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implements WorkspaceApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemWorkspaceApi.class);
 
@@ -56,8 +57,9 @@ public class FileSystemWorkspaceApi extends BaseFSApi implements WorkspaceApi
     protected static final char BRANCH_DELIMITER = '/';
 
     @Inject
-    public FileSystemWorkspaceApi()
+    public FileSystemWorkspaceApi(FSConfiguration fsConfiguration)
     {
+        super(fsConfiguration);
     }
 
     @Override

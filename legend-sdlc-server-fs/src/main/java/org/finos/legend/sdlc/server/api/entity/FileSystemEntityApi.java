@@ -25,7 +25,6 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.entity.change.EntityChangeType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.api.BaseFSApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
@@ -38,6 +37,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectFiles;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
+import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
@@ -54,13 +54,14 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class FileSystemEntityApi extends BaseFSApi implements EntityApi
+public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements EntityApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemEntityApi.class);
 
     @Inject
-    public FileSystemEntityApi()
+    public FileSystemEntityApi(FSConfiguration fsConfiguration)
     {
+        super(fsConfiguration);
     }
 
     @Override
@@ -544,7 +545,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
                 ProjectFileAccessProvider.ProjectFile projectFile = ProjectFiles.newStringProjectFile(file.getCanonicalPath(), entityContent);
                 if (sourceDirectory.isPossiblyEntityFilePath(getEntityPath(file, projectID)))
                 {
-                    files.add(new EntityProjectFile(sourceDirectory, projectFile, projectID, rootDirectory));
+                    files.add(new EntityProjectFile(sourceDirectory, projectFile, projectID, getRootDirectory()));
                 }
             }
         }
@@ -559,7 +560,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
     private String getEntityPath(File file, String projectID)
     {
         Path filePath = Paths.get(file.getPath());
-        Path pathToProject = Paths.get(rootDirectory + "/" + projectID);
+        Path pathToProject = Paths.get(getRootDirectory() + "/" + projectID);
         if (!filePath.startsWith(pathToProject))
         {
             throw new LegendSDLCServerException("Paths " + filePath + " and " + pathToProject + " are not related");
@@ -580,7 +581,7 @@ public class FileSystemEntityApi extends BaseFSApi implements EntityApi
     {
         return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
                 .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
-                .map(f -> new EntityProjectFile(sourceDirectory, f, projectID, rootDirectory));
+                .map(f -> new EntityProjectFile(sourceDirectory, f, projectID, getRootDirectory()));
     }
 
     private Revision performChanges(String projectId, WorkspaceSourceSpecification sourceSpecification, String referenceRevisionId, String message, List<? extends EntityChange> changes)
