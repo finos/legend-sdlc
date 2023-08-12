@@ -36,6 +36,7 @@ import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
@@ -254,6 +255,7 @@ public class ServicesGenerationMojo extends AbstractMojo
                     .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
                     .withJsonMapper(jsonMapper)
                     .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                    .withPureCoreExtensions(PureCoreExtensionLoader.extensions())
                     .withExecutorService(pool)
                     .build()
                     .generate();
