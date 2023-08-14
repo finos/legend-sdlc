@@ -50,7 +50,7 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(FileSystemApiWithFileAccess.class);
 
-    public FileSystemApiWithFileAccess(FSConfiguration fsConfiguration)
+    protected FileSystemApiWithFileAccess(FSConfiguration fsConfiguration)
     {
         super(fsConfiguration);
     }
@@ -209,7 +209,7 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
             }
             catch (Exception e)
             {
-                throw FSException.getLegendSDLCServerException("Failed to get current revision for branch " + branchName + " in project " + this.projectId, e);
+                throw FSException.getLegendSDLCServerException("Failed to get base revision for branch " + branchName + " in project " + this.projectId, e);
             }
         }
 
