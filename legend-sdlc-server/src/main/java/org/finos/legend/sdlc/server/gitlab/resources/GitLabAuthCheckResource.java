@@ -24,24 +24,18 @@ import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 
 import javax.inject.Inject;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.Arrays;
-import java.util.Optional;
 
 import static org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter.SESSION_ATTRIBUTE;
 
 @Path("/auth")
 public class GitLabAuthCheckResource extends BaseResource
 {
-
-    private static final String SESSION_COOKIE_NAME = "LegendSSO";
-
     private final HttpServletRequest httpRequest;
     private final HttpServletResponse httpResponse;
     private final GitLabAuthorizerManager authorizerManager;
@@ -72,18 +66,10 @@ public class GitLabAuthCheckResource extends BaseResource
         {
             Session session = SessionProvider.findSession(httpRequest);
 
-            if (session == null && httpRequest.getCookies() != null)
+            if (session == null)
             {
-                Optional<Cookie> optional =
-                        Arrays.stream(httpRequest.getCookies())
-                        .filter(c -> c.getName().equals(SESSION_COOKIE_NAME))
-                        .findFirst();
-
-                if (optional.isPresent())
-                {
-                    session = sessionProvider.getSession(httpRequest, httpResponse, appInfo);
-                    httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
-                }
+                session = sessionProvider.getSessionFromSessionStore(httpRequest, httpResponse, appInfo);
+                httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
             }
 
             if (session instanceof GitLabSession)

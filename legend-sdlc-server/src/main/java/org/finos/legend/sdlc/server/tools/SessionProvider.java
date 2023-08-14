@@ -41,7 +41,7 @@ public class SessionProvider
 
     private SessionStore sessionStore;
 
-    public Session getSession(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
+    public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
     {
         if (sessionStore != null)
         {
