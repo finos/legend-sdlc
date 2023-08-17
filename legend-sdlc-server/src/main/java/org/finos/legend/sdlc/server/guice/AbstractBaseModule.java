@@ -14,10 +14,10 @@
 
 package org.finos.legend.sdlc.server.guice;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
@@ -230,6 +230,7 @@ import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.session.J2ESessionStore;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.jax.rs.pac4j.JaxRsContext;
 import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 
@@ -550,21 +551,21 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private SessionProvider getSessionProvider()
     {
-        SessionProvider sessionProvider = new SessionProvider();
         LegendPac4jConfiguration config = getConfiguration().getPac4jConfiguration();
+        return new SessionProvider(getSessionStoreFromConfig(config));
+    }
 
+    private SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
+    {
         if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
         {
-            HazelcastSessionStore hazelcastSessionStore = new HazelcastSessionStore(
+            return new HazelcastSessionStore(
                     config.getHazelcastSession().getConfigFilePath(),
-                    ImmutableMap.of(
+                    Maps.immutable.with(
                             J2EContext.class, new J2ESessionStore(),
-                            JaxRsContext.class, new ServletSessionStore()));
-
-            sessionProvider.setSessionStore(hazelcastSessionStore);
+                            JaxRsContext.class, new ServletSessionStore()).castToMap());
         }
-
-        return sessionProvider;
+        return null;
     }
 
     @Provides

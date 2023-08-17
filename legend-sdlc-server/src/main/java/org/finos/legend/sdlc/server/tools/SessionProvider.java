@@ -32,42 +32,39 @@ import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class SessionProvider
 {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionProvider.class);
 
-    private SessionStore sessionStore;
+    private final SessionStore sessionStore;
+
+    public SessionProvider(SessionStore sessionStore)
+    {
+        this.sessionStore = sessionStore;
+    }
 
     public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
     {
         if (sessionStore != null)
         {
             WebContext context = new J2EContext(httpRequest, httpResponse);
+            Map<String, CommonProfile> profileMap =
+                    (Map<String, CommonProfile>) sessionStore.get(context, Pac4jConstants.USER_PROFILES);
 
-            LinkedHashMap<String, CommonProfile> map = (LinkedHashMap) sessionStore.get(context, Pac4jConstants.USER_PROFILES);
-
-            if (map != null && map.containsKey(GitlabClient.GITLAB_CLIENT_NAME))
+            if (profileMap != null)
             {
-                CommonProfile profile = map.get(GitlabClient.GITLAB_CLIENT_NAME);
-                GitLabSessionBuilder builder = GitLabSessionBuilder.newBuilder(appInfo);
-                return builder.withProfile(profile).build();
+                CommonProfile profile = profileMap.get(GitlabClient.GITLAB_CLIENT_NAME);
+                if (profile != null)
+                {
+                    return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
+                }
             }
         }
 
         return null;
-    }
-
-    public SessionStore getSessionStore()
-    {
-        return sessionStore;
-    }
-
-    public void setSessionStore(SessionStore sessionStore)
-    {
-        this.sessionStore = sessionStore;
     }
 
     public static Session findSession(ServletRequest request)
