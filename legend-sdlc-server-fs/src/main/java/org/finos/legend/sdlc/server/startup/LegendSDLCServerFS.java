@@ -122,6 +122,7 @@ public class LegendSDLCServerFS<T extends LegendSDLCServerFSConfiguration> exten
 
     public static void main(String... args) throws Exception
     {
+        LOGGER.info("Starting SDLC server with File System as backend");
         new LegendSDLCServerFS().run(args);
     }
 }
