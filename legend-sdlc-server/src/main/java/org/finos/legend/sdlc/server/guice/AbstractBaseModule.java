@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.guice;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
@@ -224,6 +225,14 @@ import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWor
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
+import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
+import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.session.J2ESessionStore;
+import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.jax.rs.pac4j.JaxRsContext;
+import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 
 import java.util.Collections;
 import java.util.List;
@@ -257,6 +266,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
+        binder.bind(SessionProvider.class).toProvider(this::getSessionProvider);
 
         bindResources(binder);
     }
@@ -537,6 +547,25 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         return builder -> builder;
+    }
+
+    private SessionProvider getSessionProvider()
+    {
+        LegendPac4jConfiguration config = getConfiguration().getPac4jConfiguration();
+        return new SessionProvider(getSessionStoreFromConfig(config));
+    }
+
+    private SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
+    {
+        if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
+        {
+            return new HazelcastSessionStore(
+                    config.getHazelcastSession().getConfigFilePath(),
+                    Maps.immutable.with(
+                            J2EContext.class, new J2ESessionStore(),
+                            JaxRsContext.class, new ServletSessionStore()).castToMap());
+        }
+        return null;
     }
 
     @Provides

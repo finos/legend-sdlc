@@ -16,18 +16,56 @@ package org.finos.legend.sdlc.server.tools;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
+import org.finos.legend.server.pac4j.gitlab.GitlabClient;
+import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.Pac4jConstants;
+import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.profile.CommonProfile;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import java.util.Map;
 
-public class SessionUtil
+public class SessionProvider
 {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(SessionUtil.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(SessionProvider.class);
+
+    private final SessionStore sessionStore;
+
+    public SessionProvider(SessionStore sessionStore)
+    {
+        this.sessionStore = sessionStore;
+    }
+
+    public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
+    {
+        if (sessionStore != null)
+        {
+            WebContext context = new J2EContext(httpRequest, httpResponse);
+            Map<String, CommonProfile> profileMap =
+                    (Map<String, CommonProfile>) sessionStore.get(context, Pac4jConstants.USER_PROFILES);
+
+            if (profileMap != null)
+            {
+                CommonProfile profile = profileMap.get(GitlabClient.GITLAB_CLIENT_NAME);
+                if (profile != null)
+                {
+                    return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
+                }
+            }
+        }
+
+        return null;
+    }
 
     public static Session findSession(ServletRequest request)
     {

@@ -59,6 +59,9 @@ pac4j:
         secret: $APP_SECRET
         discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
         scope: openid profile api
+#  hazelcastSession:
+#    enabled: true
+#    configFilePath: legend-sdlc-server/src/test/resources/hazelcast.yaml
   bypassPaths:
     - /api/info
     - /api/server/info
