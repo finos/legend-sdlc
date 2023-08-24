@@ -34,7 +34,7 @@ public class InMemoryComparisonApi implements ComparisonApi
     }
 
     @Override
-    public Comparison getWorkspaceSourceComparison(String projectId, WorkspaceSpecification workspaceSpecification)
+    public Comparison getDevelopmentStreamComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

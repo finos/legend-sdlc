@@ -64,7 +64,7 @@ public class PatchesGroupWorkspaceEntityChangesResource extends BaseResource
         }
         return executeWithLogging(
                 "performing changes in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }
 }

@@ -66,7 +66,7 @@ public class PatchesGroupWorkspaceRevisionPureModelContextDataResource extends P
         }
         return executeWithLogging(
                 "getting Pure model context data for group workspace " + workspaceId + " in project " + projectId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId))
+                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId))
         );
     }
 }

@@ -15,6 +15,10 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamConsumer;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamVisitor;
+import org.finos.legend.sdlc.domain.model.project.ProjectDevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
@@ -30,11 +34,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
 import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -212,19 +211,19 @@ abstract class BaseGitLabApi
     protected static String getWorkspaceBranchNamePrefix(WorkspaceSpecification workspaceSpec)
     {
         String basePrefix = getWorkspaceBranchNamePrefix(workspaceSpec.getType(), workspaceSpec.getAccessType());
-        return workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<String>()
+        return workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<String>()
         {
             @Override
-            public String visit(ProjectWorkspaceSource source)
+            public String visit(ProjectDevelopmentStream source)
             {
                 return basePrefix;
             }
 
             @Override
-            public String visit(PatchWorkspaceSource source)
+            public String visit(Patch source)
             {
                 StringBuilder builder = new StringBuilder(getPatchWorkspaceBranchPrefix()).append(BRANCH_DELIMITER);
-                source.getPatchVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
+                source.getPatchReleaseVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
                 return builder.append(basePrefix).toString();
             }
         });
@@ -292,7 +291,7 @@ abstract class BaseGitLabApi
         return PATCH_WORKSPACE_BRANCH_PREFIX;
     }
 
-    protected static WorkspaceSpecification parseWorkspaceBranchName(String branchName)
+    protected static WorkspaceSpecification parseWorkspaceBranchName(String projectId, String branchName)
     {
         if (branchName == null)
         {
@@ -310,10 +309,10 @@ abstract class BaseGitLabApi
         String userId = matcher.group("user");
         String workspaceId = matcher.group("id");
 
-        WorkspaceSource source;
+        DevelopmentStream source;
         if (patchVersionString == null)
         {
-            source = WorkspaceSource.projectWorkspaceSource();
+            source = DevelopmentStream.projectDevelopmentStream();
         }
         else
         {
@@ -327,7 +326,7 @@ abstract class BaseGitLabApi
                 // not a valid version string
                 return null;
             }
-            source = WorkspaceSource.patchWorkspaceSource(versionId);
+            source = new Patch(projectId, versionId);
         }
 
         WorkspaceType type;
@@ -494,7 +493,7 @@ abstract class BaseGitLabApi
         return getSourceBranch(projectId, workspaceSpec.getSource());
     }
 
-    protected String getSourceBranch(GitLabProjectId projectId, WorkspaceSource workspaceSource)
+    protected String getSourceBranch(GitLabProjectId projectId, DevelopmentStream workspaceSource)
     {
         return getSourceBranch(workspaceSource, () -> getDefaultBranch(projectId));
     }
@@ -509,20 +508,20 @@ abstract class BaseGitLabApi
         return getSourceBranch(workspaceSpec.getSource(), defaultBranchSupplier);
     }
 
-    protected static String getSourceBranch(WorkspaceSource workspaceSource, Supplier<String> defaultBranchSupplier)
+    protected static String getSourceBranch(DevelopmentStream workspaceSource, Supplier<String> defaultBranchSupplier)
     {
-        return workspaceSource.visit(new WorkspaceSourceVisitor<String>()
+        return workspaceSource.visit(new DevelopmentStreamVisitor<String>()
         {
             @Override
-            public String visit(ProjectWorkspaceSource source)
+            public String visit(ProjectDevelopmentStream source)
             {
                 return defaultBranchSupplier.get();
             }
 
             @Override
-            public String visit(PatchWorkspaceSource source)
+            public String visit(Patch source)
             {
-                return getPatchReleaseBranchName(source.getPatchVersionId());
+                return getPatchReleaseBranchName(source.getPatchReleaseVersionId());
             }
         });
     }
@@ -540,11 +539,11 @@ abstract class BaseGitLabApi
     protected static String getWorkspaceBranchName(WorkspaceSpecification workspaceSpec, Supplier<String> currentUser)
     {
         StringBuilder builder = new StringBuilder();
-        WorkspaceSource source = workspaceSpec.getSource();
-        if (source instanceof PatchWorkspaceSource)
+        DevelopmentStream source = workspaceSpec.getSource();
+        if (source instanceof Patch)
         {
             builder.append(PATCH_WORKSPACE_BRANCH_PREFIX).append(BRANCH_DELIMITER);
-            ((PatchWorkspaceSource) source).getPatchVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
+            ((Patch) source).getPatchReleaseVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
         }
         builder.append(getWorkspaceBranchNamePrefix(workspaceSpec.getType(), workspaceSpec.getAccessType())).append(BRANCH_DELIMITER);
         if (workspaceSpec.getType() == WorkspaceType.USER)
@@ -737,11 +736,6 @@ abstract class BaseGitLabApi
         return getReferenceInfo(projectId, workspaceSpec.getSourceSpecification());
     }
 
-    protected static String getReferenceInfo(String projectId, WorkspaceSource workspaceSource)
-    {
-        return getReferenceInfo(projectId, workspaceSource.getSourceSpecification());
-    }
-
     protected static String getReferenceInfo(String projectId, SourceSpecification sourceSpec)
     {
         return getReferenceInfo(projectId, sourceSpec, null);
@@ -784,12 +778,12 @@ abstract class BaseGitLabApi
                 builder.append(workspaceSpec.getType().getLabel()).append(" ")
                         .append(workspaceSpec.getAccessType().getLabel()).append(" ")
                         .append(workspaceSpec.getId()).append(" of ");
-                workspaceSpec.getSource().visit(new WorkspaceSourceConsumer()
+                workspaceSpec.getSource().visit(new DevelopmentStreamConsumer()
                 {
                     @Override
-                    protected void accept(PatchWorkspaceSource source)
+                    protected void accept(Patch source)
                     {
-                        source.getPatchVersionId().appendVersionIdString(builder.append("patch ")).append(" of ");
+                        source.getPatchReleaseVersionId().appendVersionIdString(builder.append("patch ")).append(" of ");
                     }
                 });
             }
@@ -1056,7 +1050,7 @@ abstract class BaseGitLabApi
 
     protected static Workspace fromWorkspaceBranchName(String projectId, String branchName)
     {
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(branchName);
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, branchName);
         return (workspaceSpec == null) ? null : fromWorkspaceSpecification(projectId, workspaceSpec);
     }
 
@@ -1087,6 +1081,12 @@ abstract class BaseGitLabApi
             {
                 return workspaceId;
             }
+
+            @Override
+            public DevelopmentStream getSource()
+            {
+                return workspaceSpec.getSource();
+            }
         };
     }
 
@@ -1094,20 +1094,7 @@ abstract class BaseGitLabApi
     {
         int index = branchName.lastIndexOf(BRANCH_DELIMITER);
         VersionId patchReleaseVersionId = parseVersionIdString(branchName.substring(index + 1));
-        return new Patch()
-        {
-            @Override
-            public String getProjectId()
-            {
-                return projectId;
-            }
-
-            @Override
-            public VersionId getPatchReleaseVersionId()
-            {
-                return patchReleaseVersionId;
-            }
-        };
+        return new Patch(projectId, patchReleaseVersionId);
     }
 
     protected MergeRequest getReviewMergeRequest(MergeRequestApi mergeRequestApi, GitLabProjectId projectId, String reviewId)
@@ -1141,18 +1128,18 @@ abstract class BaseGitLabApi
                 () -> "Error accessing review " + reviewId + " in project " + projectId);
         }
 
-        if (!isReviewMergeRequest(mergeRequest, defaultBranchSupplier))
+        if (!isReviewMergeRequest(mergeRequest, projectId.toString(), defaultBranchSupplier))
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Status.NOT_FOUND);
         }
         return mergeRequest;
     }
 
-    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, Supplier<String> defaultBranchSupplier)
+    protected static boolean isReviewMergeRequest(MergeRequest mergeRequest, String projectId, Supplier<String> defaultBranchSupplier)
     {
         if (mergeRequest != null)
         {
-            WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+            WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
             if ((workspaceSpec != null) && (workspaceSpec.getAccessType() == WorkspaceAccessType.WORKSPACE))
             {
                 String expectedTargetBranch = getSourceBranch(workspaceSpec, defaultBranchSupplier);

@@ -15,11 +15,11 @@
 package org.finos.legend.sdlc.server.domain.api.comparison;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -41,11 +41,11 @@ public interface ComparisonApi
      * @param workspaceSpecification workspace specification
      * @return comparison between user workspace HEAD and workspace source HEAD
      */
-    Comparison getWorkspaceSourceComparison(String projectId, WorkspaceSpecification workspaceSpecification);
+    Comparison getDevelopmentStreamComparison(String projectId, WorkspaceSpecification workspaceSpecification);
 
     /**
      * Get the comparison for a given review between the HEAD (current revision) of its source (workspace) and target.
-     * This is equivalent to calling {@link #getWorkspaceSourceComparison} for the source workspace of the review.
+     * This is equivalent to calling {@link #getDevelopmentStreamComparison} for the source workspace of the review.
      *
      * @param projectId project id
      * @param reviewId  review id
@@ -114,13 +114,13 @@ public interface ComparisonApi
         {
             throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
         }
-        return getWorkspaceSourceComparison(projectId, ((WorkspaceSourceSpecification) sourceSpecification).getWorkspaceSpecification());
+        return getDevelopmentStreamComparison(projectId, ((WorkspaceSourceSpecification) sourceSpecification).getWorkspaceSpecification());
     }
 
     @Deprecated
     default Comparison getWorkspaceProjectComparison(String projectId, String workspaceId, WorkspaceType workspaceType)
     {
-        return getWorkspaceSourceComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.projectWorkspaceSource()));
+        return getDevelopmentStreamComparison(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, DevelopmentStream.projectDevelopmentStream()));
     }
 
     @Deprecated

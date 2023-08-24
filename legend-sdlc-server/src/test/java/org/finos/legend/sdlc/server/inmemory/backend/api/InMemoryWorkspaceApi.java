@@ -16,14 +16,14 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamVisitor;
+import org.finos.legend.sdlc.domain.model.project.ProjectDevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
@@ -52,18 +52,18 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
             throw new UnsupportedOperationException("Not implemented");
         }
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
-        VersionId patchVersion = workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<VersionId>()
+        VersionId patchVersion = workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<VersionId>()
         {
             @Override
-            public VersionId visit(ProjectWorkspaceSource source)
+            public VersionId visit(ProjectDevelopmentStream source)
             {
                 return null;
             }
 
             @Override
-            public VersionId visit(PatchWorkspaceSource source)
+            public VersionId visit(Patch source)
             {
-                return source.getPatchVersionId();
+                return source.getPatchReleaseVersionId();
             }
         });
         return (workspaceSpec.getType() == WorkspaceType.GROUP) ?
@@ -72,7 +72,7 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         if (sources == null)
         {
@@ -87,20 +87,20 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
         // currently only WORKSPACE access type is supported
         if (resolvedAccessTypes.contains(ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
         {
-            for (WorkspaceSource source : sources)
+            for (DevelopmentStream source : sources)
             {
-                VersionId patchVersionId = source.visit(new WorkspaceSourceVisitor<VersionId>()
+                VersionId patchVersionId = source.visit(new DevelopmentStreamVisitor<VersionId>()
                 {
                     @Override
-                    public VersionId visit(ProjectWorkspaceSource source)
+                    public VersionId visit(ProjectDevelopmentStream source)
                     {
                         return null;
                     }
 
                     @Override
-                    public VersionId visit(PatchWorkspaceSource source)
+                    public VersionId visit(Patch source)
                     {
-                        return source.getPatchVersionId();
+                        return source.getPatchReleaseVersionId();
                     }
                 });
                 if (resolvedTypes.contains(WorkspaceType.GROUP))
@@ -117,13 +117,13 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         return getWorkspaces(projectId, types, accessTypes, sources);
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, WorkspaceSource source)
+    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, DevelopmentStream source)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
@@ -132,18 +132,18 @@ public class InMemoryWorkspaceApi implements WorkspaceApi
     public void deleteWorkspace(String projectId, WorkspaceSpecification workspaceSpec)
     {
         InMemoryProject project = this.backend.getProject(projectId);
-        VersionId patchVersion = workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<VersionId>()
+        VersionId patchVersion = workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<VersionId>()
         {
             @Override
-            public VersionId visit(ProjectWorkspaceSource source)
+            public VersionId visit(ProjectDevelopmentStream source)
             {
                 return null;
             }
 
             @Override
-            public VersionId visit(PatchWorkspaceSource source)
+            public VersionId visit(Patch source)
             {
-                return source.getPatchVersionId();
+                return source.getPatchReleaseVersionId();
             }
         });
         if (workspaceSpec.getType() == WorkspaceType.GROUP)

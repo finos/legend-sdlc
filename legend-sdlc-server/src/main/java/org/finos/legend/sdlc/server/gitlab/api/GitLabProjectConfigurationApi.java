@@ -100,7 +100,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         return super.getProjectConfiguration(projectId, workspaceSpec.getSourceSpecification(), diffRef.getStartSha());
     }
 
@@ -119,7 +119,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             throw new LegendSDLCServerException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
         }
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         return super.getProjectConfiguration(projectId, workspaceSpec.getSourceSpecification(), diffRef.getHeadSha());
     }
 

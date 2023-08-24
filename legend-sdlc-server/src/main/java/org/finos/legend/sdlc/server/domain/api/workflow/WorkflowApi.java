@@ -32,7 +32,7 @@ public interface WorkflowApi
     @Deprecated
     default WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId)
     {
-        return getWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId));
     }
 
     @Deprecated

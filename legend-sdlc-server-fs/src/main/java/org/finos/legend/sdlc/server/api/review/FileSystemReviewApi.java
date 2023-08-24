@@ -14,12 +14,11 @@
 
 package org.finos.legend.sdlc.server.api.review;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
 
@@ -28,7 +27,6 @@ import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiPredicate;
 
 public class FileSystemReviewApi implements ReviewApi
 {
@@ -44,13 +42,13 @@ public class FileSystemReviewApi implements ReviewApi
     }
 
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, Set<DevelopmentStream> workspaceSources, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         return Collections.emptyList();
     }
 
     @Override
-    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, Set<DevelopmentStream> workspaceSources, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
     {
         return Collections.emptyList();
     }

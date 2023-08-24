@@ -35,7 +35,7 @@ public class FileSystemComparisonApi implements ComparisonApi
     }
 
     @Override
-    public Comparison getWorkspaceSourceComparison(String projectId, WorkspaceSpecification workspaceSpecification)
+    public Comparison getDevelopmentStreamComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         throw FSException.unavailableFeature();
     }

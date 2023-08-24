@@ -66,7 +66,7 @@ public class PatchesWorkspaceRevisionPureModelContextDataResource extends PureMo
         }
         return executeWithLogging(
                 "getting Pure model context data for user workspace " + workspaceId + " in project " + projectId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId))
+                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId))
         );
     }
 }

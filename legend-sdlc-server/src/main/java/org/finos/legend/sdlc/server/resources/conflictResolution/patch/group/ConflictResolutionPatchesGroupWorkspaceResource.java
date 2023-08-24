@@ -68,7 +68,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         return executeWithLogging(
                 "getting group workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -89,7 +89,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         return executeWithLogging(
                 "checking if group workspace with conflict resolution " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -109,7 +109,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "discarding conflict resolution for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -130,7 +130,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "discarding all conflict resolution changes for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -152,7 +152,7 @@ public class ConflictResolutionPatchesGroupWorkspaceResource extends BaseResourc
         }
         executeWithLogging(
                 "accept conflict resolution for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), command)
+                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), command)
         );
     }
 }

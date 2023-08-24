@@ -17,6 +17,8 @@ package org.finos.legend.sdlc.server.inmemory.domain.api;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 
 import javax.inject.Inject;
@@ -29,6 +31,7 @@ public class InMemoryWorkspace implements Workspace
     private String currentRevisionId;
     private String projectId;
     private String workspaceId;
+    private DevelopmentStream source;
 
     @Inject
     public InMemoryWorkspace()
@@ -66,6 +69,12 @@ public class InMemoryWorkspace implements Workspace
     public String getWorkspaceId()
     {
         return this.workspaceId;
+    }
+
+    @Override
+    public DevelopmentStream getSource()
+    {
+        return this.source;
     }
 
     @JsonIgnore

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.review;
 
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
@@ -22,7 +23,6 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.time.Instant;
@@ -53,14 +53,13 @@ public interface ReviewApi
      * @param projectId                   project id
      * @param state                       review state
      * @param revisionIds                 a set of revision IDs, with each we will get the reviews are associated
-     * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
      * @param sources                     source with which review is associated
      * @param since                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param until                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit                       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(String projectId, Set<DevelopmentStream> sources, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit);
 
     /**
      * Get reviews across all projects with the given state and labels.
@@ -75,14 +74,14 @@ public interface ReviewApi
      * @param assignedToMe                whether to return only reviews assigned to me
      * @param authoredByMe                whether to return only reviews authored by me
      * @param labels                      labels to apply, return only reviews that match all the labels
-     * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
+     * @param workspaceSources            workspace sources with which review is associated
      * @param state                       review state
      * @param since                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param until                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit                       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, Set<DevelopmentStream> workspaceSources, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit);
 
     /**
      * Create a review for changes from the given workspace.
@@ -233,7 +232,7 @@ public interface ReviewApi
     @Deprecated
     default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
-        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.projectWorkspaceSource()), since, until, limit);
+        return getReviews(projectId, Collections.singleton(DevelopmentStream.projectDevelopmentStream()), state, revisionIds, since, until, limit);
     }
 
     @Deprecated
@@ -245,13 +244,19 @@ public interface ReviewApi
     @Deprecated
     default List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
-        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)), since, until, limit);
+        return getReviews(projectId, Collections.singleton(DevelopmentStream.patch(projectId, patchReleaseVersionId)), state, revisionIds, since, until, limit);
     }
 
     @Deprecated
     default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         return getReviews(projectId, state, revisionIds, null, since, until, limit);
+    }
+
+    @Deprecated
+    default List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(assignedToMe, authoredByMe, null, labels, state, since, until, limit);
     }
 
     @Deprecated

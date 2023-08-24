@@ -68,12 +68,12 @@ public class PatchesGroupWorkspacePureModelContextDataResource extends PureModel
                 "getting Pure model context data for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).getCurrentRevision();
+                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).getCurrentRevision();
                     if (revision == null)
                     {
                         throw new LegendSDLCServerException("Could not find latest revision for group workspace " + workspaceId + " in project " + projectId + "; project may be corrupt");
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)));
                 });
     }
 }

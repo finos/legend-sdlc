@@ -77,7 +77,7 @@ public class PatchesWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflows for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -98,7 +98,7 @@ public class PatchesWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflow " + workflowId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflow(workflowId)
         );
     }
 }

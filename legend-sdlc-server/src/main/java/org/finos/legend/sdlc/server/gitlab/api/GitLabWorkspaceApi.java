@@ -15,14 +15,14 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamConsumer;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -102,18 +102,18 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         return getWorkspaces(projectId, types, accessTypes, sources, getCurrentUser());
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         return getWorkspaces(projectId, types, accessTypes, sources, null);
     }
 
-    private List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources, String userId)
+    private List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources, String userId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -134,7 +134,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 {
                     for (WorkspaceAccessType accessType : resolvedAccessTypes)
                     {
-                        for (WorkspaceSource source : sources)
+                        for (DevelopmentStream source : sources)
                         {
                             Stream<WorkspaceSpecification> localStream = getWorkspaces(gitLabProjectId, type, accessType, source, userId);
                             stream = (stream == null) ? localStream : Stream.concat(stream, localStream);
@@ -171,7 +171,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         Stream<WorkspaceSpecification> stream = PagerTools.stream(pager)
                 .map(Branch::getName)
                 .filter(n -> (n != null) && n.startsWith(branchPrefix))
-                .map(GitLabWorkspaceApi::parseWorkspaceBranchName)
+                .map(branchName -> parseWorkspaceBranchName(projectId.toString(), branchName))
                 .filter(Objects::nonNull);
         if (types != null)
         {
@@ -188,7 +188,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         return stream;
     }
 
-    private Stream<WorkspaceSpecification> getWorkspaces(GitLabProjectId projectId, WorkspaceType type, WorkspaceAccessType accessType, WorkspaceSource source, String userId) throws GitLabApiException
+    private Stream<WorkspaceSpecification> getWorkspaces(GitLabProjectId projectId, WorkspaceType type, WorkspaceAccessType accessType, DevelopmentStream source, String userId) throws GitLabApiException
     {
         String branchPrefix = getBranchSearchPrefix(type, accessType, source, userId);
 
@@ -197,12 +197,12 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         return PagerTools.stream(pager)
                 .map(Branch::getName)
                 .filter(n -> (n != null) && n.startsWith(branchPrefix))
-                .map(GitLabWorkspaceApi::parseWorkspaceBranchName)
+                .map(branchName -> parseWorkspaceBranchName(projectId.toString(), branchName))
                 .filter(Objects::nonNull)
                 .filter(spec -> (spec.getType() == type) && (spec.getAccessType() == accessType) && source.equals(spec.getSource()));
     }
 
-    private String getBranchSearchPrefix(WorkspaceType type, WorkspaceAccessType accessType, WorkspaceSource source, String userId)
+    private String getBranchSearchPrefix(WorkspaceType type, WorkspaceAccessType accessType, DevelopmentStream source, String userId)
     {
         if (type == WorkspaceType.USER)
         {
@@ -249,9 +249,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access the latest revision in " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Unknown: " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Error accessing latest revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()));
+                    () -> "User " + getCurrentUser() + " is not allowed to access the latest revision in " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Unknown: " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Error accessing latest revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()));
         }
         String sourceBranchRevisionId = sourceBranch.getCommit().getId();
 
@@ -321,7 +321,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, WorkspaceSource source)
+    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, DevelopmentStream source)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspace id may not be null");
@@ -339,14 +339,14 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
 
         // check if the source branch exists or not
-        workspaceSpecification.getSource().visit(new WorkspaceSourceConsumer()
+        workspaceSpecification.getSource().visit(new DevelopmentStreamConsumer()
         {
             @Override
-            protected void accept(PatchWorkspaceSource source)
+            protected void accept(Patch source)
             {
-                if (!isPatchReleaseBranchPresent(gitLabProjectId, source.getPatchVersionId()))
+                if (!isPatchReleaseBranchPresent(gitLabProjectId, source.getPatchReleaseVersionId()))
                 {
-                    throw new LegendSDLCServerException("Patch release branch for " + source.getPatchVersionId() + " doesn't exist", Response.Status.BAD_REQUEST);
+                    throw new LegendSDLCServerException("Patch release branch for " + source.getPatchReleaseVersionId() + " doesn't exist", Response.Status.BAD_REQUEST);
                 }
             }
         });
@@ -531,9 +531,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access the latest revision in " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Unknown : " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Error accessing latest revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()));
+                    () -> "User " + getCurrentUser() + " is not allowed to access the latest revision in " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Unknown : " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Error accessing latest revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()));
         }
 
         String sourceRevisionId = sourceBranch.getCommit().getId();
@@ -563,9 +563,9 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access revision " + sourceRevisionId + " in " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Unknown revision in " + getReferenceInfo(projectId, workspaceSpecification.getSource()) + ": " + sourceRevisionId,
-                    () -> "Error accessing revision " + sourceRevisionId + " of " + getReferenceInfo(projectId, workspaceSpecification.getSource()));
+                    () -> "User " + getCurrentUser() + " is not allowed to access revision " + sourceRevisionId + " in " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Unknown revision in " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()) + ": " + sourceRevisionId,
+                    () -> "Error accessing revision " + sourceRevisionId + " of " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()));
         }
 
         // Temp branch for checking for merge conflicts
@@ -1016,7 +1016,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
         // Create a new commit on conflict resolution branch
         CommitsApi commitsApi = getGitLabApi().getCommitsApi();
-        ProjectFileAccessProvider.FileAccessContext projectFileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceSpec.getSource().getSourceSpecification());
+        ProjectFileAccessProvider.FileAccessContext projectFileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceSpec.getWorkspaceSourceSpecification());
         ProjectFileAccessProvider.FileAccessContext workspaceFileAccessContext = getProjectFileAccessProvider().getFileAccessContext(projectId, workspaceSpec.getSourceSpecification());
         try
         {

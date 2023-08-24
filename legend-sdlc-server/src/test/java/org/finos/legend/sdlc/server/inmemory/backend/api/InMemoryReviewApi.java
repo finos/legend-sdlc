@@ -15,12 +15,11 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
@@ -51,14 +50,14 @@ public class InMemoryReviewApi implements ReviewApi
     }
     
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, Set<DevelopmentStream> workspaceSources, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
         return Lists.mutable.withAll(inMemoryProject.getReviews(state, revisionIds, since, until, limit));
     }
 
     @Override
-    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, Set<DevelopmentStream> workspaceSources,  List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

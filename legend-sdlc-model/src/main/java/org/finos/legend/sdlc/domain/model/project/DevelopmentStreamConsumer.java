@@ -12,39 +12,42 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.domain.model.project;
+
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 
 import java.util.function.Consumer;
 
-public abstract class WorkspaceSourceConsumer implements WorkspaceSourceVisitor<Void>, Consumer<WorkspaceSource>
+public abstract class DevelopmentStreamConsumer implements DevelopmentStreamVisitor<Void>, Consumer<DevelopmentStream>
 {
     @Override
-    public final Void visit(ProjectWorkspaceSource source)
+    public final Void visit(ProjectDevelopmentStream source)
     {
         accept(source);
         return null;
     }
 
     @Override
-    public final Void visit(PatchWorkspaceSource source)
+    public final Void visit(Patch source)
     {
         accept(source);
         return null;
     }
 
     @Override
-    public final void accept(WorkspaceSource source)
+    public final void accept(DevelopmentStream source)
     {
         source.visit(this);
     }
 
-    protected void accept(ProjectWorkspaceSource source)
+    protected void accept(ProjectDevelopmentStream source)
     {
         // nothing by default
     }
 
-    protected void accept(PatchWorkspaceSource source)
+    protected void accept(Patch source)
     {
         // nothing by default
     }
 }
+

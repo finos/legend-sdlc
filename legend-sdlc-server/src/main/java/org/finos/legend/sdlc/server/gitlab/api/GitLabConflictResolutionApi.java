@@ -179,7 +179,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         {
             throw buildException(e,
                 () -> "User " + getCurrentUser() + " is not allowed to create " + getReferenceInfo(projectId, workspaceWorkspaceSpec),
-                () -> "Unknown " + getReferenceInfo(projectId, workspaceWorkspaceSpec.getSource()),
+                () -> "Unknown " + getReferenceInfo(projectId, workspaceWorkspaceSpec.getWorkspaceSourceSpecification()),
                 () -> "Error creating " + getReferenceInfo(projectId, workspaceWorkspaceSpec));
         }
         if (newWorkspaceBranch == null)

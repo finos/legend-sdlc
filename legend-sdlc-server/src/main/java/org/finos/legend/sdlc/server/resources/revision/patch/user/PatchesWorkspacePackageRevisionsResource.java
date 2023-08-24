@@ -74,7 +74,7 @@ public class PatchesWorkspacePackageRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revisions for package " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -99,7 +99,7 @@ public class PatchesWorkspacePackageRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revision " + revisionId + " for package " + path + " in user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), path).getRevision(revisionId)
+                () -> this.revisionApi.getWorkspacePackageRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), path).getRevision(revisionId)
         );
     }
 }

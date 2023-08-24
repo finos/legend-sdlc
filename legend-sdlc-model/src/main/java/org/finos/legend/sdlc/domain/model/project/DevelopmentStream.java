@@ -12,20 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
 
+package org.finos.legend.sdlc.domain.model.project;
+
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 
-public abstract class WorkspaceSource
+import java.util.Objects;
+
+public abstract class DevelopmentStream
 {
-    WorkspaceSource()
+    private static String type;
+
+    public DevelopmentStream(String type)
     {
+        this.type = Objects.requireNonNull(type, "developemnt stream type amy not be null");
     }
 
-    public abstract SourceSpecification getSourceSpecification();
-
-    public abstract <T> T visit(WorkspaceSourceVisitor<T> visitor);
+    public abstract <T> T visit(DevelopmentStreamVisitor<T> visitor);
 
     @Override
     public String toString()
@@ -33,25 +37,30 @@ public abstract class WorkspaceSource
         return appendString(new StringBuilder()).toString();
     }
 
-    StringBuilder appendString(StringBuilder builder)
+    public StringBuilder appendString(StringBuilder builder)
     {
         return appendAdditionalInfo(builder.append("<").append(getClass().getSimpleName())).append('>');
     }
 
     protected abstract StringBuilder appendAdditionalInfo(StringBuilder builder);
 
-    public static ProjectWorkspaceSource projectWorkspaceSource()
+    public String getType()
     {
-        return ProjectWorkspaceSource.INSTANCE;
+        return this.type;
     }
 
-    public static PatchWorkspaceSource patchWorkspaceSource(String patch)
+    public static ProjectDevelopmentStream projectDevelopmentStream()
     {
-        return patchWorkspaceSource(VersionId.parseVersionId(patch));
+        return ProjectDevelopmentStream.INSTANCE;
     }
 
-    public static PatchWorkspaceSource patchWorkspaceSource(VersionId patch)
+    public static Patch patch(String projectId, VersionId patchReleaseVersionId)
     {
-        return new PatchWorkspaceSource(patch);
+        return new Patch(projectId, patchReleaseVersionId);
+    }
+
+    public static Patch patch(String projectId, String patchReleaseVersionId)
+    {
+        return new Patch(projectId, VersionId.parseVersionId(patchReleaseVersionId));
     }
 }

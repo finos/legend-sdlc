@@ -96,7 +96,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "getting user workspace " + workspaceId + " for patch release " + patchReleaseVersionId +  " for project " + projectId,
-                () -> this.workspaceApi.getWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -117,7 +117,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -138,7 +138,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " is in conflict resolution mode",
-                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -159,7 +159,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "creating new user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.newWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.newWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
 
         );
     }
@@ -181,7 +181,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         executeWithLogging(
                 "deleting user workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.deleteWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.deleteWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -202,7 +202,7 @@ public class PatchesWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "updating user workspace " + workspaceId + " in project " + projectId + " to latest revision",
-                () -> this.workspaceApi.updateWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.updateWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

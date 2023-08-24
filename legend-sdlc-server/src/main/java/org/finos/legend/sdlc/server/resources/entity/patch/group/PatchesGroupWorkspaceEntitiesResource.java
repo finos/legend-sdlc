@@ -94,7 +94,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "getting entities in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "get entities of the group workspace",
-                () -> getEntities(this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -116,11 +116,11 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         return (entityPathsToDelete == null) ?
                 executeWithLogging(
                         "deleting all entities in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).deleteAllEntities(command.getMessage())
+                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).deleteAllEntities(command.getMessage())
                 ) :
                 executeWithLogging(
                         "deleting " + entityPathsToDelete.size() + " entities in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).deleteEntities(entityPathsToDelete, command.getMessage())
+                        () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).deleteEntities(entityPathsToDelete, command.getMessage())
                 );
     }
 
@@ -142,7 +142,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "updating entities in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "update entities",
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
 
@@ -163,7 +163,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entity " + path + " in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).getEntity(path)
+                () -> this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).getEntity(path)
         );
     }
 
@@ -185,7 +185,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "Creating or updating entity " + path + " in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
         );
     }
 
@@ -207,7 +207,7 @@ public class PatchesGroupWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "deleting entity " + path + " in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId)).deleteEntity(path, command.getMessage())
+                () -> this.entityApi.getWorkspaceEntityModificationContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId)).deleteEntity(path, command.getMessage())
         );
     }
 }

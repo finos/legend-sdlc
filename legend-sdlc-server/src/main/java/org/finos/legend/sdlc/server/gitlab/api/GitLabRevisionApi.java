@@ -168,7 +168,7 @@ public class GitLabRevisionApi extends GitLabApiWithFileAccess implements Revisi
                     }
 
                     // workspace branch
-                    WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(cr.getName());
+                    WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, cr.getName());
                     if ((workspaceSpec != null) && (workspaceSpec.getAccessType() == ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
                     {
                         workspaces.add(fromWorkspaceSpecification(projectId, workspaceSpec));

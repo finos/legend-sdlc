@@ -69,7 +69,7 @@ public class PatchesGroupWorkspaceRevisionDependenciesResource extends BaseResou
         }
         return executeWithLogging(
                 "getting upstream dependencies of project " + projectId + " for patch release version " + patchReleaseVersionId + ", group workspace " + workspaceId + ", revision " + revisionId + " (fetch transitively = " + transitive + ")",
-                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId, transitive)
+                () -> this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId, transitive)
         );
     }
 }

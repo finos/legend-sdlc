@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.domain.api.project.source;
 
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
@@ -102,12 +102,12 @@ public abstract class SourceSpecification
     }
 
     @Deprecated
-    public static SourceSpecification newSourceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
+    public static SourceSpecification newSourceSpecification(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
         if (workspaceId != null)
         {
-            WorkspaceSource workspaceSource = (patchReleaseVersionId == null) ? WorkspaceSource.projectWorkspaceSource() : WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId);
-            WorkspaceSpecification workspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType, workspaceSource);
+            DevelopmentStream devlopmentStream = (patchReleaseVersionId == null) ? DevelopmentStream.projectDevelopmentStream() : DevelopmentStream.patch(projectId, patchReleaseVersionId);
+            WorkspaceSpecification workspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType, devlopmentStream);
             return workspaceSourceSpecification(workspaceSpec);
         }
         if (patchReleaseVersionId != null)
@@ -120,54 +120,54 @@ public abstract class SourceSpecification
     @Deprecated
     public static SourceSpecification newSourceSpecification(String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        return newSourceSpecification(workspaceId, workspaceType, workspaceAccessType, null);
+        return newSourceSpecification(null, workspaceId, workspaceType, workspaceAccessType, null);
     }
 
     @Deprecated
     public static SourceSpecification newSourceSpecification(String workspaceId, WorkspaceType workspaceType)
     {
-        return newSourceSpecification(workspaceId, workspaceType, null, null);
+        return newSourceSpecification(null, workspaceId, workspaceType, null, null);
     }
 
     @Deprecated
-    public static SourceSpecification newSourceSpecification(VersionId patchReleaseVersionId)
+    public static SourceSpecification newSourceSpecification(String projectId, VersionId patchReleaseVersionId)
     {
-        return newSourceSpecification(null, null, null, patchReleaseVersionId);
+        return newSourceSpecification(projectId, null, null, null, patchReleaseVersionId);
     }
 
     @Deprecated
-    public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
+    public static SourceSpecification newGroupWorkspaceSourceSpecification(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
-        return newSourceSpecification(workspaceId, WorkspaceType.GROUP, workspaceAccessType, patchReleaseVersionId);
+        return newSourceSpecification(projectId, workspaceId, WorkspaceType.GROUP, workspaceAccessType, patchReleaseVersionId);
     }
 
     @Deprecated
-    public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
+    public static SourceSpecification newGroupWorkspaceSourceSpecification(String projectId, String workspaceId, VersionId patchReleaseVersionId)
     {
-        return newGroupWorkspaceSourceSpecification(workspaceId, null, patchReleaseVersionId);
+        return newGroupWorkspaceSourceSpecification(projectId, workspaceId, null, patchReleaseVersionId);
     }
 
     @Deprecated
     public static SourceSpecification newGroupWorkspaceSourceSpecification(String workspaceId)
     {
-        return newGroupWorkspaceSourceSpecification(workspaceId, null);
+        return newGroupWorkspaceSourceSpecification(null, workspaceId, null);
     }
 
     @Deprecated
-    public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
+    public static SourceSpecification newUserWorkspaceSourceSpecification(String projectId, String workspaceId, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType, VersionId patchReleaseVersionId)
     {
-        return newSourceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType, patchReleaseVersionId);
+        return newSourceSpecification(projectId, workspaceId, WorkspaceType.USER, workspaceAccessType, patchReleaseVersionId);
     }
 
     @Deprecated
-    public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId, VersionId patchReleaseVersionId)
+    public static SourceSpecification newUserWorkspaceSourceSpecification(String projectId, String workspaceId, VersionId patchReleaseVersionId)
     {
-        return newUserWorkspaceSourceSpecification(workspaceId, null, patchReleaseVersionId);
+        return newUserWorkspaceSourceSpecification(projectId, workspaceId, null, patchReleaseVersionId);
     }
 
     @Deprecated
     public static SourceSpecification newUserWorkspaceSourceSpecification(String workspaceId)
     {
-        return newUserWorkspaceSourceSpecification(workspaceId, null);
+        return newUserWorkspaceSourceSpecification(null, workspaceId, null);
     }
 }
