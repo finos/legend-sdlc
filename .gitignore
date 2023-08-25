@@ -16,3 +16,4 @@ Thumbs.db
 **/dependency-reduced-pom.xml
 /logs
 /.run/
+/temp/

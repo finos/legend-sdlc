@@ -16,9 +16,11 @@ package org.finos.legend.sdlc.server.gitlab.api.docker;
 
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -55,6 +57,24 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         gitLabWorkspaceApiTestResource.runUpdateGroupWorkspaceWithRebaseNoConflictTest();
     }
 
+    @Test
+    public void testUserAndGroupWorkspaceNormalWorkflowForPatchReleaseVersion()
+    {
+        gitLabWorkspaceApiTestResource.runUserAndGroupWorkspaceNormalWorkflowTestForPatchReleaseVersion();
+    }
+
+    @Test
+    public void testUpdateUserWorkspaceWithRebaseNoConflictFlowForPatchReleaseVersion() throws GitLabApiException
+    {
+        gitLabWorkspaceApiTestResource.runUpdateUserWorkspaceWithRebaseNoConflictTestForPatchReleaseVersion();
+    }
+
+    @Test
+    public void testUpdateGroupWorkspaceWithRebaseNoConflictFlowForPatchReleaseVersion() throws GitLabApiException
+    {
+        gitLabWorkspaceApiTestResource.runUpdateGroupWorkspaceWithRebaseNoConflictTestForPatchReleaseVersion();
+    }
+
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */
@@ -71,7 +91,9 @@ public class IntegrationTestGitLabWorkspaceApis extends AbstractGitLabApiTest
         GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabReviewApi gitLabCommitterReviewApi = new GitLabReviewApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabReviewApi gitLabApproverReviewApi = new GitLabReviewApi(gitLabConfig, gitLabOwnerUserContext, backgroundTaskProcessor);
+        GitLabPatchApi gitLabPatchApi = new GitLabPatchApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabVersionApi gitLabVersionApi = new GitLabVersionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
 
-        gitLabWorkspaceApiTestResource = new GitLabWorkspaceApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext);
+        gitLabWorkspaceApiTestResource = new GitLabWorkspaceApiTestResource(gitLabWorkspaceApi, gitLabProjectApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext, gitLabRevisionApi, gitLabPatchApi, gitLabVersionApi);
     }
 }

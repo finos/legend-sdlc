@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.setup.Bootstrap;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
@@ -51,6 +52,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
         bootstrap.getObjectMapper().addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
         bootstrap.getObjectMapper().addMixIn(VersionId.class, VersionIdMixin.class);
         bootstrap.getObjectMapper().addMixIn(Review.class, InMemoryMixins.Review.class);
+        bootstrap.getObjectMapper().addMixIn(Patch.class, InMemoryMixins.Patch.class);
     }
 
     @Override

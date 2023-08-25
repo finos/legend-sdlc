@@ -15,57 +15,30 @@
 package org.finos.legend.sdlc.generation.service;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
 import org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement;
-
-import java.util.List;
-import java.util.function.BiConsumer;
+import org.finos.legend.sdlc.generation.GeneratorTemplate;
 
 class EnumerationClassGenerator extends AbstractServiceExecutionClassGenerator
 {
-    private final String enumerationPackage;
-    private final String enumerationName;
-    private final List<String> enumValues;
+    private static final String ENUM_VALUES_PARAM = "validEnumValues";
 
-    private EnumerationClassGenerator(String packagePrefix, String enumerationPackage, String enumerationName, List<String> enumValues)
+    private EnumerationClassGenerator(String packagePrefix)
     {
-        super(packagePrefix);
-        this.enumerationPackage = enumerationPackage;
-        this.enumerationName = enumerationName;
-        this.enumValues = enumValues;
+        super(GeneratorTemplate.fromResource("generation/service/ServiceParamEnumClassGenerator.ftl"), packagePrefix);
     }
 
-    @Override
-    protected String getLegendPackage()
+    public EnumerationClassGenerator withEnumeration(Enumeration<? extends Enum> enumeration)
     {
-        return this.enumerationPackage;
+        setPackageName(getJavaPackageName(PackageableElement.getUserPathForPackageableElement(enumeration._package())));
+        setClassName(getJavaClassName(enumeration._name()));
+        setParameter(ENUM_VALUES_PARAM, enumeration._values().collect(Enum::_name, Lists.mutable.empty()));
+        return this;
     }
 
-    @Override
-    protected String getLegendName()
+    static EnumerationClassGenerator newGenerator(String packagePrefix)
     {
-        return this.enumerationName;
-    }
-
-    @Override
-    protected void collectTemplateParameters(BiConsumer<String, Object> consumer)
-    {
-        consumer.accept("validEnumValues", this.enumValues);
-    }
-
-    @Override
-    protected String getTemplateResourceName()
-    {
-        return "generation/service/ServiceParamEnumClassGenerator.ftl";
-    }
-
-    static EnumerationClassGenerator newGenerator(String packagePrefix, Enumeration<? extends Enum> enumeration)
-    {
-        String packageName = PackageableElement.getUserPathForPackageableElement(enumeration._package());
-        String enumerationName = enumeration._name();
-        MutableList<String> values = enumeration._values().collect(Enum::_name, Lists.mutable.empty());
-        return new EnumerationClassGenerator(packagePrefix, packageName, enumerationName, values);
+        return new EnumerationClassGenerator(packagePrefix);
     }
 }

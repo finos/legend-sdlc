@@ -20,6 +20,7 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.eclipse.collections.impl.utility.ListIterate;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
@@ -33,6 +34,7 @@ import java.util.Set;
 public class ProjectConfigurationUpdater
 {
     private String projectId;
+    private ProjectType projectType;
     private Integer projectStructureVersion;
     private Integer projectStructureExtensionVersion;
     private String groupId;
@@ -61,6 +63,24 @@ public class ProjectConfigurationUpdater
     public ProjectConfigurationUpdater withProjectId(String projectId)
     {
         setProjectId(projectId);
+        return this;
+    }
+
+    // Project type
+
+    public ProjectType getProjectType()
+    {
+        return this.projectType;
+    }
+
+    public void setProjectType(ProjectType projectType)
+    {
+        this.projectType = projectType;
+    }
+
+    public ProjectConfigurationUpdater withProjectType(ProjectType projectType)
+    {
+        setProjectType(projectType);
         return this;
     }
 
@@ -360,13 +380,17 @@ public class ProjectConfigurationUpdater
         // Project id
         String newProjectId = (this.projectId == null) ? configuration.getProjectId() : this.projectId;
 
+        // Project type
+        ProjectType newProjectType = (this.projectType == null) ? configuration.getProjectType() : this.projectType;
+
         // Project structure version
         ProjectStructureVersion newProjectStructureVersion;
         if (this.projectStructureVersion != null)
         {
             newProjectStructureVersion = ProjectStructureVersion.newProjectStructureVersion(this.projectStructureVersion, this.projectStructureExtensionVersion);
         }
-        else if (this.projectStructureExtensionVersion != null)
+        // For EMBEDDED projects drop extension version from current configuration
+        else if (this.projectStructureExtensionVersion != null || newProjectType == ProjectType.EMBEDDED)
         {
             newProjectStructureVersion = ProjectStructureVersion.newProjectStructureVersion(configuration.getProjectStructureVersion().getVersion(), this.projectStructureExtensionVersion);
         }
@@ -441,6 +465,12 @@ public class ProjectConfigurationUpdater
             public String getProjectId()
             {
                 return newProjectId;
+            }
+
+            @Override
+            public ProjectType getProjectType()
+            {
+                return newProjectType;
             }
 
             @Override

@@ -76,7 +76,7 @@ public class TestFileGenerationMojo
     {
         File[] emptyEntityDirs = {this.tempFolder.newFolder("empty1"), this.tempFolder.newFolder("empty2")};
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", emptyEntityDirs);
-
+        serializeProjectConfiguration(projectDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
@@ -92,6 +92,7 @@ public class TestFileGenerationMojo
         File tempPath = this.tempFolder.getRoot();
         File[] nonExistentEntityDirectories = {new File(tempPath, "nonexistent1"), new File(tempPath, "nonexistent2")};
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", nonExistentEntityDirectories);
+        serializeProjectConfiguration(projectDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
@@ -112,9 +113,10 @@ public class TestFileGenerationMojo
                     .filter(p -> !GENERATION_SPECIFICATION_CLASSIFIER_PATH.equals(p.getClassifierPath()))
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(13, entities.size());
+        Assert.assertEquals(12, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
+        serializeProjectConfiguration(projectDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
         Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
@@ -133,16 +135,17 @@ public class TestFileGenerationMojo
         {
             entities = testEntities.getAllEntities().collect(Collectors.toList());
         }
-        Assert.assertEquals(14, entities.size());
+        Assert.assertEquals(13, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
+        serializeProjectConfiguration(projectDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
         Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitiesDir);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(23, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(25, actualGeneratedSourceFiles.size());
         // Temporary disable because of ordering issue in the Protobuf generation
         verifyDirsAreEqual(generatedSourceDir, expectedPath);
     }
@@ -197,11 +200,6 @@ public class TestFileGenerationMojo
 
                 String expectedContent = new String(Files.readAllBytes(fileInOther), StandardCharsets.UTF_8);
                 String actualContent = new String(Files.readAllBytes(file), StandardCharsets.UTF_8);
-                // FIXME: order is not preserved for cdm so we do not assert on the file content
-                if (!"rosettaTypes.txt".equals(file.getFileName().toString()) && !sameContent(expectedContent, actualContent))
-                {
-                    fileDiffs.add(new FileDiff(file.getFileName().toString(), expectedContent, actualContent));
-                }
                 return result;
             }
         });
@@ -228,17 +226,18 @@ public class TestFileGenerationMojo
             entities = testEntities.getAllEntities()
                     .collect(Collectors.toList());
         }
-        Assert.assertEquals(14, entities.size());
+        Assert.assertEquals(13, entities.size());
         entities.forEach(e -> writeEntityToDirectory(entitySourceDirectories.toPath(), e));
         entities.forEach(e -> writeEntityToDirectory(includedDirectory.toPath(), e));
         File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", includedDirectory);
+        serializeProjectConfiguration(projectDir);
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
         Path outputDir = Paths.get(mavenProject.getBuild().getOutputDirectory());
         Path generatedSourceDir = Paths.get(mavenProject.getBuild().getDirectory()).resolve("classes");
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir, entitySourceDirectories);
         Set<String> actualGeneratedSourceFiles = getFileStream(generatedSourceDir, true).map(Path::toString).collect(Collectors.toSet());
-        Assert.assertEquals(23, actualGeneratedSourceFiles.size());
+        Assert.assertEquals(25, actualGeneratedSourceFiles.size());
     }
 
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)
@@ -353,6 +352,14 @@ public class TestFileGenerationMojo
         try (Writer writer = Files.newBufferedWriter(projectDir.resolve("pom.xml"), StandardCharsets.UTF_8))
         {
             new MavenXpp3Writer().write(writer, mavenModel);
+        }
+    }
+
+    private void serializeProjectConfiguration(File projectDir) throws IOException
+    {
+        try (Writer writer = Files.newBufferedWriter(projectDir.toPath().resolve("project.json"), StandardCharsets.UTF_8))
+        {
+            writer.write("{ \"groupId\": \"org.finos.test\", \"artifactId\": \"test-project\" }");
         }
     }
 

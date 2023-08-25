@@ -21,14 +21,13 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 
-import java.util.Collections;
 import java.util.function.Consumer;
 
 public class LegendServiceExecutionGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
     public LegendServiceExecutionGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
-        super(groupId, artifactId, version, "generate-sources", "generate-service-executions", Collections.singletonList(generationExtensionsCollection));
+        super(groupId, artifactId, version, "generate-sources", "generate-service-executions", generationExtensionsCollection);
     }
 
     public Plugin getBuildHelperPlugin(String version)

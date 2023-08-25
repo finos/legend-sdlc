@@ -33,6 +33,7 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -47,6 +48,8 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
@@ -64,7 +67,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -315,9 +317,9 @@ public abstract class ProjectStructure
         return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
     }
 
-    public static ProjectStructure getProjectStructure(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessor, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    public static ProjectStructure getProjectStructure(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessor)
     {
-        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        return getProjectStructure(projectFileAccessor.getFileAccessContext(projectId, sourceSpecification, revisionId));
     }
 
     public static ProjectStructure getProjectStructure(FileAccessContext fileAccessContext)
@@ -340,12 +342,12 @@ public abstract class ProjectStructure
     @Deprecated
     public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectConfiguration(projectId, workspaceId, revisionId, projectFileAccessProvider, WorkspaceType.USER, workspaceAccessType);
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType), revisionId, projectFileAccessProvider);
     }
 
-    public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    public static ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessProvider)
     {
-        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId));
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId, ProjectFileAccessProvider projectFileAccessProvider)
@@ -362,6 +364,11 @@ public abstract class ProjectStructure
     public static ProjectConfiguration getDefaultProjectConfiguration(String projectId)
     {
         return SimpleProjectConfiguration.newConfiguration(projectId, ProjectStructureVersion.newProjectStructureVersion(0), null, null, null, null, null);
+    }
+
+    public static boolean isValidProjectType(ProjectType projectType)
+    {
+        return projectType == ProjectType.MANAGED || projectType == ProjectType.EMBEDDED;
     }
 
     public static boolean isValidGroupId(String groupId)
@@ -392,9 +399,10 @@ public abstract class ProjectStructure
     private static Revision updateProjectConfiguration(UpdateBuilder updateBuilder, boolean requireRevisionId)
     {
         String projectId = updateBuilder.getProjectId();
-        String workspaceId = updateBuilder.getWorkspaceId();
-        WorkspaceType workspaceType = updateBuilder.getWorkspaceType();
-        WorkspaceAccessType workspaceAccessType = updateBuilder.getWorkspaceAccessType();
+        String workspaceId = updateBuilder.getSourceSpecification().getWorkspaceId();
+        VersionId patchReleaseVersionId = updateBuilder.getSourceSpecification().getPatchReleaseVersionId();
+        WorkspaceType workspaceType = updateBuilder.getSourceSpecification().getWorkspaceType();
+        WorkspaceAccessType workspaceAccessType = updateBuilder.getSourceSpecification().getWorkspaceAccessType();
         ProjectFileAccessProvider projectFileAccessProvider = updateBuilder.getProjectFileAccessProvider();
 
         String revisionId;
@@ -426,16 +434,51 @@ public abstract class ProjectStructure
             revisionId = updateBuilder.getRevisionId();
         }
 
-        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId));
+        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType, patchReleaseVersionId), revisionId));
 
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId) : readProjectConfiguration(configFile);
+        ProjectType oldProjectType = currentConfig.getProjectType();
+        // Upgrade old project types
+        if (!ProjectStructure.isValidProjectType(oldProjectType))
+        {
+            oldProjectType = ProjectType.MANAGED;
+            if (updateBuilder.configUpdater.getProjectType() == null)
+            {
+                updateBuilder.configUpdater.setProjectType(oldProjectType);
+            }
+        }
+        ProjectType newProjectType = updateBuilder.configUpdater.getProjectType() == null ? oldProjectType : updateBuilder.configUpdater.getProjectType();
+        // For MANAGED projects
+        if (updateBuilder.projectStructureExtensionProvider != null && newProjectType != ProjectType.EMBEDDED)
+        {
+            // converted from EMBEDDED set version
+            if (oldProjectType == ProjectType.EMBEDDED && updateBuilder.configUpdater.getProjectStructureVersion() == null)
+            {
+                updateBuilder.configUpdater.setProjectStructureVersion(currentConfig.getProjectStructureVersion().getVersion());
+            }
+            // if extension version was not specified, use the latest one for given version
+            if (updateBuilder.configUpdater.getProjectStructureVersion() != null && updateBuilder.configUpdater.getProjectStructureExtensionVersion() == null)
+            {
+                updateBuilder.configUpdater.setProjectStructureExtensionVersion(updateBuilder.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(updateBuilder.configUpdater.getProjectStructureVersion()));
+            }
+        }
         ProjectConfiguration newConfig = updateLegacyDependencies(updateBuilder.getProjectConfigurationUpdater().update(currentConfig), projectFileAccessProvider);
 
         validateProjectConfiguration(newConfig);
 
+        ProjectStructureVersion oldProjectVersion = currentConfig.getProjectStructureVersion();
+        // prevent extensions on non-managed projects
+        if (newConfig.getProjectType() == ProjectType.EMBEDDED)
+        {
+            if (newConfig.getProjectStructureVersion().getExtensionVersion() != null)
+            {
+                throw new LegendSDLCServerException("Cannot set extensions on project " + projectId + " with " + newConfig.getProjectType() + " type", Status.BAD_REQUEST);
+            }
+            oldProjectVersion = ProjectStructureVersion.newProjectStructureVersion(oldProjectVersion.getVersion());
+        }
         // prevent downgrading project
-        if (newConfig.getProjectStructureVersion().compareTo(currentConfig.getProjectStructureVersion()) < 0)
+        if (newConfig.getProjectStructureVersion().compareTo(oldProjectVersion) < 0)
         {
             throw new LegendSDLCServerException("Cannot change project " + projectId + " from project structure version " + currentConfig.getProjectStructureVersion().toVersionString() + " to version " + newConfig.getProjectStructureVersion().toVersionString(), Status.BAD_REQUEST);
         }
@@ -499,7 +542,11 @@ public abstract class ProjectStructure
         }
 
         // Collect any further update operations
-        newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, operations::add);
+        if (newConfig.getProjectType() != ProjectType.EMBEDDED)
+        {
+            newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, operations::add);
+        }
+
         // Call legacy method
         newProjectStructure.collectUpdateProjectConfigurationOperations(currentProjectStructure, fileAccessContext, (x, y) ->
         {
@@ -533,6 +580,12 @@ public abstract class ProjectStructure
         if (!isValidArtifactId(config.getArtifactId()))
         {
             throw new LegendSDLCServerException("Invalid artifactId: " + config.getArtifactId(), Status.BAD_REQUEST);
+        }
+
+        // Project type
+        if (!isValidProjectType(config.getProjectType()))
+        {
+            throw new LegendSDLCServerException("Invalid projectType: " + config.getArtifactId(), Status.BAD_REQUEST);
         }
 
         // Platform configurations
@@ -968,10 +1021,8 @@ public abstract class ProjectStructure
     {
         private final ProjectFileAccessProvider projectFileAccessProvider;
         private final String projectId;
+        private SourceSpecification sourceSpecification;
         private ProjectConfigurationUpdater configUpdater;
-        private String workspaceId;
-        private WorkspaceType workspaceType;
-        private WorkspaceAccessType workspaceAccessType;
         private String revisionId;
         private String message;
         private ProjectStructureExtensionProvider projectStructureExtensionProvider;
@@ -981,6 +1032,7 @@ public abstract class ProjectStructure
         {
             this.projectFileAccessProvider = projectFileAccessProvider;
             this.projectId = projectId;
+            this.sourceSpecification = SourceSpecification.projectSourceSpecification();
             this.configUpdater = (configUpdater == null) ? getDefaultProjectConfigurationUpdater() : configUpdater;
         }
 
@@ -989,6 +1041,11 @@ public abstract class ProjectStructure
         public String getProjectId()
         {
             return this.projectId;
+        }
+
+        public SourceSpecification getSourceSpecification()
+        {
+            return this.sourceSpecification;
         }
 
         // Project file access provider
@@ -1021,37 +1078,28 @@ public abstract class ProjectStructure
             return ProjectConfigurationUpdater.newUpdater().withProjectId(this.projectId);
         }
 
-        // Workspace
+        // Source specification
 
-        public String getWorkspaceId()
+        public void setSourceSpecification(SourceSpecification sourceSpec)
         {
-            return this.workspaceId;
+            this.sourceSpecification = sourceSpec;
         }
 
-        public WorkspaceType getWorkspaceType()
+        public UpdateBuilder withSourceSpecification(SourceSpecification sourceSpec)
         {
-            return this.workspaceType;
-        }
-
-        public WorkspaceAccessType getWorkspaceAccessType()
-        {
-            return this.workspaceAccessType;
-        }
-
-        public void setWorkspace(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-        {
-            Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-            Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-            Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-            this.workspaceId = workspaceId;
-            this.workspaceType = workspaceType;
-            this.workspaceAccessType = workspaceAccessType;
-        }
-
-        public UpdateBuilder withWorkspace(String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-        {
-            setWorkspace(workspaceId, workspaceType, workspaceAccessType);
+            setSourceSpecification(sourceSpec);
             return this;
+        }
+
+        public UpdateBuilder withWorkspace(WorkspaceSpecification workspaceSpec)
+        {
+            return withSourceSpecification(SourceSpecification.workspaceSourceSpecification(workspaceSpec));
+        }
+
+        @Deprecated
+        public UpdateBuilder withWorkspace(SourceSpecification sourceSpecification)
+        {
+            return withSourceSpecification(sourceSpecification);
         }
 
         // Revision id
@@ -1159,16 +1207,9 @@ public abstract class ProjectStructure
             {
                 throw new IllegalArgumentException("No project id specified");
             }
-            if (this.projectStructureExtensionProvider == null)
+            if (this.projectStructureExtensionProvider == null && this.configUpdater.getProjectStructureExtensionVersion() != null)
             {
-                if (this.configUpdater.getProjectStructureExtensionVersion() != null)
-                {
                     throw new IllegalArgumentException("Project structure extension version specified (" + this.configUpdater.getProjectStructureExtensionVersion() + ") with no project structure extension provider");
-                }
-            }
-            else if ((this.configUpdater.getProjectStructureVersion() != null) && (this.configUpdater.getProjectStructureExtensionVersion() == null))
-            {
-                this.configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(this.configUpdater.getProjectStructureVersion()));
             }
             return updateProjectConfiguration(this, requireRevisionId);
         }

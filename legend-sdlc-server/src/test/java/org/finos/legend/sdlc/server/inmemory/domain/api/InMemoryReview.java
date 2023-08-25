@@ -41,6 +41,7 @@ public class InMemoryReview implements Review
     private String title;
     private String description;
     private List<String> labels;
+    private String targetBranch = "default";
 
 
     @Inject
@@ -224,4 +225,15 @@ public class InMemoryReview implements Review
         return "1";
     }
 
+    @JsonIgnore
+    public void setTargetBranch(String branchName)
+    {
+        this.targetBranch = branchName;
+    }
+
+    @JsonIgnore
+    public String getTargetBranch()
+    {
+        return this.targetBranch;
+    }
 }

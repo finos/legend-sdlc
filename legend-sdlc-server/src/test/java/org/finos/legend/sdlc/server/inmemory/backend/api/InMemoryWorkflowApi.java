@@ -14,11 +14,9 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 
@@ -30,19 +28,7 @@ public class InMemoryWorkflowApi implements WorkflowApi
     }
 
     @Override
-    public WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, VersionId versionId)
+    public WorkflowAccessContext getWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

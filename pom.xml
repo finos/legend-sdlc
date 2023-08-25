@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.116.1-SNAPSHOT</version>
+    <version>0.140.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -38,6 +38,8 @@
         <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
         <module>legend-sdlc-server</module>
+        <module>legend-sdlc-server-fs</module>
+        <module>legend-sdlc-generation-shared</module>
         <module>legend-sdlc-generation-file</module>
         <module>legend-sdlc-generation-service</module>
         <module>legend-sdlc-generation-model</module>
@@ -48,6 +50,8 @@
         <module>legend-sdlc-generation-service-maven-plugin</module>
         <module>legend-sdlc-version-package-maven-plugin</module>
         <module>legend-sdlc-test-utils</module>
+        <module>legend-sdlc-test-generation</module>
+        <module>legend-sdlc-test-generation-maven-plugin</module>
     </modules>
 
     <properties>
@@ -63,29 +67,31 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <maven.compiler.release>8</maven.compiler.release>
-        <java.version.range>[11.0.10,12)</java.version.range>
+        <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.1.0</legend.engine.version>
-        <legend.pure.version>4.1.0</legend.pure.version>
-        <legend.shared.version>0.22.5</legend.shared.version>
+        <legend.engine.version>4.25.2</legend.engine.version>
+        <legend.pure.version>4.5.12</legend.pure.version>
+        <legend.shared.version>0.24.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
         <commons-compress.version>1.21</commons-compress.version>
         <commons-io.version>2.7</commons-io.version>
         <commons-lang.version>2.6</commons-lang.version>
-        <commons-lang3.version>3.7</commons-lang3.version>
+        <commons-lang3.version>3.11</commons-lang3.version>
+        <commons-text.version>1.10.0</commons-text.version>
         <dropwizard.version>1.3.29</dropwizard.version>
         <dropwizard.metrics.version>4.1.16</dropwizard.metrics.version>
         <dropwizard-guicier.version>1.3.5.2</dropwizard-guicier.version>
         <dropwizard-swagger.version>1.3.17-1</dropwizard-swagger.version>
         <eclipsecollections.version>10.2.0</eclipsecollections.version>
         <findbugs.version>3.0.0</findbugs.version>
+        <freemarker.version>2.3.30</freemarker.version>
         <gitlab4j.version>4.16.0</gitlab4j.version>
-        <guava.version>30.0-jre</guava.version>
-        <guice.version>4.2.1</guice.version>
-        <h2.version>1.4.200</h2.version>
+        <guava.version>31.1-jre</guava.version>
+        <guice.version>6.0.0</guice.version>        
+        <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
         <hk2.version>2.5.0-b32</hk2.version>
         <jackson.version>2.10.5</jackson.version>
         <jackson.databind.version>2.10.5.1</jackson.databind.version>
@@ -96,12 +102,25 @@
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
         <junit.version>4.13.1</junit.version>
-        <apache.maven.version>3.8.6</apache.maven.version>
+        <maven.version>3.9.2</maven.version>
         <pac4j.version>3.8.3</pac4j.version>
         <slf4j.version>1.7.25</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
-        <freemarker.version>2.3.30</freemarker.version>
-        <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
+
+        <!-- Plugin versions -->
+        <jacoco.maven.plugin.version>0.8.10</jacoco.maven.plugin.version>
+        <maven.checkstyle.plugin.version>3.3.0</maven.checkstyle.plugin.version>
+        <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
+        <maven.dependency.plugin.version>3.1.2</maven.dependency.plugin.version>
+        <maven.enforcer.plugin.version>3.0.0-M1</maven.enforcer.plugin.version>
+        <maven.failsafe.plugin.version>3.1.0</maven.failsafe.plugin.version>
+        <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
+        <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
+        <maven.plugin.plugin.version>3.9.0</maven.plugin.plugin.version>
+        <maven.pmd.version>3.21.0</maven.pmd.version>
+        <maven.shade.plugin.version>3.4.1</maven.shade.plugin.version>
+        <maven.source.plugin.version>3.2.1</maven.source.plugin.version>
+        <maven.surefire.plugin.version>3.1.0</maven.surefire.plugin.version>
     </properties>
 
     <scm>
@@ -121,12 +140,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
-                    <version>3.1.1</version>
+                    <version>${maven.checkstyle.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.0</version>
+                    <version>${maven.compiler.plugin.version}</version>
                     <configuration>
                         <release>8</release>
                     </configuration>
@@ -134,22 +153,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-dependency-plugin</artifactId>
-                    <version>2.10</version>
+                    <version>${maven.dependency.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.sonatype.plugins</groupId>
                     <artifactId>nexus-staging-maven-plugin</artifactId>
-                    <version>1.6.8</version>
+                    <version>1.6.13</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-enforcer-plugin</artifactId>
-                    <version>3.0.0-M1</version>
+                    <version>${maven.enforcer.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-failsafe-plugin</artifactId>
-                    <version>3.0.0-M5</version>
+                    <version>${maven.failsafe.plugin.version}</version>
                     <configuration>
                         <!-- This is to measure the module path issue from maven failsafe V3.0.0-M5 that introduces NoClassDefFoundError
                         during integration tests via failsafe. Flag useModulePath should be set to false in order to disable modular paths.
@@ -169,12 +188,12 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.1.2</version>
+                    <version>${maven.jar.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-javadoc-plugin</artifactId>
-                    <version>3.3.1</version>
+                    <version>${maven.javadoc.plugin.version}</version>
                     <configuration>
                         <source>8</source>
                     </configuration>
@@ -182,31 +201,22 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-plugin-plugin</artifactId>
-                    <version>3.6.0</version>
+                    <version>${maven.plugin.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-shade-plugin</artifactId>
-                    <version>3.2.1</version>
+                    <version>${maven.shade.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-source-plugin</artifactId>
-                    <version>3.2.0</version>
-                    <executions>
-                        <execution>
-                            <id>attach-sources</id>
-                            <phase>verify</phase>
-                            <goals>
-                                <goal>jar-no-fork</goal>
-                            </goals>
-                        </execution>
-                    </executions>
+                    <version>${maven.source.plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.22.2</version>
+                    <version>${maven.surefire.plugin.version}</version>
                     <configuration>
                         <trimStackTrace>false</trimStackTrace>
                     </configuration>
@@ -220,7 +230,7 @@
                 <plugin>
                     <groupId>org.jacoco</groupId>
                     <artifactId>jacoco-maven-plugin</artifactId>
-                    <version>0.8.5</version>
+                    <version>${jacoco.maven.plugin.version}</version>
                 </plugin>
 
                 <!-- TODO - send PR to https://github.com/finos/finos-parent-pom (and use a mvn property to manage the version) -->
@@ -379,7 +389,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-pmd-plugin</artifactId>
-                <version>3.17.0</version>
+                <version>${maven.pmd.version}</version>
                 <configuration>
                     <printFailingErrors>true</printFailingErrors>
                     <rulesets>
@@ -472,6 +482,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-generation-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -517,10 +532,20 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server</artifactId>
                 <version>${project.version}</version>
                 <type>test-jar</type>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-server-fs</artifactId>
+                <version>${project.version}</version>
             </dependency>
 
             <!-- External Legend dependencies -->
@@ -546,7 +571,42 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-code-core-extension</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-pure-platform-store-relational-java</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-relationalStore-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-pure-code-compiled-core</artifactId>
+                <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.antlr</groupId>
+                        <artifactId>*</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>jcl-over-slf4j</artifactId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-generation-pure</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
@@ -722,6 +782,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-relationalStore-protocol</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-relationalStore-grammar</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
@@ -783,6 +848,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-language-pure-dsl-service-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-serviceStore-grammar</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
@@ -808,6 +878,21 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-serviceStore-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-serviceStore-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xt-json-javaPlatformBinding-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-language-pure-dsl-service-execution</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
@@ -824,11 +909,6 @@
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-protobuf</artifactId>
-                <version>${legend.engine.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-xt-rosetta</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -890,12 +970,6 @@
                 <groupId>com.google.inject.extensions</groupId>
                 <artifactId>guice-servlet</artifactId>
                 <version>${guice.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>com.h2database</groupId>
-                <artifactId>h2</artifactId>
-                <version>${h2.version}</version>
             </dependency>
 
             <dependency>
@@ -1034,7 +1108,7 @@
             <dependency>
                 <groupId>io.swagger</groupId>
                 <artifactId>swagger-annotations</artifactId>
-                <version>1.5.20</version>
+                <version>1.6.11</version>
             </dependency>
 
             <dependency>
@@ -1072,7 +1146,7 @@
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
-                <version>2.9.9</version>
+                <version>2.10.12</version>
             </dependency>
 
             <dependency>
@@ -1100,7 +1174,7 @@
             <dependency>
                 <groupId>org.apache.commons</groupId>
                 <artifactId>commons-text</artifactId>
-                <version>1.10.0</version>
+                <version>${commons-text.version}</version>
             </dependency>
 
             <dependency>
@@ -1123,27 +1197,27 @@
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-artifact</artifactId>
-                <version>${apache.maven.version}</version>
+                <version>${maven.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-compat</artifactId>
-                <version>${apache.maven.version}</version>
+                <version>${maven.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-core</artifactId>
-                <version>${apache.maven.version}</version>
+                <version>${maven.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-model</artifactId>
-                <version>${apache.maven.version}</version>
+                <version>${maven.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.apache.maven</groupId>
                 <artifactId>maven-plugin-api</artifactId>
-                <version>${apache.maven.version}</version>
+                <version>${maven.version}</version>
             </dependency>
 
             <dependency>
@@ -1156,23 +1230,23 @@
             <dependency>
                 <groupId>org.apache.maven.plugin-tools</groupId>
                 <artifactId>maven-plugin-annotations</artifactId>
-                <version>3.6.0</version>
+                <version>3.9.0</version>
             </dependency>
 
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-classworlds</artifactId>
-                <version>2.6.0</version>
+                <version>2.7.0</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-component-annotations</artifactId>
-                <version>2.0.0</version>
+                <version>2.1.0</version>
             </dependency>
             <dependency>
                 <groupId>org.codehaus.plexus</groupId>
                 <artifactId>plexus-utils</artifactId>
-                <version>3.2.1</version>
+                <version>3.5.1</version>
             </dependency>
 
             <dependency>
@@ -1286,7 +1360,7 @@
             <dependency>
                 <groupId>org.javassist</groupId>
                 <artifactId>javassist</artifactId>
-                <version>3.21.0-GA</version>
+                <version>3.27.0-GA</version>
             </dependency>
 
             <dependency>
@@ -1304,6 +1378,11 @@
                 <groupId>org.pac4j</groupId>
                 <artifactId>pac4j-oidc</artifactId>
                 <version>${pac4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.pac4j.jax-rs</groupId>
+                <artifactId>core</artifactId>
+                <version>3.0.0</version>
             </dependency>
 
             <dependency>

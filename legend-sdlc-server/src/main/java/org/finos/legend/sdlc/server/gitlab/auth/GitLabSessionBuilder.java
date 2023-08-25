@@ -25,7 +25,7 @@ import org.pac4j.oidc.profile.OidcProfile;
 import java.time.Instant;
 import java.util.Objects;
 
-class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
+public class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
 {
     private final GitLabTokenManager tokenManager;
 
@@ -130,7 +130,7 @@ class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }
 
-    static GitLabSessionBuilder newBuilder(GitLabAppInfo appInfo)
+    public static GitLabSessionBuilder newBuilder(GitLabAppInfo appInfo)
     {
         return new GitLabSessionBuilder(GitLabTokenManager.newTokenManager(appInfo));
     }

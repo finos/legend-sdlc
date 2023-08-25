@@ -1,0 +1,485 @@
+{
+  "content": {
+    "_type": "service",
+    "name": "TestService4",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 54,
+      "endColumn": 1
+    },
+    "stereotypes": [],
+    "taggedValues": [],
+    "pattern": "/testTestSuites/testService4",
+    "owners": [
+      "dummy1",
+      "dummy2"
+    ],
+    "documentation": "Service to test Multi Exec Service testSuite",
+    "autoActivateUpdates": true,
+    "execution": {
+      "_type": "pureMultiExecution",
+      "sourceInformation": {
+        "sourceId": "",
+        "startLine": 12,
+        "startColumn": 14,
+        "endLine": 17,
+        "endColumn": 3
+      },
+      "func": {
+        "_type": "lambda",
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 14,
+          "startColumn": 12,
+          "endLine": 14,
+          "endColumn": 277
+        },
+        "body": [
+          {
+            "_type": "func",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 14,
+              "startColumn": 169,
+              "endLine": 14,
+              "endColumn": 177
+            },
+            "function": "serialize",
+            "parameters": [
+              {
+                "_type": "func",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 14,
+                  "startColumn": 57,
+                  "endLine": 14,
+                  "endColumn": 66
+                },
+                "function": "graphFetch",
+                "parameters": [
+                  {
+                    "_type": "func",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 49,
+                      "endLine": 14,
+                      "endColumn": 54
+                    },
+                    "function": "getAll",
+                    "parameters": [
+                      {
+                        "_type": "packageableElementPtr",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 13,
+                          "endLine": 14,
+                          "endColumn": 48
+                        },
+                        "fullPath": "testTestSuites::Employee"
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "rootGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 70,
+                      "endLine": 14,
+                      "endColumn": 105
+                    },
+                    "subTrees": [
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 107,
+                          "endLine": 14,
+                          "endColumn": 114
+                        },
+                        "subTrees": [],
+                        "property": "kerberos",
+                        "parameters": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 116,
+                          "endLine": 14,
+                          "endColumn": 125
+                        },
+                        "subTrees": [],
+                        "property": "employeeID",
+                        "parameters": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 127,
+                          "endLine": 14,
+                          "endColumn": 131
+                        },
+                        "subTrees": [],
+                        "property": "title",
+                        "parameters": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 133,
+                          "endLine": 14,
+                          "endColumn": 141
+                        },
+                        "subTrees": [],
+                        "property": "firstName",
+                        "parameters": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 143,
+                          "endLine": 14,
+                          "endColumn": 150
+                        },
+                        "subTrees": [],
+                        "property": "lastName",
+                        "parameters": []
+                      },
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "sourceInformation": {
+                          "sourceId": "",
+                          "startLine": 14,
+                          "startColumn": 152,
+                          "endLine": 14,
+                          "endColumn": 162
+                        },
+                        "subTrees": [],
+                        "property": "countryCode",
+                        "parameters": []
+                      }
+                    ],
+                    "class": "testTestSuites::Employee"
+                  }
+                ]
+              },
+              {
+                "_type": "rootGraphFetchTree",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 14,
+                  "startColumn": 181,
+                  "endLine": 14,
+                  "endColumn": 216
+                },
+                "subTrees": [
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 218,
+                      "endLine": 14,
+                      "endColumn": 225
+                    },
+                    "subTrees": [],
+                    "property": "kerberos",
+                    "parameters": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 227,
+                      "endLine": 14,
+                      "endColumn": 236
+                    },
+                    "subTrees": [],
+                    "property": "employeeID",
+                    "parameters": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 238,
+                      "endLine": 14,
+                      "endColumn": 242
+                    },
+                    "subTrees": [],
+                    "property": "title",
+                    "parameters": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 244,
+                      "endLine": 14,
+                      "endColumn": 252
+                    },
+                    "subTrees": [],
+                    "property": "firstName",
+                    "parameters": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 254,
+                      "endLine": 14,
+                      "endColumn": 261
+                    },
+                    "subTrees": [],
+                    "property": "lastName",
+                    "parameters": []
+                  },
+                  {
+                    "_type": "propertyGraphFetchTree",
+                    "sourceInformation": {
+                      "sourceId": "",
+                      "startLine": 14,
+                      "startColumn": 263,
+                      "endLine": 14,
+                      "endColumn": 273
+                    },
+                    "subTrees": [],
+                    "property": "countryCode",
+                    "parameters": []
+                  }
+                ],
+                "class": "testTestSuites::Employee"
+              }
+            ]
+          }
+        ],
+        "parameters": []
+      },
+      "executionParameters": [
+        {
+          "key": "key1",
+          "mapping": "testTestSuites::ServiceStoreMapping",
+          "runtime": {
+            "_type": "runtimePointer",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 16,
+              "startColumn": 14,
+              "endLine": 16,
+              "endColumn": 60
+            },
+            "runtime": "testTestSuites::ServiceStoreRuntime"
+          },
+          "mappingSourceInformation": {
+            "sourceId": "",
+            "startLine": 15,
+            "startColumn": 14,
+            "endLine": 15,
+            "endColumn": 60
+          }
+        },
+        {
+          "key": "key2",
+          "mapping": "testTestSuites::ServiceStoreMapping",
+          "runtime": {
+            "_type": "runtimePointer",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 16,
+              "startColumn": 14,
+              "endLine": 16,
+              "endColumn": 60
+            },
+            "runtime": "testTestSuites::ServiceStoreRuntime"
+          },
+          "mappingSourceInformation": {
+            "sourceId": "",
+            "startLine": 15,
+            "startColumn": 14,
+            "endLine": 15,
+            "endColumn": 60
+          }
+        }
+      ],
+      "executionKey" : "key"
+    },
+    "testSuites": [
+      {
+        "_type": "serviceTestSuite",
+        "id": "testSuite1",
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 20,
+          "startColumn": 5,
+          "endLine": 52,
+          "endColumn": 5
+        },
+        "tests": [
+          {
+            "_type": "serviceTest",
+            "id": "test1",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 35,
+              "startColumn": 9,
+              "endLine": 50,
+              "endColumn": 9
+            },
+            "serializationFormat": "PURE",
+            "assertions": [
+              {
+                "_type": "equalToJson",
+                "id": "assert1",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 40,
+                  "startColumn": 15,
+                  "endLine": 48,
+                  "endColumn": 16
+                },
+                "expected": {
+                  "_type": "externalFormat",
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 43,
+                    "startColumn": 19,
+                    "endLine": 47,
+                    "endColumn": 20
+                  },
+                  "contentType": "application/json",
+                  "data": "{ \"kerberos\": \"dummy kerberos\", \"employeeID\": \"dummy id\", \"title\": \"dummy title\", \"firstName\": \"dummy firstName\", \"lastName\": \"dummy lastname\", \"countryCode\": \"dummy countryCode\" }"
+                }
+              }
+            ]
+          },
+          {
+            "_type": "serviceTest",
+            "id": "test2",
+            "keys": ["key1"],
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 35,
+              "startColumn": 9,
+              "endLine": 50,
+              "endColumn": 9
+            },
+            "serializationFormat": "PURE",
+            "assertions": [
+              {
+                "_type": "equalToJson",
+                "id": "assert1",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 40,
+                  "startColumn": 15,
+                  "endLine": 48,
+                  "endColumn": 16
+                },
+                "expected": {
+                  "_type": "externalFormat",
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 43,
+                    "startColumn": 19,
+                    "endLine": 47,
+                    "endColumn": 20
+                  },
+                  "contentType": "application/json",
+                  "data": "{ \"kerberos\": \"dummy kerbos\", \"employeeID\": \"dummy id\", \"title\": \"dummy title\", \"firstName\": \"dummy firstName\", \"lastName\": \"dummy lastname\", \"countryCode\": \"dummy countryCode\" }"
+                }
+              }
+            ]
+          },
+          {
+            "_type": "serviceTest",
+            "id": "test3",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 35,
+              "startColumn": 9,
+              "endLine": 50,
+              "endColumn": 9
+            },
+            "serializationFormat": "PURE",
+            "assertions": [
+              {
+                "_type": "equalToJson",
+                "id": "assert1",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 40,
+                  "startColumn": 15,
+                  "endLine": 48,
+                  "endColumn": 16
+                },
+                "expected": {
+                  "_type": "externalFormat",
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 43,
+                    "startColumn": 19,
+                    "endLine": 47,
+                    "endColumn": 20
+                  },
+                  "contentType": "application/json",
+                  "data": "{ \"kerberos\": \"dummy kerbes\", \"employeeID\": \"dummy id\", \"title\": \"dummy title\", \"firstName\": \"dummy firstName\", \"lastName\": \"dummy lastname\", \"countryCode\": \"dummy countryCode\" }"
+                }
+              }
+            ]
+          }
+        ],
+        "testData": {
+          "connectionsTestData": [
+            {
+              "id": "connection_1",
+              "data": {
+                "_type": "reference",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 27,
+                  "startColumn": 13,
+                  "endLine": 30,
+                  "endColumn": 14
+                },
+                "dataElement": "testTestSuites::TestData"
+              },
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 26,
+                "startColumn": 11,
+                "endLine": 30,
+                "endColumn": 14
+              }
+            }
+          ],
+          "sourceInformation": {
+            "sourceId": "",
+            "startLine": 22,
+            "startColumn": 7,
+            "endLine": 32,
+            "endColumn": 7
+          }
+        }
+      }
+    ],
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::legend::service::metamodel::Service"
+}

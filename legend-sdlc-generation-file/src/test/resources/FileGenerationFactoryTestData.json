@@ -72,17 +72,6 @@
     {
       "_type": "fileGeneration",
       "configurationProperties": [],
-      "name": "MyRosetta",
-      "package": "generation",
-      "scopeElements": [
-        "model",
-        "generation"
-      ],
-      "type": "rosetta"
-    },
-    {
-      "_type": "fileGeneration",
-      "configurationProperties": [],
       "name": "MyProtobuf",
       "package": "generation",
       "scopeElements": [
@@ -96,10 +85,6 @@
       "fileGenerations": [
         {
           "path": "generation::MyAvro",
-          "type": "FILE_GENERATION"
-        },
-        {
-          "path": "generation::MyRosetta",
           "type": "FILE_GENERATION"
         },
         {

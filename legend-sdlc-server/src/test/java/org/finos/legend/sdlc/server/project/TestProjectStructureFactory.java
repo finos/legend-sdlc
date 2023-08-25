@@ -21,14 +21,12 @@ import org.eclipse.collections.impl.factory.primitive.IntLists;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Collections;
-
 public class TestProjectStructureFactory
 {
     @Test
-    public void testFactoryWithV0_V11_V12()
+    public void testFactoryWithV0_V11_V12_V13()
     {
-        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory(), new ProjectStructureV12Factory())));
+        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory(), new ProjectStructureV12Factory(), new ProjectStructureV13Factory())));
     }
 
     @Test
@@ -70,7 +68,7 @@ public class TestProjectStructureFactory
 
     private void assertFactoryWithV0(ProjectStructureFactory factory)
     {
-        assertSupportsVersions(factory, 0, 11, 12);
+        assertSupportsVersions(factory, 0, 11, 12, 13);
 
         ProjectStructure structure = factory.newProjectStructure(null, null);
         Assert.assertEquals(0, structure.getVersion());

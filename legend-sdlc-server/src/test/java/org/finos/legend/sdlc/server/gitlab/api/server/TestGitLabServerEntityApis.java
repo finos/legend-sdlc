@@ -18,9 +18,11 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApiTestResource;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
+import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -61,6 +63,19 @@ public class TestGitLabServerEntityApis extends AbstractGitLabServerApiTest
         gitLabEntityApiTestResource.runEntitiesInNormalGroupWorkspaceWorkflowTest();
     }
 
+    @Test
+    public void testEntitiesInNormalUserWorkspaceWorkflowForPatchReleaseVersion() throws GitLabApiException
+    {
+        gitLabEntityApiTestResource.runEntitiesInNormalUserWorkspaceWorkflowTestForPatchRelaseVersion();
+    }
+
+
+    @Test
+    public void testEntitiesInNormalGroupWorkspaceWorkflowForPatchReleaseVersion() throws GitLabApiException
+    {
+        gitLabEntityApiTestResource.runEntitiesInNormalGroupWorkspaceWorkflowTestForPatchRelaseVersion();
+    }
+
     /**
      * Authenticates with OAuth2 and instantiate the test resource.
      */
@@ -77,7 +92,9 @@ public class TestGitLabServerEntityApis extends AbstractGitLabServerApiTest
         GitLabEntityApi gitLabEntityApi = new GitLabEntityApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabReviewApi gitLabCommitterReviewApi = new GitLabReviewApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabReviewApi gitLabApproverReviewApi = new GitLabReviewApi(gitLabConfig, gitLabOwnerUserContext, backgroundTaskProcessor);
+        GitLabPatchApi gitLabPatchApi = new GitLabPatchApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
+        GitLabVersionApi gitLabVersionApi = new GitLabVersionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
 
-        gitLabEntityApiTestResource = new GitLabEntityApiTestResource(gitLabProjectApi, gitLabWorkspaceApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext);
+        gitLabEntityApiTestResource = new GitLabEntityApiTestResource(gitLabProjectApi, gitLabWorkspaceApi, gitLabEntityApi, gitLabCommitterReviewApi, gitLabApproverReviewApi, gitLabMemberUserContext, gitLabPatchApi, gitLabVersionApi, gitLabRevisionApi);
     }
 }

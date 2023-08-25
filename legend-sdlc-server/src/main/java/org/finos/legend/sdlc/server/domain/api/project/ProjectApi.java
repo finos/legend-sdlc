@@ -41,7 +41,7 @@ public interface ProjectApi
 
     List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit);
 
-    Project createProject(String name, String description, String groupId, String artifactId, Iterable<String> tags);
+    Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
 
     void deleteProject(String id);
 
@@ -94,13 +94,7 @@ public interface ProjectApi
      */
     boolean checkUserAuthorizedAction(String id, AuthorizableProjectAction action);
 
-    @Deprecated
-    default ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
-    {
-        return this.importProject(id, groupId, artifactId);
-    }
-
-    ImportReport importProject(String id, String groupId, String artifactId);
+    ImportReport importProject(String id, ProjectType type, String groupId, String artifactId);
 
     interface ImportReport
     {
