@@ -376,7 +376,7 @@ public class ServiceExecutionGenerator
         ExecutionPlan plan;
         try
         {
-            plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, this.pureModel, this.clientVersion, PlanPlatform.JAVA, planId, this.extensions, this.transformers);
+            plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, this.pureModel, this.clientVersion, PlanPlatform.JAVA, planId, this.extensions, this.transformers, this.executorService);
         }
         catch (Exception e)
         {
