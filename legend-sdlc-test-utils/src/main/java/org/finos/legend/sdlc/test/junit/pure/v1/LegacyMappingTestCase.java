@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
 import org.eclipse.collections.api.RichIterable;
-import org.eclipse.collections.api.list.MutableList;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.execution.PlanExecutor;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
@@ -28,7 +27,7 @@ public class LegacyMappingTestCase extends LegendSDLCTestCase
 {
     private final LegacyMappingTestHelper helper;
 
-    public LegacyMappingTestCase(String mappingPath, PureModel pureModel, MappingTest_Legacy mappingTest, MutableList<PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
+    public LegacyMappingTestCase(String mappingPath, PureModel pureModel, MappingTest_Legacy mappingTest, Iterable<? extends PlanTransformer> planTransformers, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, String pureVersion)
     {
         super(mappingPath);
         this.helper = new LegacyMappingTestHelper(3, mappingPath, new MappingTestRunner(pureModel, mappingPath, mappingTest, PlanExecutor.newPlanExecutorBuilder().withAvailableStoreExecutors().build(), extensions, planTransformers, pureVersion));
