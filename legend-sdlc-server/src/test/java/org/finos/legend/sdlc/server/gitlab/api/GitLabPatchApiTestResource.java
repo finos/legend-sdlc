@@ -70,6 +70,36 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals("0.0.2", patch.getPatchReleaseVersionId().toVersionIdString());
     }
 
+    public void runGetPatchTest() throws LegendSDLCServerException
+    {
+        String projectName = "PatchTestProjectThree";
+        String description = "A test project.";
+        String groupId = "org.finos.sdlc.test";
+        String artifactId = "testpatchprojthree";
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
+
+        Project createdProject = gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertNull(createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+
+        String projectId = createdProject.getProjectId();
+        Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Patch patch = gitLabPatchApi.newPatch(projectId, version.getId());
+
+        Assert.assertNotNull(patch);
+        Assert.assertEquals(projectId, patch.getProjectId());
+        Assert.assertEquals("0.0.2", patch.getPatchReleaseVersionId().toVersionIdString());
+
+        Patch returnedPatch = gitLabPatchApi.getPatch(projectId, patch.getPatchReleaseVersionId());
+        Assert.assertNotNull(returnedPatch);
+        Assert.assertEquals(projectId, returnedPatch.getProjectId());
+        Assert.assertEquals("0.0.2", returnedPatch.getPatchReleaseVersionId().toVersionIdString());
+    }
+
     public void runGetPatchesTest() throws LegendSDLCServerException
     {
         String projectName = "PatchTestProjectTwo";

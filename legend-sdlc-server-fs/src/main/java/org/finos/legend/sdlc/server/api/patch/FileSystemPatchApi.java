@@ -37,6 +37,12 @@ public class FileSystemPatchApi implements PatchApi
     }
 
     @Override
+    public Patch getPatch(String projectId, VersionId patchReleaseVersionId)
+    {
+        throw FSException.unavailableFeature();
+    }
+
+    @Override
     public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
         throw FSException.unavailableFeature();

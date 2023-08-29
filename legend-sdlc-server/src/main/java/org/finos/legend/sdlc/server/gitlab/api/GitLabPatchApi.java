@@ -115,6 +115,30 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     }
 
     @Override
+    public Patch getPatch(String projectId, VersionId patchReleaseVersionId)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+
+        // Get patch branch
+        try
+        {
+            GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+            String branchName = getPatchReleaseBranchName(patchReleaseVersionId);
+            RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
+            Branch branch = withRetries(() -> repositoryApi.getBranch(gitLabProjectId.getGitLabId(), branchName));
+            return fromPatchBranchName(projectId, branch.getName());
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to get patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId,
+                    () -> "Unknown patch " + patchReleaseVersionId.toVersionIdString() + " or project (" + projectId + ")",
+                    () -> "Error getting patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId);
+        }
+    }
+
+    @Override
     public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
