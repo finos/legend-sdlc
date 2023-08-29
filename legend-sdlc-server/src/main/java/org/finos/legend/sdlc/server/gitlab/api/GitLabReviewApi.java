@@ -18,6 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
+import org.eclipse.collections.api.set.SetIterable;
 import org.eclipse.collections.api.set.primitive.MutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.eclipse.collections.impl.factory.primitive.IntSets;
@@ -30,6 +31,7 @@ import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -61,11 +63,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -86,7 +84,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
     }
 
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         Set<String> revisionIdSet;
@@ -106,6 +104,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
+            SetIterable<String> sourceBranches = ((sources == null) || sources.isEmpty()) ? Sets.immutable.empty() : Iterate.collect(sources, source -> getSourceBranch(gitLabProjectId, source), Sets.mutable.ofInitialCapacity(sources.size()));
             if (!revisionIdSet.isEmpty()) // Do we want to have a check here to know whether revisions belong to the protected branch?
             {
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
@@ -139,7 +138,15 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
             {
                 // if no revision ID is specified we will use the default merge request API from Gitlab to take advantage of the filter
                 MergeRequestFilter mergeRequestFilter = withMergeRequestFilters(new MergeRequestFilter(), state, since, until).withProjectId(gitLabProjectId.getGitLabId());
+                if (sourceBranches.size() == 1)
+                {
+                    mergeRequestFilter.withTargetBranch(sourceBranches.getAny());
+                }
                 mergeRequestStream = PagerTools.stream(withRetries(() -> getGitLabApi().getMergeRequestApi().getMergeRequests(mergeRequestFilter, ITEMS_PER_PAGE)));
+            }
+            if (sourceBranches.notEmpty())
+            {
+                mergeRequestStream = mergeRequestStream.filter(mr -> sourceBranches.contains(mr.getTargetBranch()));
             }
             String defaultBranch = getDefaultBranch(gitLabProjectId);
             Supplier<String> defaultBranchSupplier = () -> defaultBranch;

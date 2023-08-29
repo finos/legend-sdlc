@@ -20,12 +20,14 @@ import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 import javax.inject.Inject;
 
@@ -49,7 +51,7 @@ public class InMemoryReviewApi implements ReviewApi
     }
     
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit)
     {
         InMemoryProject inMemoryProject = this.backend.getProject(projectId);
         return Lists.mutable.withAll(inMemoryProject.getReviews(state, revisionIds, since, until, limit));

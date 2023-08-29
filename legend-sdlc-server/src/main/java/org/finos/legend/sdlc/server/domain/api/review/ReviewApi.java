@@ -22,9 +22,11 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -52,12 +54,13 @@ public interface ReviewApi
      * @param state                       review state
      * @param revisionIds                 a set of revision IDs, with each we will get the reviews are associated
      * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
+     * @param sources                     source with which review is associated
      * @param since                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param until                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
      * @param limit                       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit);
+    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit);
 
     /**
      * Get reviews across all projects with the given state and labels.
@@ -228,6 +231,12 @@ public interface ReviewApi
     // Deprecated APIs
 
     @Deprecated
+    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.projectWorkspaceSource()), since, until, limit);
+    }
+
+    @Deprecated
     default Review getReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
     {
         return getReview(projectId, reviewId);
@@ -236,7 +245,7 @@ public interface ReviewApi
     @Deprecated
     default List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
     {
-        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, since, until, limit);
+        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)), since, until, limit);
     }
 
     @Deprecated
