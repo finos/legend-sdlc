@@ -49,6 +49,12 @@ public class TestGitLabServerPatchApis extends AbstractGitLabServerApiTest
     }
 
     @Test
+    public void testGetPatch() throws LegendSDLCServerException
+    {
+        gitLabPatchApiTestResource.runGetPatchTest();
+    }
+
+    @Test
     public void testCreatePatch() throws LegendSDLCServerException
     {
         gitLabPatchApiTestResource.runCreatePatchTest();

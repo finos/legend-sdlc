@@ -32,6 +32,14 @@ public interface PatchApi
     Patch newPatch(String projectId, VersionId sourceVersion);
 
     /**
+     * Get a specific patch for the given project.
+     *
+     * @param projectId project id
+     * @param patchVersionId patch version id
+     */
+    Patch getPatch(String projectId, VersionId patchVersionId);
+
+    /**
      * Get the list of all patch release branches for the given project.
      *
      * @param projectId project id

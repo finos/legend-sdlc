@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -47,6 +48,13 @@ public class InMemoryPatchApi implements PatchApi
     {
         InMemoryProject project = backend.getProject(projectId);
         return Lists.mutable.withAll(project.getPatches());
+    }
+
+    @Override
+    public Patch getPatch(String projectId, VersionId patchReleaseVersionId)
+    {
+        InMemoryProject project = backend.getProject(projectId);
+        return Iterate.detect(project.getPatches(), p -> patchReleaseVersionId.equals(p.getPatchReleaseVersionId()));
     }
 
     @Override

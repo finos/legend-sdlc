@@ -104,6 +104,26 @@ public class PatchesResource extends BaseResource
         );
     }
 
+    @GET
+    @Path("{patchReleaseVersionId}")
+    @ApiOperation("Get a specific patch")
+    public Patch getPatchReleaseBranch(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
+    {
+        VersionId versionId;
+        try
+        {
+            versionId = VersionId.parseVersionId(patchReleaseVersionId);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
+        }
+        return executeWithLogging(
+                "getting patch " + patchReleaseVersionId + " for project " + projectId,
+                () -> this.patchApi.getPatch(projectId, versionId)
+        );
+    }
+
     @DELETE
     @Path("{patchReleaseVersionId}")
     @ApiOperation("Delete a patch release branch")

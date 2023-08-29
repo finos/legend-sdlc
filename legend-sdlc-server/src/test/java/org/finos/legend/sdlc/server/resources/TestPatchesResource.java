@@ -28,6 +28,26 @@ import javax.ws.rs.core.Response;
 public class TestPatchesResource extends AbstractLegendSDLCServerResourceTest
 {
     @Test
+    public void testGetPatch() throws HttpResponseException
+    {
+        this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
+        this.backend.project("A").addPatch(VersionId.parseVersionId("1.0.1"));
+
+        Response response = this.clientFor("/api/projects/A/patches/1.0.1").request().get();
+
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+
+        Patch patch = response.readEntity(new GenericType<Patch>()
+        {
+        });
+
+        Assert.assertEquals("1.0.1", patch.getPatchReleaseVersionId().toVersionIdString());
+    }
+
+    @Test
     public void testGetAllPatches() throws HttpResponseException
     {
         this.backend.project("A").addVersionedClasses("1.0.0", "a1", "a2");
