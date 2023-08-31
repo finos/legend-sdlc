@@ -19,6 +19,7 @@ import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
 
@@ -26,6 +27,7 @@ import javax.inject.Inject;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.function.BiPredicate;
 
 public class FileSystemReviewApi implements ReviewApi
@@ -42,7 +44,7 @@ public class FileSystemReviewApi implements ReviewApi
     }
 
     @Override
-    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    public List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit)
     {
         return Collections.emptyList();
     }
