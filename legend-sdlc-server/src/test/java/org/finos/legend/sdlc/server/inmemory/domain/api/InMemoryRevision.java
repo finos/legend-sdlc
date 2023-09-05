@@ -22,8 +22,8 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.inmemory.backend.RevisionIdGenerator;
 
-import javax.inject.Inject;
 import java.time.Instant;
+import javax.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryRevision implements Revision
@@ -120,6 +120,12 @@ public class InMemoryRevision implements Revision
     public void removeEntities(Iterable<? extends Entity> entitiesToRemove)
     {
         entitiesToRemove.forEach(this::removeEntity);
+    }
+
+    @JsonIgnore
+    public Entity getEntity(String path)
+    {
+        return this.entities.get(path);
     }
 
     @JsonIgnore

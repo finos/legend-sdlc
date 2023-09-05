@@ -1,0 +1,16 @@
+{
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "name" : "A",
+    "package" : "legend::demo",
+    "properties" : [ {
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "i",
+      "type" : "String"
+    } ]
+  }
+}

@@ -14,11 +14,13 @@
 
 package org.finos.legend.sdlc.generation.file;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
@@ -28,10 +30,15 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.generation.extension.ArtifactGenerationExtension;
+import org.finos.legend.engine.protocol.Protocol;
+import org.finos.legend.engine.protocol.pure.PureClientVersions;
+import org.finos.legend.engine.protocol.pure.v1.model.context.AlloySDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
+import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGeneration.FileGenerationSpecification;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
+import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationFactory;
 import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationResult;
@@ -41,7 +48,6 @@ import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -65,6 +71,9 @@ public class FileGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File outputDirectory;
+
+    @Parameter(defaultValue = "${project}", readonly = true)
+    private MavenProject mavenProject;
 
     @Override
     public void execute() throws MojoExecutionException
@@ -91,28 +100,29 @@ public class FileGenerationMojo extends AbstractMojo
         try (EntityLoader allEntities = EntityLoader.newEntityLoader(Thread.currentThread().getContextClassLoader()))
         {
             pureModelBuilder.addEntitiesIfPossible(allEntities.getAllEntities());
-            int entityCount = pureModelBuilder.getElementCount();
-            getLog().info("Found " + entityCount + " entities");
-            if (entityCount == 0)
-            {
-                long modelEnd = System.nanoTime();
-                getLog().info(String.format("Finished loading model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
-                getLog().info("No elements found to generate");
-                return;
-            }
         }
         catch (Exception e)
         {
             throw new MojoExecutionException("Error loading entities from model", e);
         }
+
+        int entityCount = pureModelBuilder.getElementCount();
+        getLog().info("Found " + entityCount + " entities");
+        if (entityCount == 0)
+        {
+            long modelEnd = System.nanoTime();
+            getLog().info(String.format("Finished loading model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
+            getLog().info("No elements found to generate");
+            return;
+        }
+
         getLog().info("Compiling model");
-        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.build();
+        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.withSDLC(buildSDLCInfo()).withProtocol(buildProtocol()).build();
         PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
         PureModel pureModel = pureModelWithContextData.getPureModel();
         long modelEnd = System.nanoTime();
         getLog().info(String.format("Finished loading and compiling model (%.9fs)", (modelEnd - modelStart) / 1_000_000_000.0));
 
-        Set<String> fileOutputPaths = Sets.mutable.empty();
         // Generation Specification
         MutableMap<String, GenerationSpecification> generationSpecificationMap = LazyIterate.selectInstancesOf(pureModelContextData.getElements(), GenerationSpecification.class).groupByUniqueKey(PackageableElement::getPath, Maps.mutable.empty());
         filterPackageableElementsByIncludes(generationSpecificationMap);
@@ -129,8 +139,12 @@ public class FileGenerationMojo extends AbstractMojo
                 getLog().info(String.format("Start generating file generations for generation specification '%s', %,d file generations found", generationSpecification.getPath(), generationSpecification.fileGenerations.size()));
                 FileGenerationFactory fileGenerationFactory = FileGenerationFactory.newFactory(generationSpecification, pureModelContextData, pureModel);
                 MutableMap<FileGenerationSpecification, List<GenerationOutput>> outputs = fileGenerationFactory.generateFiles();
-                serializeOutput(outputs, fileOutputPaths);
+                serializeOutput(outputs);
                 getLog().info(String.format("Done (%.9fs)", (System.nanoTime() - generateStart) / 1_000_000_000.0));
+            }
+            catch (MojoExecutionException e)
+            {
+                throw e;
             }
             catch (Exception e)
             {
@@ -151,8 +165,12 @@ public class FileGenerationMojo extends AbstractMojo
             List<PackageableElement> elements = Lists.mutable.withAll(elementsMap.values());
             ArtifactGenerationFactory factory = ArtifactGenerationFactory.newFactory(pureModel, pureModelContextData, elements);
             MutableMap<ArtifactGenerationExtension, List<ArtifactGenerationResult>> results = factory.generate();
-            serializeArtifacts(results, fileOutputPaths);
+            serializeArtifacts(results);
             getLog().info(String.format("Done (%.9fs)", (System.nanoTime() - generateStart) / 1_000_000_000.0));
+        }
+        catch (MojoExecutionException e)
+        {
+            throw e;
         }
         catch (Exception e)
         {
@@ -160,32 +178,43 @@ public class FileGenerationMojo extends AbstractMojo
         }
     }
 
-    protected void serializeOutput(MutableMap<FileGenerationSpecification, List<GenerationOutput>> generationGenerationOutputMap, Set<String> fileOutputPaths) throws MojoExecutionException, IOException
+    protected void serializeOutput(MutableMap<FileGenerationSpecification, List<GenerationOutput>> generationGenerationOutputMap) throws MojoExecutionException
     {
         long serializeStart = System.nanoTime();
         getLog().info("Start serializing file generations");
         Path outputDirPath = this.outputDirectory.toPath();
-        String fileSeparator = outputDirPath.getFileSystem().getSeparator();
         for (Map.Entry<FileGenerationSpecification, List<GenerationOutput>> fileOutputPair : generationGenerationOutputMap.entrySet())
         {
             FileGenerationSpecification fileGenerationSpecification = fileOutputPair.getKey();
             List<GenerationOutput> generationOutputs = fileOutputPair.getValue();
             String generationOutPath = fileGenerationSpecification.generationOutputPath;
             String rootFolder = (generationOutPath != null && !generationOutPath.isEmpty()) ? generationOutPath : fileGenerationSpecification.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "_");
+            Path rootFolderPath = outputDirPath.resolve(rootFolder);
             getLog().info(String.format("Serializing %,d files for '%s'", generationOutputs.size(), fileGenerationSpecification.getPath()));
             for (GenerationOutput output : generationOutputs)
             {
-                String fileName = rootFolder + fileSeparator + output.getFileName();
-                if (!fileOutputPaths.add(fileName))
+                Path filePath = rootFolderPath.resolve(output.getFileName());
+                try
                 {
-                    throw new MojoExecutionException("Duplicate file paths found when serializing file generations outputs : '" + fileName + "'");
+                    byte[] content = output.extractFileContent().getBytes(StandardCharsets.UTF_8);
+                    if (Files.exists(filePath))
+                    {
+                        byte[] foundContent = Files.readAllBytes(filePath);
+                        if (!Arrays.equals(content, foundContent))
+                        {
+                            throw new MojoExecutionException("Duplicate file paths found when serializing file generations outputs : '" + filePath + "'");
+                        }
+                        getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                    }
+                    else
+                    {
+                        Files.createDirectories(filePath.getParent());
+                        Files.write(filePath, content);
+                    }
                 }
-                String resolver = fileName.replace(EntityPaths.PACKAGE_SEPARATOR, fileSeparator);
-                Path entityFilePath = outputDirPath.resolve(resolver);
-                Files.createDirectories(entityFilePath.getParent());
-                try (OutputStream stream = Files.newOutputStream(entityFilePath))
+                catch (IOException e)
                 {
-                    stream.write(output.extractFileContent().getBytes(StandardCharsets.UTF_8));
+                    throw new MojoExecutionException("Error writing file " + output.getFileName() + " (" + filePath + ") for file generation specification " + fileGenerationSpecification.getPath(), e);
                 }
             }
             getLog().info("Done serializing files for'" + fileGenerationSpecification.getPath() + "'");
@@ -194,7 +223,7 @@ public class FileGenerationMojo extends AbstractMojo
     }
 
 
-    protected void serializeArtifacts(MutableMap<ArtifactGenerationExtension, List<ArtifactGenerationResult>> results, Set<String> fileOutputPaths) throws IOException, MojoExecutionException
+    protected void serializeArtifacts(MutableMap<ArtifactGenerationExtension, List<ArtifactGenerationResult>> results) throws MojoExecutionException
     {
         long serializeStart = System.nanoTime();
         getLog().info("Start serializing artifact extension generations");
@@ -210,19 +239,31 @@ public class FileGenerationMojo extends AbstractMojo
                 String elementFolder = org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.getUserPathForPackageableElement(generator, fileSeparator);
                 List<GenerationOutput> generatorOutputs = result.getResults();
                 String rootExtensionFolder = extension.getKey();
+                Path rootFolderPath = outputDirPath.resolve(elementFolder).resolve(rootExtensionFolder);
                 for (GenerationOutput output : generatorOutputs)
                 {
-                    String fileName = elementFolder + fileSeparator + rootExtensionFolder + fileSeparator + output.getFileName();
-                    if (!fileOutputPaths.add(fileName))
+                    Path filePath = rootFolderPath.resolve(output.getFileName());
+                    try
                     {
-                        throw new MojoExecutionException("Duplicate file path found when serializing artifact generation extension  '" + extension.getClass() + "' output: '" + fileName + "'");
+                        byte[] content = output.extractFileContent().getBytes(StandardCharsets.UTF_8);
+                        if (Files.exists(filePath))
+                        {
+                            byte[] foundContent = Files.readAllBytes(filePath);
+                            if (!Arrays.equals(content, foundContent))
+                            {
+                                throw new MojoExecutionException("Duplicate file path found when serializing artifact generation extension  '" + extension.getClass() + "' output: '" + filePath + "'");
+                            }
+                            getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                        }
+                        else
+                        {
+                            Files.createDirectories(filePath.getParent());
+                            Files.write(filePath, content);
+                        }
                     }
-                    String resolver = fileName.replace(EntityPaths.PACKAGE_SEPARATOR, fileSeparator);
-                    Path entityFilePath = outputDirPath.resolve(resolver);
-                    Files.createDirectories(entityFilePath.getParent());
-                    try (OutputStream stream = Files.newOutputStream(entityFilePath))
+                    catch (IOException e)
                     {
-                        stream.write(output.extractFileContent().getBytes(StandardCharsets.UTF_8));
+                        throw new MojoExecutionException("Error writing file " + output.getFileName() + " (" + filePath + ") for file artifact generation extension '" + extension.getClass() + "'", e);
                     }
                 }
             }
@@ -286,6 +327,42 @@ public class FileGenerationMojo extends AbstractMojo
         return new ResolvedPackageableElementFilter(resolvedElementsByPath, elementFilter.packages);
     }
 
+    private SDLC buildSDLCInfo()
+    {
+        try
+        {
+            MavenProject rootMavenProject = findRootMavenProject();
+            ObjectMapper mapper = ObjectMapperFactory.getNewStandardObjectMapper();
+            Path baseDir = rootMavenProject.getBasedir().toPath();
+            ReducedProjectConfiguration projectConfiguration = mapper.readValue(baseDir.resolve("project.json").toFile(), ReducedProjectConfiguration.class);
+            AlloySDLC sdlcInfo = new AlloySDLC();
+            sdlcInfo.groupId = projectConfiguration.getGroupId();
+            sdlcInfo.artifactId = projectConfiguration.getArtifactId();
+            sdlcInfo.version = this.mavenProject.getVersion();
+            return sdlcInfo;
+        }
+        catch (Exception e)
+        {
+            getLog().warn("Unable to build SDLC info", e);
+            return new AlloySDLC();
+        }
+    }
+
+    private MavenProject findRootMavenProject()
+    {
+        MavenProject currentMavenProject = this.mavenProject;
+        while (currentMavenProject.hasParent())
+        {
+            currentMavenProject = currentMavenProject.getParent();
+        }
+
+        return currentMavenProject;
+    }
+
+    private Protocol buildProtocol()
+    {
+        return new Protocol("pure", PureClientVersions.production);
+    }
 
     public static class PackageableElementFilter
     {

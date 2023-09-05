@@ -1,0 +1,34 @@
+{
+  "content": {
+    "_type": "connection",
+    "name": "ServiceStoreConnection",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 6,
+      "endColumn": 1
+    },
+    "connectionValue": {
+      "_type": "serviceStore",
+      "element": "testTestSuites::ServiceStore",
+      "elementSourceInformation": {
+        "sourceId": "",
+        "startLine": 4,
+        "startColumn": 10,
+        "endLine": 4,
+        "endColumn": 49
+      },
+      "sourceInformation": {
+        "sourceId": "",
+        "startLine": 2,
+        "startColumn": 1,
+        "endLine": 6,
+        "endColumn": 1
+      },
+      "baseUrl": "https://prodUrl.com"
+    },
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::pure::runtime::PackageableConnection"
+}

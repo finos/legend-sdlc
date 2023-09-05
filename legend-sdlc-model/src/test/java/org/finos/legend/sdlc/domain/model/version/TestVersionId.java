@@ -55,6 +55,39 @@ public class TestVersionId
     }
 
     @Test
+    public void testIsValidVersionIdString()
+    {
+        Assert.assertTrue(VersionId.isValidVersionIdString("0.0.0"));
+        Assert.assertTrue(VersionId.isValidVersionIdString("0.0.1"));
+        Assert.assertTrue(VersionId.isValidVersionIdString("1.2.3"));
+        Assert.assertTrue(VersionId.isValidVersionIdString("0_0_0", '_'));
+        Assert.assertTrue(VersionId.isValidVersionIdString("1/2/3", '/'));
+        Assert.assertTrue(VersionId.isValidVersionIdString(Integer.MAX_VALUE + "." + Integer.MAX_VALUE + "." + Integer.MAX_VALUE));
+
+        Assert.assertFalse(VersionId.isValidVersionIdString(null));
+        Assert.assertFalse(VersionId.isValidVersionIdString(""));
+        Assert.assertFalse(VersionId.isValidVersionIdString("0"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.2"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.2.3."));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.2.3.4"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("0.0.00"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.02.3"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("2023.04.21"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.-2.3"));
+        Assert.assertFalse(VersionId.isValidVersionIdString((1L + (long) Integer.MAX_VALUE) + "." + Integer.MAX_VALUE + "." + Integer.MAX_VALUE));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1.2." + Long.MAX_VALUE));
+        Assert.assertFalse(VersionId.isValidVersionIdString("a.b.c"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("1a3.45.6"));
+
+        Assert.assertFalse(VersionId.isValidVersionIdString("release-99.23.23456"));
+        Assert.assertFalse(VersionId.isValidVersionIdString("release-99.23.23456", 6, 19));
+        Assert.assertFalse(VersionId.isValidVersionIdString("release-99.23.23456", 7, 19));
+        Assert.assertFalse(VersionId.isValidVersionIdString("release-99.23.23456", 8, 13));
+        Assert.assertFalse(VersionId.isValidVersionIdString("release-99.23.23456", 8, 14));
+        Assert.assertTrue(VersionId.isValidVersionIdString("release-99.23.23456", 8, 19));
+    }
+
+    @Test
     public void testToVersionIdString()
     {
         Assert.assertEquals("1.2.3", VersionId.newVersionId(1, 2, 3).toVersionIdString());

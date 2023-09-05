@@ -20,7 +20,9 @@ import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 
@@ -40,7 +42,17 @@ public abstract class AbstractLegendMavenPluginHelper
         this.version = version;
         this.phase = phase;
         this.goal = goal;
-        this.extensionsCollections = extensionsCollections;
+        this.extensionsCollections = Objects.requireNonNull(extensionsCollections);
+    }
+
+    protected AbstractLegendMavenPluginHelper(String groupId, String artifactId, String version, String phase, String goal, Dependency extensionsCollection)
+    {
+        this(groupId, artifactId, version, phase, goal, Collections.singletonList(Objects.requireNonNull(extensionsCollection)));
+    }
+
+    protected AbstractLegendMavenPluginHelper(String groupId, String artifactId, String version, String phase, String goal)
+    {
+        this(groupId, artifactId, version, phase, goal, Collections.emptyList());
     }
 
     public final Plugin getPlugin(MavenProjectStructure projectStructure)
@@ -74,9 +86,6 @@ public abstract class AbstractLegendMavenPluginHelper
 
     protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
     {
-        if (this.extensionsCollections != null && !this.extensionsCollections.isEmpty())
-        {
-            this.extensionsCollections.forEach(dependencyConsumer);
-        }
+        this.extensionsCollections.forEach(dependencyConsumer);
     }
 }

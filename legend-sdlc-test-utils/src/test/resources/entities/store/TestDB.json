@@ -1,0 +1,228 @@
+{
+  "classifierPath": "meta::relational::metamodel::Database",
+  "content": {
+    "_type": "relational",
+    "filters": [],
+    "includedStores": [],
+    "joins": [
+      {
+        "name": "FirmPerson",
+        "operation": {
+          "_type": "dynaFunc",
+          "funcName": "equal",
+          "parameters": [
+            {
+              "_type": "column",
+              "column": "firm_id",
+              "sourceInformation": {
+                "endColumn": 52,
+                "endLine": 36,
+                "sourceId": "",
+                "startColumn": 19,
+                "startLine": 36
+              },
+              "table": {
+                "_type": "Table",
+                "database": "store::TestDB",
+                "mainTableDb": "store::TestDB",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 29,
+                  "endLine": 36,
+                  "sourceId": "",
+                  "startColumn": 19,
+                  "startLine": 36
+                },
+                "table": "PersonTable"
+              },
+              "tableAlias": "PersonTable"
+            },
+            {
+              "_type": "column",
+              "column": "id",
+              "sourceInformation": {
+                "endColumn": 52,
+                "endLine": 36,
+                "sourceId": "",
+                "startColumn": 41,
+                "startLine": 36
+              },
+              "table": {
+                "_type": "Table",
+                "database": "store::TestDB",
+                "mainTableDb": "store::TestDB",
+                "schema": "default",
+                "sourceInformation": {
+                  "endColumn": 49,
+                  "endLine": 36,
+                  "sourceId": "",
+                  "startColumn": 41,
+                  "startLine": 36
+                },
+                "table": "FirmTable"
+              },
+              "tableAlias": "FirmTable"
+            }
+          ],
+          "sourceInformation": {
+            "endColumn": 52,
+            "endLine": 36,
+            "sourceId": "",
+            "startColumn": 39,
+            "startLine": 36
+          }
+        },
+        "sourceInformation": {
+          "endColumn": 53,
+          "endLine": 36,
+          "sourceId": "",
+          "startColumn": 3,
+          "startLine": 36
+        }
+      }
+    ],
+    "name": "TestDB",
+    "package": "store",
+    "schemas": [
+      {
+        "name": "default",
+        "sourceInformation": {
+          "endColumn": 1,
+          "endLine": 37,
+          "sourceId": "",
+          "startColumn": 1,
+          "startLine": 21
+        },
+        "tables": [
+          {
+            "columns": [
+              {
+                "name": "id",
+                "nullable": false,
+                "sourceInformation": {
+                  "endColumn": 26,
+                  "endLine": 25,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 25
+                },
+                "type": {
+                  "_type": "Integer"
+                }
+              },
+              {
+                "name": "legal_name",
+                "nullable": true,
+                "sourceInformation": {
+                  "endColumn": 27,
+                  "endLine": 26,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 26
+                },
+                "type": {
+                  "_type": "Varchar",
+                  "size": 200
+                }
+              }
+            ],
+            "milestoning": [],
+            "name": "FirmTable",
+            "primaryKey": [
+              "id"
+            ],
+            "sourceInformation": {
+              "endColumn": 3,
+              "endLine": 27,
+              "sourceId": "",
+              "startColumn": 3,
+              "startLine": 23
+            }
+          },
+          {
+            "columns": [
+              {
+                "name": "id",
+                "nullable": false,
+                "sourceInformation": {
+                  "endColumn": 26,
+                  "endLine": 30,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 30
+                },
+                "type": {
+                  "_type": "Integer"
+                }
+              },
+              {
+                "name": "firm_id",
+                "nullable": true,
+                "sourceInformation": {
+                  "endColumn": 19,
+                  "endLine": 31,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 31
+                },
+                "type": {
+                  "_type": "Integer"
+                }
+              },
+              {
+                "name": "firstName",
+                "nullable": true,
+                "sourceInformation": {
+                  "endColumn": 26,
+                  "endLine": 32,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 32
+                },
+                "type": {
+                  "_type": "Varchar",
+                  "size": 200
+                }
+              },
+              {
+                "name": "lastName",
+                "nullable": true,
+                "sourceInformation": {
+                  "endColumn": 25,
+                  "endLine": 33,
+                  "sourceId": "",
+                  "startColumn": 5,
+                  "startLine": 33
+                },
+                "type": {
+                  "_type": "Varchar",
+                  "size": 200
+                }
+              }
+            ],
+            "milestoning": [],
+            "name": "PersonTable",
+            "primaryKey": [
+              "id"
+            ],
+            "sourceInformation": {
+              "endColumn": 3,
+              "endLine": 34,
+              "sourceId": "",
+              "startColumn": 3,
+              "startLine": 28
+            }
+          }
+        ],
+        "views": []
+      }
+    ],
+    "sourceInformation": {
+      "endColumn": 1,
+      "endLine": 37,
+      "sourceId": "",
+      "startColumn": 1,
+      "startLine": 21
+    }
+  }
+}

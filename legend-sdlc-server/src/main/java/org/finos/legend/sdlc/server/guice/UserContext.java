@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2023 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,23 +15,17 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.servlet.RequestScoped;
-import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.finos.legend.sdlc.server.tools.SessionProvider;
 
 import javax.inject.Inject;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestWrapper;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 @RequestScoped
 public class UserContext
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserContext.class);
 
     protected final HttpServletRequest httpRequest;
     protected final HttpServletResponse httpResponse;
@@ -42,7 +36,7 @@ public class UserContext
     {
         this.httpRequest = httpRequest;
         this.httpResponse = httpResponse;
-        this.session = LegendSDLCServerException.validateNonNull(findSession(httpRequest), "Invalid request");
+        this.session = LegendSDLCServerException.validateNonNull(SessionProvider.findSession(httpRequest), "Invalid request");
     }
 
     public String getCurrentUser()
@@ -55,54 +49,4 @@ public class UserContext
         return this.httpRequest;
     }
 
-    private static Session findSession(ServletRequest request)
-    {
-        Session session = findSession(request, 0);
-        if (session == null)
-        {
-            LOGGER.warn("Could not find SDLC session from request: {} (class: {})", request, request.getClass());
-        }
-        return session;
-    }
-
-    private static Session findSession(ServletRequest request, int depth)
-    {
-        Session sdlcSession = LegendSDLCWebFilter.getSessionFromServletRequestAttribute(request);
-        if (sdlcSession != null)
-        {
-            LOGGER.debug("got SDLC session from request attribute (depth {})", depth);
-            return sdlcSession;
-        }
-
-        if (request instanceof HttpServletRequest)
-        {
-            HttpServletRequest httpRequest = (HttpServletRequest) request;
-            HttpSession httpSession;
-            try
-            {
-                httpSession = httpRequest.getSession(false);
-            }
-            catch (Exception e)
-            {
-                httpSession = null;
-            }
-            if (httpSession != null)
-            {
-                sdlcSession = LegendSDLCWebFilter.getSessionFromHttpSession(httpSession);
-                if (sdlcSession != null)
-                {
-                    LOGGER.debug("got SDLC session from HTTP session (depth {})", depth);
-                    return sdlcSession;
-                }
-            }
-        }
-
-        if (request instanceof ServletRequestWrapper)
-        {
-            return findSession(((ServletRequestWrapper) request).getRequest(), depth + 1);
-        }
-
-        LOGGER.debug("Did not find session at depth {}; no more nested requests to check; request: {}; request class: {}", depth, request, request.getClass());
-        return null;
-    }
 }

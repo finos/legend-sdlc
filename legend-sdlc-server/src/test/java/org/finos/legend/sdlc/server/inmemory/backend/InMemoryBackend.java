@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
@@ -110,13 +111,18 @@ public class InMemoryBackend
 
         public void addWorkspace(String workspaceId, WorkspaceType workspaceType)
         {
+           this.addWorkspace(workspaceId, workspaceType, null);
+        }
+
+        public void addWorkspace(String workspaceId, WorkspaceType workspaceType, VersionId patchReleaseVersionId)
+        {
             if (workspaceType == WorkspaceType.GROUP)
             {
-                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision());
+                this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             }
             else
             {
-                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+                this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             }
         }
 
@@ -141,12 +147,26 @@ public class InMemoryBackend
 
         private void addEntities(String workspaceId, List<Entity> entities)
         {
-            this.addEntities(workspaceId, WorkspaceType.USER, entities);
+            this.addEntities(workspaceId, WorkspaceType.USER, entities, null);
+        }
+
+        public void addEntities(String workspaceId, List<Entity> entities, VersionId patchReleaseVersionId)
+        {
+            this.addEntities(workspaceId, WorkspaceType.USER, entities, patchReleaseVersionId);
         }
 
         private void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities)
         {
-            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision()) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision());
+            this.addEntities(workspaceId, workspaceType, entities, null);
+        }
+
+        public void addEntities(String workspaceId, WorkspaceType workspaceType, List<Entity> entities, VersionId patchReleaseVersionId)
+        {
+            if (patchReleaseVersionId != null)
+            {
+                this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
+            }
+            InMemoryWorkspace workspace = workspaceType == WorkspaceType.GROUP ? this.project.addNewGroupWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId) : this.project.addNewUserWorkspace(workspaceId, this.project.getCurrentRevision(), patchReleaseVersionId);
             workspace.getCurrentRevision().addEntities(entities);
         }
 
@@ -234,6 +254,11 @@ public class InMemoryBackend
             this.addEntities(workspaceId, entities);
         }
 
+        public void addPatch(VersionId patchReleaseVersionId)
+        {
+            this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
+        }
+
         public void addDependency(String... projectDependencies)
         {
             InMemoryRevision newRevision = new InMemoryRevision(this.project.getProjectId(), this.project.getCurrentRevision());
@@ -304,7 +329,16 @@ public class InMemoryBackend
     
         public InMemoryReview addReview(String reviewId)
         {
-            return this.project.addReview(reviewId);
+            return this.addReview(reviewId, null);
+        }
+
+        public InMemoryReview addReview(String reviewId, VersionId patchReleaseVersionId)
+        {
+            if (patchReleaseVersionId != null)
+            {
+                this.project.addPatch(patchReleaseVersionId, this.project.getCurrentRevision());
+            }
+            return this.project.addReview(reviewId, patchReleaseVersionId);
         }
     }
 

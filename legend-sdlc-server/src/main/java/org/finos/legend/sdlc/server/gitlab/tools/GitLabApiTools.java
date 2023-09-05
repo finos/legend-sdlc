@@ -15,20 +15,25 @@
 package org.finos.legend.sdlc.server.gitlab.tools;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.RepositoryApi;
+import org.gitlab4j.api.models.AccessLevel;
 import org.gitlab4j.api.models.Branch;
 import org.gitlab4j.api.models.Commit;
+import org.gitlab4j.api.models.Tag;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Objects;
 import java.util.function.LongUnaryOperator;
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 
 public class GitLabApiTools
@@ -311,5 +316,56 @@ public class GitLabApiTools
             return null;
         }
         return createBranchAndVerify(api, projectIdOrPath, branchName, sourceBranch.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
+    }
+
+    @Deprecated
+    public static Branch createProtectedBranchFromSourceTagAndVerify(GitLabApi api, GitLabProjectId projectId, String branchName, String sourceTagName, int maxVerificationTries, long verificationWaitMillis) throws GitLabApiException
+    {
+        return createProtectedBranchFromSourceTagAndVerify(api, projectId.getGitLabId(), branchName, sourceTagName, maxVerificationTries, verificationWaitMillis);
+    }
+
+    @Deprecated
+    public static Tag getTag(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
+    {
+        return getTag(api, gitLabProjectId.getGitLabId(), tagName);
+    }
+
+    @Deprecated
+    public static boolean tagExists(GitLabApi api, GitLabProjectId gitLabProjectId, String tagName) throws GitLabApiException
+    {
+        return tagExists(api, gitLabProjectId.getGitLabId(), tagName);
+    }
+
+    public static Branch createProtectedBranchFromSourceTagAndVerify(GitLabApi api, Object projectIdOrPath, String branchName, String sourceTagName, int maxVerificationTries, long verificationWaitMillis) throws GitLabApiException
+    {
+        Tag sourceTag = getTag(api, projectIdOrPath, sourceTagName);
+        if (sourceTag == null)
+        {
+            throw new LegendSDLCServerException("Source release version " + sourceTagName + " does not exist", Response.Status.CONFLICT);
+        }
+        Branch targetBranch = createBranchAndVerify(api.getRepositoryApi(), projectIdOrPath, branchName, sourceTag.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
+        api.getProtectedBranchesApi().protectBranch(projectIdOrPath, branchName, AccessLevel.NONE, AccessLevel.MAINTAINER, AccessLevel.MAINTAINER, true);
+        return targetBranch;
+    }
+
+    public static Tag getTag(GitLabApi api, Object projectIdOrPath, String tagName) throws GitLabApiException
+    {
+        try
+        {
+           return api.getTagsApi().getTag(projectIdOrPath, tagName);
+        }
+        catch (GitLabApiException e)
+        {
+            if (isNotFoundGitLabApiException(e))
+            {
+                return null;
+            }
+            throw e;
+        }
+    }
+
+    public static boolean tagExists(GitLabApi api, Object projectIdOrPath, String tagName) throws GitLabApiException
+    {
+        return getTag(api, projectIdOrPath, tagName) != null;
     }
 }

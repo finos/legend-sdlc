@@ -15,12 +15,11 @@
 package org.finos.legend.sdlc.test.junit;
 
 import junit.framework.TestSuite;
-import org.finos.legend.sdlc.test.PathTools;
 
 public class TestLegendSDLCTestSuite extends TestSuite
 {
     public static TestSuite suite()
     {
-        return new LegendSDLCTestSuiteBuilder("vX_X_X").buildSuite("Test TestSuite", PathTools.resourceToPath("legend-sdlc-test-m2m-mapping-model-with-tests"));
+        return new LegendSDLCTestSuiteBuilder("Test TestSuite", "vX_X_X").buildSuiteFromPackages("legend", "model::domain", "model::mapping");
     }
 }

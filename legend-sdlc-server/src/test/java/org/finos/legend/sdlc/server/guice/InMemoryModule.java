@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
 import com.google.inject.Scopes;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
@@ -25,6 +26,7 @@ import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
@@ -41,6 +43,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryComparisonApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryConflictResolutionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryEntityApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryIssueApi;
+import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryPatchApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryProjectConfigurationApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryReviewApi;
@@ -52,6 +55,7 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkflowJobApi;
 import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryWorkspaceApi;
 import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataApi;
 import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataBackend;
+import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
 public class InMemoryModule extends AbstractBaseModule
@@ -86,8 +90,10 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(ConflictResolutionApi.class).to(InMemoryConflictResolutionApi.class);
         binder.bind(BackupApi.class).to(InMemoryBackupApi.class);
         binder.bind(WorkflowApi.class).to(InMemoryWorkflowApi.class);
+        binder.bind(PatchApi.class).to(InMemoryPatchApi.class);
         binder.bind(WorkflowJobApi.class).to(InMemoryWorkflowJobApi.class);
 
         binder.bind(Project.class).to(InMemoryProject.class);
+        binder.bind(Patch.class).to(InMemoryPatch.class);
     }
 }

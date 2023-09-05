@@ -8,10 +8,6 @@
         "type": "FILE_GENERATION"
       },
       {
-        "path": "model::myRosetta",
-        "type": "FILE_GENERATION"
-      },
-      {
         "path": "model::myProtobuf",
         "type": "FILE_GENERATION"
       },

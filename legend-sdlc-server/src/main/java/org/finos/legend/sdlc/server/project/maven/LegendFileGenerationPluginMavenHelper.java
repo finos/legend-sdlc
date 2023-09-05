@@ -17,14 +17,13 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
-import java.util.Collections;
 import java.util.function.Consumer;
 
 public class LegendFileGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-    public LegendFileGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency extensionsGenerationCollection)
+    public LegendFileGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
-        super(groupId, artifactId, version, "generate-sources", "generate-file-generations", Collections.singletonList(extensionsGenerationCollection));
+        super(groupId, artifactId, version, "generate-sources", "generate-file-generations", generationExtensionsCollection);
     }
 
     @Override

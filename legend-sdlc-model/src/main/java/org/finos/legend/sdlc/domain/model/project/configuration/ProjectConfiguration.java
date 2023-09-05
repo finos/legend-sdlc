@@ -23,7 +23,6 @@ public interface ProjectConfiguration
 {
     String getProjectId();
 
-    @Deprecated
     default ProjectType getProjectType()
     {
         return null;

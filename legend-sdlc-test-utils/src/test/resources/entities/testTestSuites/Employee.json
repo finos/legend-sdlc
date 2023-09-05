@@ -1,0 +1,167 @@
+{
+  "content": {
+    "_type": "class",
+    "name": "Employee",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 1,
+      "startColumn": 1,
+      "endLine": 9,
+      "endColumn": 1
+    },
+    "superTypes": [],
+    "originalMilestonedProperties": [],
+    "properties": [
+      {
+        "name": "kerberos",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 3,
+          "startColumn": 3,
+          "endLine": 3,
+          "endColumn": 22
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 3,
+          "startColumn": 13,
+          "endLine": 3,
+          "endColumn": 18
+        }
+      },
+      {
+        "name": "employeeID",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 3,
+          "endLine": 4,
+          "endColumn": 24
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 15,
+          "endLine": 4,
+          "endColumn": 20
+        }
+      },
+      {
+        "name": "title",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 5,
+          "startColumn": 3,
+          "endLine": 5,
+          "endColumn": 22
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 5,
+          "startColumn": 10,
+          "endLine": 5,
+          "endColumn": 15
+        }
+      },
+      {
+        "name": "firstName",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 6,
+          "startColumn": 3,
+          "endLine": 6,
+          "endColumn": 26
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 6,
+          "startColumn": 14,
+          "endLine": 6,
+          "endColumn": 19
+        }
+      },
+      {
+        "name": "lastName",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 7,
+          "startColumn": 3,
+          "endLine": 7,
+          "endColumn": 25
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 7,
+          "startColumn": 13,
+          "endLine": 7,
+          "endColumn": 18
+        }
+      },
+      {
+        "name": "countryCode",
+        "type": "String",
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "stereotypes": [],
+        "taggedValues": [],
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 8,
+          "startColumn": 3,
+          "endLine": 8,
+          "endColumn": 28
+        },
+        "propertyTypeSourceInformation": {
+          "sourceId": "",
+          "startLine": 8,
+          "startColumn": 16,
+          "endLine": 8,
+          "endColumn": 21
+        }
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "taggedValues": [],
+    "constraints": [],
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::pure::metamodel::type::Class"
+}

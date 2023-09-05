@@ -24,7 +24,6 @@ import org.apache.maven.plugins.annotations.Parameter;
 import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
@@ -120,7 +119,7 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
                 throw new MojoFailureException("A non-empty version is required");
             }
         }
-        else if (!this.versionAlias.matches("^\\w++$"))
+        else if (!this.versionAlias.matches("\\w++"))
         {
             throw new MojoFailureException("Invalid version alias: \"" + this.versionAlias + "\"");
         }
@@ -349,26 +348,9 @@ public class VersionQualifiedPackageMojo extends AbstractMojo
 
     private static StringBuilder appendVersionPackage(StringBuilder builder, String version)
     {
-        VersionId versionId;
-        try
-        {
-            versionId = VersionId.parseVersionId(version);
-        }
-        catch (IllegalArgumentException ignore)
-        {
-            versionId = null;
-        }
-
-        if (versionId == null)
-        {
-            builder.append("vX_X_X");
-        }
-        else
-        {
-            builder.append('v');
-            versionId.appendVersionIdString(builder, '_');
-        }
-        return builder;
+        return version.matches("\\d++(\\.\\d++)*+") ?
+                builder.append('v').append(version.replace('.', '_')) :
+                builder.append("vX_X_X");
     }
 
     private static boolean isValidPackageNameCharacter(char c)

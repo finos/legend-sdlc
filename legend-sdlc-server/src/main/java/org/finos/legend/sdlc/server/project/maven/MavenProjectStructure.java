@@ -593,6 +593,35 @@ public abstract class MavenProjectStructure extends ProjectStructure
         return obj1.compareTo(obj2);
     }
 
+    protected static class MavenCoordinates
+    {
+        private final String groupId;
+        private final String artifactId;
+        private final String version;
+
+        public MavenCoordinates(String groupdId, String artifactId, String version)
+        {
+            this.groupId = groupdId;
+            this.artifactId = artifactId;
+            this.version = version;
+        }
+
+        public String getArtifactId()
+        {
+            return artifactId;
+        }
+
+        public String getVersion()
+        {
+            return version;
+        }
+
+        public String getGroupId()
+        {
+            return groupId;
+        }
+    }
+
     protected static class MavenModelConfiguration
     {
         private final SortedProperties properties = new SortedProperties();

@@ -18,10 +18,10 @@ import junit.framework.TestCase;
 import junit.framework.TestFailure;
 import junit.framework.TestResult;
 import junit.framework.TestSuite;
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
-import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.finos.legend.sdlc.test.PathTools;
+import org.eclipse.collections.impl.list.fixed.ArrayAdapter;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -40,11 +40,11 @@ public class TestLegendSDLCTestSuiteBuilder
     public void testBuildM2MMappingWithTestsTestSuite() throws Exception
     {
         Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
-                "legend::demo::AB { Specific }", Sets.immutable.with("legend::demo::AB Test #1").castToSet(),
-                "model::domain::inmemm2m::mapping::M2MMapping { Specific }", Sets.immutable.with("model::domain::inmemm2m::mapping::M2MMapping Test #1", "model::domain::inmemm2m::mapping::M2MMapping Test #2").castToSet());
+                "legend::demo::SingleQuoteInResultM2M { Specific }", Sets.immutable.with("legend::demo::SingleQuoteInResultM2M Test #1").castToSet(),
+                "model::mapping::SourceToTargetM2M { Specific }", Sets.immutable.with("model::mapping::SourceToTargetM2M Test #1", "model::mapping::SourceToTargetM2M Test #2").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-m2m-mapping-model-with-tests", 2, 3, 0, 0, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-m2m-mapping-model-with-tests", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-m2m-mapping-model-with-tests", "legend", "model");
     }
 
     @Test
@@ -52,10 +52,12 @@ public class TestLegendSDLCTestSuiteBuilder
     {
         Map<String, Set<String>> expectedTestCasesByTestSuite = Maps.mutable.with(
                 "testTestSuites::TestService { Generic }", Sets.immutable.with("testTestSuites::TestService Test #1").castToSet(),
-                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet());
-        ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 2, 2, 0, 1, expectedTestCasesByTestSuite);
+                "testTestSuites::TestService2 { Generic }", Sets.immutable.with("testTestSuites::TestService2 Test #1").castToSet(),
+                "testTestSuites::TestService3 { Generic }", Sets.immutable.with("testTestSuites::TestService3 Test #1").castToSet(),
+                "testTestSuites::TestService4 { Generic }", Sets.immutable.with("testTestSuites::TestService4 Test #1").castToSet());
+        ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-service-with-testSuites", 4, 4, 0, 2, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-service-with-testSuites", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-service-with-testSuites", "testTestSuites");
     }
 
     @Test
@@ -65,17 +67,17 @@ public class TestLegendSDLCTestSuiteBuilder
                 "execution::RelationalMapping { Generic }", Sets.immutable.with("execution::RelationalMapping Test #1").castToSet());
         ExpectedTestState expectedTestState = new ExpectedTestState("legend-sdlc-test-mapping-with-testTestSuites", 1, 1, 0, 0, expectedTestCasesByTestSuite);
 
-        testTestSuiteBuilder("legend-sdlc-test-mapping-with-testTestSuites", expectedTestState);
+        testTestSuiteBuilder(expectedTestState, "legend-sdlc-test-mapping-with-testTestSuites", Lists.immutable.with("data", "execution", "model", "store"), Lists.immutable.with("model::mapping", "model::domain"));
     }
 
-    protected void testTestSuiteBuilder(String entitiesResourceName, ExpectedTestState expectedTestState) throws Exception
+    protected void testTestSuiteBuilder(ExpectedTestState expectedTestState, String suiteName, String... testingPackages)
     {
-        TestSuite suite;
-        try (EntityLoader entityLoader = EntityLoader.newEntityLoader(PathTools.resourceToPath(entitiesResourceName)))
-        {
-            suite = new LegendSDLCTestSuiteBuilder("vX_X_X")
-                    .buildSuite(entitiesResourceName, entityLoader);
-        }
+        testTestSuiteBuilder(expectedTestState, suiteName, ArrayAdapter.adapt(testingPackages), null);
+    }
+
+    protected void testTestSuiteBuilder(ExpectedTestState expectedTestState, String suiteName, Iterable<String> includePackagesForTesting, Iterable<String> excludePackagesForTesting)
+    {
+        TestSuite suite = new LegendSDLCTestSuiteBuilder(suiteName, "vX_X_X").buildSuiteFromPackages(includePackagesForTesting, excludePackagesForTesting);
         expectedTestState.assertTestSuite(suite);
     }
 
@@ -99,7 +101,7 @@ public class TestLegendSDLCTestSuiteBuilder
                 {
                     t.printStackTrace(pw);
                 }
-                builder.append('\n').append(writer.toString());
+                builder.append('\n').append(writer.getBuffer());
             }
         });
         return builder.toString();
@@ -107,16 +109,16 @@ public class TestLegendSDLCTestSuiteBuilder
 
     protected class ExpectedTestState
     {
-        private String entitiesResourceName;
-        private int expectedTestCount;
-        private int expectedTestCaseCount;
-        private int expectedErrors;
-        private int expectedFailures;
-        private Map<String, Set<String>> expectedTestCasesByTestSuite;
+        private final String suiteName;
+        private final int expectedTestCount;
+        private final int expectedTestCaseCount;
+        private final int expectedErrors;
+        private final int expectedFailures;
+        private final Map<String, Set<String>> expectedTestCasesByTestSuite;
 
-        public ExpectedTestState(String entitiesResourceName, int expectedTestCount, int expectedTestCaseCount, int expectedErrors, int expectedFailures, Map<String, Set<String>> expectedTestCasesByTestSuite)
+        public ExpectedTestState(String suiteName, int expectedTestCount, int expectedTestCaseCount, int expectedErrors, int expectedFailures, Map<String, Set<String>> expectedTestCasesByTestSuite)
         {
-            this.entitiesResourceName = entitiesResourceName;
+            this.suiteName = suiteName;
             this.expectedTestCount = expectedTestCount;
             this.expectedTestCaseCount = expectedTestCaseCount;
             this.expectedErrors = expectedErrors;
@@ -137,15 +139,14 @@ public class TestLegendSDLCTestSuiteBuilder
             TestResult testResult = new TestResult();
             suite.run(testResult);
 
-            Assert.assertEquals(entitiesResourceName, suite.getName());
-            Assert.assertEquals(expectedTestCount, suite.testCount());
-            Assert.assertEquals(expectedTestCaseCount, suite.countTestCases());
+            Assert.assertEquals(this.suiteName, suite.getName());
+            Assert.assertEquals(this.expectedTestCount, suite.testCount());
+            Assert.assertEquals(this.expectedTestCaseCount, suite.countTestCases());
 
             Assert.assertEquals(suite.countTestCases(), testResult.runCount());
-            Assert.assertEquals(buildFailureMessage("erroring", testResult.errors()), expectedErrors, testResult.errorCount());
-            Assert.assertEquals(buildFailureMessage("failing", testResult.failures()), expectedFailures, testResult.failureCount());
-            Assert.assertEquals(expectedTestCasesByTestSuite, actualTestCasesByTestSuite);
+            Assert.assertEquals(buildFailureMessage("erroring", testResult.errors()), this.expectedErrors, testResult.errorCount());
+            Assert.assertEquals(buildFailureMessage("failing", testResult.failures()), this.expectedFailures, testResult.failureCount());
+            Assert.assertEquals(this.expectedTestCasesByTestSuite, actualTestCasesByTestSuite);
         }
     }
 }
-

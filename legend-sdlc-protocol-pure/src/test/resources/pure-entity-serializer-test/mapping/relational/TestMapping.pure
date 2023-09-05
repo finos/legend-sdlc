@@ -1,7 +1,7 @@
 ###Mapping
 Mapping model::mapping::TestMapping
 (
-  include model::mapping::OtherMapping
+  include mapping model::mapping::OtherMapping
 
   model::domain::TargetClass1[tc1]: Relational
   {

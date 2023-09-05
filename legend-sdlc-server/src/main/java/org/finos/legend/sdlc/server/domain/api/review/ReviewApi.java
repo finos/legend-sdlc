@@ -19,8 +19,14 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Approval;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
@@ -44,22 +50,17 @@ public interface ReviewApi
      * Time filter range (since/until) is inclusive.
      * If the limit equals to 0, effectively no limit is applied.
      *
-     * @param projectId   project id
-     * @param state       review state
-     * @param revisionIds a set of revision IDs, with each we will get the reviews are associated
+     * @param projectId                   project id
+     * @param state                       review state
+     * @param revisionIds                 a set of revision IDs, with each we will get the reviews are associated
      * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
-     * @param since       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
-     * @param until       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
-     * @param limit       maximum number of reviews to get
+     * @param sources                     source with which review is associated
+     * @param since                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param until                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param limit                       maximum number of reviews to get
      * @return reviews
      */
-    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit);
-
-    @Deprecated
-    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
-    {
-        return this.getReviews(projectId, state, revisionIds, null, since, until, limit);
-    }
+    List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Set<WorkspaceSource> sources, Instant since, Instant until, Integer limit);
 
     /**
      * Get reviews across all projects with the given state and labels.
@@ -71,36 +72,41 @@ public interface ReviewApi
      * If the limit equals to 0, effectively no limit is applied.
      * if no projectType is provided the default mode of the system would be selected
      *
-     * @param assignedToMe whether to return only reviews assigned to me
-     * @param authoredByMe whether to return only reviews authored by me
-     * @param labels       labels to apply, return only reviews that match all the labels
+     * @param assignedToMe                whether to return only reviews assigned to me
+     * @param authoredByMe                whether to return only reviews authored by me
+     * @param labels                      labels to apply, return only reviews that match all the labels
      * @param workspaceIdAndTypePredicate workspace Id and type predicate with which review is associated
-     * @param state        review state
-     * @param since        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
-     * @param until        this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
-     * @param limit        maximum number of reviews to get
+     * @param state                       review state
+     * @param since                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param until                       this time limit is interpreted based on the chosen state, for example: if only committed reviews are fetched, 'since' will concern the committed time
+     * @param limit                       maximum number of reviews to get
      * @return reviews
      */
     List<Review> getReviews(boolean assignedToMe, boolean authoredByMe, List<String> labels, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, ReviewState state, Instant since, Instant until, Integer limit);
 
-    @Deprecated
-    default List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
-    {
-        return this.getReviews(assignedToMe, authoredByMe, labels, null, state, since, until, limit);
-    }
-
     /**
      * Create a review for changes from the given workspace.
      *
-     * @param projectId     project id
-     * @param workspaceId   workspace id
-     * @param workspaceType workspace type
-     * @param title         review title
-     * @param description   review description
-     * @param labels        review labels
+     * @param projectId              project id
+     * @param workspaceSpecification source specification
+     * @param title                  review title
+     * @param description            review description
+     * @param labels                 review labels
      * @return new review
      */
-    Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels);
+    Review createReview(String projectId, WorkspaceSpecification workspaceSpecification, String title, String description, List<String> labels);
+
+    /**
+     * Edit review. Update the title, description, or labels.
+     *
+     * @param projectId   project id
+     * @param reviewId    review id
+     * @param title       updated Title
+     * @param description description
+     * @param labels      review labels
+     * @return edited review
+     */
+    Review editReview(String projectId, String reviewId, String title, String description, List<String> labels);
 
     /**
      * Close a review. This is only valid if the review is open.
@@ -130,8 +136,7 @@ public interface ReviewApi
     Review approveReview(String projectId, String reviewId);
 
     /**
-     * Revoke approval of a review. This is only valid if the review
-     * is open and the user has previously approved it.
+     * Revoke approval of a review. This is only valid if the review is open and the user has previously approved it.
      *
      * @param projectId project id
      * @param reviewId  review id
@@ -140,8 +145,7 @@ public interface ReviewApi
     Review revokeReviewApproval(String projectId, String reviewId);
 
     /**
-     * Reject a review. This is only valid if the review is open. It
-     * may cause the review to be closed.
+     * Reject a review. This is only valid if the review is open. It may cause the review to be closed.
      *
      * @param projectId project id
      * @param reviewId  review id
@@ -159,8 +163,7 @@ public interface ReviewApi
     Approval getReviewApproval(String projectId, String reviewId);
 
     /**
-     * Commit changes from a review. This is only valid if the
-     * review is open and has sufficient approvals.
+     * Commit changes from a review. This is only valid if the review is open and has sufficient approvals.
      *
      * @param projectId project id
      * @param reviewId  review id
@@ -170,9 +173,8 @@ public interface ReviewApi
     Review commitReview(String projectId, String reviewId, String message);
 
     /**
-     * Get the current update status of an open review. See {@link ReviewUpdateStatus}
-     * for more information on the meaning of the return value. If the review is not
-     * open, this method will throw an exception.
+     * Get the current update status of an open review. See {@link ReviewUpdateStatus} for more information on the
+     * meaning of the return value. If the review is not open, this method will throw an exception.
      *
      * @param projectId project id
      * @param reviewId  review id
@@ -181,37 +183,23 @@ public interface ReviewApi
     ReviewUpdateStatus getReviewUpdateStatus(String projectId, String reviewId);
 
     /**
-     * Try to update an open review. That is, try to bring the review up to date
-     * with the latest revision of the project. If the review is not open, this
-     * method will throw an exception.
+     * Try to update an open review. That is, try to bring the review up to date with the latest revision of the
+     * source of the workspace. If the review is not open, this method will throw an exception.
      * <p>
-     * This method does not wait for the update to complete. It starts the update
-     * and returns an initial status. Use {@link #getReviewUpdateStatus} for
-     * subsequent status checks.
+     * This method does not wait for the update to complete. It starts the update and returns an initial status. Use
+     * {@link #getReviewUpdateStatus} for subsequent status checks.
      * <p>
-     * If an update is already in progress or if the review is already up to
-     * date, this returns the current update status but is otherwise a no-op.
+     * If an update is already in progress or if the review is already up to date, this returns the current update
+     * status but is otherwise a no-op.
      * <p>
-     * It is not always possible to update a review. In case the update fails,
-     * the review will be left in the pre-update state.
+     * It is not always possible to update a review. In case the update fails, the review will be left in the pre-update
+     * state.
      *
      * @param projectId project id
      * @param reviewId  review id
      * @return update status
      */
     ReviewUpdateStatus updateReview(String projectId, String reviewId);
-
-    /**
-     * Edit review, update the review  title, description and labels
-     *
-     * @param projectId   project id
-     * @param reviewId    review id
-     * @param title       updated Title
-     * @param description description
-     * @param labels      review labels
-     * @return edited review
-     */
-    Review editReview(String projectId, String reviewId, String title, String description, List<String> labels);
 
     interface ReviewUpdateStatus
     {
@@ -238,5 +226,113 @@ public interface ReviewApi
          * @return target head revision
          */
         String getTargetRevisionId();
+    }
+
+    // Deprecated APIs
+
+    @Deprecated
+    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.projectWorkspaceSource()), since, until, limit);
+    }
+
+    @Deprecated
+    default Review getReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return getReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default List<Review> getReviews(String projectId, VersionId patchReleaseVersionId, ReviewState state, Iterable<String> revisionIds, BiPredicate<String, WorkspaceType> workspaceIdAndTypePredicate, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(projectId, state, revisionIds, workspaceIdAndTypePredicate, Collections.singleton(WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)), since, until, limit);
+    }
+
+    @Deprecated
+    default List<Review> getReviews(String projectId, ReviewState state, Iterable<String> revisionIds, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(projectId, state, revisionIds, null, since, until, limit);
+    }
+
+    @Deprecated
+    default List<Review> getReviews(Set<ProjectType> projectTypes, boolean assignedToMe, boolean authoredByMe, List<String> labels, ReviewState state, Instant since, Instant until, Integer limit)
+    {
+        return getReviews(assignedToMe, authoredByMe, labels, null, state, since, until, limit);
+    }
+
+    @Deprecated
+    default Review createReview(String projectId, SourceSpecification sourceSpecification, String title, String description, List<String> labels)
+    {
+        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
+        {
+            throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
+        }
+        return createReview(projectId, ((WorkspaceSourceSpecification) sourceSpecification).getWorkspaceSpecification(), title, description, labels);
+    }
+
+    @Deprecated
+    default Review createReview(String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, List<String> labels)
+    {
+        return createReview(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType), title, description, labels);
+    }
+
+    @Deprecated
+    default Review closeReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return closeReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review reopenReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return reopenReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review approveReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return approveReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review revokeReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return revokeReviewApproval(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review rejectReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return rejectReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Approval getReviewApproval(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return getReviewApproval(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review commitReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String message)
+    {
+        return commitReview(projectId, reviewId, message);
+    }
+
+    @Deprecated
+    default ReviewUpdateStatus getReviewUpdateStatus(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return getReviewUpdateStatus(projectId, reviewId);
+    }
+
+    @Deprecated
+    default ReviewUpdateStatus updateReview(String projectId, VersionId patchReleaseVersionId, String reviewId)
+    {
+        return updateReview(projectId, reviewId);
+    }
+
+    @Deprecated
+    default Review editReview(String projectId, VersionId patchReleaseVersionId, String reviewId, String title, String description, List<String> labels)
+    {
+        return editReview(projectId, reviewId, title, description, labels);
     }
 }

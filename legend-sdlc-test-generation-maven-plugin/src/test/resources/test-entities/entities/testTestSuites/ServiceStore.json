@@ -1,0 +1,180 @@
+{
+  "content": {
+    "_type": "serviceStore",
+    "name": "ServiceStore",
+    "sourceInformation": {
+      "sourceId": "",
+      "startLine": 2,
+      "startColumn": 1,
+      "endLine": 30,
+      "endColumn": 1
+    },
+    "includedStores": [],
+    "elements": [
+      {
+        "_type": "serviceGroup",
+        "id": "EmployeeServices",
+        "path": "/employees",
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 4,
+          "startColumn": 3,
+          "endLine": 29,
+          "endColumn": 3
+        },
+        "elements": [
+          {
+            "_type": "service",
+            "id": "EmployeeService",
+            "path": "/allEmployees",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 8,
+              "startColumn": 5,
+              "endLine": 14,
+              "endColumn": 5
+            },
+            "method": "GET",
+            "response": {
+              "_type": "complex",
+              "list": true,
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 12,
+                "startColumn": 18,
+                "endLine": 12,
+                "endColumn": 120
+              },
+              "type": "testTestSuites::Employee",
+              "binding": "testTestSuites::employeeServiceStoreSchemaBinding"
+            },
+            "security": []
+          },
+          {
+            "_type": "service",
+            "id": "EmployeeServiceWithParameters",
+            "path": "/employeesWithParameters",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 15,
+              "startColumn": 5,
+              "endLine": 28,
+              "endColumn": 5
+            },
+            "method": "GET",
+            "parameters": [
+              {
+                "name": "stringParam",
+                "type": {
+                  "_type": "string",
+                  "list": false,
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 21,
+                    "startColumn": 23,
+                    "endLine": 21,
+                    "endColumn": 28
+                  }
+                },
+                "location": "QUERY",
+                "serializationFormat": {},
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 21,
+                  "startColumn": 9,
+                  "endLine": 21,
+                  "endColumn": 49
+                }
+              },
+              {
+                "name": "integerParam",
+                "type": {
+                  "_type": "integer",
+                  "list": false,
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 22,
+                    "startColumn": 24,
+                    "endLine": 22,
+                    "endColumn": 30
+                  }
+                },
+                "location": "QUERY",
+                "serializationFormat": {},
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 22,
+                  "startColumn": 9,
+                  "endLine": 22,
+                  "endColumn": 51
+                }
+              },
+              {
+                "name": "floatParam",
+                "type": {
+                  "_type": "float",
+                  "list": false,
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 23,
+                    "startColumn": 22,
+                    "endLine": 23,
+                    "endColumn": 26
+                  }
+                },
+                "location": "QUERY",
+                "serializationFormat": {},
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 23,
+                  "startColumn": 9,
+                  "endLine": 23,
+                  "endColumn": 47
+                }
+              },
+              {
+                "name": "booleanParam",
+                "type": {
+                  "_type": "boolean",
+                  "list": false,
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 24,
+                    "startColumn": 24,
+                    "endLine": 24,
+                    "endColumn": 30
+                  }
+                },
+                "location": "QUERY",
+                "serializationFormat": {},
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 24,
+                  "startColumn": 9,
+                  "endLine": 24,
+                  "endColumn": 51
+                }
+              }
+            ],
+            "response": {
+              "_type": "complex",
+              "list": true,
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 26,
+                "startColumn": 18,
+                "endLine": 26,
+                "endColumn": 121
+              },
+              "type": "testTestSuites::Employee2",
+              "binding": "testTestSuites::employeeServiceStoreSchemaBinding"
+            },
+            "security": []
+          }
+        ]
+      }
+    ],
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::external::store::service::metamodel::ServiceStore"
+}

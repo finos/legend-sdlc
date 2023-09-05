@@ -1,0 +1,1 @@
+Some output for enumeration 'City' - SDLC Info 'org.finos.test:test-project:1.0.0'

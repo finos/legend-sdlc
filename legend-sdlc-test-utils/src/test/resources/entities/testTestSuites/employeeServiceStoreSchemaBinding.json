@@ -1,0 +1,17 @@
+{
+  "content": {
+    "_type": "binding",
+    "contentType": "application/json",
+    "includedStores": [],
+    "modelUnit": {
+      "packageableElementExcludes": [],
+      "packageableElementIncludes": [
+        "testTestSuites::Employee",
+        "testTestSuites::Employee2"
+      ]
+    },
+    "name": "employeeServiceStoreSchemaBinding",
+    "package": "testTestSuites"
+  },
+  "classifierPath": "meta::external::shared::format::binding::Binding"
+}

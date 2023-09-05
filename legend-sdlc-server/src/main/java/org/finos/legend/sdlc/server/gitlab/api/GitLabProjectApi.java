@@ -18,6 +18,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.utility.Iterate;
+import org.eclipse.collections.impl.utility.LazyIterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
@@ -29,6 +30,8 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -64,13 +67,11 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
 
@@ -100,20 +101,9 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     public Project getProject(String id)
     {
         LegendSDLCServerException.validateNonNull(id, "id may not be null");
-        try
-        {
-            GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi().getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isLegendSDLCProject(gitLabProject))
-            {
-                throw new LegendSDLCServerException("Failed to get project " + id);
-            }
-            return fromGitLabProject(gitLabProject);
-        }
-        catch (Exception e)
-        {
-            throw buildException(e, () -> "Failed to get project " + id);
-        }
+        GitLabProjectId projectId = parseProjectId(id);
+        org.gitlab4j.api.models.Project gitLabProject = getLegendSDLCGitLabProject(projectId);
+        return fromGitLabProject(gitLabProject);
     }
 
     @Override
@@ -139,7 +129,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
             if (!tagSet.isEmpty())
             {
-                stream = stream.filter(p -> p.getTagList().stream().anyMatch(tagSet::contains));
+                stream = stream.filter(p ->
+                {
+                    List<String> tagList = p.getTagList();
+                    return (tagList != null) && Iterate.anySatisfy(p.getTagList(), tagSet::contains);
+                });
             }
             if (limited)
             {
@@ -157,7 +151,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     message.append("user ");
                 }
                 message.append("projects");
-                List<String> tagList = (tags == null) ? Collections.emptyList() : StreamSupport.stream(tags.spliterator(), false).collect(Collectors.toList());
+                List<String> tagList = (tags == null) ? Collections.emptyList() : Lists.mutable.withAll(tags);
                 if ((search != null) || !tagList.isEmpty())
                 {
                     message.append(" (");
@@ -182,12 +176,16 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public Project createProject(String name, String description, String groupId, String artifactId, Iterable<String> tags)
+    public Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags)
     {
         LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        if (type != null)
+        {
+            LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
+        }
 
         validateProjectCreation(groupId, artifactId);
 
@@ -255,10 +253,11 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             int projectStructureVersion = getDefaultProjectStructureVersion();
             ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
                     .withProjectId(project.getProjectId())
+                    .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId)
                     .withProjectStructureVersion(projectStructureVersion);
-            if (this.projectStructurePlatformExtensions != null)
+            if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
             {
                 configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
             }
@@ -340,11 +339,15 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public ImportReport importProject(String id, String groupId, String artifactId)
+    public ImportReport importProject(String id, ProjectType type, String groupId, String artifactId)
     {
         LegendSDLCServerException.validateNonNull(id, "id may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
         LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        if (type != null)
+        {
+            LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
+        }
 
         // Get project ID
         GitLabProjectId projectId = id.chars().allMatch(Character::isDigit) ?
@@ -370,13 +373,12 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         // Create a workspace for project configuration
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
         String workspaceId = PROJECT_CONFIGURATION_WORKSPACE_ID_PREFIX + getRandomIdString();
-        WorkspaceType workspaceType = WorkspaceType.USER;
-        WorkspaceAccessType workspaceAccessType = WorkspaceAccessType.WORKSPACE;
+        WorkspaceSpecification workspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
         Branch workspaceBranch;
         String defaultBranch = getDefaultBranch(projectId);
         try
         {
-            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, 30, 1_000);
+            workspaceBranch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), defaultBranch, 30, 1_000);
         }
         catch (Exception e)
         {
@@ -395,12 +397,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         Revision configRevision;
         try
         {
-            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), null, null, projectFileAccessProvider, WorkspaceType.USER, WorkspaceAccessType.WORKSPACE);
+            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
             ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId);
             ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
-                    .withWorkspace(workspaceId, workspaceType, workspaceAccessType)
+                    .withWorkspace(workspaceSpec)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
             int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
@@ -408,7 +411,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             {
                 // No current project structure: build a new one
                 configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                if (this.projectStructureExtensionProvider != null)
+                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
                 {
                     configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
                 }
@@ -420,7 +423,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
                 {
                     configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                    if (this.projectStructureExtensionProvider != null)
+                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
                     {
                         configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
                     }
@@ -431,7 +434,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         catch (Exception e)
         {
             // Try to delete the branch in case of exception
-            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
             throw e;
         }
 
@@ -443,22 +446,22 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             reviewId = null;
 
             // Try to delete the branch
-            deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
         }
         else
         {
             MergeRequest mergeRequest;
             try
             {
-                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
+                mergeRequest = gitLabApi.getMergeRequestApi().createMergeRequest(projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), defaultBranch, "Project structure", "Set up project structure", null, null, null, null, true, false);
             }
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+                deleteWorkspace(projectId, repositoryApi, workspaceSpec);
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to submit project configuration changes create a workspace for initial configuration of project " + id,
-                        () -> "Could not find " + workspaceType.getLabel() + " " + workspaceAccessType.getLabel() + " " + workspaceId + " in project " + id,
+                        () -> "Could not find " + getReferenceInfo(id, workspaceSpec),
                         () -> "Failed to create a review for configuration of project " + id);
             }
             reviewId = toStringIfNotNull(mergeRequest.getIid());
@@ -466,14 +469,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
         // Add tags
         Project finalProject;
-        List<String> currentTags = currentProject.getTagList();
-        if ((currentTags != null) && currentTags.stream().anyMatch(this::isLegendSDLCProjectTag))
+        if (hasLegendSDLCProjectTag(currentProject))
         {
             // already has the necessary tag
             finalProject = fromGitLabProject(currentProject);
         }
         else
         {
+            List<String> currentTags = currentProject.getTagList();
             List<String> updatedTags = Lists.mutable.ofInitialCapacity((currentTags == null) ? 1 : (currentTags.size() + 1));
             if (currentTags != null)
             {
@@ -488,7 +491,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             catch (Exception e)
             {
                 // Try to delete the branch in case of exception
-                deleteWorkspace(projectId, repositoryApi, workspaceId, workspaceType, workspaceAccessType);
+                deleteWorkspace(projectId, repositoryApi, workspaceSpec);
                 throw buildException(e,
                         () -> "User " + getCurrentUser() + " is not allowed to import project " + id,
                         () -> "Could not find project " + id,
@@ -512,20 +515,20 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         };
     }
 
-    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
+    private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, WorkspaceSpecification workspaceSpec)
     {
         try
         {
-            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceId, workspaceType, workspaceAccessType), 30, 1_000);
+            boolean deleted = GitLabApiTools.deleteBranchAndVerify(repositoryApi, projectId.getGitLabId(), getWorkspaceBranchName(workspaceSpec), 30, 1_000);
             if (!deleted)
             {
-                LOGGER.error("Failed to delete {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId);
+                LOGGER.error("Failed to delete {} {} {} in project {}", workspaceSpec.getType().getLabel(), workspaceSpec.getAccessType().getLabel(), workspaceSpec.getId(), projectId);
             }
         }
         catch (Exception e)
         {
             // Possibly failed to delete branch - unfortunate, but ignore it
-            LOGGER.error("Error deleting {} {} {} in project {}", workspaceType.getLabel(), workspaceAccessType.getLabel(), workspaceId, projectId, e);
+            LOGGER.error("Error deleting {} {} {} in project {}", workspaceSpec.getType().getLabel(), workspaceSpec.getAccessType().getLabel(), workspaceSpec.getId(), projectId, e);
         }
     }
 
@@ -536,7 +539,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
+            org.gitlab4j.api.models.Project currentProject = getLegendSDLCGitLabProject(projectId);
             withRetries(() -> getGitLabApi().getProjectApi().deleteProject(currentProject));
         }
         catch (Exception e)
@@ -556,7 +559,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
+            org.gitlab4j.api.models.Project currentProject = getLegendSDLCGitLabProject(projectId);
             if (newName.equals(currentProject.getName()))
             {
                 return;
@@ -581,7 +584,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         try
         {
             GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
+            org.gitlab4j.api.models.Project currentProject = getLegendSDLCGitLabProject(projectId);
             org.gitlab4j.api.models.Project updatedProject = new org.gitlab4j.api.models.Project().withId(currentProject.getId()).withDescription(newDescription);
             withRetries(() -> getGitLabApi().getProjectApi().updateProject(updatedProject));
         }
@@ -606,7 +609,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabProjectId projectId = parseProjectId(id);
 
-            org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
+            org.gitlab4j.api.models.Project currentProject = getLegendSDLCGitLabProject(projectId);
             List<String> currentTags = currentProject.getTagList();
 
             Set<String> toRemoveSet = (tagsToRemove == null) ? Collections.emptySet() : toLegendSDLCTagSet(tagsToRemove);
@@ -645,7 +648,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabProjectId projectId = parseProjectId(id);
 
-            org.gitlab4j.api.models.Project currentProject = getPureGitLabProjectById(projectId);
+            org.gitlab4j.api.models.Project currentProject = getLegendSDLCGitLabProject(projectId);
 
             List<String> currentTags = currentProject.getTagList();
             Set<String> newTags = toLegendSDLCTagSet(tags);
@@ -713,50 +716,19 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public Set<AuthorizableProjectAction> checkUserAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
     {
-        try
-        {
-            GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi().getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isLegendSDLCProject(gitLabProject))
-            {
-                throw new LegendSDLCServerException("Failed to get project " + id);
-            }
-            AccessLevel userLevel = getUserAccess(gitLabProject);
-            if (userLevel == null)
-            {
-                return Collections.emptySet();
-            }
-            return actions.stream().filter(Objects::nonNull).filter(a -> checkUserAction(projectId, a, userLevel)).collect(Collectors.toSet());
-        }
-        catch (Exception e)
-        {
-            throw buildException(e, () -> "Failed to get project " + id);
-        }
+        GitLabProjectId projectId = parseProjectId(id);
+        org.gitlab4j.api.models.Project gitLabProject = getLegendSDLCGitLabProject(projectId);
+        AccessLevel userLevel = getUserAccess(gitLabProject);
+        return (userLevel == null) ? Collections.emptySet() : Iterate.select(actions, a -> (a != null) && checkUserAction(projectId, a, userLevel), EnumSet.noneOf(AuthorizableProjectAction.class));
     }
 
     @Override
     public boolean checkUserAuthorizedAction(String id, AuthorizableProjectAction action)
     {
-        try
-        {
-            GitLabProjectId projectId = parseProjectId(id);
-            org.gitlab4j.api.models.Project gitLabProject = withRetries(() -> getGitLabApi().getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isLegendSDLCProject(gitLabProject))
-            {
-                throw new LegendSDLCServerException("Failed to get project " + id);
-            }
-            AccessLevel userLevel = getUserAccess(gitLabProject);
-            if (userLevel == null)
-            {
-                return false;
-            }
-
-            return checkUserAction(projectId, action, userLevel);
-        }
-        catch (Exception e)
-        {
-            throw buildException(e, () -> "Failed to get project " + id);
-        }
+        GitLabProjectId projectId = parseProjectId(id);
+        org.gitlab4j.api.models.Project gitLabProject = getLegendSDLCGitLabProject(projectId);
+        AccessLevel userLevel = getUserAccess(gitLabProject);
+        return (userLevel != null) && checkUserAction(projectId, action, userLevel);
     }
 
     private AccessLevel getUserAccess(org.gitlab4j.api.models.Project gitLabProject)
@@ -815,15 +787,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 // See https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
                 return defaultReleaseAction(accessLevel);
             }
-            protectedTags = protectedTags.stream().filter(a -> a.getName().startsWith("release") || a.getName().startsWith("version")).collect(Collectors.toList());
-            for (ProtectedTag tag : protectedTags)
+            for (ProtectedTag tag : LazyIterate.select(protectedTags, a -> a.getName().startsWith("release") || a.getName().startsWith("version")))
             {
                 if (tag.getCreateAccessLevels().isEmpty())
                 {
                     return defaultReleaseAction(accessLevel);
                 }
                 // with the release protected tag the user must have the min access_level
-                List<ProtectedTag.CreateAccessLevel> matchedTags = tag.getCreateAccessLevels().stream().filter(a -> a.getAccess_level().value >= accessLevel.value).collect(Collectors.toList());
+                List<ProtectedTag.CreateAccessLevel> matchedTags = ListIterate.select(tag.getCreateAccessLevels(), a -> a.getAccess_level().value >= accessLevel.value);
                 // if the matchedTags are empty or null user access does not match any of the protected tags
                 if (matchedTags.isEmpty())
                 {
@@ -926,17 +897,13 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         return (visibility == null) ? DEFAULT_VISIBILITY : visibility;
     }
 
-    private org.gitlab4j.api.models.Project getPureGitLabProjectById(GitLabProjectId projectId)
+    private org.gitlab4j.api.models.Project getLegendSDLCGitLabProject(GitLabProjectId projectId)
     {
+        org.gitlab4j.api.models.Project gitLabProject;
         try
         {
-            GitLabApi gitLabApi = getGitLabApi();
-            org.gitlab4j.api.models.Project project = withRetries(() -> gitLabApi.getProjectApi().getProject(projectId.getGitLabId()));
-            if (!isLegendSDLCProject(project))
-            {
-                throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND);
-            }
-            return project;
+            org.gitlab4j.api.ProjectApi projectApi = getGitLabApi().getProjectApi();
+            gitLabProject = withRetries(() -> projectApi.getProject(projectId.getGitLabId()));
         }
         catch (Exception e)
         {
@@ -945,22 +912,22 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     () -> "Unknown project: " + projectId,
                     () -> "Failed to get project " + projectId);
         }
+        if (!isLegendSDLCProject(gitLabProject))
+        {
+            throw new LegendSDLCServerException("Unknown project: " + projectId, Status.NOT_FOUND, new RuntimeException("GitLab project " + projectId.getGitLabId() + " exists but is not a Legend SDLC project"));
+        }
+        return gitLabProject;
     }
 
     private boolean isLegendSDLCProject(org.gitlab4j.api.models.Project project)
     {
-        if (project == null)
-        {
-            return false;
-        }
-
-        List<String> tags = project.getTagList();
-        return (tags != null) && tags.stream().anyMatch(this::isLegendSDLCProjectTag);
+        return (project != null) && hasLegendSDLCProjectTag(project);
     }
 
-    private boolean isLegendSDLCProjectTag(String tag)
+    private boolean hasLegendSDLCProjectTag(org.gitlab4j.api.models.Project project)
     {
-        return getLegendSDLCProjectTag().equalsIgnoreCase(tag);
+        List<String> tags = project.getTagList();
+        return (tags != null) && Iterate.anySatisfy(tags, getLegendSDLCProjectTag()::equalsIgnoreCase);
     }
 
     private String getLegendSDLCProjectTag()

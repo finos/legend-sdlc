@@ -109,10 +109,6 @@ public class TestFileGenerationFactory
                 "  string first_name = 1;\n" +
                 "  string last_name = 2;\n" +
                 "}", protobufOutputs.get("model.proto").getContent());
-        // rosetta
-        List<GenerationOutput> rosettaResult = result.get(specifications.get("generation::MyRosetta"));
-        Assert.assertEquals(1, rosettaResult.size());
-        Assert.assertEquals("rosettaTypes.txt", rosettaResult.get(0).getFileName());
     }
 
     @Test
