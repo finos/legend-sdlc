@@ -54,7 +54,7 @@ classpath to add functionality extensions.
 
 ## Development setup
 
-This application uses Maven 3.6+ and JDK 11 to build. Simply run `mvn install` to compile.
+This application uses Maven 3.6+ and JDK 11 or 17 to build. Simply run `mvn install` to compile.
 
 ## Roadmap
 
