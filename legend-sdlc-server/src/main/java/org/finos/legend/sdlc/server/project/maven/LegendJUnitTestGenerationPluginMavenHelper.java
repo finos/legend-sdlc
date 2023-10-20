@@ -17,10 +17,18 @@ package org.finos.legend.sdlc.server.project.maven;
 import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
+    public Boolean runDependencyTests;
+    public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection, Boolean runDependencyTests)
+    {
+        super(groupId, artifactId, version, "generate-test-sources", "generate-junit-tests", generationExtensionsCollection);
+        this.runDependencyTests = runDependencyTests;
+    }
+
     public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
     {
         super(groupId, artifactId, version, "generate-test-sources", "generate-junit-tests", generationExtensionsCollection);
@@ -33,6 +41,23 @@ public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMa
         if (groupId != null)
         {
             configConsumer.accept(MavenPluginTools.newDom("packagePrefix", groupId));
+        }
+        if (this.runDependencyTests != null && this.runDependencyTests == true)
+        {
+            configConsumer.accept(MavenPluginTools.newDom("runDependencyTests", "true"));
+        }
+    }
+
+    protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
+    {
+        if(this.runDependencyTests != null && this.runDependencyTests == true)
+        {
+            super.addDependencies(projectStructure, dependencyConsumer);
+            if (projectStructure instanceof MultiModuleMavenProjectStructure)
+            {
+                MultiModuleMavenProjectStructure multiModuleProjectStructure = (MultiModuleMavenProjectStructure) projectStructure;
+                dependencyConsumer.accept(multiModuleProjectStructure.getModuleWithProjectVersionDependency(multiModuleProjectStructure.getEntitiesModuleName()));
+            }
         }
     }
 }

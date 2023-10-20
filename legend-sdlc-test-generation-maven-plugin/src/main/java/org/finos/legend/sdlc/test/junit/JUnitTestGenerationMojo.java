@@ -37,7 +37,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.lang.model.SourceVersion;
 
-@Mojo(name = "generate-junit-tests", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, threadSafe = true)
+@Mojo(name = "generate-junit-tests", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES)
 public class JUnitTestGenerationMojo extends AbstractMojo
 {
     @Parameter
@@ -60,6 +60,9 @@ public class JUnitTestGenerationMojo extends AbstractMojo
 
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
+
+    @Parameter(defaultValue = "false")
+    private boolean runDependecyTests;
 
     @Override
     public void execute() throws MojoExecutionException
@@ -88,7 +91,7 @@ public class JUnitTestGenerationMojo extends AbstractMojo
         try
         {
             JUnitTestGenerator generator = JUnitTestGenerator.newGenerator(this.packagePrefix);
-            try (EntityLoader entityLoader = EntityLoader.newEntityLoader(this.entitiesDirectory))
+            try (EntityLoader entityLoader = this.runDependecyTests ? EntityLoader.newEntityLoader(Thread.currentThread().getContextClassLoader()) : EntityLoader.newEntityLoader(this.entitiesDirectory))
             {
                 Stream<Entity> stream = entityLoader.getAllEntities();
                 Predicate<Entity> includeFilter = resolveEntityFilter(this.inclusions);
