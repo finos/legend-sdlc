@@ -21,9 +21,12 @@ import java.util.function.Consumer;
 
 public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-    public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
+    public Boolean runDependencyTests;
+
+    public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection, Boolean runDependencyTests)
     {
         super(groupId, artifactId, version, "generate-test-sources", "generate-junit-tests", generationExtensionsCollection);
+        this.runDependencyTests = runDependencyTests;
     }
 
     @Override
@@ -33,6 +36,20 @@ public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMa
         if (groupId != null)
         {
             configConsumer.accept(MavenPluginTools.newDom("packagePrefix", groupId));
+        }
+        if (this.runDependencyTests != null && this.runDependencyTests)
+        {
+            configConsumer.accept(MavenPluginTools.newDom("runDependencyTests", "true"));
+        }
+    }
+
+    protected void addDependencies(MavenProjectStructure projectStructure, Consumer<? super Dependency> dependencyConsumer)
+    {
+       super.addDependencies(projectStructure, dependencyConsumer);
+        if (this.runDependencyTests != null && this.runDependencyTests && projectStructure instanceof MultiModuleMavenProjectStructure)
+        {
+            MultiModuleMavenProjectStructure multiModuleProjectStructure = (MultiModuleMavenProjectStructure) projectStructure;
+            dependencyConsumer.accept(multiModuleProjectStructure.getModuleWithProjectVersionDependency(multiModuleProjectStructure.getEntitiesModuleName()));
         }
     }
 }

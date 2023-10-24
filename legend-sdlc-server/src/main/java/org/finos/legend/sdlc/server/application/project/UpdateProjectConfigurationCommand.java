@@ -40,6 +40,7 @@ public class UpdateProjectConfigurationCommand
     private final List<ProjectDependency> projectDependenciesToRemove;
     private final List<ArtifactGeneration> artifactGenerationsToAdd;
     private final List<String> artifactGenerationsNamesToRemove;
+    private final Boolean runDependencyTests;
 
     @JsonCreator
     public UpdateProjectConfigurationCommand(
@@ -52,7 +53,9 @@ public class UpdateProjectConfigurationCommand
             @JsonProperty("projectDependenciesToAdd") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToAdd,
             @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
             @JsonProperty("artifactGenerationsToAdd") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerationsToAdd,
-            @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove)
+            @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove,
+            @JsonProperty("runDependencyTest") Boolean runDependencyTests
+    )
     {
         this.message = message;
         this.projectStructureVersion = projectStructureVersion;
@@ -64,6 +67,7 @@ public class UpdateProjectConfigurationCommand
         this.projectDependenciesToRemove = projectDependenciesToRemove;
         this.artifactGenerationsToAdd = artifactGenerationsToAdd;
         this.artifactGenerationsNamesToRemove = artifactGenerationNamesToRemove;
+        this.runDependencyTests = runDependencyTests;
     }
 
     public String getMessage()
@@ -92,6 +96,10 @@ public class UpdateProjectConfigurationCommand
         if (this.platformConfigurations != null)
         {
             configUpdater.setPlatformConfigurations(this.platformConfigurations.getPlatformConfigurations());
+        }
+        if (this.runDependencyTests != null)
+        {
+            configUpdater.setRunDependencyTests(runDependencyTests);
         }
         return configUpdater;
     }
