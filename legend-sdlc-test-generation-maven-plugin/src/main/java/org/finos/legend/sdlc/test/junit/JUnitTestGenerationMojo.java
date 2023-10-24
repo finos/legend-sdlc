@@ -61,6 +61,9 @@ public class JUnitTestGenerationMojo extends AbstractMojo
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
 
+    @Parameter(defaultValue = "false")
+    private boolean runDependencyTests;
+
     @Override
     public void execute() throws MojoExecutionException
     {
@@ -83,12 +86,16 @@ public class JUnitTestGenerationMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Invalid package prefix: " + this.packagePrefix);
         }
+        if (this.runDependencyTests)
+        {
+            getLog().info("running dependency tests flag set");
+        }
 
         long start = System.nanoTime();
         try
         {
             JUnitTestGenerator generator = JUnitTestGenerator.newGenerator(this.packagePrefix);
-            try (EntityLoader entityLoader = EntityLoader.newEntityLoader(this.entitiesDirectory))
+            try (EntityLoader entityLoader = this.runDependencyTests ? EntityLoader.newEntityLoader(Thread.currentThread().getContextClassLoader()) : EntityLoader.newEntityLoader(this.entitiesDirectory))
             {
                 Stream<Entity> stream = entityLoader.getAllEntities();
                 Predicate<Entity> includeFilter = resolveEntityFilter(this.inclusions);
