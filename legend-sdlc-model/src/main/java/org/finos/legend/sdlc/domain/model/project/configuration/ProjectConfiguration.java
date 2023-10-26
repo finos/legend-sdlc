@@ -43,6 +43,11 @@ public interface ProjectConfiguration
 
     List<MetamodelDependency> getMetamodelDependencies();
 
+    default Boolean getRunDependencyTests()
+    {
+        return null;
+    }
+
     @Deprecated
     default List<ArtifactGeneration> getArtifactGenerations()
     {

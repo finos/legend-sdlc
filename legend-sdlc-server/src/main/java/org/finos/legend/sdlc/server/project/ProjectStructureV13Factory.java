@@ -120,7 +120,7 @@ public class ProjectStructureV13Factory extends ProjectStructureVersionFactory
             this.legendServiceExecutionGenerationPluginMavenHelper = new LegendServiceExecutionGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-service-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
             this.legendModelGenerationPluginMavenHelper = new LegendModelGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-model-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
             this.legendFileGenerationPluginMavenHelper = new LegendFileGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-generation-file-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
-            this.legendJUnitTestGenerationPluginMavenHelper = new LegendJUnitTestGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-test-generation-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection);
+            this.legendJUnitTestGenerationPluginMavenHelper = new LegendJUnitTestGenerationPluginMavenHelper(LEGEND_SDLC_GROUP_ID, "legend-sdlc-test-generation-maven-plugin", LEGEND_SDLC_PROPERTY_REFERENCE, generationExtensionsCollection, projectConfiguration.getRunDependencyTests());
         }
 
         private Dependency getExtensionsCollectionDependency(String extensionName, boolean includeVersion, boolean scopeTest)
