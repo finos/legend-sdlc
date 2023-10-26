@@ -70,7 +70,7 @@
         <java.version.range>[11,12),[17,18)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.31.2</legend.engine.version>
+        <legend.engine.version>4.31.3</legend.engine.version>
         <legend.pure.version>4.9.0</legend.pure.version>
         <legend.shared.version>0.24.1</legend.shared.version>
 
