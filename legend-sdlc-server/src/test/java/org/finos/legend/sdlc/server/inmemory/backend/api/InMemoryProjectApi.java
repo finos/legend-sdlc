@@ -115,7 +115,8 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions) {
+    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
+    {
         throw new UnsupportedOperationException("Not implemented");
     }
 }

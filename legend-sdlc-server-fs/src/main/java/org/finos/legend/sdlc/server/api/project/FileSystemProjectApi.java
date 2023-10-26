@@ -276,7 +276,8 @@ public class FileSystemProjectApi extends FileSystemApiWithFileAccess implements
     }
 
     @Override
-    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions) {
+    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
+    {
         throw FSException.unavailableFeature();
     }
 }

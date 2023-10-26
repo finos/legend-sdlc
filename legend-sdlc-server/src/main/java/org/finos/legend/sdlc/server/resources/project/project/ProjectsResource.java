@@ -212,6 +212,7 @@ public class ProjectsResource extends BaseResource
             "checking if the current user is authorized to perform the action given",
             () -> this.projectApi.checkUserAuthorizedAction(projectId, action));
     }
+
     @GET
     @Path("{id}/allUsersAuthorizedActions")
     @ApiOperation("Get all the users who can perform set of actions provided")

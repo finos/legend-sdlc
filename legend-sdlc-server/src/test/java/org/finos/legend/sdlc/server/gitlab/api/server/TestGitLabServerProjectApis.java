@@ -93,6 +93,7 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     {
         gitLabProjectApiTestResource.runGetAllUsersAuthorizedActions();
     }
+
         /**
          * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
          *

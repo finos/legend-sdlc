@@ -736,38 +736,52 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     @Override
     public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
     {
-        try {
+        try
+        {
             GitLabProjectId projectId = parseProjectId(id);
             List<Member> members = getGitLabApi().getProjectApi().getAllMembers(projectId.getGitLabId());
-            Set<UserPermission> users = members.stream().map(member -> new UserPermission() {
-                @Override
-                public org.finos.legend.sdlc.domain.model.user.User getUser() {
-                    return new org.finos.legend.sdlc.domain.model.user.User() {
-                        @Override
-                        public String getUserId() {
-                            return member.getId().toString();
-                        }
-
-                        @Override
-                        public String getName() {
-                            return member.getName();
-                        }
-                    };
-                }
-
-                @Override
-                public Set<AuthorizableProjectAction> getAuhorizedProjectAction() {
-                    AccessLevel userLevel = member.getAccessLevel();
-                    return (userLevel == null) ? Collections.emptySet() : Iterate.select(actions, a -> (a != null) && checkUserAction(projectId, a, userLevel), EnumSet.noneOf(AuthorizableProjectAction.class));
-                }
-            }).collect(Collectors.toSet());
-            return users;
+            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
+            return processUserAuthorizedActions(protectedTags, members, actions);
         }
         catch (Exception e)
         {
             throw buildException(e,
                     () -> "User " + getCurrentUser() + " is not allowed to call getAllUsersAuthorizedActions for project " + id);
         }
+    }
+
+    public Set<UserPermission> processUserAuthorizedActions(List<ProtectedTag> protectedTags, List<Member> members, Set<AuthorizableProjectAction> actions)
+    {
+        Set<UserPermission> users = members.stream().map(member -> new UserPermission()
+                {
+                    @Override
+                    public org.finos.legend.sdlc.domain.model.user.User getUser()
+                    {
+                        return new org.finos.legend.sdlc.domain.model.user.User()
+                        {
+                            @Override
+                            public String getUserId()
+                            {
+                                return member.getId().toString();
+                            }
+
+                            @Override
+                            public String getName()
+                            {
+                                return member.getName();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public Set<AuthorizableProjectAction> getAuhorizedProjectAction()
+                    {
+                        AccessLevel userLevel = member.getAccessLevel();
+                        return (userLevel == null) ? Collections.emptySet() : Iterate.select(actions, a -> (a != null) && checkUserAction(protectedTags, a, userLevel), EnumSet.noneOf(AuthorizableProjectAction.class));
+                    }
+                }
+        ).collect(Collectors.toSet());
+        return users;
     }
 
     private AccessLevel getUserAccess(org.gitlab4j.api.models.Project gitLabProject)
@@ -790,11 +804,24 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
     private boolean checkUserAction(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
     {
+        try
+        {
+            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
+            return checkUserAction(protectedTags, action, accessLevel);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
+        }
+    }
+
+    private boolean checkUserAction(List<ProtectedTag> protectedTags, AuthorizableProjectAction action, AccessLevel accessLevel)
+    {
         switch (action)
         {
             case CREATE_VERSION:
             {
-                return checkUserReleasePermission(projectId, accessLevel);
+                return checkUserReleasePermission(protectedTags, accessLevel);
             }
             case COMMIT_REVIEW:
             {
@@ -815,42 +842,35 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
-    private boolean checkUserReleasePermission(GitLabProjectId projectId, AccessLevel accessLevel)
+    private boolean checkUserReleasePermission(List<ProtectedTag> protectedTags, AccessLevel accessLevel)
     {
-        try
+        if (protectedTags == null || protectedTags.isEmpty())
         {
-            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
-            if (protectedTags == null || protectedTags.isEmpty())
+            // By default, user can perform a release if the user has developer access or above
+            // See https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
+            return defaultReleaseAction(accessLevel);
+        }
+        for (ProtectedTag tag : LazyIterate.select(protectedTags, a -> a.getName().startsWith("release") || a.getName().startsWith("version")))
+        {
+            if (tag.getCreateAccessLevels().isEmpty())
             {
-                // By default, user can perform a release if the user has developer access or above
-                // See https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
                 return defaultReleaseAction(accessLevel);
             }
-            for (ProtectedTag tag : LazyIterate.select(protectedTags, a -> a.getName().startsWith("release") || a.getName().startsWith("version")))
+            // with the release protected tag the user must have the min access_level
+            List<ProtectedTag.CreateAccessLevel> matchedTags = ListIterate.select(tag.getCreateAccessLevels(), a -> a.getAccess_level().value >= accessLevel.value);
+            // if the matchedTags are empty or null user access does not match any of the protected tags
+            if (matchedTags.isEmpty())
             {
-                if (tag.getCreateAccessLevels().isEmpty())
-                {
-                    return defaultReleaseAction(accessLevel);
-                }
-                // with the release protected tag the user must have the min access_level
-                List<ProtectedTag.CreateAccessLevel> matchedTags = ListIterate.select(tag.getCreateAccessLevels(), a -> a.getAccess_level().value >= accessLevel.value);
-                // if the matchedTags are empty or null user access does not match any of the protected tags
-                if (matchedTags.isEmpty())
-                {
-                    return defaultReleaseAction(accessLevel);
-                }
+                return defaultReleaseAction(accessLevel);
+            }
 
-                // User does not meet all criteria not authorized for the action
-                if (matchedTags.size() != tag.getCreateAccessLevels().size())
-                {
-                    return false;
-                }
+            // User does not meet all criteria not authorized for the action
+            if (matchedTags.size() != tag.getCreateAccessLevels().size())
+            {
+                return false;
             }
         }
-        catch (Exception e)
-        {
-            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
-        }
+
         return false;
     }
 
