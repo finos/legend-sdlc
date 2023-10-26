@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.server.application.project.CreateProjectCommand;
 import org.finos.legend.sdlc.server.application.project.ImportProjectCommand;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectCommand;
@@ -210,5 +211,20 @@ public class ProjectsResource extends BaseResource
         return executeWithLogging(
             "checking if the current user is authorized to perform the action given",
             () -> this.projectApi.checkUserAuthorizedAction(projectId, action));
+    }
+
+    @GET
+    @Path("{id}/allUsersAuthorizedActions")
+    @ApiOperation("Get all the users who can perform set of actions provided")
+    public Set<UserPermission> getAllUsersAuthorizedActions(@PathParam("id") String projectId,
+                                                      @ApiParam("List of actions to be checked for the current user")
+                                                                 @QueryParam("actions") Set<AuthorizableProjectAction> actions)
+    {
+        LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
+
+        return executeWithLogging(
+                "checking if the current user has been authorized to perform the set of actions given",
+                () -> this.projectApi.getAllUsersAuthorizedActions(projectId,
+                        (actions == null || actions.isEmpty()) ? EnumSet.allOf(AuthorizableProjectAction.class) : actions));
     }
 }

@@ -18,13 +18,19 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
+import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.gitlab4j.api.models.AccessLevel;
+import org.gitlab4j.api.models.Member;
+import org.gitlab4j.api.models.ProtectedTag;
 import org.junit.Assert;
 
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -204,6 +210,51 @@ public class GitLabProjectApiTestResource
         Assert.assertEquals(newProjectName, reRetrievedProject.getName());
         Assert.assertEquals(newProjectDescription, reRetrievedProject.getDescription());
         Assert.assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
+    }
+
+    public void runGetAllUsersAuthorizedActions()
+    {
+        Set<AuthorizableProjectAction> actionSet = Collections.singleton(AuthorizableProjectAction.COMMIT_REVIEW);
+        List<ProtectedTag> protectedTags = null;
+        List<Member> members = new ArrayList<>();
+        members.add(new Member().withAccessLevel(AccessLevel.MAINTAINER).withName("haveAccess").withId(1));
+        members.add(new Member().withAccessLevel(AccessLevel.NONE).withName("noAccess").withId(2));
+        Set<UserPermission> users = this.gitLabProjectApi.processUserAuthorizedActions(protectedTags, members, actionSet);
+        Set<UserPermission> expectedUsers = new HashSet<>();
+        expectedUsers.add(createUserPermission("1", "haveAccess", Collections.singleton(AuthorizableProjectAction.COMMIT_REVIEW)));
+        expectedUsers.add(createUserPermission("2", "noAccess", Collections.emptySet()));
+        Assert.assertEquals("List of authorized users", users, expectedUsers);
+    }
+
+    private UserPermission createUserPermission(String userId, String name, Set<AuthorizableProjectAction>  authorizableProjectActions)
+    {
+        return new UserPermission()
+        {
+            @Override
+            public User getUser()
+            {
+                return new User()
+                {
+                    @Override
+                    public String getUserId()
+                    {
+                        return userId;
+                    }
+
+                    @Override
+                    public String getName()
+                    {
+                        return name;
+                    }
+                };
+            }
+
+            @Override
+            public Set<AuthorizableProjectAction> getAuhorizedProjectAction()
+            {
+                return authorizableProjectActions;
+            }
+        };
     }
 
     public GitLabProjectApi getGitLabProjectApi()
