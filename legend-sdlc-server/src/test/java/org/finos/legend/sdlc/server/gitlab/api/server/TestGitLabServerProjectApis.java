@@ -88,11 +88,16 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
         gitLabProjectApiTestResource.runUpdateProjectTest();
     }
 
-    /**
-     * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
-     *
-     * @throws LegendSDLCServerException if cannot authenticate to GitLab.
-     */
+    @Test
+    public void runGetAllUsersAuthorizedActions()
+    {
+        gitLabProjectApiTestResource.runGetAllUsersAuthorizedActions();
+    }
+        /**
+         * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
+         *
+         * @throws LegendSDLCServerException if cannot authenticate to GitLab.
+         */
     private static void setUpProjectApi() throws LegendSDLCServerException
     {
         int projectStructureVersion = ProjectStructure.getLatestProjectStructureVersion();

@@ -18,13 +18,17 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
+import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.junit.Assert;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -204,6 +208,31 @@ public class GitLabProjectApiTestResource
         Assert.assertEquals(newProjectName, reRetrievedProject.getName());
         Assert.assertEquals(newProjectDescription, reRetrievedProject.getDescription());
         Assert.assertEquals(Sets.mutable.withAll(expectedTags), Sets.mutable.withAll(reRetrievedProject.getTags()));
+    }
+
+    public void runGetAllUsersAuthorizedActions()
+    {
+        String projectName = "TestProjectFour";
+        String description = "A test project.";
+        String groupId = "org.finos.sdlc.test";
+        String artifactId = "testprojfour";
+        List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
+
+        Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
+
+        Assert.assertNotNull(createdProject);
+        Assert.assertEquals(projectName, createdProject.getName());
+        Assert.assertEquals(description, createdProject.getDescription());
+        Assert.assertNull(createdProject.getProjectType());
+        Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
+
+        String projectId = createdProject.getProjectId();
+        Set<AuthorizableProjectAction> actionSet = Collections.singleton(AuthorizableProjectAction.COMMIT_REVIEW);
+
+        Set<UserPermission> users = this.gitLabProjectApi.getAllUsersAuthorizedActions(projectId, actionSet);
+
+        Assert.assertNull("List of authorized users", users);
+
     }
 
     public GitLabProjectApi getGitLabProjectApi()

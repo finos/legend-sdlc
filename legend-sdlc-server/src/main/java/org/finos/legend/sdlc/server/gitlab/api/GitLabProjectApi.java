@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -71,6 +72,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
@@ -729,6 +731,43 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         org.gitlab4j.api.models.Project gitLabProject = getLegendSDLCGitLabProject(projectId);
         AccessLevel userLevel = getUserAccess(gitLabProject);
         return (userLevel != null) && checkUserAction(projectId, action, userLevel);
+    }
+
+    @Override
+    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
+    {
+        try {
+            GitLabProjectId projectId = parseProjectId(id);
+            List<Member> members = getGitLabApi().getProjectApi().getAllMembers(projectId.getGitLabId());
+            Set<UserPermission> users = members.stream().map(member -> new UserPermission() {
+                @Override
+                public org.finos.legend.sdlc.domain.model.user.User getUser() {
+                    return new org.finos.legend.sdlc.domain.model.user.User() {
+                        @Override
+                        public String getUserId() {
+                            return member.getId().toString();
+                        }
+
+                        @Override
+                        public String getName() {
+                            return member.getName();
+                        }
+                    };
+                }
+
+                @Override
+                public Set<AuthorizableProjectAction> getAuhorizedProjectAction() {
+                    AccessLevel userLevel = member.getAccessLevel();
+                    return (userLevel == null) ? Collections.emptySet() : Iterate.select(actions, a -> (a != null) && checkUserAction(projectId, a, userLevel), EnumSet.noneOf(AuthorizableProjectAction.class));
+                }
+            }).collect(Collectors.toSet());
+            return users;
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to call getAllUsersAuthorizedActions for project " + id);
+        }
     }
 
     private AccessLevel getUserAccess(org.gitlab4j.api.models.Project gitLabProject)
