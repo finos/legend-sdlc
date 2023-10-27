@@ -112,7 +112,7 @@ public class TestProjectStructureV13 extends TestMultiGenerationProjectStructure
         super.collectExpectedEntitiesModelPlugins(projectStructure, pluginConsumer);
         pluginConsumer.accept(new LegendEntityPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-entity-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency(), getSerializerDependency()).getPlugin(projectStructure));
         pluginConsumer.accept(new LegendModelGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-model-maven-plugin", "${platform.legend-sdlc.version}", getGenerationDependency()).getPlugin(projectStructure));
-        pluginConsumer.accept(new LegendJUnitTestGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-test-generation-maven-plugin", "${platform.legend-sdlc.version}", getGenerationDependency()).getPlugin(projectStructure));
+        pluginConsumer.accept(new LegendJUnitTestGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-test-generation-maven-plugin", "${platform.legend-sdlc.version}", getGenerationDependency(), null).getPlugin(projectStructure));
     }
 
     @Override

@@ -21,9 +21,12 @@ import java.util.function.Consumer;
 
 public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMavenPluginHelper
 {
-    public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection)
+    public Boolean runDependencyTests;
+
+    public LegendJUnitTestGenerationPluginMavenHelper(String groupId, String artifactId, String version, Dependency generationExtensionsCollection, Boolean runDependencyTests)
     {
         super(groupId, artifactId, version, "generate-test-sources", "generate-junit-tests", generationExtensionsCollection);
+        this.runDependencyTests = runDependencyTests;
     }
 
     @Override
@@ -33,6 +36,10 @@ public class LegendJUnitTestGenerationPluginMavenHelper extends AbstractLegendMa
         if (groupId != null)
         {
             configConsumer.accept(MavenPluginTools.newDom("packagePrefix", groupId));
+        }
+        if (this.runDependencyTests != null && this.runDependencyTests)
+        {
+            configConsumer.accept(MavenPluginTools.newDom("runDependencyTests", "true"));
         }
     }
 }

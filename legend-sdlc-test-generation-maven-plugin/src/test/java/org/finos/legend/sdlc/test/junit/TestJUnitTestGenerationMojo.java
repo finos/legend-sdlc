@@ -70,7 +70,7 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testEmptyEntitiesDirectory() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.test.test_project", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.test.test_project", null, null);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -83,9 +83,9 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testNoTestables() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.test.test_project", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.test.test_project", null, null);
         Set<String> testableClassifiers = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap().keySet();
-        writeTestEntitiesToBuildOutputDir(projectDir, e -> !testableClassifiers.contains(e.getClassifierPath()));
+        writeTestEntitiesToBuildOutputDir(projectDir, e -> !testableClassifiers.contains(e.getClassifierPath()), false);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
 
@@ -98,7 +98,7 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testFullModel() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.legend.sdlc.test.junit.junit4", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.legend.sdlc.test.junit.junit4", null, null);
         writeTestEntitiesToBuildOutputDir(projectDir);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -116,7 +116,7 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testFullModelWithExcludedEntities() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, Sets.mutable.with("execution::RelationalMapping", "testTestSuites::TestService2"), null, "org.finos.legend.sdlc.test.junit.junit4", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, Sets.mutable.with("execution::RelationalMapping", "testTestSuites::TestService2"), null, "org.finos.legend.sdlc.test.junit.junit4", null, null);
         writeTestEntitiesToBuildOutputDir(projectDir);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -134,7 +134,7 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testFullModelWithExcludedPackages() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, Sets.mutable.with("testTestSuites", "model::mapping"), "org.finos.legend.sdlc.test.junit.junit4", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, Sets.mutable.with("testTestSuites", "model::mapping"), "org.finos.legend.sdlc.test.junit.junit4", null, null);
         writeTestEntitiesToBuildOutputDir(projectDir);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -152,7 +152,7 @@ public class TestJUnitTestGenerationMojo
     @Test
     public void testFullModelWithExcludedEntitiesAndPackages() throws Exception
     {
-        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, Sets.mutable.with("execution::RelationalMapping"), Sets.mutable.with("testTestSuites"), "org.finos.legend.sdlc.test.junit.junit4", null);
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, Sets.mutable.with("execution::RelationalMapping"), Sets.mutable.with("testTestSuites"), "org.finos.legend.sdlc.test.junit.junit4", null, null);
         writeTestEntitiesToBuildOutputDir(projectDir);
 
         MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
@@ -162,6 +162,24 @@ public class TestJUnitTestGenerationMojo
         executeMojo(projectDir);
 
         SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java");
+
+        SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
+        Assert.assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFullModelWithDependencies() throws Exception
+    {
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", null, null, null, null, "org.finos.legend.sdlc.test.junit.junit4", null, true);
+        writeTestEntitiesToBuildOutputDir(projectDir, null, true);
+
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+
+        File outputDir = getExpectedOutputDir(mavenProject);
+        assertDirectoryEmpty(outputDir);
+        executeMojo(projectDir);
+
+        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java", "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java", "org/finos/legend/sdlc/test/junit/junit4/model/TestMyMapping.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);
@@ -219,9 +237,15 @@ public class TestJUnitTestGenerationMojo
 
     private EntityLoader getTestEntities()
     {
+        return getTestEntities(false);
+    }
+
+    private EntityLoader getTestEntities(boolean includeDependencies)
+    {
         try
         {
-            return EntityLoader.newEntityLoader(Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("test-entities")).toURI()));
+            Path entities = Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("test-entities")).toURI());
+            return includeDependencies ? EntityLoader.newEntityLoader(entities, Paths.get(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("dependencies-entities")).toURI())) : EntityLoader.newEntityLoader(entities);
         }
         catch (URISyntaxException e)
         {
@@ -229,19 +253,29 @@ public class TestJUnitTestGenerationMojo
         }
     }
 
-    private void writeTestEntitiesToBuildOutputDir(File projectDirectory)
+    private void writeTestEntitiesToBuildOutputDir(File projectDirectory, boolean includeDependencies)
     {
-        writeTestEntitiesToBuildOutputDir(projectDirectory, null);
+        writeTestEntitiesToBuildOutputDir(projectDirectory, null, includeDependencies);
     }
 
-    private void writeTestEntitiesToBuildOutputDir(File projectDirectory, Predicate<Entity> predicate)
+    private void writeTestEntitiesToBuildOutputDir(File projectDirectory)
     {
-        writeTestEntitiesToDirectory(projectDirectory.toPath().resolve("target").resolve("classes"), predicate);
+        writeTestEntitiesToBuildOutputDir(projectDirectory, null, false);
+    }
+
+    private void writeTestEntitiesToBuildOutputDir(File projectDirectory, Predicate<Entity> predicate, boolean includeDependencies)
+    {
+        writeTestEntitiesToDirectory(projectDirectory.toPath().resolve("target").resolve("classes"), predicate, includeDependencies);
     }
 
     private void writeTestEntitiesToDirectory(Path directory, Predicate<Entity> predicate)
     {
-        try (EntityLoader entityLoader = getTestEntities())
+        writeTestEntitiesToDirectory(directory, predicate, false);
+    }
+
+    private void writeTestEntitiesToDirectory(Path directory, Predicate<Entity> predicate, boolean includeDependencies)
+    {
+        try (EntityLoader entityLoader = getTestEntities(includeDependencies))
         {
             Stream<Entity> stream = entityLoader.getAllEntities();
             if (predicate != null)
@@ -278,9 +312,9 @@ public class TestJUnitTestGenerationMojo
         return new File(mavenProject.getBuild().getDirectory(), "generated-test-sources");
     }
 
-    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, Set<String> excludePaths, Set<String> excludePackages, String packagePrefix, File outputDirectory) throws IOException
+    private File buildSingleModuleProject(String projectDirName, String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, Set<String> excludePaths, Set<String> excludePackages, String packagePrefix, File outputDirectory, Boolean runDependencyTests) throws IOException
     {
-        Model mavenModel = buildMavenModelWithPlugin(groupId, artifactId, version, includePaths, includePackages, excludePaths, excludePackages, packagePrefix, outputDirectory);
+        Model mavenModel = buildMavenModelWithPlugin(groupId, artifactId, version, includePaths, includePackages, excludePaths, excludePackages, packagePrefix, outputDirectory, runDependencyTests);
         return buildProject(projectDirName, mavenModel);
     }
 
@@ -323,11 +357,11 @@ public class TestJUnitTestGenerationMojo
         return mavenModel;
     }
 
-    private Model buildMavenModelWithPlugin(String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, Set<String> excludePaths, Set<String> excludePackages, String packagePrefix, File outputDirectory)
+    private Model buildMavenModelWithPlugin(String groupId, String artifactId, String version, Set<String> includePaths, Set<String> includePackages, Set<String> excludePaths, Set<String> excludePackages, String packagePrefix, File outputDirectory, Boolean runDependencyTests)
     {
         Model mavenModel = buildMavenModel(groupId, artifactId, version, null);
         Build build = new Build();
-        build.addPlugin(buildPlugin(buildEntityFilterSpecification(includePaths, includePackages), buildEntityFilterSpecification(excludePaths, excludePackages), packagePrefix, outputDirectory));
+        build.addPlugin(buildPlugin(buildEntityFilterSpecification(includePaths, includePackages), buildEntityFilterSpecification(excludePaths, excludePackages), packagePrefix, outputDirectory, runDependencyTests));
         mavenModel.setBuild(build);
         return mavenModel;
     }
@@ -351,7 +385,7 @@ public class TestJUnitTestGenerationMojo
         return spec;
     }
 
-    private Plugin buildPlugin(JUnitTestGenerationMojo.EntityFilterSpecification inclusions, JUnitTestGenerationMojo.EntityFilterSpecification exclusions, String packagePrefix, File outputDirectory)
+    private Plugin buildPlugin(JUnitTestGenerationMojo.EntityFilterSpecification inclusions, JUnitTestGenerationMojo.EntityFilterSpecification exclusions, String packagePrefix, File outputDirectory, Boolean runDependencyTests)
     {
         Plugin plugin = new Plugin();
         plugin.setGroupId("org.finos.legend.sdlc");
@@ -378,6 +412,10 @@ public class TestJUnitTestGenerationMojo
         if (outputDirectory != null)
         {
             newXpp3Dom("outputDirectory", outputDirectory.getAbsolutePath(), configuration);
+        }
+        if (runDependencyTests != null)
+        {
+            newXpp3Dom("runDependencyTests", "true", configuration);
         }
 
         // execution

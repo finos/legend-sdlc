@@ -40,6 +40,7 @@ public class ProjectConfigurationUpdater
     private String groupId;
     private String artifactId;
     private boolean platformConfigurationsIsSet = false;
+    private Boolean runDependencyTests;
     private MutableList<PlatformConfiguration> platformConfigurations;
     private final MutableSet<ProjectDependency> projectDependenciesToAdd = Sets.mutable.empty();
     private final MutableSet<ProjectDependency> projectDependenciesToRemove = Sets.mutable.empty();
@@ -63,6 +64,12 @@ public class ProjectConfigurationUpdater
     public ProjectConfigurationUpdater withProjectId(String projectId)
     {
         setProjectId(projectId);
+        return this;
+    }
+
+    public ProjectConfigurationUpdater withRunDependencyTests(boolean runDependencyTests)
+    {
+        setRunDependencyTests(runDependencyTests);
         return this;
     }
 
@@ -173,6 +180,16 @@ public class ProjectConfigurationUpdater
     {
         setArtifactId(artifactId);
         return this;
+    }
+
+    public void setRunDependencyTests(boolean runDependencyTests)
+    {
+        this.runDependencyTests = runDependencyTests;
+    }
+
+    public boolean getRunDependencyTests()
+    {
+        return this.runDependencyTests;
     }
 
     // Project dependencies to add
@@ -417,6 +434,8 @@ public class ProjectConfigurationUpdater
         // Artifact id
         String newArtifactId = (this.artifactId == null) ? configuration.getArtifactId() : this.artifactId;
 
+        Boolean newRunDependencyTests = (this.runDependencyTests == null) ? configuration.getRunDependencyTests() : this.runDependencyTests;
+
         // Project dependencies
         List<ProjectDependency> newProjectDependencies;
         if (this.projectDependenciesToAdd.isEmpty() && this.projectDependenciesToRemove.isEmpty())
@@ -507,6 +526,12 @@ public class ProjectConfigurationUpdater
             public List<MetamodelDependency> getMetamodelDependencies()
             {
                 return newMetamodelDependencies;
+            }
+
+            @Override
+            public Boolean getRunDependencyTests()
+            {
+                return newRunDependencyTests;
             }
 
             @Override
