@@ -135,8 +135,7 @@ public class JUnitTestGenerationMojo extends AbstractMojo
 
     // requires requiresDependencyResolution set to compile for resolution of project to be complete
     // loads all classes from maven project see: https://maven.apache.org/guides/mini/guide-maven-classloading.html#plugin-classloaders and https://stackoverflow.com/questions/49737706/access-project-classes-from-a-maven-plugin
-    private ClassLoader getClassLoader(MavenProject project)
-    {
+    private ClassLoader getClassLoader(MavenProject project) throws MojoExecutionException {
         try
         {
             List<String> classpathElements = project.getCompileClasspathElements();
@@ -147,12 +146,12 @@ public class JUnitTestGenerationMojo extends AbstractMojo
             {
                 urls[i] = new File(classpathElements.get(i)).toURL();
             }
-            return new URLClassLoader(urls, this.getClass().getClassLoader());
+            return new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
         }
         catch (Exception e)
         {
             getLog().debug("Couldn't get the classloader.");
-            return this.getClass().getClassLoader();
+            throw new MojoExecutionException("Error getting class loader to run dependency tests", e);
         }
     }
 
