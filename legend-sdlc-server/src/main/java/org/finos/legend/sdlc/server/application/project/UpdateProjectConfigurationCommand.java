@@ -54,7 +54,7 @@ public class UpdateProjectConfigurationCommand
             @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
             @JsonProperty("artifactGenerationsToAdd") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerationsToAdd,
             @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove,
-            @JsonProperty("runDependencyTest") Boolean runDependencyTests
+            @JsonProperty("runDependencyTests") Boolean runDependencyTests
     )
     {
         this.message = message;
