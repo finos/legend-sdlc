@@ -19,7 +19,7 @@
     <parent>
         <groupId>org.finos.legend.sdlc</groupId>
         <artifactId>legend-sdlc</artifactId>
-        <version>0.147.5-SNAPSHOT</version>
+        <version>0.148.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
