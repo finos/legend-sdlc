@@ -85,7 +85,7 @@ public class BackupPatchesWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entities in backup user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -106,7 +106,7 @@ public class BackupPatchesWorkspaceEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId)).getEntity(path)
+                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId)).getEntity(path)
         );
     }
 }

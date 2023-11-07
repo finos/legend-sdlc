@@ -60,7 +60,7 @@ public interface ProjectConfigurationApi
     @Deprecated
     default ProjectConfiguration getProjectProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
-        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId));
     }
 
     @Deprecated
@@ -78,7 +78,7 @@ public interface ProjectConfigurationApi
     @Deprecated
     default ProjectConfiguration getProjectRevisionProjectConfiguration(String projectId, VersionId patchReleaseVersionId, String revisionId)
     {
-        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), revisionId);
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId), revisionId);
     }
 
     @Deprecated
@@ -252,7 +252,7 @@ public interface ProjectConfigurationApi
     @Deprecated
     default List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGenerations(String projectId, VersionId patchReleaseVersionId)
     {
-        return getAvailableArtifactGenerations(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getAvailableArtifactGenerations(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId));
     }
 
     @Deprecated

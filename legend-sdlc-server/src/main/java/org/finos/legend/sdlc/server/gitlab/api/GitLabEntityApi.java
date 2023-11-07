@@ -89,7 +89,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         return new GitLabEntityAccessContext(projectId, workspaceSpec.getSourceSpecification(), diffRef.getStartSha())
         {
             @Override
@@ -115,7 +115,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         return new GitLabEntityAccessContext(projectId, workspaceSpec.getSourceSpecification(), diffRef.getHeadSha())
         {
             @Override

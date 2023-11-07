@@ -66,7 +66,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionProjectConfigurationResou
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getWorkspaceWithConflictResolutionRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId)
         );
     }
 }

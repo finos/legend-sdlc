@@ -62,7 +62,7 @@ public class BackupPatchesGroupWorkspaceProjectConfigurationResource extends Bas
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in backup group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

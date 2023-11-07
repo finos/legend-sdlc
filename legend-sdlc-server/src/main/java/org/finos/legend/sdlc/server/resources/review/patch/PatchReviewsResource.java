@@ -161,7 +161,7 @@ public class PatchReviewsResource extends ReviewFilterResource
         return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, SourceSpecification.newSourceSpecification(command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), null, versionId), command.getTitle(), command.getDescription(), command.getLabels())
+                () -> this.reviewApi.createReview(projectId, SourceSpecification.newSourceSpecification(projectId, command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), null, versionId), command.getTitle(), command.getDescription(), command.getLabels())
         );
     }
 

@@ -41,7 +41,8 @@ public class InMemoryMixins
             include = JsonTypeInfo.As.PROPERTY,
             property = "jackson-type")
     @JsonSubTypes({
-            @JsonSubTypes.Type(value = InMemoryWorkspace.class, name = "InMemoryWorkspace")})
+            @JsonSubTypes.Type(value = InMemoryWorkspace.class, name = "InMemoryWorkspace"),
+            @JsonSubTypes.Type(value = InMemoryWorkspace.class, name = "InMemoryReview$1")})
     public abstract class Workspace
     {
 

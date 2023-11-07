@@ -67,7 +67,7 @@ public class PatchesGroupWorkspaceProjectConfigurationResource extends BaseResou
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -88,7 +88,7 @@ public class PatchesGroupWorkspaceProjectConfigurationResource extends BaseResou
         }
         return executeWithLogging(
                 "updating configuration for project " + projectId + " in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), command.getMessage(), command.getProjectConfigurationUpdater())
+                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), command.getMessage(), command.getProjectConfigurationUpdater())
         );
     }
 
@@ -109,7 +109,7 @@ public class PatchesGroupWorkspaceProjectConfigurationResource extends BaseResou
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in group workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

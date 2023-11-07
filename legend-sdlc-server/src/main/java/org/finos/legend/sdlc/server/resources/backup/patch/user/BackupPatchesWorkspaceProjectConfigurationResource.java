@@ -62,7 +62,7 @@ public class BackupPatchesWorkspaceProjectConfigurationResource extends BaseReso
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in backup user workspace " + workspaceId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getBackupWorkspaceProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

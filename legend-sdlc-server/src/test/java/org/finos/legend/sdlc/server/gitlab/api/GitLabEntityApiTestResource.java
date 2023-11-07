@@ -387,7 +387,7 @@ public class GitLabEntityApiTestResource
         Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newUserWorkspaceSourceSpecification(workspaceName, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceName, patchReleaseVersionId);
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
@@ -540,7 +540,7 @@ public class GitLabEntityApiTestResource
         Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceName, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceName, patchReleaseVersionId);
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 

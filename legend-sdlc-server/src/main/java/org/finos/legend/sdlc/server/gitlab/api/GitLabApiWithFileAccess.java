@@ -23,6 +23,8 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamConsumer;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
@@ -33,8 +35,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationConsumer;
 import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -112,7 +112,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     @Deprecated
     protected ProjectConfiguration getProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
-        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId));
     }
 
     protected ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification)
@@ -852,12 +852,12 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 {
                     WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
                     builder.append(workspaceSpec.getType().getLabel()).append(" ").append(workspaceSpec.getAccessType().getLabel()).append(" ").append(workspaceSpec.getId());
-                    workspaceSpec.getSource().visit(new WorkspaceSourceConsumer()
+                    workspaceSpec.getSource().visit(new DevelopmentStreamConsumer()
                     {
                         @Override
-                        protected void accept(PatchWorkspaceSource source)
+                        protected void accept(Patch source)
                         {
-                            source.getPatchVersionId().appendVersionIdString(builder.append(" of patch "));
+                            source.getPatchReleaseVersionId().appendVersionIdString(builder.append(" of patch "));
                         }
                     });
                 }

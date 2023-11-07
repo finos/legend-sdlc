@@ -69,7 +69,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -90,7 +90,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if backup group workspace " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -110,7 +110,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "discarding backup group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.discardBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.backupApi.discardBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -134,7 +134,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 forceRecovery ? "force " : "" + "recovering group workspace " + workspaceId + " from backup in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.recoverBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), forceRecovery)
+                () -> this.backupApi.recoverBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), forceRecovery)
         );
     }
 }

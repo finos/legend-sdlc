@@ -19,6 +19,9 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamType;
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.review.Review;
 import org.finos.legend.sdlc.domain.model.review.ReviewState;
 
@@ -36,8 +39,7 @@ public class InMemoryReview implements Review
     private final MutableMap<String, Entity> entities = Maps.mutable.empty();
     private String projectId;
     private String reviewId;
-    private String workspaceId;
-    private String workspaceType;
+    private Workspace workspace;
     private String title;
     private String description;
     private List<String> labels;
@@ -53,8 +55,32 @@ public class InMemoryReview implements Review
     {
         this.projectId = projectId;
         this.reviewId = reviewId;
-        this.workspaceId = "111";
-        this.workspaceType = WorkspaceType.USER.toString();
+        this.workspace = new Workspace()
+        {
+            @Override
+            public String getProjectId()
+            {
+                return projectId;
+            }
+
+            @Override
+            public String getUserId()
+            {
+                return null;
+            }
+
+            @Override
+            public String getWorkspaceId()
+            {
+                return "111";
+            }
+
+            @Override
+            public DevelopmentStream getSource()
+            {
+                return null;
+            }
+        };
         this.title = "Title"; 
         this.description = "Description";
 
@@ -68,9 +94,33 @@ public class InMemoryReview implements Review
     {
         this.projectId = projectId;
         this.reviewId = reviewId;
-        this.workspaceId = workspaceId;
-        this.workspaceType = workspaceType.toString();
-        this.title = title; 
+        this.workspace = new Workspace()
+        {
+            @Override
+            public String getProjectId()
+            {
+                return projectId;
+            }
+
+            @Override
+            public String getUserId()
+            {
+                return workspaceType == WorkspaceType.GROUP ? null : "testUser";
+            }
+
+            @Override
+            public String getWorkspaceId()
+            {
+                return workspaceId;
+            }
+
+            @Override
+            public DevelopmentStream getSource()
+            {
+                return null;
+            }
+        };
+        this.title = title;
         this.description = description;
         this.labels = labels; 
     }
@@ -144,7 +194,13 @@ public class InMemoryReview implements Review
     @Override
     public String getWorkspaceId()
     {
-        return this.workspaceId;
+        return this.workspace.getWorkspaceId();
+    }
+
+    @Override
+    public Workspace getWorkspace()
+    {
+        return this.workspace;
     }
 
     @Override

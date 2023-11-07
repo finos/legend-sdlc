@@ -14,6 +14,9 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamVisitor;
+import org.finos.legend.sdlc.domain.model.project.ProjectDevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
@@ -28,9 +31,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
 import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
@@ -86,18 +86,18 @@ public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
                 {
                     throw new UnsupportedOperationException("Not implemented");
                 }
-                VersionId patchVersionId = workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<VersionId>()
+                VersionId patchVersionId = workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<VersionId>()
                 {
                     @Override
-                    public VersionId visit(ProjectWorkspaceSource source)
+                    public VersionId visit(ProjectDevelopmentStream source)
                     {
                         return null;
                     }
 
                     @Override
-                    public VersionId visit(PatchWorkspaceSource source)
+                    public VersionId visit(Patch source)
                     {
-                        return source.getPatchVersionId();
+                        return source.getPatchReleaseVersionId();
                     }
                 });
                 InMemoryWorkspace workspace = (workspaceSpec.getType() == WorkspaceType.GROUP) ?

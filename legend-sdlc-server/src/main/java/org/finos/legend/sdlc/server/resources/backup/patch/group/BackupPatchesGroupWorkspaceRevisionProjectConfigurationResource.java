@@ -66,7 +66,7 @@ public class BackupPatchesGroupWorkspaceRevisionProjectConfigurationResource ext
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in backup group workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getBackupWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId)
         );
     }
 }

@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.junit.Assert;
@@ -131,6 +131,7 @@ public class TestBaseGitLabApi
     @Test
     public void testGetWorkspaceBranchName()
     {
+        String projectId = "testProject";
         Supplier<String> userNameSupplier = () -> "userName";
         Assert.assertEquals(
                 "workspace/userName/wid1",
@@ -154,99 +155,100 @@ public class TestBaseGitLabApi
 
         Assert.assertEquals(
                 "patch/3.5.7/workspace/userName/wid1",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource("3.5.7")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, DevelopmentStream.patch(projectId, "3.5.7")), userNameSupplier));
         Assert.assertEquals(
                 "patch/0.0.1/backup/userName/wid2",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource("0.0.1")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.patch(projectId, "0.0.1")), userNameSupplier));
         Assert.assertEquals(
                 "patch/10.5.1/resolution/userName/wid3",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource("10.5.1")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.patch(projectId, "10.5.1")), userNameSupplier));
 
         Assert.assertEquals(
                 "patch/2.4.6/group/wid1",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource("2.4.6")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, DevelopmentStream.patch(projectId, "2.4.6")), userNameSupplier));
         Assert.assertEquals(
                 "patch/1.0.0/group-backup/wid2",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource("1.0.0")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.patch(projectId, "1.0.0")), userNameSupplier));
         Assert.assertEquals(
                 "patch/99.102.3/group-resolution/wid3",
-                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource("99.102.3")), userNameSupplier));
+                BaseGitLabApi.getWorkspaceBranchName(WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.patch(projectId, "99.102.3")), userNameSupplier));
     }
 
     @Test
     public void testParseWorkspaceBranchName()
     {
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(null));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(""));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("main"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("master"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("other_branch_name"));
+        String projectId = "testProject";
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, null));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, ""));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "main"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "master"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "other_branch_name"));
 
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("wirkspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspice/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace/"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace/uid/wid/other"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace//"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("workspace_uid_wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "wirkspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspice/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace/"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace/uid/wid/other"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace//"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace_uid_wid"));
 
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("grp/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("group"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("group/"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("group/wid/other"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "grp/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "group"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "group/"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "group/wid/other"));
 
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/not.a.version/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/12345678901.0.0/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1.2/group/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1.2.3/patch/1.2.3/group/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1.2.3.4/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1.2.3.4.5/groupd/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1_2_3/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("pitch/1.2.3/workspace/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch/1.2.3/workspice/uid/wid"));
-        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName("patch//workspace/uid/wid"));
-
-        Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.projectWorkspaceSource(), "uid1"),
-                BaseGitLabApi.parseWorkspaceBranchName("workspace/uid1/wid1"));
-        Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.projectWorkspaceSource(), "uid2"),
-                BaseGitLabApi.parseWorkspaceBranchName("backup/uid2/wid2"));
-        Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.projectWorkspaceSource(), "uid3"),
-                BaseGitLabApi.parseWorkspaceBranchName("resolution/uid3/wid3"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/not.a.version/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/12345678901.0.0/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2/group/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2.3/patch/1.2.3/group/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2.3.4/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2.3.4.5/groupd/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1_2_3/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "pitch/1.2.3/workspace/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2.3/workspice/uid/wid"));
+        Assert.assertNull(BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch//workspace/uid/wid"));
 
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.projectWorkspaceSource()),
-                BaseGitLabApi.parseWorkspaceBranchName("group/wid1"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, DevelopmentStream.projectDevelopmentStream(), "uid1"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "workspace/uid1/wid1"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.projectWorkspaceSource()),
-                BaseGitLabApi.parseWorkspaceBranchName("group-backup/wid2"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.projectDevelopmentStream(), "uid2"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "backup/uid2/wid2"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.projectWorkspaceSource()),
-                BaseGitLabApi.parseWorkspaceBranchName("group-resolution/wid3"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.projectDevelopmentStream(), "uid3"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "resolution/uid3/wid3"));
 
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource("1.2.3"), "uid1"),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/1.2.3/workspace/uid1/wid1"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, DevelopmentStream.projectDevelopmentStream()),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "group/wid1"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource("4.5.6"), "uid2"),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/4.5.6/backup/uid2/wid2"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.projectDevelopmentStream()),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "group-backup/wid2"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource("41.25.63"), "uid3"),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/41.25.63/resolution/uid3/wid3"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.projectDevelopmentStream()),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "group-resolution/wid3"));
 
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource("3.2.1")),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/3.2.1/group/wid1"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, DevelopmentStream.patch(projectId, "1.2.3"), "uid1"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/1.2.3/workspace/uid1/wid1"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource("0.0.2")),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/0.0.2/group-backup/wid2"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.patch(projectId, "4.5.6"), "uid2"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/4.5.6/backup/uid2/wid2"));
         Assert.assertEquals(
-                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource("9.9.9")),
-                BaseGitLabApi.parseWorkspaceBranchName("patch/9.9.9/group-resolution/wid3"));
+                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.patch(projectId, "41.25.63"), "uid3"),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/41.25.63/resolution/uid3/wid3"));
+
+        Assert.assertEquals(
+                WorkspaceSpecification.newWorkspaceSpecification("wid1", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, DevelopmentStream.patch(projectId, "3.2.1")),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/3.2.1/group/wid1"));
+        Assert.assertEquals(
+                WorkspaceSpecification.newWorkspaceSpecification("wid2", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.BACKUP, DevelopmentStream.patch(projectId, "0.0.2")),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/0.0.2/group-backup/wid2"));
+        Assert.assertEquals(
+                WorkspaceSpecification.newWorkspaceSpecification("wid3", WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.CONFLICT_RESOLUTION, DevelopmentStream.patch(projectId, "9.9.9")),
+                BaseGitLabApi.parseWorkspaceBranchName(projectId, "patch/9.9.9/group-resolution/wid3"));
     }
 }

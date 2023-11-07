@@ -63,7 +63,7 @@ public class ComparisonPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting comparison between current user workspace revision and project revision at workspace creation, for user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.comparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.comparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -84,7 +84,7 @@ public class ComparisonPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting comparison between current user workspace revision and current project revision, for user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.comparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.comparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

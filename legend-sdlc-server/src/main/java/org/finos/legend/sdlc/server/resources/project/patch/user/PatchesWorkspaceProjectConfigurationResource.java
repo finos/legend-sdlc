@@ -67,7 +67,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 
@@ -88,7 +88,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
         }
         return executeWithLogging(
                 "updating configuration for project " + projectId + " in workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), command.getMessage(), command.getProjectConfigurationUpdater())
+                () -> this.projectConfigurationApi.updateProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), command.getMessage(), command.getProjectConfigurationUpdater())
         );
     }
 
@@ -109,7 +109,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in workspace " + workspaceId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.projectConfigurationApi.getWorkspaceAvailableArtifactGenerations(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId))
         );
     }
 }

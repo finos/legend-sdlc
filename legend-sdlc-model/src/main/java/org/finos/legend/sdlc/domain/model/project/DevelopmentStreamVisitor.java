@@ -12,25 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.domain.model.project;
+
+import org.finos.legend.sdlc.domain.model.patch.Patch;
 
 import java.util.function.Function;
 
-public interface WorkspaceSourceVisitor<T> extends Function<WorkspaceSource, T>
+public interface DevelopmentStreamVisitor<T> extends Function<DevelopmentStream, T>
 {
-    default T visit(ProjectWorkspaceSource source)
+    default T visit(ProjectDevelopmentStream source)
     {
-        throw new UnsupportedOperationException("Unsupported workspace source specification: " + source);
+        throw new UnsupportedOperationException("Unsupported development stream specification: " + source);
     }
 
-    default T visit(PatchWorkspaceSource source)
+    default T visit(Patch source)
     {
-        throw new UnsupportedOperationException("Unsupported workspace source specification: " + source);
+        throw new UnsupportedOperationException("Unsupported development stream specification: " + source);
     }
 
     @Override
-    default T apply(WorkspaceSource source)
+    default T apply(DevelopmentStream source)
     {
         return source.visit(this);
     }
+
 }

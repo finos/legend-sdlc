@@ -21,13 +21,13 @@ import org.eclipse.jgit.api.ListBranchCommand;
 import org.eclipse.jgit.lib.Constants;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
@@ -71,7 +71,7 @@ public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implemen
     }
 
     @Override
-    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         if (sources == null)
         {
@@ -101,13 +101,13 @@ public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implemen
     }
 
     @Override
-    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources)
+    public List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<ProjectFileAccessProvider.WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources)
     {
         return this.getWorkspaces(projectId, types, accessTypes, sources);
     }
 
     @Override
-    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, WorkspaceSource source)
+    public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, DevelopmentStream source)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
@@ -186,11 +186,11 @@ public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implemen
     protected static String getWorkspaceBranchName(WorkspaceSpecification workspaceSpec, String currentUser)
     {
         StringBuilder builder = new StringBuilder();
-        WorkspaceSource source = workspaceSpec.getSource();
-        if (source instanceof PatchWorkspaceSource)
+        DevelopmentStream source = workspaceSpec.getSource();
+        if (source instanceof Patch)
         {
             builder.append(PATCH_WORKSPACE_BRANCH_PREFIX).append(BRANCH_DELIMITER);
-            ((PatchWorkspaceSource) source).getPatchVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
+            ((Patch) source).getPatchReleaseVersionId().appendVersionIdString(builder).append(BRANCH_DELIMITER);
         }
         builder.append(getWorkspaceBranchNamePrefix(workspaceSpec.getType(), workspaceSpec.getAccessType())).append(BRANCH_DELIMITER);
         if (workspaceSpec.getType() == WorkspaceType.USER)
@@ -336,6 +336,12 @@ public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implemen
             public String getWorkspaceId()
             {
                 return workspaceId;
+            }
+
+            @Override
+            public DevelopmentStream getSource()
+            {
+                return workspaceSpecification.getSource();
             }
         };
     }

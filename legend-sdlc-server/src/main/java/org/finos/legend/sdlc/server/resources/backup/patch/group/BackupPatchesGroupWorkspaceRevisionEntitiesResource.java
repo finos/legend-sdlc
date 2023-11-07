@@ -87,7 +87,7 @@ public class BackupPatchesGroupWorkspaceRevisionEntitiesResource extends EntityA
         }
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -108,7 +108,7 @@ public class BackupPatchesGroupWorkspaceRevisionEntitiesResource extends EntityA
         }
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId).getEntity(path)
+                () -> this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId).getEntity(path)
         );
     }
 }

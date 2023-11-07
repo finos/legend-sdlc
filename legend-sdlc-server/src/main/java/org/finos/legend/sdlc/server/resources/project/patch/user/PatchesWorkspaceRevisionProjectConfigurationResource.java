@@ -68,7 +68,7 @@ public class PatchesWorkspaceRevisionProjectConfigurationResource extends BaseRe
         }
         return executeWithLogging(
                 "getting project " + projectId + " configuration in workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId)
         );
     }
 
@@ -92,7 +92,7 @@ public class PatchesWorkspaceRevisionProjectConfigurationResource extends BaseRe
         }
         return executeWithLogging(
                 "getting project " + projectId + " available generations in workspace " + workspaceId + " at revision " + revisionId + " for patch release version " + patchReleaseVersionId,
-                () -> this.projectConfigurationApi.getWorkspaceRevisionAvailableArtifactGenerations(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId)
+                () -> this.projectConfigurationApi.getWorkspaceRevisionAvailableArtifactGenerations(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId)
         );
     }
 }

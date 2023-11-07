@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.domain.model.review;
 
+import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 
@@ -26,8 +27,12 @@ public interface Review
 
     String getProjectId();
 
+    Workspace getWorkspace();
+
+    @Deprecated
     String getWorkspaceId();
 
+    @Deprecated
     WorkspaceType getWorkspaceType();
 
     String getTitle();

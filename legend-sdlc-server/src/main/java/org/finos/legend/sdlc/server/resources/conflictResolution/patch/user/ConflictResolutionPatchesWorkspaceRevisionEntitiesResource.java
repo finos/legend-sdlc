@@ -87,7 +87,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionEntitiesResource extends 
         }
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -113,7 +113,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionEntitiesResource extends 
         }
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), revisionId).getEntity(path)
+                () -> this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId).getEntity(path)
         );
     }
 }

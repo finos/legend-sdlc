@@ -15,6 +15,9 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStreamVisitor;
+import org.finos.legend.sdlc.domain.model.project.ProjectDevelopmentStream;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
 import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
@@ -24,9 +27,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionAccessContext;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.ProjectWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
@@ -162,35 +162,35 @@ public class InMemoryRevisionApi implements RevisionApi
         {
             case USER:
             {
-                return workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<InMemoryWorkspace>()
+                return workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<InMemoryWorkspace>()
                 {
                     @Override
-                    public InMemoryWorkspace visit(ProjectWorkspaceSource source)
+                    public InMemoryWorkspace visit(ProjectDevelopmentStream source)
                     {
                         return project.getUserWorkspace(workspaceSpec.getId(), null);
                     }
 
                     @Override
-                    public InMemoryWorkspace visit(PatchWorkspaceSource source)
+                    public InMemoryWorkspace visit(Patch source)
                     {
-                        return project.getUserWorkspace(workspaceSpec.getId(), source.getPatchVersionId());
+                        return project.getUserWorkspace(workspaceSpec.getId(), source.getPatchReleaseVersionId());
                     }
                 });
             }
             case GROUP:
             {
-                return workspaceSpec.getSource().visit(new WorkspaceSourceVisitor<InMemoryWorkspace>()
+                return workspaceSpec.getSource().visit(new DevelopmentStreamVisitor<InMemoryWorkspace>()
                 {
                     @Override
-                    public InMemoryWorkspace visit(ProjectWorkspaceSource source)
+                    public InMemoryWorkspace visit(ProjectDevelopmentStream source)
                     {
                         return project.getGroupWorkspace(workspaceSpec.getId(), null);
                     }
 
                     @Override
-                    public InMemoryWorkspace visit(PatchWorkspaceSource source)
+                    public InMemoryWorkspace visit(Patch source)
                     {
-                        return project.getGroupWorkspace(workspaceSpec.getId(), source.getPatchVersionId());
+                        return project.getGroupWorkspace(workspaceSpec.getId(), source.getPatchReleaseVersionId());
                     }
                 });
             }

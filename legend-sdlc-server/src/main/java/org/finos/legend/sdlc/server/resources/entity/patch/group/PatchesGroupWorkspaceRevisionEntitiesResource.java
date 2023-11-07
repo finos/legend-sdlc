@@ -87,7 +87,7 @@ public class PatchesGroupWorkspaceRevisionEntitiesResource extends EntityAccessR
         }
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -113,7 +113,7 @@ public class PatchesGroupWorkspaceRevisionEntitiesResource extends EntityAccessR
         }
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of group workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), revisionId).getEntity(path)
+                () -> this.entityApi.getWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), revisionId).getEntity(path)
         );
     }
 }

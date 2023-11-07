@@ -14,6 +14,9 @@
 
 package org.finos.legend.sdlc.server.domain.api.workspace;
 
+import org.finos.legend.sdlc.domain.model.patch.Patch;
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
+import org.finos.legend.sdlc.domain.model.project.ProjectDevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
@@ -26,10 +29,10 @@ public class WorkspaceSpecification
     private final String id;
     private final WorkspaceType type;
     private final WorkspaceAccessType accessType;
-    private final WorkspaceSource source;
+    private final DevelopmentStream source;
     private final String userId;
 
-    private WorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, WorkspaceSource source, String userId)
+    private WorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, DevelopmentStream source, String userId)
     {
         if ((userId != null) && (type != WorkspaceType.USER))
         {
@@ -77,7 +80,7 @@ public class WorkspaceSpecification
         {
             builder.append(" accessType=").append(this.accessType.getLabel());
         }
-        if (!(this.source instanceof ProjectWorkspaceSource))
+        if (!(this.source instanceof ProjectDevelopmentStream))
         {
             this.source.appendString(builder.append(" source="));
         }
@@ -103,9 +106,18 @@ public class WorkspaceSpecification
         return this.accessType;
     }
 
-    public WorkspaceSource getSource()
+    public DevelopmentStream getSource()
     {
         return this.source;
+    }
+
+    public SourceSpecification getWorkspaceSourceSpecification()
+    {
+        if (this.source instanceof Patch)
+        {
+            return SourceSpecification.patchSourceSpecification(((Patch) this.source).getPatchReleaseVersionId());
+        }
+        return SourceSpecification.projectSourceSpecification();
     }
 
     /**
@@ -135,12 +147,12 @@ public class WorkspaceSpecification
      * @param userId     optional user id
      * @return workspace specification
      */
-    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, WorkspaceSource source, String userId)
+    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, DevelopmentStream source, String userId)
     {
-        return new WorkspaceSpecification(id, type, (accessType == null) ? WorkspaceAccessType.WORKSPACE : accessType, (source == null) ? WorkspaceSource.projectWorkspaceSource() : source, userId);
+        return new WorkspaceSpecification(id, type, (accessType == null) ? WorkspaceAccessType.WORKSPACE : accessType, (source == null) ? DevelopmentStream.projectDevelopmentStream() : source, userId);
     }
 
-    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, WorkspaceSource source)
+    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, WorkspaceAccessType accessType, DevelopmentStream source)
     {
         return newWorkspaceSpecification(id, type, accessType, source, null);
     }
@@ -150,7 +162,7 @@ public class WorkspaceSpecification
         return newWorkspaceSpecification(id, type, accessType, null);
     }
 
-    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, WorkspaceSource source)
+    public static WorkspaceSpecification newWorkspaceSpecification(String id, WorkspaceType type, DevelopmentStream source)
     {
         return newWorkspaceSpecification(id, type, null, source);
     }

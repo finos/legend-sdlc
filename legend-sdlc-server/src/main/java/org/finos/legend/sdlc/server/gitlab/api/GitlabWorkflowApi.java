@@ -87,7 +87,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         if (workspaceSpec == null)
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);

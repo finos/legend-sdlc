@@ -102,7 +102,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
     }
 
     @Override
-    public Comparison getWorkspaceSourceComparison(String projectId, WorkspaceSpecification workspaceSpecification)
+    public Comparison getDevelopmentStreamComparison(String projectId, WorkspaceSpecification workspaceSpecification)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
@@ -139,17 +139,17 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         catch (Exception e)
         {
             throw buildException(e,
-                    () -> "User " + getCurrentUser() + " is not allowed to access the current revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Could not find current revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()),
-                    () -> "Failed to find current revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()));
+                    () -> "User " + getCurrentUser() + " is not allowed to access the current revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Could not find current revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()),
+                    () -> "Failed to find current revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()));
         }
         if (sourceCommit == null)
         {
-            throw new LegendSDLCServerException("Could not access current revision for " + getReferenceInfo(projectId, workspaceSpecification.getSource()));
+            throw new LegendSDLCServerException("Could not access current revision for " + getReferenceInfo(projectId, workspaceSpecification.getWorkspaceSourceSpecification()));
         }
 
         ProjectStructure workspaceProjectStructure = getProjectStructure(projectId, workspaceSpecification.getSourceSpecification(), workspaceCommit.getId());
-        ProjectStructure sourceProjectStructure = getProjectStructure(projectId, workspaceSpecification.getSource().getSourceSpecification(), sourceCommit.getId());
+        ProjectStructure sourceProjectStructure = getProjectStructure(projectId, workspaceSpecification.getWorkspaceSourceSpecification(), sourceCommit.getId());
         return getComparisonResult(gitLabProjectId, repositoryApi, sourceCommit.getId(), workspaceCommit.getId(), sourceProjectStructure, workspaceProjectStructure);
     }
 
@@ -165,7 +165,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
 
         MergeRequest mergeRequest = getReviewMergeRequest(gitLabApi.getMergeRequestApi(), gitLabProjectId, reviewId);
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         if (workspaceSpec == null)
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
@@ -180,7 +180,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         String fromRevisionId = diffRef.getStartSha();
         String toRevisionId = diffRef.getHeadSha();
         ProjectStructure fromProjectStructure = getProjectStructure(projectId, workspaceSpec.getSourceSpecification(), fromRevisionId);
-        ProjectStructure toProjectStructure = getProjectStructure(projectId, workspaceSpec.getSource().getSourceSpecification(), toRevisionId);
+        ProjectStructure toProjectStructure = getProjectStructure(projectId, workspaceSpec.getWorkspaceSourceSpecification(), toRevisionId);
         return getComparisonResult(gitLabProjectId, repositoryApi, fromRevisionId, toRevisionId, fromProjectStructure, toProjectStructure);
     }
 
@@ -195,7 +195,7 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
         RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
         MergeRequest mergeRequest = getReviewMergeRequest(gitLabApi.getMergeRequestApi(), gitLabProjectId, reviewId);
 
-        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
+        WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(projectId, mergeRequest.getSourceBranch());
         if (workspaceSpec == null)
         {
             throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);

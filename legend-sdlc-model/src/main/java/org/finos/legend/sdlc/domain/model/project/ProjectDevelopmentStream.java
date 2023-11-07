@@ -12,26 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
 
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+package org.finos.legend.sdlc.domain.model.project;
 
-public class ProjectWorkspaceSource extends WorkspaceSource
+public class ProjectDevelopmentStream extends DevelopmentStream
 {
-    static final ProjectWorkspaceSource INSTANCE = new ProjectWorkspaceSource();
+    static final ProjectDevelopmentStream INSTANCE = new ProjectDevelopmentStream();
 
-    private ProjectWorkspaceSource()
+    private ProjectDevelopmentStream()
     {
+        super(DevelopmentStreamType.PROJECT_MAIN.toString());
     }
 
     @Override
-    public SourceSpecification getSourceSpecification()
-    {
-        return SourceSpecification.projectSourceSpecification();
-    }
-
-    @Override
-    public <T> T visit(WorkspaceSourceVisitor<T> visitor)
+    public <T> T visit(DevelopmentStreamVisitor<T> visitor)
     {
         return visitor.visit(this);
     }

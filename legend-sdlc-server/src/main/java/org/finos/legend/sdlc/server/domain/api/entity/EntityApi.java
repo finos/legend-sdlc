@@ -45,7 +45,7 @@ public interface EntityApi
     @Deprecated
     default EntityAccessContext getProjectEntityAccessContext(String projectId, VersionId patchReleaseVersionId)
     {
-        return getEntityAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getEntityAccessContext(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId));
     }
 
     @Deprecated
@@ -57,7 +57,7 @@ public interface EntityApi
     @Deprecated
     default EntityAccessContext getProjectRevisionEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String revisionId)
     {
-        return getEntityAccessContext(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId), revisionId);
+        return getEntityAccessContext(projectId, SourceSpecification.newSourceSpecification(projectId, patchReleaseVersionId), revisionId);
     }
 
     @Deprecated

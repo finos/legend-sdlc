@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2023 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,17 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.domain.model.project.workspace;
+package org.finos.legend.sdlc.domain.model.project;
 
-import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
-
-public interface Workspace
+public enum DevelopmentStreamType
 {
-    String getProjectId();
-
-    String getUserId();
-
-    String getWorkspaceId();
-
-    DevelopmentStream getSource();
+    PROJECT_MAIN, PATCH
 }

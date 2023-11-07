@@ -74,7 +74,7 @@ public class PatchesGroupWorkspaceEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revisions for entity " + path + " in group workspace " + workspaceId + " for project " + projectId +  " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -99,7 +99,7 @@ public class PatchesGroupWorkspaceEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revision " + revisionId + " for entity " + path + " in group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), path).getRevision(revisionId)
+                () -> this.revisionApi.getWorkspaceEntityRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(projectId, workspaceId, versionId), path).getRevision(revisionId)
         );
     }
 }

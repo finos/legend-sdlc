@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.domain.api.workspace;
 
+import org.finos.legend.sdlc.domain.model.project.DevelopmentStream;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -45,7 +46,7 @@ public interface WorkspaceApi
      * @param sources     set of workspace sources in scope; null means all sources
      * @return workspaces
      */
-    List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources);
+    List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources);
 
     /**
      * Get all workspaces in the given project for all users subject to the given filters.
@@ -56,7 +57,7 @@ public interface WorkspaceApi
      * @param sources     set of workspace sources in scope
      * @return workspaces
      */
-    List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources);
+    List<Workspace> getAllWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<DevelopmentStream> sources);
 
     /**
      * Create a new workspace in the given project. If the workspace is a user workspace, then it will be for the
@@ -68,7 +69,7 @@ public interface WorkspaceApi
      * @param source      workspace source
      * @return new workspace
      */
-    Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, WorkspaceSource source);
+    Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, DevelopmentStream source);
 
     /**
      * Delete the given workspace.
@@ -166,13 +167,13 @@ public interface WorkspaceApi
     @Deprecated
     default List<Workspace> getWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes)
     {
-        return getWorkspaces(projectId, workspaceTypes, Collections.singleton(WorkspaceAccessType.WORKSPACE), Collections.singleton((patchReleaseVersionId == null) ? WorkspaceSource.projectWorkspaceSource() : WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        return getWorkspaces(projectId, workspaceTypes, Collections.singleton(WorkspaceAccessType.WORKSPACE), Collections.singleton((patchReleaseVersionId == null) ? DevelopmentStream.projectDevelopmentStream() : DevelopmentStream.patch(projectId, patchReleaseVersionId)));
     }
 
     @Deprecated
     default List<Workspace> getWorkspacesWithConflictResolution(String projectId, VersionId patchReleaseVersionId)
     {
-        return getWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), Collections.singleton(WorkspaceAccessType.CONFLICT_RESOLUTION), Collections.singleton((patchReleaseVersionId == null) ? WorkspaceSource.projectWorkspaceSource() : WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        return getWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), Collections.singleton(WorkspaceAccessType.CONFLICT_RESOLUTION), Collections.singleton((patchReleaseVersionId == null) ? DevelopmentStream.projectDevelopmentStream() : DevelopmentStream.patch(projectId, patchReleaseVersionId)));
     }
 
     @Deprecated
@@ -184,7 +185,7 @@ public interface WorkspaceApi
     @Deprecated
     default List<Workspace> getBackupWorkspaces(String projectId, VersionId patchReleaseVersionId)
     {
-        return getWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), Collections.singleton(WorkspaceAccessType.BACKUP), Collections.singleton((patchReleaseVersionId == null) ? WorkspaceSource.projectWorkspaceSource() : WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        return getWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), Collections.singleton(WorkspaceAccessType.BACKUP), Collections.singleton((patchReleaseVersionId == null) ? DevelopmentStream.projectDevelopmentStream() : DevelopmentStream.patch(projectId, patchReleaseVersionId)));
     }
 
     @Deprecated
@@ -202,7 +203,7 @@ public interface WorkspaceApi
     @Deprecated
     default List<Workspace> getAllUserWorkspaces(String projectId)
     {
-        return getAllWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), null, Collections.singleton(WorkspaceSource.projectWorkspaceSource()));
+        return getAllWorkspaces(projectId, Collections.singleton(WorkspaceType.USER), null, Collections.singleton(DevelopmentStream.projectDevelopmentStream()));
     }
 
     /**
@@ -214,7 +215,7 @@ public interface WorkspaceApi
     @Deprecated
     default List<Workspace> getAllWorkspaces(String projectId)
     {
-        return getAllWorkspaces(projectId, null, null, Collections.singleton(WorkspaceSource.projectWorkspaceSource()));
+        return getAllWorkspaces(projectId, null, null, Collections.singleton(DevelopmentStream.projectDevelopmentStream()));
     }
 
     /**
@@ -228,7 +229,7 @@ public interface WorkspaceApi
     @Deprecated
     default List<Workspace> getAllWorkspaces(String projectId, VersionId patchReleaseVersionId, Set<WorkspaceType> workspaceTypes)
     {
-        return getAllWorkspaces(projectId, workspaceTypes, Collections.singleton(WorkspaceAccessType.WORKSPACE), Collections.singleton((patchReleaseVersionId == null) ? WorkspaceSource.projectWorkspaceSource() : WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        return getAllWorkspaces(projectId, workspaceTypes, Collections.singleton(WorkspaceAccessType.WORKSPACE), Collections.singleton((patchReleaseVersionId == null) ? DevelopmentStream.projectDevelopmentStream() : DevelopmentStream.patch(projectId, patchReleaseVersionId)));
     }
 
     /**
@@ -458,7 +459,7 @@ public interface WorkspaceApi
     @Deprecated
     default Workspace newUserWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, workspaceId, WorkspaceType.USER, WorkspaceSource.projectWorkspaceSource());
+        return newWorkspace(projectId, workspaceId, WorkspaceType.USER, DevelopmentStream.projectDevelopmentStream());
     }
 
     /**
@@ -471,7 +472,7 @@ public interface WorkspaceApi
     @Deprecated
     default Workspace newGroupWorkspace(String projectId, String workspaceId)
     {
-        return newWorkspace(projectId, workspaceId, WorkspaceType.GROUP, WorkspaceSource.projectWorkspaceSource());
+        return newWorkspace(projectId, workspaceId, WorkspaceType.GROUP, DevelopmentStream.projectDevelopmentStream());
     }
 
     /**
