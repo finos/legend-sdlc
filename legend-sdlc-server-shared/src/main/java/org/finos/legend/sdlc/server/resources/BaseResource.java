@@ -33,6 +33,7 @@ public abstract class BaseResource
     protected <T> T execute(String descriptionForLogging, String metricName, Supplier<T> supplier)
     {
         Logger logger = getLogger();
+        SDLCMetricsHandler.observeOperationStart();
         SDLCMetricsHandler.operationStart();
         boolean isInfoLogging = logger.isInfoEnabled();
         String sanitizedDescription = isInfoLogging ? StringTools.sanitizeForLogging(descriptionForLogging, "_", false) : null;
@@ -45,6 +46,7 @@ public abstract class BaseResource
         {
             T result = supplier.get();
             long endTime = System.nanoTime();
+            SDLCMetricsHandler.observeOperationComplete(startTime, endTime, metricName);
             SDLCMetricsHandler.operationComplete(startTime, endTime, metricName);
             if (isInfoLogging)
             {
@@ -62,6 +64,7 @@ public abstract class BaseResource
             Status status = e.getStatus();
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))
             {
+                SDLCMetricsHandler.observeOperationRedirect(startTime, endTime, metricName);
                 SDLCMetricsHandler.operationRedirect(startTime, endTime, metricName);
                 if (isInfoLogging)
                 {
@@ -75,6 +78,7 @@ public abstract class BaseResource
             }
             else
             {
+                SDLCMetricsHandler.observeOperationError(startTime, endTime, metricName);
                 SDLCMetricsHandler.operationError(startTime, endTime, metricName);
                 if (logger.isErrorEnabled())
                 {
@@ -91,6 +95,7 @@ public abstract class BaseResource
         catch (Throwable t)
         {
             long endTime = System.nanoTime();
+            SDLCMetricsHandler.observeOperationError(startTime, endTime, metricName);
             SDLCMetricsHandler.operationError(startTime, endTime, metricName);
             if (logger.isErrorEnabled())
             {
