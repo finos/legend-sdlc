@@ -585,7 +585,7 @@ public abstract class ProjectStructure
         // Project type
         if (!isValidProjectType(config.getProjectType()))
         {
-            throw new LegendSDLCServerException("Invalid projectType: " + config.getArtifactId(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid projectType: " + config.getProjectType(), Status.BAD_REQUEST);
         }
 
         // Platform configurations
