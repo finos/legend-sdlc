@@ -109,7 +109,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
+    public List<Project> getProjects(boolean user, String searchString, Iterable<String> tags, Integer limit)
     {
         boolean limited = false;
         if (limit != null)
@@ -124,9 +124,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             }
             limited = true;
         }
+        Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
+        String search = (tagSet.contains("legend_sandbox") && searchString == null) ? getCurrentUser() : searchString;
         try
         {
-            Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
             Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, ITEMS_PER_PAGE));
             Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
             if (!tagSet.isEmpty())
@@ -394,51 +395,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             throw new LegendSDLCServerException("Failed to create workspace " + workspaceId + " in project " + projectId);
         }
 
-        // Configure project in workspace
-        ProjectFileAccessProvider projectFileAccessProvider = getProjectFileAccessProvider();
-        Revision configRevision;
-        try
-        {
-            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
-            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
-                    .withProjectType(type)
-                    .withGroupId(groupId)
-                    .withArtifactId(artifactId);
-            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
-                    .withWorkspace(workspaceSpec)
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
-            int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
-            if (currentConfig == null)
-            {
-                // No current project structure: build a new one
-                configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
-                {
-                    configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
-                }
-                configRevision = builder.withMessage("Build project structure").build();
-            }
-            else
-            {
-                ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
-                if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
-                {
-                    configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
-                    {
-                        configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
-                    }
-                }
-                configRevision = builder.withMessage("Update project structure").update();
-            }
-        }
-        catch (Exception e)
-        {
-            // Try to delete the branch in case of exception
-            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
-            throw e;
-        }
+        Revision configRevision = configureProjectInWorkspace(projectId, type, groupId, artifactId, workspaceSpec);
 
         // Submit workspace changes, if any, for review
         String reviewId;
@@ -515,6 +472,57 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 return reviewId;
             }
         };
+    }
+
+    public Revision configureProjectInWorkspace(GitLabProjectId projectId, ProjectType type, String groupId, String artifactId, WorkspaceSpecification workspaceSpec)
+    {
+        ProjectFileAccessProvider projectFileAccessProvider = getProjectFileAccessProvider();
+        Revision configRevision;
+        try
+        {
+            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
+            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectType(type)
+                    .withGroupId(groupId)
+                    .withArtifactId(artifactId);
+            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
+                    .withWorkspace(workspaceSpec)
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
+            int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
+            if (currentConfig == null)
+            {
+                // No current project structure: build a new one
+                configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
+                {
+                    configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                }
+                configRevision = builder.withMessage("Build project structure").build();
+            }
+            else
+            {
+                ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
+                if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
+                {
+                    configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
+                    {
+                        configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                    }
+                }
+                configRevision = builder.withMessage("Update project structure").update();
+            }
+            return configRevision;
+        }
+        catch (Exception e)
+        {
+            // Try to delete the branch in case of exception
+            GitLabApi gitLabApi = getGitLabApi();
+            RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
+            throw e;
+        }
     }
 
     private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, WorkspaceSpecification workspaceSpec)
