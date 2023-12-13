@@ -19,6 +19,9 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
+import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,6 +48,8 @@ public interface ProjectApi
     Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
 
     void deleteProject(String id);
+
+    Revision configureProjectInWorkspace(GitLabProjectId projectId, ProjectType type, String groupId, String artifactId, WorkspaceSpecification workspaceSpec);
 
     void changeProjectName(String id, String newName);
 
