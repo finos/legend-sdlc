@@ -120,7 +120,8 @@ class PureTestHelper
         {
             return PureModelBuilder.newBuilder()
                     .withEntitiesIfPossible(entityLoader.getAllEntities())
-                    .build(classLoader);
+                    .withClassLoader(classLoader)
+                    .build();
         }
         catch (Exception e)
         {
