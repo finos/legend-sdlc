@@ -24,6 +24,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 
 import java.util.ServiceLoader;
@@ -31,13 +32,14 @@ import java.util.stream.Stream;
 
 public class PureModelBuilder
 {
-    private final PureModelContextDataBuilder contextDataBuilder = PureModelContextDataBuilder.newBuilder();
+    private final PureModelContextDataBuilder contextDataBuilder;
     private ClassLoader classLoader;
     private CompilerExtensions extensions;
     private String packagePrefix;
 
-    private PureModelBuilder()
+    private PureModelBuilder(EntityToPureConverter converter)
     {
+        this.contextDataBuilder = PureModelContextDataBuilder.newBuilder(converter);
     }
 
     public int getElementCount()
@@ -230,7 +232,12 @@ public class PureModelBuilder
 
     public static PureModelBuilder newBuilder()
     {
-        return new PureModelBuilder();
+        return newBuilder(null);
+    }
+
+    public static PureModelBuilder newBuilder(EntityToPureConverter converter)
+    {
+        return new PureModelBuilder(converter);
     }
 
     public static class PureModelWithContextData
