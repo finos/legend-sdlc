@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
-import org.finos.legend.engine.language.pure.modelManager.ModelManager;
-import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
 import org.junit.Test;
 
