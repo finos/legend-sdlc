@@ -24,7 +24,7 @@ public abstract class AbstractTestableTest extends AbstractPureTest
     @Test
     public void testTestable() throws Exception
     {
-        TestableHelper helper = new TestableHelper(4, getEntityPath(), new TestableRunner(new ModelManager(DeploymentMode.PROD)), getPureModel(), getPureModelContextData());
+        TestableHelper helper = new TestableHelper(4, getEntityPath(), new TestableRunner(), getPureModel(), getPureModelContextData());
         helper.runTest();
     }
 }
