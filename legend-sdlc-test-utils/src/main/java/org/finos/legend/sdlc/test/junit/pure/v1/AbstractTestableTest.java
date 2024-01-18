@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
-import org.finos.legend.engine.language.pure.modelManager.ModelManager;
-import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.engine.testable.TestableRunner;
 import org.junit.Test;
 
@@ -24,7 +22,7 @@ public abstract class AbstractTestableTest extends AbstractPureTest
     @Test
     public void testTestable() throws Exception
     {
-        TestableHelper helper = new TestableHelper(4, getEntityPath(), new TestableRunner(new ModelManager(DeploymentMode.PROD)), getPureModel(), getPureModelContextData());
+        TestableHelper helper = new TestableHelper(4, getEntityPath(), new TestableRunner(), getPureModel(), getPureModelContextData());
         helper.runTest();
     }
 }
