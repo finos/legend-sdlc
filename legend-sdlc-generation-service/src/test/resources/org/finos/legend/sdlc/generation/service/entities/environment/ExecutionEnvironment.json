@@ -1,0 +1,25 @@
+{
+  "classifierPath" : "meta::legend::service::metamodel::ExecutionEnvironmentInstance",
+  "content" : {
+    "_type" : "executionEnvironmentInstance",
+    "executionParameters" : [ {
+      "_type" : "singleExecutionParameters",
+      "key" : "env1",
+      "mapping" : "model::RelationalMapping",
+      "runtime" : {
+        "_type" : "runtimePointer",
+        "runtime" : "model::RelationalRuntime"
+      }
+    }, {
+      "_type" : "singleExecutionParameters",
+      "key" : "env2",
+      "mapping" : "model::RelationalMapping",
+      "runtime" : {
+        "_type" : "runtimePointer",
+        "runtime" : "model::RelationalRuntime"
+      }
+    } ],
+    "name" : "ExecutionEnvironment",
+    "package" : "environment"
+  }
+}

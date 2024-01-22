@@ -92,10 +92,14 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         if (execution instanceof PureMultiExecution)
         {
-            String executionKey = ((PureMultiExecution) execution).executionKey;
-            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(executionKey);
-            javaParameterNames.add(javaParameterName);
-            parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
+            PureMultiExecution multiExec = (PureMultiExecution) execution;
+            if (multiExec.executionParameters != null && !multiExec.executionParameters.isEmpty())
+            {
+                String executionKey = multiExec.executionKey;
+                String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(executionKey);
+                javaParameterNames.add(javaParameterName);
+                parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
+            }
         }
         for (Variable legendParameter : lambda.parameters)
         {
