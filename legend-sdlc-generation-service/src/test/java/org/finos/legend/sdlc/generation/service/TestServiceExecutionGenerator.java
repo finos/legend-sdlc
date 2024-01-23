@@ -221,6 +221,15 @@ public class TestServiceExecutionGenerator
     }
 
     @Test
+    public void testRelationalWithNoExecutionParams() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service enumParamService = getService("service::RelationalServiceWithNoExecutionParams");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, Lists.fixedSize.of(enumParamService));
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithNoExecutionParams", String.class);
+    }
+
+    @Test
     public void testEnumParamServiceExecutionUsingServiceRunnerAPI() throws Exception
     {
         Service service = getService("service::RelationalServiceWithEnumParams");
