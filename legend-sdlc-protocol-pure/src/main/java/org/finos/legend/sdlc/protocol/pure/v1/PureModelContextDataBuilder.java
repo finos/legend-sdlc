@@ -36,7 +36,7 @@ public class PureModelContextDataBuilder
 
     private PureModelContextDataBuilder(EntityToPureConverter converter)
     {
-        this.converter = converter;
+        this.converter = (converter == null) ? new EntityToPureConverter() : converter;
     }
 
     public int getElementCount()
@@ -192,7 +192,7 @@ public class PureModelContextDataBuilder
 
     public static PureModelContextDataBuilder newBuilder()
     {
-        return newBuilder(new EntityToPureConverter());
+        return newBuilder(null);
     }
 
     public static PureModelContextDataBuilder newBuilder(EntityToPureConverter converter)
