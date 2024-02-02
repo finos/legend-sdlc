@@ -37,7 +37,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtension;
+import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
@@ -428,7 +428,7 @@ public class TestServiceExecutionGenerator
                 .withPackagePrefix(packagePrefix)
                 .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
                 .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
-                .withPureCoreExtensions(ServiceLoader.load(PureCoreExtension.class))
+                .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
                 .withClientVersion("vX_X_X")
                 .build();
         generator.generate();

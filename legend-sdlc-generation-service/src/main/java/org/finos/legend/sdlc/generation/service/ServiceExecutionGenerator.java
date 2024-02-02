@@ -38,7 +38,7 @@ import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtension;
+import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
@@ -626,7 +626,7 @@ public class ServiceExecutionGenerator
         private Path resourceOutputDirectory;
         private JsonMapper jsonMapper;
         private final MutableList<PlanGeneratorExtension> planGeneratorExtensions = Lists.mutable.empty();
-        private final MutableList<PureCoreExtension> pureCoreExtensions = Lists.mutable.empty();
+        private final MutableList<LegendPureCoreExtension> pureCoreExtensions = Lists.mutable.empty();
         private String clientVersion;
         private ForkJoinPool executorService;
 
@@ -694,13 +694,13 @@ public class ServiceExecutionGenerator
             return this;
         }
 
-        public Builder withPureCoreExtension(PureCoreExtension extension)
+        public Builder withPureCoreExtension(LegendPureCoreExtension extension)
         {
             this.pureCoreExtensions.add(Objects.requireNonNull(extension));
             return this;
         }
 
-        public Builder withPureCoreExtensions(Iterable<? extends PureCoreExtension> extensions)
+        public Builder withPureCoreExtensions(Iterable<? extends LegendPureCoreExtension> extensions)
         {
             extensions.forEach(this::withPureCoreExtension);
             return this;
