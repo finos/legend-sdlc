@@ -26,7 +26,7 @@ import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.generation.transformers.PlanTransformer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
-import org.finos.legend.engine.pure.code.core.PureCoreExtension;
+import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder.PureModelWithContextData;
@@ -96,7 +96,7 @@ class PureTestHelper
                     PURE_MODEL = pureModelWithContextData.getPureModel();
 
                     PLAN_TRANSFORMERS = Iterate.flatCollect(ServiceLoader.load(PlanGeneratorExtension.class, classLoader), PlanGeneratorExtension::getExtraPlanTransformers, Lists.mutable.empty()).asUnmodifiable();
-                    ROUTER_EXTENSIONS = Iterate.flatCollect(ServiceLoader.load(PureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(PURE_MODEL.getExecutionSupport()), Lists.mutable.empty()).asUnmodifiable();
+                    ROUTER_EXTENSIONS = Iterate.flatCollect(ServiceLoader.load(LegendPureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(PURE_MODEL.getExecutionSupport()), Lists.mutable.empty()).asUnmodifiable();
                     LOGGER.debug("Finished initialization");
                 }
                 catch (Throwable t)
