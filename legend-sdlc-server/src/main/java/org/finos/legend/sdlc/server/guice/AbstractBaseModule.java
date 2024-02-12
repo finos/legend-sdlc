@@ -264,6 +264,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
+        binder.bind(LegendPac4jConfiguration.class).toProvider(this::getLegendPac4jConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
         binder.bind(SessionProvider.class).toProvider(this::getSessionProvider);
@@ -524,6 +525,11 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     {
         LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
+    }
+
+    private LegendPac4jConfiguration getLegendPac4jConfiguration()
+    {
+        return getConfiguration().getPac4jConfiguration();
     }
 
     private AuthClientInjector getAuthClientInjector()

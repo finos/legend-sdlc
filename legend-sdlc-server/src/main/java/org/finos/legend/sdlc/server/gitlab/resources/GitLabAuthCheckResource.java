@@ -22,6 +22,10 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabSession;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
+import org.pac4j.core.client.Client;
+import org.pac4j.core.context.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -40,6 +44,7 @@ public class GitLabAuthCheckResource extends BaseResource
     private final HttpServletResponse httpResponse;
     private final GitLabAuthorizerManager authorizerManager;
     private final GitLabAppInfo appInfo;
+    private final LegendPac4jConfiguration legendPac4jConfiguration;
     private final SessionProvider sessionProvider;
 
     @Inject
@@ -47,6 +52,7 @@ public class GitLabAuthCheckResource extends BaseResource
                                    HttpServletResponse httpResponse,
                                    GitLabAuthorizerManager authorizerManager,
                                    GitLabAppInfo appInfo,
+                                   LegendPac4jConfiguration legendPac4jConfiguration,
                                    SessionProvider sessionProvider)
     {
         super();
@@ -54,6 +60,7 @@ public class GitLabAuthCheckResource extends BaseResource
         this.httpResponse = httpResponse;
         this.authorizerManager = authorizerManager;
         this.appInfo = appInfo;
+        this.legendPac4jConfiguration = legendPac4jConfiguration;
         this.sessionProvider = sessionProvider;
     }
 
@@ -68,7 +75,16 @@ public class GitLabAuthCheckResource extends BaseResource
 
             if (session == null)
             {
-                session = sessionProvider.getSessionFromSessionStore(httpRequest, httpResponse, appInfo);
+                String clientName = httpRequest.getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER);
+                GitlabPersonalAccessTokenClient client = getGitlabPersonalAccessTokenClient(legendPac4jConfiguration, clientName);
+                if (client != null && httpRequest.getHeader(client.headerTokenName) != null)
+                {
+                    session = SessionProvider.getSessionUsingGitlabPersonalAccessToken(httpRequest, httpResponse, appInfo, client);
+                }
+                else
+                {
+                    session = sessionProvider.getSessionFromSessionStore(httpRequest, httpResponse, appInfo);
+                }
                 httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
             }
 
@@ -86,5 +102,18 @@ public class GitLabAuthCheckResource extends BaseResource
             }
             return false;
         });
+    }
+
+    private GitlabPersonalAccessTokenClient getGitlabPersonalAccessTokenClient(LegendPac4jConfiguration configuration,
+                                                                               String requestClientName)
+    {
+        for (Client client: configuration.getClients())
+        {
+            if (client.getName().equals(requestClientName) && client instanceof GitlabPersonalAccessTokenClient)
+            {
+                return (GitlabPersonalAccessTokenClient) client;
+            }
+        }
+        return null;
     }
 }
