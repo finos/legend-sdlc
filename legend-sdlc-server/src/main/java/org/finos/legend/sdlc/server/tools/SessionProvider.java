@@ -134,7 +134,17 @@ public class SessionProvider
         GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(client.host);
         GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, client.host, client.apiVersion);
         GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context);
-        authenticator.validate(credentials, context);
+
+        try
+        {
+            authenticator.validate(credentials, context);
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Validation failed for PA token: {}", e.getMessage());
+            return null;
+        }
+
         GitlabPersonalAccessTokenProfile profile = creator.create(credentials, context);
         return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
     }
