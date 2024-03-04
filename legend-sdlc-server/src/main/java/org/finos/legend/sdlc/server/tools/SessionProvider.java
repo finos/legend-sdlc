@@ -141,7 +141,7 @@ public class SessionProvider
         }
         catch (Exception e)
         {
-            LOGGER.error("Validation failed for PA token: {}", e.getMessage());
+            LOGGER.error("Validation failed for PA token", e);
             return null;
         }
 
