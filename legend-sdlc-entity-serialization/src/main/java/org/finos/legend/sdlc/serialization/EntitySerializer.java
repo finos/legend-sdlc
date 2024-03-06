@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.serialization;
 
+import java.util.List;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -156,7 +157,7 @@ public interface EntitySerializer
      * @return deserialized entity
      * @throws IOException if an I/O error occurs
      */
-    Entity deserialize(InputStream stream) throws IOException;
+    List<Entity> deserialize(InputStream stream) throws IOException;
 
     /**
      * Deserialize an entity from a byte array.
@@ -165,7 +166,7 @@ public interface EntitySerializer
      * @return deserialized entity
      * @throws IOException if an I/O error occurs
      */
-    default Entity deserialize(byte[] content) throws IOException
+    default List<Entity> deserialize(byte[] content) throws IOException
     {
         return deserialize(new ByteArrayInputStream(content));
     }

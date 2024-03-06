@@ -48,6 +48,9 @@ public class EntityMojo extends AbstractMojo
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     public File baseDir;
 
+    @Parameter(defaultValue = "true")
+    public boolean enforceOneEntityPerFile;
+
     @Override
     public void execute() throws MojoExecutionException
     {
