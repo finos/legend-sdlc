@@ -69,6 +69,9 @@ public class FileGenerationMojo extends AbstractMojo
     @Parameter
     private PackageableElementFilter exclusions;
 
+    @Parameter
+    private boolean allowOverwrite;
+
     @Parameter(defaultValue = "${project.build.outputDirectory}")
     private File outputDirectory;
 
@@ -202,9 +205,27 @@ public class FileGenerationMojo extends AbstractMojo
                         byte[] foundContent = Files.readAllBytes(filePath);
                         if (!Arrays.equals(content, foundContent))
                         {
-                            throw new MojoExecutionException("Duplicate file paths found when serializing file generations outputs : '" + filePath + "'");
+                            if (!this.allowOverwrite)
+                            {
+                                throw new MojoExecutionException("Duplicate file paths found when serializing file generations outputs : '" + filePath + "'");
+                            }
+                            else
+                            {
+                                if (content.length > foundContent.length)
+                                {
+                                    getLog().warn("Overwriting file with larger content: " + filePath);
+                                    Files.write(filePath, content);
+                                }
+                                else
+                                {
+                                    getLog().warn("Keeping existing file content: " + filePath);
+                                }
+                            }
                         }
-                        getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                        else
+                        {
+                            getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                        }
                     }
                     else
                     {
@@ -251,9 +272,27 @@ public class FileGenerationMojo extends AbstractMojo
                             byte[] foundContent = Files.readAllBytes(filePath);
                             if (!Arrays.equals(content, foundContent))
                             {
-                                throw new MojoExecutionException("Duplicate file path found when serializing artifact generation extension  '" + extension.getClass() + "' output: '" + filePath + "'");
+                                if (!this.allowOverwrite)
+                                {
+                                    throw new MojoExecutionException("Duplicate file path found when serializing artifact generation extension  '" + extension.getClass() + "' output: '" + filePath + "'");
+                                }
+                                else
+                                {
+                                    if (content.length > foundContent.length)
+                                    {
+                                        getLog().warn("Overwriting file with larger content: " + filePath);
+                                        Files.write(filePath, content);
+                                    }
+                                    else
+                                    {
+                                        getLog().warn("Keeping existing file content: " + filePath);
+                                    }
+                                }
                             }
-                            getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                            else
+                            {
+                                getLog().warn("Duplicate file paths found with the same content: " + filePath);
+                            }
                         }
                         else
                         {
