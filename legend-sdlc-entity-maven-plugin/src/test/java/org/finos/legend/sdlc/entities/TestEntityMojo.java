@@ -189,6 +189,24 @@ public class TestEntityMojo
     }
 
     @Test
+    public void testAllPureSourceOnSingleFile() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/pure-source-directory.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+
+        // Legend source directory exists (found as a default source directory)
+        TestHelper.copyResourceDirectoryTree("single-file-pure-model", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+        this.mojoRule.executeMojo(projectDir, GOAL);
+
+        Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
+        // todo - assertions...
+    }
+
+    @Test
     public void testMixedSourceDirectoryWithFilters() throws Exception
     {
         File projectDir = this.tempFolder.newFolder();
