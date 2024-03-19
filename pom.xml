@@ -325,6 +325,7 @@
                             <includes>
                                 <include>org.slf4j:slf4j-api:${slf4j.version}</include>
                                 <include>org.slf4j:jcl-over-slf4j:${slf4j.version}:jar:test</include>
+                                <include>org.slf4j:jul-to-slf4j:${slf4j.version}:jar:test</include>
                             </includes>
                         </bannedDependencies>
                     </rules>
