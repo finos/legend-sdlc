@@ -48,6 +48,9 @@ public class EntityMojo extends AbstractMojo
     @Parameter(defaultValue = "${project.basedir}", readonly = true)
     public File baseDir;
 
+    @Parameter(defaultValue = "true", readonly = true)
+    public boolean enforceOneEntityPerFile;
+
     @Override
     public void execute() throws MojoExecutionException
     {
@@ -68,7 +71,7 @@ public class EntityMojo extends AbstractMojo
             Predicate<Path> filter = (serializationSpec.fileExtensions == null) ? null : EntityReserializer.getExtensionsFilter(serializationSpec.fileExtensions);
             try
             {
-                List<String> paths = reserializer.reserializeDirectoryTree(serializationSpec.directory, filter, this.outputDirectory.toPath());
+                List<String> paths = reserializer.reserializeDirectoryTree(serializationSpec.directory, filter, this.outputDirectory.toPath(), enforceOneEntityPerFile);
                 long sourceEnd = System.nanoTime();
                 getLog().info(String.format("Finished reserializing %,d entities from %s using serializer \"%s\" to %s (%.9fs)", paths.size(), serializationSpec.directory, serializationSpec.serializer.getName(), this.outputDirectory, nanoDuration(sourceStart, sourceEnd)));
                 if (getLog().isDebugEnabled())

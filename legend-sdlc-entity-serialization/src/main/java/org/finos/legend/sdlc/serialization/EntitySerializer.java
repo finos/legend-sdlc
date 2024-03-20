@@ -26,6 +26,8 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.List;
 
 public interface EntitySerializer
 {
@@ -168,5 +170,29 @@ public interface EntitySerializer
     default Entity deserialize(byte[] content) throws IOException
     {
         return deserialize(new ByteArrayInputStream(content));
+    }
+
+    /**
+     * Deserialize entities from an input stream.
+     *
+     * @param stream input stream
+     * @return deserialized entities
+     * @throws IOException if an I/O error occurs
+     */
+    default List<Entity> deserializeMany(InputStream stream) throws IOException
+    {
+        return Collections.singletonList(deserialize(stream));
+    }
+
+    /**
+     * Deserialize entities from a byte array.
+     *
+     * @param content input bytes
+     * @return deserialized entities
+     * @throws IOException if an I/O error occurs
+     */
+    default List<Entity> deserializeMany(byte[] content) throws IOException
+    {
+        return deserializeMany(new ByteArrayInputStream(content));
     }
 }

@@ -189,6 +189,61 @@ public class TestEntityMojo
     }
 
     @Test
+    public void testAllPureSourceInSingleFile() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/multi-element-pure-source-directory.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+
+        TestHelper.copyResourceDirectoryTree("single-file-pure-model", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+        this.mojoRule.executeMojo(projectDir, GOAL);
+
+        Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("single-file-json-model"));
+        TestHelper.assertDirectoryTreeFilePaths(
+                Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
+                outputDir);
+        Map<String, Entity> actualEntities = TestHelper.loadEntities(outputDir);
+        TestHelper.assertEntitiesByPathEqual(expectedEntities, actualEntities);
+    }
+
+    @Test
+    public void testAllPureSourceInSingleFileNoElement() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/multi-element-pure-source-directory.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+
+        TestHelper.copyResourceDirectoryTree("single-file-pure-model-only-sections", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+
+        String expectedMessage = "Error reserializing entities from " + srcMain.resolve("pure") + " using serializer \"pure\" to " + outputDir + ": Error deserializing entity from " + srcMain.resolve(Paths.get("pure", "model", "domain", "singleFileOnlySections.pure")) + ": No element found";;
+        MojoExecutionException e = Assert.assertThrows(MojoExecutionException.class, () -> this.mojoRule.executeMojo(projectDir, GOAL));
+        Assert.assertEquals(expectedMessage, e.getMessage());
+    }
+
+    @Test
+    public void testAllPureSourceInSingleFileWithImports() throws Exception
+    {
+        File projectDir = this.tempFolder.newFolder();
+        copyPomFromResource("poms/multi-element-pure-source-directory.xml", projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+        Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
+        Path srcMain = projectDir.toPath().resolve("src").resolve("main");
+
+        TestHelper.copyResourceDirectoryTree("single-file-pure-model-with-imports", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
+
+        String expectedMessage = "Error reserializing entities from " + srcMain.resolve("pure") + " using serializer \"pure\" to " + outputDir + ": Error deserializing entity from " + srcMain.resolve(Paths.get("pure", "model", "domain", "singleFileWithImports.pure")) + ": Imports in Pure files are not currently supported";;
+        MojoExecutionException e = Assert.assertThrows(MojoExecutionException.class, () -> this.mojoRule.executeMojo(projectDir, GOAL));
+        Assert.assertEquals(expectedMessage, e.getMessage());
+    }
+
+    @Test
     public void testMixedSourceDirectoryWithFilters() throws Exception
     {
         File projectDir = this.tempFolder.newFolder();

@@ -1,0 +1,36 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Address",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "type",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::enums::AddressType"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "address",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "superTypes": [],
+    "taggedValues": []
+  }
+}
