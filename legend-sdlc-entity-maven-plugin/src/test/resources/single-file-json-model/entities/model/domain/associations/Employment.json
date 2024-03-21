@@ -1,0 +1,32 @@
+{
+  "classifierPath": "meta::pure::metamodel::relationship::Association",
+  "content": {
+    "_type": "association",
+    "name": "Employment",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::associations",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employer",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Firm"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "employees",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::Person"
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "taggedValues": []
+  }
+}

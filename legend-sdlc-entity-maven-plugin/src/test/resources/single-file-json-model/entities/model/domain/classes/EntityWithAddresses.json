@@ -1,0 +1,25 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "EntityWithAddresses",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 0
+        },
+        "name": "addresses",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "model::domain::classes::Address"
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "superTypes": [],
+    "taggedValues": []
+  }
+}

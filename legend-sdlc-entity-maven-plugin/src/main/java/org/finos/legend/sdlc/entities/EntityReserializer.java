@@ -63,6 +63,11 @@ public class EntityReserializer
 
     public List<String> reserializeDirectoryTree(Path sourceDirectory, Predicate<? super Path> filter, Path targetDirectory) throws IOException
     {
+        return reserializeDirectoryTree(sourceDirectory, filter, targetDirectory, true);
+    }
+
+    public List<String> reserializeDirectoryTree(Path sourceDirectory, Predicate<? super Path> filter, Path targetDirectory, boolean enforceOneEntityPerFile) throws IOException
+    {
         if (Files.notExists(sourceDirectory))
         {
             LOGGER.debug("Source directory {} does not exist: no entities reserialized to {}", sourceDirectory, targetDirectory);
@@ -87,7 +92,7 @@ public class EntityReserializer
                     }
                     else if ((filter == null) || filter.test(entry))
                     {
-                        entityPaths.add(reserializeFile(entry, targetEntitiesDirectory));
+                        entityPaths.addAll(reserializeFile(entry, targetEntitiesDirectory, enforceOneEntityPerFile));
                     }
                 }
             }
@@ -101,13 +106,20 @@ public class EntityReserializer
         return getExtensionFilter(this.sourceSerializer.getDefaultFileExtension());
     }
 
-    private String reserializeFile(Path sourceFile, Path targetDirectory) throws IOException
+    private List<String> reserializeFile(Path sourceFile, Path targetDirectory, boolean enforceOneEntityPerFile) throws IOException
     {
         LOGGER.debug("Reading {}", sourceFile);
-        Entity entity;
+        List<Entity> entities;
         try (InputStream inputStream = new BufferedInputStream(Files.newInputStream(sourceFile)))
         {
-            entity = this.sourceSerializer.deserialize(inputStream);
+            if (enforceOneEntityPerFile)
+            {
+                entities = Collections.singletonList(this.sourceSerializer.deserialize(inputStream));
+            }
+            else
+            {
+                entities = this.sourceSerializer.deserializeMany(inputStream);
+            }
         }
         catch (Exception e)
         {
@@ -125,40 +137,47 @@ public class EntityReserializer
             }
             throw new RuntimeException(message, e);
         }
-        LOGGER.debug("Finished reading {} from {}", entity.getPath(), sourceFile);
 
-        Path targetFile = this.targetSerializer.filePathForEntity(entity, targetDirectory, this.targetFileExtension);
-        LOGGER.debug("Writing {} to {}", entity.getPath(), targetFile);
-        Files.createDirectories(targetFile.getParent());
-        try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE_NEW)))
+        LOGGER.debug("Finished reading {}", sourceFile);
+        List<String> entityPaths = Lists.mutable.empty();
+        for (Entity entity : entities)
         {
-            this.targetSerializer.serialize(entity, outputStream);
-        }
-        catch (Exception e)
-        {
-            StringBuilder builder = new StringBuilder("Error serializing entity '").append(entity.getPath()).append("' to ").append(targetFile);
-            if (e instanceof FileAlreadyExistsException)
+            String entityPath = entity.getPath();
+            Path targetFile = this.targetSerializer.filePathForEntity(entity, targetDirectory, this.targetFileExtension);
+            LOGGER.debug("Writing {} to {}", entityPath, targetFile);
+            Files.createDirectories(targetFile.getParent());
+            try (OutputStream outputStream = new BufferedOutputStream(Files.newOutputStream(targetFile, StandardOpenOption.CREATE_NEW)))
             {
-                builder.append(": target file already exists");
+                this.targetSerializer.serialize(entity, outputStream);
             }
-            else
+            catch (Exception e)
             {
-                String eMessage = e.getMessage();
-                if (eMessage != null)
+                StringBuilder builder = new StringBuilder("Error serializing entity '").append(entityPath).append("' to ").append(targetFile);
+                if (e instanceof FileAlreadyExistsException)
                 {
-                    builder.append(": ").append(eMessage);
+                    builder.append(": target file already exists");
                 }
+                else
+                {
+                    String eMessage = e.getMessage();
+                    if (eMessage != null)
+                    {
+                        builder.append(": ").append(eMessage);
+                    }
+                }
+                String message = builder.toString();
+                LOGGER.debug(message, e);
+                if (e instanceof IOException)
+                {
+                    throw new IOException(message, e);
+                }
+                throw new RuntimeException(message, e);
             }
-            String message = builder.toString();
-            LOGGER.debug(message, e);
-            if (e instanceof IOException)
-            {
-                throw new IOException(message, e);
-            }
-            throw new RuntimeException(message, e);
+            LOGGER.debug("Finished writing {} to {}", entityPath, targetFile);
+            entityPaths.add(entityPath);
         }
-        LOGGER.debug("Finished writing {} to {}", entity.getPath(), targetFile);
-        return entity.getPath();
+
+        return entityPaths;
     }
 
     public static EntityReserializer newReserializer(EntitySerializer sourceSerializer, EntitySerializer targetSerializer, String targetFileExtension)

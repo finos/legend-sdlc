@@ -1,0 +1,48 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Firm",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "legalName",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "commonName",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 0,
+          "upperBound": 1
+        },
+        "name": "founded",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "StrictDate"
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "superTypes": [
+      "model::domain::classes::EntityWithAddresses"
+    ],
+    "taggedValues": []
+  }
+}

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import org.eclipse.collections.api.partition.list.PartitionMutableList;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.engine.language.pure.grammar.from.PureGrammarParser;
@@ -31,6 +32,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.Reader;
 import java.io.Writer;
@@ -134,8 +137,7 @@ public class PureEntitySerializer implements EntityTextSerializer
         return this.pureComposer.renderPureModelContextData(pureModelContextData);
     }
 
-    @Override
-    public Entity deserialize(Reader reader) throws IOException
+    private String buildStringFromReader(Reader reader) throws IOException
     {
         StringBuilder builder = new StringBuilder();
         char[] buffer = new char[8192];
@@ -144,7 +146,13 @@ public class PureEntitySerializer implements EntityTextSerializer
         {
             builder.append(buffer, 0, read);
         }
-        return deserialize(builder.toString());
+        return builder.toString();
+    }
+
+    @Override
+    public Entity deserialize(Reader reader) throws IOException
+    {
+        return deserialize(buildStringFromReader(reader));
     }
 
     @Override
@@ -205,19 +213,39 @@ public class PureEntitySerializer implements EntityTextSerializer
         }
     }
 
+    public List<Entity> deserializeMany(InputStream stream) throws IOException
+    {
+        return deserializeMany(new InputStreamReader(stream, StandardCharsets.UTF_8));
+    }
+
+    private List<Entity> deserializeMany(Reader reader) throws IOException
+    {
+        return deserializeMany(buildStringFromReader(reader));
+    }
+
+    private List<Entity> deserializeMany(String content)
+    {
+        return ListIterate.collect(deserializeToElements(content),
+                this.pureToEntityConverter::toEntity);
+    }
+
+    private List<PackageableElement> deserializeToElements(String content)
+    {
+        PureModelContextData pureModelContextData = this.pureParser.parseModel(
+                content,
+                false
+        );
+        PartitionMutableList<PackageableElement> partition = ListIterate.partition(pureModelContextData.getElements(), SectionIndex.class::isInstance);
+        partition.getSelected().forEach(s -> validateSectionIndex((SectionIndex) s));
+        List<PackageableElement> elements = partition.getRejected();
+        return elements;
+    }
+
     private void validateSectionIndex(SectionIndex sectionIndex)
     {
-        if (sectionIndex.sections != null)
+        if (sectionIndex.sections != null && ListIterate.anySatisfy(sectionIndex.sections, this::hasImports))
         {
-            if (ListIterate.anySatisfy(sectionIndex.sections, this::hasImports))
-            {
-                throw new RuntimeException("Imports in Pure files are not currently supported");
-            }
-            int countWithElements = ListIterate.count(sectionIndex.sections, this::hasElements);
-            if (countWithElements > 1)
-            {
-                throw new RuntimeException("Multi-section Pure files are not currently supported; found " + countWithElements + " sections with elements");
-            }
+            throw new RuntimeException("Imports in Pure files are not currently supported");
         }
     }
 
@@ -230,10 +258,5 @@ public class PureEntitySerializer implements EntityTextSerializer
 
         List<String> imports = ((ImportAwareCodeSection) section).imports;
         return (imports != null) && !imports.isEmpty();
-    }
-
-    private boolean hasElements(Section section)
-    {
-        return (section.elements != null) && !section.elements.isEmpty();
     }
 }
