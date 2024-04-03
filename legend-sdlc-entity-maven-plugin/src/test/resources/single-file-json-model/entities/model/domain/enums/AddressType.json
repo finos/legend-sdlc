@@ -1,0 +1,27 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Enumeration",
+  "content": {
+    "_type": "Enumeration",
+    "name": "AddressType",
+    "package": "model::domain::enums",
+    "stereotypes": [],
+    "taggedValues": [],
+    "values": [
+      {
+        "stereotypes": [],
+        "taggedValues": [],
+        "value": "STREET"
+      },
+      {
+        "stereotypes": [],
+        "taggedValues": [],
+        "value": "CITY"
+      },
+      {
+        "stereotypes": [],
+        "taggedValues": [],
+        "value": "COUNTRY"
+      }
+    ]
+  }
+}

@@ -15,9 +15,11 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
@@ -69,12 +71,17 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabWorkspaceApi.class);
 
+    private final ProjectApi projectApi;
     private final RevisionApi revisionApi;
+    private final String sandboxArtifactId = "my-prototype";
+    private final String sandboxGroupId = "com.gs.alloy.sandbox";
+
 
     @Inject
-    public GitLabWorkspaceApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, RevisionApi revisionApi, BackgroundTaskProcessor backgroundTaskProcessor)
+    public GitLabWorkspaceApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectApi projectApi, RevisionApi revisionApi, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
+        this.projectApi = projectApi;
         this.revisionApi = revisionApi;
     }
 
@@ -393,9 +400,11 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         String workspaceBranchName = getWorkspaceBranchName(workspaceSpecification);
         String sourceBranchName = getSourceBranch(gitLabProjectId, workspaceSpecification);
         Branch branch;
+        List<String> tags;
         try
         {
             branch = GitLabApiTools.createBranchFromSourceBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), workspaceBranchName, sourceBranchName, 30, 1_000);
+            tags = getGitLabApi().getProjectApi().getProject(gitLabProjectId.getGitLabId()).getTagList();
         }
         catch (Exception e)
         {
@@ -407,6 +416,10 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         if (branch == null)
         {
             throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification));
+        }
+        if (tags.contains("legend_sandbox") && tags.contains("legend"))
+        {
+            this.projectApi.configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
         }
         return fromWorkspaceBranchName(projectId, branch.getName());
     }

@@ -19,6 +19,12 @@ import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
 import org.finos.legend.server.pac4j.gitlab.GitlabClient;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenAuthenticator;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenCredentials;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenExtractor;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfileCreator;
 import org.pac4j.core.context.J2EContext;
 import org.pac4j.core.context.Pac4jConstants;
 import org.pac4j.core.context.WebContext;
@@ -116,5 +122,30 @@ public class SessionProvider
 
         LOGGER.debug("Did not find session at depth {}; no more nested requests to check; request: {}; request class: {}", depth, request, request.getClass());
         return null;
+    }
+
+    public static Session getSessionUsingGitlabPersonalAccessToken(HttpServletRequest httpRequest,
+                                                                   HttpServletResponse httpResponse,
+                                                                   GitLabAppInfo appInfo,
+                                                                   GitlabPersonalAccessTokenClient client)
+    {
+        WebContext context = new J2EContext(httpRequest, httpResponse);
+        GitlabPersonalAccessTokenExtractor extractor = new GitlabPersonalAccessTokenExtractor(client.headerTokenName);
+        GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(client.host);
+        GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, client.host, client.apiVersion);
+        GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context);
+
+        try
+        {
+            authenticator.validate(credentials, context);
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Validation failed for PA token", e);
+            return null;
+        }
+
+        GitlabPersonalAccessTokenProfile profile = creator.create(credentials, context);
+        return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
     }
 }

@@ -109,7 +109,7 @@ class TestableHelper extends TestHelper
     private StringBuilder appendMessageForTestFailure(StringBuilder builder, TestExecuted testFailed)
     {
         appendTestId(builder, testFailed);
-        MutableList<AssertFail> assertFails = ListIterate.selectInstancesOf(testFailed.assertStatuses, AssertFail.class).sortThis();
+        MutableList<AssertFail> assertFails = ListIterate.selectInstancesOf(testFailed.assertStatuses, AssertFail.class).sortThisBy(a -> a.id);
         if (assertFails.notEmpty())
         {
             assertFails.asLazy().collect(a -> a.id).appendString(builder, ":\nFailed Asserts : ", ", ", "");

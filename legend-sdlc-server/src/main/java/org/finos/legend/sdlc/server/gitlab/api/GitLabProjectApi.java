@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
+import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -71,6 +72,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response.Status;
@@ -107,7 +109,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
+    public List<Project> getProjects(boolean user, String searchString, Iterable<String> tags, Integer limit)
     {
         boolean limited = false;
         if (limit != null)
@@ -122,9 +124,10 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             }
             limited = true;
         }
+        Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
+        String search = (tagSet.contains("legend_sandbox") && searchString == null) ? getCurrentUser() : searchString;
         try
         {
-            Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
             Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, ITEMS_PER_PAGE));
             Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
             if (!tagSet.isEmpty())
@@ -392,51 +395,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             throw new LegendSDLCServerException("Failed to create workspace " + workspaceId + " in project " + projectId);
         }
 
-        // Configure project in workspace
-        ProjectFileAccessProvider projectFileAccessProvider = getProjectFileAccessProvider();
-        Revision configRevision;
-        try
-        {
-            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
-            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
-                    .withProjectType(type)
-                    .withGroupId(groupId)
-                    .withArtifactId(artifactId);
-            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
-                    .withWorkspace(workspaceSpec)
-                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
-                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
-            int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
-            if (currentConfig == null)
-            {
-                // No current project structure: build a new one
-                configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
-                {
-                    configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
-                }
-                configRevision = builder.withMessage("Build project structure").build();
-            }
-            else
-            {
-                ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
-                if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
-                {
-                    configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
-                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
-                    {
-                        configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
-                    }
-                }
-                configRevision = builder.withMessage("Update project structure").update();
-            }
-        }
-        catch (Exception e)
-        {
-            // Try to delete the branch in case of exception
-            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
-            throw e;
-        }
+        Revision configRevision = configureProjectInWorkspace(projectId, type, groupId, artifactId, workspaceSpec);
 
         // Submit workspace changes, if any, for review
         String reviewId;
@@ -513,6 +472,57 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 return reviewId;
             }
         };
+    }
+
+    public Revision configureProjectInWorkspace(GitLabProjectId projectId, ProjectType type, String groupId, String artifactId, WorkspaceSpecification workspaceSpec)
+    {
+        ProjectFileAccessProvider projectFileAccessProvider = getProjectFileAccessProvider();
+        Revision configRevision;
+        try
+        {
+            ProjectConfiguration currentConfig = ProjectStructure.getProjectConfiguration(projectId.toString(), SourceSpecification.projectSourceSpecification(), null, projectFileAccessProvider);
+            ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
+                    .withProjectType(type)
+                    .withGroupId(groupId)
+                    .withArtifactId(artifactId);
+            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
+                    .withWorkspace(workspaceSpec)
+                    .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
+                    .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
+            int defaultProjectStructureVersion = getDefaultProjectStructureVersion();
+            if (currentConfig == null)
+            {
+                // No current project structure: build a new one
+                configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                if (this.projectStructureExtensionProvider != null && type != ProjectType.EMBEDDED)
+                {
+                    configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                }
+                configRevision = builder.withMessage("Build project structure").build();
+            }
+            else
+            {
+                ProjectStructureVersion currentVersion = currentConfig.getProjectStructureVersion();
+                if ((currentVersion == null) || (currentVersion.getVersion() < defaultProjectStructureVersion))
+                {
+                    configUpdater.setProjectStructureVersion(defaultProjectStructureVersion);
+                    if (this.projectStructureExtensionProvider != null && (type != null ? type : currentConfig.getProjectType()) != ProjectType.EMBEDDED)
+                    {
+                        configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(defaultProjectStructureVersion));
+                    }
+                }
+                configRevision = builder.withMessage("Update project structure").update();
+            }
+            return configRevision;
+        }
+        catch (Exception e)
+        {
+            // Try to delete the branch in case of exception
+            GitLabApi gitLabApi = getGitLabApi();
+            RepositoryApi repositoryApi = gitLabApi.getRepositoryApi();
+            deleteWorkspace(projectId, repositoryApi, workspaceSpec);
+            throw e;
+        }
     }
 
     private void deleteWorkspace(GitLabProjectId projectId, RepositoryApi repositoryApi, WorkspaceSpecification workspaceSpec)
@@ -731,6 +741,57 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         return (userLevel != null) && checkUserAction(projectId, action, userLevel);
     }
 
+    @Override
+    public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
+    {
+        try
+        {
+            GitLabProjectId projectId = parseProjectId(id);
+            List<Member> members = getGitLabApi().getProjectApi().getAllMembers(projectId.getGitLabId());
+            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
+            return processUserAuthorizedActions(protectedTags, members, actions);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e,
+                    () -> "User " + getCurrentUser() + " is not allowed to call getAllUsersAuthorizedActions for project " + id);
+        }
+    }
+
+    public Set<UserPermission> processUserAuthorizedActions(List<ProtectedTag> protectedTags, List<Member> members, Set<AuthorizableProjectAction> actions)
+    {
+        Set<UserPermission> users = members.stream().map(member -> new UserPermission()
+                {
+                    @Override
+                    public org.finos.legend.sdlc.domain.model.user.User getUser()
+                    {
+                        return new org.finos.legend.sdlc.domain.model.user.User()
+                        {
+                            @Override
+                            public String getUserId()
+                            {
+                                return member.getId().toString();
+                            }
+
+                            @Override
+                            public String getName()
+                            {
+                                return member.getName();
+                            }
+                        };
+                    }
+
+                    @Override
+                    public Set<AuthorizableProjectAction> getAuhorizedProjectAction()
+                    {
+                        AccessLevel userLevel = member.getAccessLevel();
+                        return (userLevel == null) ? Collections.emptySet() : Iterate.select(actions, a -> (a != null) && checkUserAction(protectedTags, a, userLevel), EnumSet.noneOf(AuthorizableProjectAction.class));
+                    }
+                }
+        ).collect(Collectors.toSet());
+        return users;
+    }
+
     private AccessLevel getUserAccess(org.gitlab4j.api.models.Project gitLabProject)
     {
         Permissions permissions = gitLabProject.getPermissions();
@@ -751,11 +812,24 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
     private boolean checkUserAction(GitLabProjectId projectId, AuthorizableProjectAction action, AccessLevel accessLevel)
     {
+        try
+        {
+            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
+            return checkUserAction(protectedTags, action, accessLevel);
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
+        }
+    }
+
+    private boolean checkUserAction(List<ProtectedTag> protectedTags, AuthorizableProjectAction action, AccessLevel accessLevel)
+    {
         switch (action)
         {
             case CREATE_VERSION:
             {
-                return checkUserReleasePermission(projectId, accessLevel);
+                return checkUserReleasePermission(protectedTags, accessLevel);
             }
             case COMMIT_REVIEW:
             {
@@ -776,42 +850,35 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
     }
 
-    private boolean checkUserReleasePermission(GitLabProjectId projectId, AccessLevel accessLevel)
+    private boolean checkUserReleasePermission(List<ProtectedTag> protectedTags, AccessLevel accessLevel)
     {
-        try
+        if (protectedTags == null || protectedTags.isEmpty())
         {
-            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
-            if (protectedTags == null || protectedTags.isEmpty())
+            // By default, user can perform a release if the user has developer access or above
+            // See https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
+            return defaultReleaseAction(accessLevel);
+        }
+        for (ProtectedTag tag : LazyIterate.select(protectedTags, a -> a.getName().startsWith("release") || a.getName().startsWith("version")))
+        {
+            if (tag.getCreateAccessLevels().isEmpty())
             {
-                // By default, user can perform a release if the user has developer access or above
-                // See https://docs.gitlab.com/ee/user/permissions.html#release-permissions-with-protected-tags
                 return defaultReleaseAction(accessLevel);
             }
-            for (ProtectedTag tag : LazyIterate.select(protectedTags, a -> a.getName().startsWith("release") || a.getName().startsWith("version")))
+            // with the release protected tag the user must have the min access_level
+            List<ProtectedTag.CreateAccessLevel> matchedTags = ListIterate.select(tag.getCreateAccessLevels(), a -> a.getAccess_level().value >= accessLevel.value);
+            // if the matchedTags are empty or null user access does not match any of the protected tags
+            if (matchedTags.isEmpty())
             {
-                if (tag.getCreateAccessLevels().isEmpty())
-                {
-                    return defaultReleaseAction(accessLevel);
-                }
-                // with the release protected tag the user must have the min access_level
-                List<ProtectedTag.CreateAccessLevel> matchedTags = ListIterate.select(tag.getCreateAccessLevels(), a -> a.getAccess_level().value >= accessLevel.value);
-                // if the matchedTags are empty or null user access does not match any of the protected tags
-                if (matchedTags.isEmpty())
-                {
-                    return defaultReleaseAction(accessLevel);
-                }
+                return defaultReleaseAction(accessLevel);
+            }
 
-                // User does not meet all criteria not authorized for the action
-                if (matchedTags.size() != tag.getCreateAccessLevels().size())
-                {
-                    return false;
-                }
+            // User does not meet all criteria not authorized for the action
+            if (matchedTags.size() != tag.getCreateAccessLevels().size())
+            {
+                return false;
             }
         }
-        catch (Exception e)
-        {
-            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
-        }
+
         return false;
     }
 

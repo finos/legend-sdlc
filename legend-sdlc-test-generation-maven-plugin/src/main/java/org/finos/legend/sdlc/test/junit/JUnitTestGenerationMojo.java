@@ -19,6 +19,7 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
 import org.apache.maven.plugins.annotations.Mojo;
 import org.apache.maven.plugins.annotations.Parameter;
+import org.apache.maven.plugins.annotations.ResolutionScope;
 import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ListIterable;
@@ -28,6 +29,8 @@ import org.finos.legend.sdlc.serialization.EntityLoader;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -37,7 +40,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import javax.lang.model.SourceVersion;
 
-@Mojo(name = "generate-junit-tests", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, threadSafe = true)
+@Mojo(name = "generate-junit-tests", defaultPhase = LifecyclePhase.GENERATE_TEST_SOURCES, threadSafe = true, requiresDependencyResolution = ResolutionScope.COMPILE)
 public class JUnitTestGenerationMojo extends AbstractMojo
 {
     @Parameter
@@ -61,6 +64,9 @@ public class JUnitTestGenerationMojo extends AbstractMojo
     @Parameter(defaultValue = "${project}", readonly = true)
     private MavenProject project;
 
+    @Parameter(defaultValue = "false")
+    private boolean runDependencyTests;
+
     @Override
     public void execute() throws MojoExecutionException
     {
@@ -83,12 +89,16 @@ public class JUnitTestGenerationMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Invalid package prefix: " + this.packagePrefix);
         }
+        if (this.runDependencyTests)
+        {
+            getLog().info("running dependency tests flag set");
+        }
 
         long start = System.nanoTime();
         try
         {
             JUnitTestGenerator generator = JUnitTestGenerator.newGenerator(this.packagePrefix);
-            try (EntityLoader entityLoader = EntityLoader.newEntityLoader(this.entitiesDirectory))
+            try (EntityLoader entityLoader = this.runDependencyTests ? EntityLoader.newEntityLoader(this.getClassLoader(this.project)) : EntityLoader.newEntityLoader(this.entitiesDirectory))
             {
                 Stream<Entity> stream = entityLoader.getAllEntities();
                 Predicate<Entity> includeFilter = resolveEntityFilter(this.inclusions);
@@ -120,6 +130,29 @@ public class JUnitTestGenerationMojo extends AbstractMojo
             long end = System.nanoTime();
             getLog().error(String.format("Error generating tess (%.9fs)", (end - start) / 1_000_000_000.0));
             throw new MojoExecutionException("Error generating tests", e);
+        }
+    }
+
+    // requires requiresDependencyResolution set to compile for resolution of project to be complete
+    // loads all classes from maven project see: https://maven.apache.org/guides/mini/guide-maven-classloading.html#plugin-classloaders and https://stackoverflow.com/questions/49737706/access-project-classes-from-a-maven-plugin
+    private ClassLoader getClassLoader(MavenProject project) throws MojoExecutionException
+    {
+        try
+        {
+            List<String> classpathElements = project.getCompileClasspathElements();
+            classpathElements.add(project.getBuild().getOutputDirectory());
+            classpathElements.add(project.getBuild().getTestOutputDirectory());
+            URL[] urls = new URL[classpathElements.size()];
+            for (int i = 0; i < classpathElements.size(); ++i)
+            {
+                urls[i] = new File(classpathElements.get(i)).toURL();
+            }
+            return new URLClassLoader(urls, Thread.currentThread().getContextClassLoader());
+        }
+        catch (Exception e)
+        {
+            getLog().debug("Couldn't get the classloader.");
+            throw new MojoExecutionException("Error getting class loader to run dependency tests", e);
         }
     }
 

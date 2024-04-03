@@ -1,0 +1,37 @@
+import model::domain::enums::*;
+
+###Pure
+Association model::domain::associations::Employment
+{
+  employer: model::domain::Firm[*];
+  employees: model::domain::Person[*];
+}
+
+Class model::domain::classes::Address
+{
+  type: AddressType[1];
+  address: String[1];
+}
+
+Class model::domain::classes::EntityWithAddresses
+{
+  addresses: model::domain::classes::Address[*];
+}
+
+Class model::domain::classes::Firm extends model::domain::classes::EntityWithAddresses
+{
+  legalName: String[1];
+  commonName: String[0..1];
+  founded: StrictDate[0..1];
+}
+
+Class model::domain::classes::Person extends model::domain::classes::EntityWithAddresses
+{
+  firstName: String[1];
+  lastName: String[1];
+}
+
+Enum AddressType
+{
+  STREET, CITY, COUNTRY
+}

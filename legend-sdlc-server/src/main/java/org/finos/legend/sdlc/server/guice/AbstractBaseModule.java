@@ -264,6 +264,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(AuthClientInjector.class).toProvider(this::getAuthClientInjector);
         binder.bind(ServerInfo.class).toProvider(this.server::getServerInfo);
         binder.bind(LegendSDLCServerFeaturesConfiguration.class).toProvider(this::getFeaturesConfiguration);
+        binder.bind(LegendPac4jConfiguration.class).toProvider(this::getLegendPac4jConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
         binder.bind(SessionProvider.class).toProvider(this::getSessionProvider);
@@ -526,6 +527,11 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
     }
 
+    private LegendPac4jConfiguration getLegendPac4jConfiguration()
+    {
+        return getConfiguration().getPac4jConfiguration();
+    }
+
     private AuthClientInjector getAuthClientInjector()
     {
         if (this.authClientInjector == null)
@@ -563,7 +569,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
                     config.getHazelcastSession().getConfigFilePath(),
                     Maps.immutable.with(
                             J2EContext.class, new J2ESessionStore(),
-                            JaxRsContext.class, new ServletSessionStore()).castToMap());
+                            JaxRsContext.class, new ServletSessionStore()).castToMap(), "LegendSSO");
         }
         return null;
     }

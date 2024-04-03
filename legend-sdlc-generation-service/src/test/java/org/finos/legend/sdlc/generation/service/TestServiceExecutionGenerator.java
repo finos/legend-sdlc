@@ -37,7 +37,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.Package
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Multiplicity;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtension;
+import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.runtime.java.compiled.compiler.MemoryFileManager;
@@ -218,6 +218,15 @@ public class TestServiceExecutionGenerator
         ClassLoader classLoader = generateAndCompile(packagePrefix, Lists.fixedSize.of(enumParamService, reusedEnumParamService));
         assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParams", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
         assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithEnumParamsReused", classLoader.loadClass("org.finos.model.Country"), classLoader.loadClass("org.finos.model._enum.Country"), String.class);
+    }
+
+    @Test
+    public void testRelationalWithNoExecutionParams() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        Service enumParamService = getService("service::RelationalServiceWithNoExecutionParams");
+        ClassLoader classLoader = generateAndCompile(packagePrefix, Lists.fixedSize.of(enumParamService));
+        assertExecuteMethods(classLoader, "org.finos.service.RelationalServiceWithNoExecutionParams", String.class);
     }
 
     @Test
@@ -419,7 +428,7 @@ public class TestServiceExecutionGenerator
                 .withPackagePrefix(packagePrefix)
                 .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
                 .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
-                .withPureCoreExtensions(ServiceLoader.load(PureCoreExtension.class))
+                .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
                 .withClientVersion("vX_X_X")
                 .build();
         generator.generate();

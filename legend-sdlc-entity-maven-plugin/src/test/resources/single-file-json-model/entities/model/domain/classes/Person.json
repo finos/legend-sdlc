@@ -1,0 +1,38 @@
+{
+  "classifierPath": "meta::pure::metamodel::type::Class",
+  "content": {
+    "_type": "class",
+    "constraints": [],
+    "name": "Person",
+    "originalMilestonedProperties": [],
+    "package": "model::domain::classes",
+    "properties": [
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "firstName",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      },
+      {
+        "multiplicity": {
+          "lowerBound": 1,
+          "upperBound": 1
+        },
+        "name": "lastName",
+        "stereotypes": [],
+        "taggedValues": [],
+        "type": "String"
+      }
+    ],
+    "qualifiedProperties": [],
+    "stereotypes": [],
+    "superTypes": [
+      "model::domain::classes::EntityWithAddresses"
+    ],
+    "taggedValues": []
+  }
+}

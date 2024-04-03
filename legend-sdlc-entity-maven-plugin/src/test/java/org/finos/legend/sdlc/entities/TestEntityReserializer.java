@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.entities;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.protocol.pure.v1.PureEntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
@@ -41,7 +42,7 @@ public class TestEntityReserializer
     @Test
     public void testNonExistentSourceDirectory() throws IOException
     {
-        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer());
+        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
         Path tempRoot = this.tempFolder.getRoot().toPath();
         Path sourceDir = tempRoot.resolve("source");
         Path targetDir = tempRoot.resolve("target");
@@ -57,7 +58,7 @@ public class TestEntityReserializer
     @Test
     public void testEmptySourceDirectory() throws IOException
     {
-        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer());
+        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
         Path sourceDir = this.tempFolder.newFolder("source").toPath();
         Path targetDir = this.tempFolder.getRoot().toPath().resolve("target");
         TestHelper.assertDirectoryEmpty(sourceDir);
@@ -72,7 +73,7 @@ public class TestEntityReserializer
     @Test
     public void testPureDomainDirectory() throws IOException
     {
-        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer());
+        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
         Path sourceDir = TestHelper.getPathFromResource("simple-pure-model");
         Path targetDir = this.tempFolder.getRoot().toPath().resolve("target");
 
@@ -96,7 +97,7 @@ public class TestEntityReserializer
     @Test
     public void testTargetFileAlreadyExists() throws IOException
     {
-        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer());
+        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
         Path sourceDir = TestHelper.getPathFromResource("simple-pure-model/model/domain/enums");
         Path targetDir = this.tempFolder.getRoot().toPath().resolve("target");
 
@@ -115,7 +116,7 @@ public class TestEntityReserializer
     @Test
     public void testMixedSourceDirectoryWithFiltering() throws IOException
     {
-        EntityReserializer pureReserializer = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer());
+        EntityReserializer pureReserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
         EntityReserializer jsonReserializer = EntityReserializer.newReserializer(EntitySerializers.getDefaultJsonSerializer(), EntitySerializers.getDefaultJsonSerializer());
 
         Path sourceDir = TestHelper.getPathFromResource("simple-mixed-model");
@@ -195,7 +196,7 @@ public class TestEntityReserializer
         Assert.assertFalse(noExtensionFilter2.test(jsonFile));
         Assert.assertTrue(noExtensionFilter2.test(fakeJsonFile));
 
-        Predicate<Path> defaultFilter = EntityReserializer.newReserializer(new PureDomainDeserializer(), EntitySerializers.getDefaultJsonSerializer()).getDefaultExtensionFilter();
+        Predicate<Path> defaultFilter = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer()).getDefaultExtensionFilter();
         Assert.assertTrue(defaultFilter.test(pureFile));
         Assert.assertFalse(defaultFilter.test(fakePureFile));
         Assert.assertFalse(defaultFilter.test(textFile));

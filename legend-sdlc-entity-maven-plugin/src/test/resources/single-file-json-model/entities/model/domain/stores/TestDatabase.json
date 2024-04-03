@@ -1,0 +1,27 @@
+{
+  "classifierPath" : "meta::relational::metamodel::Database",
+  "content" : {
+    "_type" : "relational",
+    "filters" : [ ],
+    "includedStores" : [ ],
+    "joins" : [ ],
+    "name" : "TestDatabase",
+    "package" : "model::domain::stores",
+    "schemas" : [ {
+      "name" : "default",
+      "tables" : [ {
+        "columns" : [ {
+          "name" : "id",
+          "nullable" : false,
+          "type" : {
+            "_type" : "Integer"
+          }
+        } ],
+        "milestoning" : [ ],
+        "name" : "FirmTable",
+        "primaryKey" : [ "id" ]
+      } ],
+      "views" : [ ]
+    } ]
+  }
+}

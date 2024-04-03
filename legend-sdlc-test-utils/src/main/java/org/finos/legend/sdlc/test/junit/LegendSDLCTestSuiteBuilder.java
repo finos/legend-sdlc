@@ -32,7 +32,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.pure.code.core.PureCoreExtension;
+import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.test.Test;
@@ -73,11 +73,11 @@ public class LegendSDLCTestSuiteBuilder
         this.pureVersion = pureVersion;
         this.testableClassifiers = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap(classLoader).keySet();
         this.entities = getEntities(classLoader);
-        PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntitiesIfPossible(this.entities).build(classLoader);
+        PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntitiesIfPossible(this.entities).withClassLoader(classLoader).build();
         this.pureModel = pureModelWithContextData.getPureModel();
         this.pureModelContextData = pureModelWithContextData.getPureModelContextData();
         this.protocolIndex = Iterate.groupByUniqueKey(this.pureModelContextData.getElements(), PackageableElement::getPath);
-        this.routerExtensions = Iterate.flatCollect(ServiceLoader.load(PureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(this.pureModel.getExecutionSupport()), Lists.mutable.empty());
+        this.routerExtensions = Iterate.flatCollect(ServiceLoader.load(LegendPureCoreExtension.class, classLoader), e -> e.extraPureCoreExtensions(this.pureModel.getExecutionSupport()), Lists.mutable.empty());
         this.planTransformers = Iterate.flatCollect(ServiceLoader.load(PlanGeneratorExtension.class, classLoader), PlanGeneratorExtension::getExtraPlanTransformers, Lists.mutable.empty());
     }
 

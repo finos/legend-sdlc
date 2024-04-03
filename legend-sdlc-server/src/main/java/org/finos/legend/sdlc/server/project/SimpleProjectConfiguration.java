@@ -32,6 +32,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
 {
     private final String projectId;
     private ProjectType projectType;
+    private Boolean runDependencyTests;
     private ProjectStructureVersion projectStructureVersion;
     private List<PlatformConfiguration> platformConfigurations;
     private String groupId;
@@ -40,7 +41,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     private List<MetamodelDependency> metamodelDependencies;
     private List<ArtifactGeneration> artifactGeneration;
 
-    private SimpleProjectConfiguration(String projectId, ProjectType projectType, ProjectStructureVersion projectStructureVersion, List<PlatformConfiguration> platformConfigurations, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGeneration)
+    private SimpleProjectConfiguration(String projectId, ProjectType projectType, ProjectStructureVersion projectStructureVersion, List<PlatformConfiguration> platformConfigurations, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGeneration, Boolean runDependencyTests)
     {
         this.projectId = projectId;
         this.projectType = projectType;
@@ -51,11 +52,12 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
         this.projectDependencies = (projectDependencies == null) ? Collections.emptyList() : projectDependencies;
         this.metamodelDependencies = (metamodelDependencies == null) ? Collections.emptyList() : metamodelDependencies;
         this.artifactGeneration = (artifactGeneration == null) ? Collections.emptyList() : artifactGeneration;
+        this.runDependencyTests = runDependencyTests;
     }
 
     SimpleProjectConfiguration(ProjectConfiguration config)
     {
-        this(config.getProjectId(), config.getProjectType(), config.getProjectStructureVersion(), config.getPlatformConfigurations(), config.getGroupId(), config.getArtifactId(), config.getProjectDependencies(), config.getMetamodelDependencies(), config.getArtifactGenerations());
+        this(config.getProjectId(), config.getProjectType(), config.getProjectStructureVersion(), config.getPlatformConfigurations(), config.getGroupId(), config.getArtifactId(), config.getProjectDependencies(), config.getMetamodelDependencies(), config.getArtifactGenerations(), config.getRunDependencyTests());
     }
 
     @Override
@@ -73,6 +75,17 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     public void setProjectType(ProjectType projectType)
     {
         this.projectType = projectType;
+    }
+
+    @Override
+    public Boolean getRunDependencyTests()
+    {
+        return this.runDependencyTests;
+    }
+
+    public void setRunDependencyTests(Boolean runDependencyTests)
+    {
+        this.runDependencyTests = runDependencyTests;
     }
 
     @Override
@@ -168,20 +181,26 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
             @JsonProperty("artifactId") String artifactId,
             @JsonProperty("projectDependencies") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependencies,
             @JsonProperty("metamodelDependencies") @JsonDeserialize(contentAs = SimpleMetamodelDependency.class) List<MetamodelDependency> metamodelDependencies,
-            @Deprecated @JsonProperty("artifactGenerations") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerations)
+            @Deprecated @JsonProperty("artifactGenerations") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerations,
+            @JsonProperty("runDependencyTests") Boolean runDependenceTests)
     {
-        return new SimpleProjectConfiguration(projectId, projectType, projectStructureVersion, platforms, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations);
+        return new SimpleProjectConfiguration(projectId, projectType, projectStructureVersion, platforms, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations, runDependenceTests);
     }
 
     @Deprecated
     static SimpleProjectConfiguration newConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGenerations)
     {
-        return newConfiguration(projectId, ProjectType.MANAGED, projectStructureVersion, null, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations);
+        return newConfiguration(projectId, ProjectType.MANAGED, projectStructureVersion, null, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations, null);
     }
 
     static SimpleProjectConfiguration newConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, List<PlatformConfiguration> platforms, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGenerations)
     {
-        return newConfiguration(projectId, ProjectType.MANAGED, projectStructureVersion, platforms, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations);
+        return newConfiguration(projectId, ProjectType.MANAGED, projectStructureVersion, platforms, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations, null);
+    }
+
+    static SimpleProjectConfiguration newConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, List<PlatformConfiguration> platforms, String groupId, String artifactId, List<ProjectDependency> projectDependencies, List<MetamodelDependency> metamodelDependencies, List<ArtifactGeneration> artifactGenerations, Boolean runDependencyTests)
+    {
+        return newConfiguration(projectId, ProjectType.MANAGED, projectStructureVersion, platforms, groupId, artifactId, projectDependencies, metamodelDependencies, artifactGenerations, runDependencyTests);
     }
 
     public static class SimpleProjectStructureVersion extends ProjectStructureVersion

@@ -15,22 +15,31 @@
 package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModelProcessParameter;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.extension.CompilerExtension;
+import org.finos.legend.engine.language.pure.compiler.toPureGraph.extension.CompilerExtensions;
 import org.finos.legend.engine.protocol.Protocol;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 
+import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
 public class PureModelBuilder
 {
-    private final PureModelContextDataBuilder contextDataBuilder = PureModelContextDataBuilder.newBuilder();
+    private final PureModelContextDataBuilder contextDataBuilder;
+    private ClassLoader classLoader;
+    private CompilerExtensions extensions;
+    private String packagePrefix;
 
-    private PureModelBuilder()
+    private PureModelBuilder(EntityToPureConverter converter)
     {
+        this.contextDataBuilder = PureModelContextDataBuilder.newBuilder(converter);
     }
 
     public int getElementCount()
@@ -149,36 +158,86 @@ public class PureModelBuilder
         return this;
     }
 
-    public PureModelWithContextData build()
+    public void setClassLoader(ClassLoader classLoader)
     {
-        return build(null);
+        this.classLoader = classLoader;
     }
 
-    public PureModelWithContextData build(ClassLoader classLoader)
+    public PureModelBuilder withClassLoader(ClassLoader classLoader)
+    {
+        setClassLoader(classLoader);
+        return this;
+    }
+
+    public void setCompilerExtensions(CompilerExtensions extensions)
+    {
+        this.extensions = extensions;
+    }
+
+    public PureModelBuilder withCompilerExtensions(CompilerExtensions extensions)
+    {
+        setCompilerExtensions(extensions);
+        return this;
+    }
+
+    public void setPackagePrefix(String packagePrefix)
+    {
+        this.packagePrefix = packagePrefix;
+    }
+
+    public PureModelBuilder withPackagePrefix(String packagePrefix)
+    {
+        setPackagePrefix(packagePrefix);
+        return this;
+    }
+
+    public PureModelWithContextData build()
     {
         PureModelContextData pureModelContextData = this.contextDataBuilder.build();
-        PureModel pureModel = buildPureModel(pureModelContextData, classLoader);
+        PureModel pureModel = buildPureModel(pureModelContextData);
         return new PureModelWithContextData(pureModel, pureModelContextData);
+    }
+
+    @Deprecated
+    public PureModelWithContextData build(ClassLoader classLoader)
+    {
+        return withClassLoader(classLoader).build();
     }
 
     public PureModel buildPureModel()
     {
-        return buildPureModel(null);
+        return buildPureModel(this.contextDataBuilder.build());
     }
 
+    @Deprecated
     public PureModel buildPureModel(ClassLoader classLoader)
     {
-        return buildPureModel(this.contextDataBuilder.build(), classLoader);
+        return withClassLoader(classLoader).buildPureModel();
+    }
+
+    private PureModel buildPureModel(PureModelContextData pureModelContextData)
+    {
+        return new PureModel(pureModelContextData, getExtensions(), null, this.classLoader, DeploymentMode.PROD, new PureModelProcessParameter(this.packagePrefix), null);
+    }
+
+    private CompilerExtensions getExtensions()
+    {
+        if (this.extensions != null)
+        {
+            return this.extensions;
+        }
+        Iterable<? extends CompilerExtension> exts = (this.classLoader == null) ? ServiceLoader.load(CompilerExtension.class) : ServiceLoader.load(CompilerExtension.class, this.classLoader);
+        return CompilerExtensions.fromExtensions(exts);
     }
 
     public static PureModelBuilder newBuilder()
     {
-        return new PureModelBuilder();
+        return newBuilder(null);
     }
 
-    private static PureModel buildPureModel(PureModelContextData pureModelContextData, ClassLoader classLoader)
+    public static PureModelBuilder newBuilder(EntityToPureConverter converter)
     {
-        return new PureModel(pureModelContextData, null, classLoader, DeploymentMode.PROD);
+        return new PureModelBuilder(converter);
     }
 
     public static class PureModelWithContextData

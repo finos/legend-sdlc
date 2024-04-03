@@ -26,7 +26,7 @@
     <name>Legend SDLC</name>
     <groupId>org.finos.legend.sdlc</groupId>
     <artifactId>legend-sdlc</artifactId>
-    <version>0.142.1-SNAPSHOT</version>
+    <version>0.159.1-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -67,12 +67,12 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <maven.compiler.release>8</maven.compiler.release>
-        <java.version.range>[11,12),[17,18)</java.version.range>
+        <java.version.range>[11,12),[17,18),[21,22)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.26.5</legend.engine.version>
-        <legend.pure.version>4.5.14</legend.pure.version>
-        <legend.shared.version>0.24.1</legend.shared.version>
+        <legend.engine.version>4.42.3</legend.engine.version>
+        <legend.pure.version>5.2.2</legend.pure.version>
+        <legend.shared.version>0.25.4</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -325,6 +325,7 @@
                             <includes>
                                 <include>org.slf4j:slf4j-api:${slf4j.version}</include>
                                 <include>org.slf4j:jcl-over-slf4j:${slf4j.version}:jar:test</include>
+                                <include>org.slf4j:jul-to-slf4j:${slf4j.version}:jar:test</include>
                             </includes>
                         </bannedDependencies>
                     </rules>
@@ -698,7 +699,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.pure</groupId>
-                <artifactId>legend-pure-runtime-java-extension-functions-json</artifactId>
+                <artifactId>legend-pure-runtime-java-extension-compiled-functions-json</artifactId>
                 <version>${legend.pure.version}</version>
                 <exclusions>
                     <exclusion>
@@ -752,7 +753,12 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-configuration</artifactId>
+                <artifactId>legend-engine-configuration-contract-extension-pure</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-configuration-plan-generation-serialization</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
             <dependency>
@@ -1388,6 +1394,11 @@
             <dependency>
                 <groupId>org.slf4j</groupId>
                 <artifactId>jcl-over-slf4j</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>jul-to-slf4j</artifactId>
                 <version>${slf4j.version}</version>
             </dependency>
             <dependency>

@@ -35,7 +35,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Build simplified Docker image for checks
         # NOTE: we do this to make this action run faster by not actually building out the full JAR
         # Also, if this gets more complicated, consider having this as a bash script.

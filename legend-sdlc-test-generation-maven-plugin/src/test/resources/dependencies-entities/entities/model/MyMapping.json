@@ -1,0 +1,108 @@
+{
+  "content": {
+    "_type": "mapping",
+    "classMappings": [
+      {
+        "_type": "pureInstance",
+        "class": "model::A",
+        "propertyMappings": [],
+        "root": true,
+        "srcClass": "model::A"
+      }
+    ],
+    "enumerationMappings": [],
+    "includedMappings": [],
+    "name": "MyMapping",
+    "package": "model",
+    "tests": [
+      {
+        "assert": {
+          "_type": "expectedOutputMappingTestAssert",
+          "expectedOutput": "{\"name\":\"name 4\"}"
+        },
+        "inputData": [
+          {
+            "_type": "object",
+            "data": "{\"name\":\"name 4\"}",
+            "inputType": "JSON",
+            "sourceClass": "model::A"
+          }
+        ],
+        "name": "test_1",
+        "query": {
+          "_type": "lambda",
+          "body": [
+            {
+              "_type": "func",
+              "function": "serialize",
+              "parameters": [
+                {
+                  "_type": "func",
+                  "function": "graphFetch",
+                  "parameters": [
+                    {
+                      "_type": "func",
+                      "function": "getAll",
+                      "parameters": [
+                        {
+                          "_type": "packageableElementPtr",
+                          "fullPath": "model::A"
+                        }
+                      ]
+                    },
+                    {
+                      "_type": "classInstance",
+                      "multiplicity": {
+                        "lowerBound": 1,
+                        "upperBound": 1
+                      },
+                      "type": "rootGraphFetchTree",
+                      "value": {
+                        "_type": "rootGraphFetchTree",
+                        "class": "model::A",
+                        "subTrees": [
+                          {
+                            "_type": "propertyGraphFetchTree",
+                            "parameters": [],
+                            "property": "name",
+                            "subTrees": [],
+                            "subTypeTrees": []
+                          }
+                        ],
+                        "subTypeTrees": []
+                      }
+                    }
+                  ]
+                },
+                {
+                  "_type": "classInstance",
+                  "multiplicity": {
+                    "lowerBound": 1,
+                    "upperBound": 1
+                  },
+                  "type": "rootGraphFetchTree",
+                  "value": {
+                    "_type": "rootGraphFetchTree",
+                    "class": "model::A",
+                    "subTrees": [
+                      {
+                        "_type": "propertyGraphFetchTree",
+                        "parameters": [],
+                        "property": "name",
+                        "subTrees": [],
+                        "subTypeTrees": []
+                      }
+                    ],
+                    "subTypeTrees": []
+                  }
+                }
+              ]
+            }
+          ],
+          "parameters": []
+        }
+      }
+    ]
+  },
+  "classifierPath": "meta::pure::mapping::Mapping"
+}
