@@ -39,6 +39,7 @@ public class ProjectConfigurationUpdater
     private Integer projectStructureExtensionVersion;
     private String groupId;
     private String artifactId;
+    private boolean verifyChangeWindow;
     private boolean platformConfigurationsIsSet = false;
     private Boolean runDependencyTests;
     private MutableList<PlatformConfiguration> platformConfigurations;
@@ -179,6 +180,22 @@ public class ProjectConfigurationUpdater
     public ProjectConfigurationUpdater withArtifactId(String artifactId)
     {
         setArtifactId(artifactId);
+        return this;
+    }
+
+    public boolean getVerifyChangeWindow()
+    {
+        return this.verifyChangeWindow;
+    }
+
+    public void setChangeWindow(boolean verifyChangeWindow)
+    {
+        this.verifyChangeWindow = verifyChangeWindow;
+    }
+
+    public ProjectConfigurationUpdater withVerifyChangeWindow(boolean verifyChangeWindow)
+    {
+        setChangeWindow(verifyChangeWindow);
         return this;
     }
 
@@ -436,6 +453,9 @@ public class ProjectConfigurationUpdater
 
         Boolean newRunDependencyTests = (this.runDependencyTests == null) ? configuration.getRunDependencyTests() : this.runDependencyTests;
 
+        //Verify change window
+        boolean newVerifyChangeWindow =  this.verifyChangeWindow;
+
         // Project dependencies
         List<ProjectDependency> newProjectDependencies;
         if (this.projectDependenciesToAdd.isEmpty() && this.projectDependenciesToRemove.isEmpty())
@@ -514,6 +534,12 @@ public class ProjectConfigurationUpdater
             public String getArtifactId()
             {
                 return newArtifactId;
+            }
+
+            @Override
+            public boolean getVerifyChangeWindow()
+            {
+                return newVerifyChangeWindow;
             }
 
             @Override

@@ -35,6 +35,7 @@ public class UpdateProjectConfigurationCommand
     private final ProjectType projectType;
     private final String groupId;
     private final String artifactId;
+    private final boolean verifyChangeWindow;
     private final UpdatePlatformConfigurationsCommand platformConfigurations;
     private final List<ProjectDependency> projectDependenciesToAdd;
     private final List<ProjectDependency> projectDependenciesToRemove;
@@ -49,6 +50,7 @@ public class UpdateProjectConfigurationCommand
             @JsonProperty("projectType") ProjectType projectType,
             @JsonProperty("groupId") String groupId,
             @JsonProperty("artifactId") String artifactId,
+            @JsonProperty("verifyChangeWindow") boolean verifyChangeWindow,
             @JsonProperty("platformConfigurations") UpdatePlatformConfigurationsCommand platformConfigurations,
             @JsonProperty("projectDependenciesToAdd") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToAdd,
             @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
@@ -62,6 +64,7 @@ public class UpdateProjectConfigurationCommand
         this.projectType = projectType;
         this.groupId = groupId;
         this.artifactId = artifactId;
+        this.verifyChangeWindow = verifyChangeWindow;
         this.platformConfigurations = platformConfigurations;
         this.projectDependenciesToAdd = projectDependenciesToAdd;
         this.projectDependenciesToRemove = projectDependenciesToRemove;
@@ -80,6 +83,7 @@ public class UpdateProjectConfigurationCommand
         ProjectConfigurationUpdater configUpdater = ProjectConfigurationUpdater.newUpdater()
                 .withGroupId(this.groupId)
                 .withArtifactId(this.artifactId)
+                .withVerifyChangeWindow(this.verifyChangeWindow)
                 .withProjectDependenciesToAdd(this.projectDependenciesToAdd)
                 .withProjectDependenciesToRemove(this.projectDependenciesToRemove)
                 .withArtifactGenerationsToAdd(this.artifactGenerationsToAdd)

@@ -73,6 +73,7 @@ public class TestProjectConfigurationUpdater
                 .withPlatformConfigurations(Lists.fixedSize.with(newPlatformConfiguration("plat1", "1.2.3")))
                 .withGroupId("new.group.id")
                 .withArtifactId("new-artifact-id")
+                .withVerifyChangeWindow(true)
                 .withProjectDependenciesToAdd(ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"), ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"))
                 .withProjectDependenciesToRemove(ProjectDependency.newProjectDependency("org.test:to-remove", "3.2.1"))
                 .withMetamodelDependenciesToAdd(MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3))
@@ -85,6 +86,7 @@ public class TestProjectConfigurationUpdater
                 .withProjectStructureVersion(12, 5)
                 .withPlatformConfigurations(newPlatformConfiguration("plat1", "1.2.3"))
                 .withGroupArtifactIds("new.group.id", "new-artifact-id")
+                .withVerifyChangeWindow(true)
                 .withProjectDependencies(ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"), ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"))
                 .withMetamodelDependencies(MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3));
         assertNotEquals(emptyConfig, updatedEmptyConfig);
@@ -103,6 +105,7 @@ public class TestProjectConfigurationUpdater
                 .withProjectStructureVersion(12, 5)
                 .withPlatformConfigurations(newPlatformConfiguration("plat1", "1.2.3"))
                 .withGroupArtifactIds("new.group.id", "new-artifact-id")
+                .withVerifyChangeWindow(true)
                 .withProjectDependencies(ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"), ProjectDependency.newProjectDependency("org.test:q-project", "99.0.0.1"), ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"))
                 .withMetamodelDependencies(MetamodelDependency.newMetamodelDependency("meta0", 5), MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3));
         assertNotEquals(nonEmptyConfig, updatedEmptyConfig);
@@ -185,6 +188,7 @@ public class TestProjectConfigurationUpdater
         private List<PlatformConfiguration> platformConfigurations;
         private String groupId;
         private String artifactId;
+        private boolean verifyChangeWindow;
         private final MutableList<ProjectDependency> projectDependencies = Lists.mutable.empty();
         private final MutableList<MetamodelDependency> metamodelDependencies = Lists.mutable.empty();
 
@@ -257,6 +261,12 @@ public class TestProjectConfigurationUpdater
             return this.artifactId;
         }
 
+        @Override
+        public boolean getVerifyChangeWindow()
+        {
+            return this.verifyChangeWindow;
+        }
+
         public TestProjectConfiguration withArtifactId(String artifactId)
         {
             this.artifactId = artifactId;
@@ -266,6 +276,12 @@ public class TestProjectConfigurationUpdater
         public TestProjectConfiguration withGroupArtifactIds(String groupId, String artifactId)
         {
             return withGroupId(groupId).withArtifactId(artifactId);
+        }
+
+        public TestProjectConfiguration withVerifyChangeWindow(boolean verifyChangeWindow)
+        {
+            this.verifyChangeWindow = verifyChangeWindow;
+            return this;
         }
 
         @Override

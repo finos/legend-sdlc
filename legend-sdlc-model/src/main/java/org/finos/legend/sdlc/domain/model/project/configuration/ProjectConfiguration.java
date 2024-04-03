@@ -39,6 +39,8 @@ public interface ProjectConfiguration
 
     String getArtifactId();
 
+    boolean getVerifyChangeWindow();
+
     List<ProjectDependency> getProjectDependencies();
 
     List<MetamodelDependency> getMetamodelDependencies();

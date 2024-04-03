@@ -28,6 +28,7 @@ public class InMemoryProjectConfiguration implements ProjectConfiguration
     private final MutableList<ProjectDependency> projectDependencies = Lists.mutable.empty();
     private String groupId;
     private String artifactId;
+    private boolean verifyChangeWindow;
 
     public void setMavenCoordinates(String groupId, String artifactId)
     {
@@ -57,6 +58,12 @@ public class InMemoryProjectConfiguration implements ProjectConfiguration
     public String getArtifactId()
     {
         return this.artifactId;
+    }
+
+    @Override
+    public boolean getVerifyChangeWindow()
+    {
+        return this.verifyChangeWindow;
     }
 
     @Override

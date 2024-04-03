@@ -210,6 +210,12 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             }
 
             @Override
+            public boolean getVerifyChangeWindow()
+            {
+                return false;
+            }
+
+            @Override
             public List<ProjectDependency> getProjectDependencies()
             {
                 return Collections.emptyList();

@@ -28,13 +28,15 @@ public class FileSystemProjectConfiguration implements ProjectConfiguration
     private final ProjectStructureVersion projectStructureVersion;
     private final String groupId;
     private final String artifactId;
+    private final boolean verifyChangeWindow;
 
-    public FileSystemProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId)
+    public FileSystemProjectConfiguration(String projectId, ProjectStructureVersion projectStructureVersion, String groupId, String artifactId, boolean verifyChangeWindow)
     {
         this.projectId = projectId;
         this.projectStructureVersion = projectStructureVersion;
         this.groupId = groupId;
         this.artifactId = artifactId;
+        this.verifyChangeWindow = verifyChangeWindow;
     }
 
     @Override
@@ -59,6 +61,12 @@ public class FileSystemProjectConfiguration implements ProjectConfiguration
     public String getArtifactId()
     {
         return this.artifactId;
+    }
+
+    @Override
+    public boolean getVerifyChangeWindow()
+    {
+        return this.verifyChangeWindow;
     }
 
     @Override

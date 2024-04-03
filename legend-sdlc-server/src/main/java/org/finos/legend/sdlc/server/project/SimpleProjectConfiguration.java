@@ -37,6 +37,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     private List<PlatformConfiguration> platformConfigurations;
     private String groupId;
     private String artifactId;
+    private boolean verifyChangeWindow;
     private List<ProjectDependency> projectDependencies;
     private List<MetamodelDependency> metamodelDependencies;
     private List<ArtifactGeneration> artifactGeneration;
@@ -130,6 +131,12 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     public String getArtifactId()
     {
         return this.artifactId;
+    }
+
+    @Override
+    public boolean getVerifyChangeWindow()
+    {
+        return this.verifyChangeWindow;
     }
 
     public void setArtifactId(String artifactId)
