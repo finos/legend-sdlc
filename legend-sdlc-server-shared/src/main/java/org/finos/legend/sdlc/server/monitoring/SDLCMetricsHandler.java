@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.monitoring;
 
 import io.prometheus.client.Collector;
 import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 import io.prometheus.client.SimpleTimer;
 import io.prometheus.client.Summary;
 import org.eclipse.collections.api.map.ConcurrentMutableMap;
@@ -53,26 +54,77 @@ public class SDLCMetricsHandler
         }
     };
 
+    // ----------------------------------------- NEW IMPLEMENTATION -----------------------------------------
+
+    private static final Counter OPERATION_COUNTER = Counter
+            .build("sdlc_operations_count", "Counter of SDLC operations started")
+            .labelNames("operation_name")
+            .register();
+
+    private static final Histogram OPERATION_HISTOGRAM = Histogram
+            .build("sdlc_operations_duration", "Duration histogram for SDLC operations terminating with an error, success or redirect")
+            .labelNames("operation_name", "status")
+            .register();
+
+    public static void observeOperationComplete(long startNanos, long endNanos, String operationName)
+    {
+        operationTermination(startNanos, endNanos, operationName, "COMPLETE");
+    }
+
+    public static void observeOperationRedirect(long startNanos, long endNanos, String operationName)
+    {
+        operationTermination(startNanos, endNanos, operationName, "REDIRECT");
+    }
+
+    public static void observeOperationError(long startNanos, long endNanos, String operationName)
+    {
+        operationTermination(startNanos, endNanos, operationName, "ERROR");
+    }
+
+    private static void operationTermination(long startNanos, long endNanos, String operationName, String status)
+    {
+        double duration = SimpleTimer.elapsedSecondsFromNanos(startNanos, endNanos);
+        OPERATION_HISTOGRAM.labels(operationName != null ? operationName : "unknown", status).observe(duration);
+    }
+
+    public static void observeOperationStart()
+    {
+        incrementOperationCounter("sdlc operation start");
+    }
+
+    public static void incrementOperationCounter(String name)
+    {
+        OPERATION_COUNTER.labels(name != null ? name : "unknown").inc();
+    }
+
+
+    // -------------------------------------- END OF NEW IMPLEMENTATION -------------------------------------
+
+    @Deprecated
     public static void operationStart()
     {
         OPERATION_START_COUNTER.inc();
     }
 
+    @Deprecated
     public static void operationComplete(long startNanos, long endNanos, String durationMetricName)
     {
         operationTermination(startNanos, endNanos, OPERATION_COMPLETE_SUMMARY, durationMetricName);
     }
 
+    @Deprecated
     public static void operationRedirect(long startNanos, long endNanos, String durationMetricName)
     {
         operationTermination(startNanos, endNanos, OPERATION_REDIRECT_SUMMARY, durationMetricName);
     }
 
+    @Deprecated
     public static void operationError(long startNanos, long endNanos, String durationMetricName)
     {
         operationTermination(startNanos, endNanos, OPERATION_ERROR_SUMMARY, durationMetricName);
     }
 
+    @Deprecated
     private static void operationTermination(long startNanos, long endNanos, Summary durationSummary, String durationMetricName)
     {
         double duration = SimpleTimer.elapsedSecondsFromNanos(startNanos, endNanos);
@@ -87,6 +139,7 @@ public class SDLCMetricsHandler
         }
     }
 
+    @Deprecated
     public static void incrementCounter(String name)
     {
         Counter counter = ADDITIONAL_COUNTERS.getOrCreate(name);
@@ -96,6 +149,7 @@ public class SDLCMetricsHandler
         }
     }
 
+    @Deprecated
     private static Summary createDurationSummary(String name, String help)
     {
         return Summary.build(name, help)
@@ -103,11 +157,13 @@ public class SDLCMetricsHandler
                 .register();
     }
 
+    @Deprecated
     private static Counter createCounter(String name, String help)
     {
         return Counter.build(name, help).register();
     }
 
+    @Deprecated
     private abstract static class MetricsRegistry<T extends Collector>
     {
         private static final String METRIC_PREFIX = "sdlc_";
