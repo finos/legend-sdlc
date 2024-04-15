@@ -23,18 +23,18 @@ public class TestServiceTestGenerator extends AbstractTestClassGeneratorTest<Ser
     public void testTestService()
     {
         testGeneration(
-                "testTestSuites.TestTestService",
-                "generated/java/testTestSuites/TestTestService.java",
+                "testTestSuites.TestService",
+                "generated/java/testTestSuites/TestService.java",
                 null,
                 "testTestSuites::TestService");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestTestService",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java",
+                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestService",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestService.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
                 "testTestSuites::TestService");
         testGeneration(
-                "other.test.pkg.testTestSuites.TestTestService",
-                "generated/java/other/test/pkg/testTestSuites/TestTestService.java",
+                "other.test.pkg.testTestSuites.TestService",
+                "generated/java/other/test/pkg/testTestSuites/TestService.java",
                 "other.test.pkg",
                 "testTestSuites::TestService");
     }
@@ -43,18 +43,18 @@ public class TestServiceTestGenerator extends AbstractTestClassGeneratorTest<Ser
     public void testTestService2()
     {
         testGeneration(
-                "testTestSuites.TestTestService2",
-                "generated/java/testTestSuites/TestTestService2.java",
+                "testTestSuites.TestService2",
+                "generated/java/testTestSuites/TestService2.java",
                 null,
                 "testTestSuites::TestService2");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestTestService2",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java",
+                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestService2",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestService2.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
                 "testTestSuites::TestService2");
         testGeneration(
-                "other.test.pkg.testTestSuites.TestTestService2",
-                "generated/java/other/test/pkg/testTestSuites/TestTestService2.java",
+                "other.test.pkg.testTestSuites.TestService2",
+                "generated/java/other/test/pkg/testTestSuites/TestService2.java",
                 "other.test.pkg",
                 "testTestSuites::TestService2");
     }

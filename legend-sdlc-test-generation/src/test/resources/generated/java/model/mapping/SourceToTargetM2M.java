@@ -1,9 +1,9 @@
-package other.test.pkg.legend.demo;
+package model.mapping;
 
 import org.finos.legend.sdlc.test.junit.pure.v1.AbstractMappingTest;
 import org.junit.Test;
 
-public class TestSingleQuoteInResultM2M extends AbstractMappingTest
+public class SourceToTargetM2M extends AbstractMappingTest
 {
     @Test
     public void test1() throws Exception
@@ -11,9 +11,15 @@ public class TestSingleQuoteInResultM2M extends AbstractMappingTest
         runTest(1);
     }
 
+    @Test
+    public void test2() throws Exception
+    {
+        runTest(2);
+    }
+
     @Override
     protected String getEntityPath()
     {
-        return "legend::demo::SingleQuoteInResultM2M";
+        return "model::mapping::SourceToTargetM2M";
     }
 }

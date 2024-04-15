@@ -1,9 +1,9 @@
-package org.finos.legend.sdlc.test.junit.junit4.legend.demo;
+package other.test.pkg.legend.demo;
 
 import org.finos.legend.sdlc.test.junit.pure.v1.AbstractMappingTest;
 import org.junit.Test;
 
-public class TestSingleQuoteInResultM2M extends AbstractMappingTest
+public class SingleQuoteInResultM2M extends AbstractMappingTest
 {
     @Test
     public void test1() throws Exception
