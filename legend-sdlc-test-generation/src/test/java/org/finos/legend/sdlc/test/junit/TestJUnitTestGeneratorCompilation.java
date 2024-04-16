@@ -76,37 +76,37 @@ public class TestJUnitTestGeneratorCompilation
     @Test
     public void testRelationalMapping()
     {
-        testCompilation("execution.TestRelationalMapping", "execution::RelationalMapping");
+        testCompilation("execution.RelationalMapping", "execution::RelationalMapping");
     }
 
     @Test
     public void testSingleQuoteInResultM2M()
     {
-        testCompilation("legend.demo.TestSingleQuoteInResultM2M", "legend::demo::SingleQuoteInResultM2M");
+        testCompilation("legend.demo.SingleQuoteInResultM2M", "legend::demo::SingleQuoteInResultM2M");
     }
 
     @Test
     public void testSourceToTargetM2M()
     {
-        testCompilation("model.mapping.TestSourceToTargetM2M", "model::mapping::SourceToTargetM2M");
+        testCompilation("model.mapping.SourceToTargetM2M", "model::mapping::SourceToTargetM2M");
     }
 
     @Test
     public void testTestService()
     {
-        testCompilation("testTestSuites.TestTestService", "testTestSuites::TestService");
+        testCompilation("testTestSuites.TestService", "testTestSuites::TestService");
     }
 
     @Test
     public void testTestService2()
     {
-        testCompilation("testTestSuites.TestTestService2", "testTestSuites::TestService2");
+        testCompilation("testTestSuites.TestService2", "testTestSuites::TestService2");
     }
 
     @Test
     public void testServiceStoreMapping()
     {
-        testCompilation("testTestSuites.TestServiceStoreMapping", "testTestSuites::ServiceStoreMapping");
+        testCompilation("testTestSuites.ServiceStoreMapping", "testTestSuites::ServiceStoreMapping");
     }
 
     private void testCompilation(String expectedClassName, String entityPath)

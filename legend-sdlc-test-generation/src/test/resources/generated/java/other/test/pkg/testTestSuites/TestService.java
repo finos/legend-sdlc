@@ -1,8 +1,8 @@
-package org.finos.legend.sdlc.test.junit.junit4.testTestSuites;
+package other.test.pkg.testTestSuites;
 
 import org.finos.legend.sdlc.test.junit.pure.v1.AbstractServiceTest;
 
-public class TestTestService extends AbstractServiceTest
+public class TestService extends AbstractServiceTest
 {
     @Override
     protected String getEntityPath()

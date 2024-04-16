@@ -61,19 +61,19 @@ public class TestJUnitTestGeneratorSerialization extends AbstractGenerationTest
     @Test
     public void testWriteTestClassesWithoutRootPackage() throws IOException
     {
-        testWriteTestClasses(null, "generated/java/execution/TestRelationalMapping.java", "generated/java/legend/demo/TestSingleQuoteInResultM2M.java", "generated/java/model/mapping/TestSourceToTargetM2M.java", "generated/java/testTestSuites/TestTestService.java", "generated/java/testTestSuites/TestTestService2.java", "generated/java/testTestSuites/TestServiceStoreMapping.java");
+        testWriteTestClasses(null, "generated/java/execution/RelationalMapping.java", "generated/java/legend/demo/SingleQuoteInResultM2M.java", "generated/java/model/mapping/SourceToTargetM2M.java", "generated/java/testTestSuites/TestService.java", "generated/java/testTestSuites/TestService2.java", "generated/java/testTestSuites/ServiceStoreMapping.java");
     }
 
     @Test
     public void testWriteTestClasses() throws IOException
     {
-        testWriteTestClasses("org.finos.legend.sdlc.test.junit.junit4", "generated/java/org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java");
+        testWriteTestClasses("org.finos.legend.sdlc.test.junit.junit4", "generated/java/org/finos/legend/sdlc/test/junit/junit4/execution/RelationalMapping.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/legend/demo/SingleQuoteInResultM2M.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/mapping/SourceToTargetM2M.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestService.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestService2.java", "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/ServiceStoreMapping.java");
     }
 
     @Test
     public void testWriteTestClassesOtherPackage() throws IOException
     {
-        testWriteTestClasses("other.test.pkg", "generated/java/other/test/pkg/execution/TestRelationalMapping.java", "generated/java/other/test/pkg/legend/demo/TestSingleQuoteInResultM2M.java", "generated/java/other/test/pkg/model/mapping/TestSourceToTargetM2M.java", "generated/java/other/test/pkg/testTestSuites/TestTestService.java", "generated/java/other/test/pkg/testTestSuites/TestTestService2.java", "generated/java/other/test/pkg/testTestSuites/TestServiceStoreMapping.java");
+        testWriteTestClasses("other.test.pkg", "generated/java/other/test/pkg/execution/RelationalMapping.java", "generated/java/other/test/pkg/legend/demo/SingleQuoteInResultM2M.java", "generated/java/other/test/pkg/model/mapping/SourceToTargetM2M.java", "generated/java/other/test/pkg/testTestSuites/TestService.java", "generated/java/other/test/pkg/testTestSuites/TestService2.java", "generated/java/other/test/pkg/testTestSuites/ServiceStoreMapping.java");
     }
 
     private void testWriteTestClasses(String rootPackage, String... expectedResources) throws IOException
