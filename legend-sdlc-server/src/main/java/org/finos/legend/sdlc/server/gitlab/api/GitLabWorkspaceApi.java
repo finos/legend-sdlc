@@ -417,7 +417,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         {
             throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification));
         }
-        if (tags.contains("legend_sandbox") && tags.contains("legend"))
+        String projectTag = this.getGitLabConfiguration().getProjectTag();
+        if (tags.contains(projectTag + "_sandbox") && tags.contains(projectTag))
         {
             this.projectApi.configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
         }
