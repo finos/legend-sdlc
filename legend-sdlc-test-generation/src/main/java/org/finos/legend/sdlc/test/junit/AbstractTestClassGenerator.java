@@ -58,7 +58,7 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
 
     private String generateTestClassName(PackageableElement protocolElement)
     {
-        return appendJavaIdentifier(new StringBuilder(), protocolElement.name).toString();
+        return appendJavaIdentifier(new StringBuilder("Test"), protocolElement.name).toString();
     }
 
     private StringBuilder appendJavaIdentifier(StringBuilder builder, String string)

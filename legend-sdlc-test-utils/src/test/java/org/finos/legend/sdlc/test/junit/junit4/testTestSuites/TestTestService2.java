@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.test.junit.pure.v1.AbstractServiceTest;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class TestService2 extends AbstractServiceTest
+public class TestTestService2 extends AbstractServiceTest
 {
     @Test
     @Override

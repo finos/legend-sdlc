@@ -12,15 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.test.junit.junit4.testTestSuites;
+package org.finos.legend.sdlc.test.junit.junit4.legend.demo;
 
 import org.finos.legend.sdlc.test.junit.pure.v1.AbstractMappingTest;
+import org.junit.Test;
 
-public class ServiceStoreMapping extends AbstractMappingTest
+public class TestSingleQuoteInResultM2M extends AbstractMappingTest
 {
+    @Test
+    public void test1() throws Exception
+    {
+        runTest(1);
+    }
+
     @Override
     protected String getEntityPath()
     {
-        return "testTestSuites::ServiceStoreMapping";
+        return "legend::demo::SingleQuoteInResultM2M";
     }
 }
