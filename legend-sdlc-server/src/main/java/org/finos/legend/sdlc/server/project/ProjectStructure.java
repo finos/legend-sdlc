@@ -579,7 +579,7 @@ public abstract class ProjectStructure
         // Artifact id
         if (!isValidArtifactId(config.getArtifactId()))
         {
-            throw new LegendSDLCServerException("Invalid artifactId: " + config.getArtifactId(), Status.BAD_REQUEST);
+            throw new LegendSDLCServerException("Invalid artifactId: " + config.getArtifactId() + ". ArtifactId must follow pattern that starts with a lowercase letter and can include lowercase letters, digits, underscores, and hyphens between segments.", Status.BAD_REQUEST);
         }
 
         // Project type

@@ -184,7 +184,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         LegendSDLCServerException.validate(name, n -> (n != null) && !n.isEmpty(), "name may not be null or empty");
         LegendSDLCServerException.validateNonNull(description, "description may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
-        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a + ". ArtifactId must follow pattern that starts with a lowercase letter and can include lowercase letters, digits, underscores, and hyphens between segments.");
         if (type != null)
         {
             LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
@@ -346,7 +346,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     {
         LegendSDLCServerException.validateNonNull(id, "id may not be null");
         LegendSDLCServerException.validate(groupId, ProjectStructure::isValidGroupId, g -> "Invalid groupId: " + g);
-        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a);
+        LegendSDLCServerException.validate(artifactId, ProjectStructure::isValidArtifactId, a -> "Invalid artifactId: " + a + ". ArtifactId must follow pattern that starts with a lowercase letter and can include lowercase letters, digits, underscores, and hyphens between segments.");
         if (type != null)
         {
             LegendSDLCServerException.validate(type, ProjectStructure::isValidProjectType, t -> "Invalid type: " + t);
