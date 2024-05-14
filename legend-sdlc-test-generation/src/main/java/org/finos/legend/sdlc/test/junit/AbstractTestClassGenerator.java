@@ -20,12 +20,18 @@ import org.finos.legend.sdlc.generation.JavaCodeGenerator;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import javax.lang.model.SourceVersion;
+import javax.tools.JavaFileObject;
+import java.nio.charset.StandardCharsets;
+import java.util.Formatter;
 
 class AbstractTestClassGenerator extends JavaCodeGenerator
 {
     private static final String ENTITY_PATH_PARAM = "entityPath";
 
     private final String packagePrefix;
+
+    private static final String TEST_PREFIX = "Test";
+    private static final int NAME_BYTE_MAX = 254 - TEST_PREFIX.getBytes(StandardCharsets.UTF_8).length - JavaFileObject.Kind.SOURCE.extension.getBytes(StandardCharsets.UTF_8).length;
 
     protected AbstractTestClassGenerator(GeneratorTemplate template, String packagePrefix)
     {
@@ -58,7 +64,25 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
 
     private String generateTestClassName(PackageableElement protocolElement)
     {
-        return appendJavaIdentifier(new StringBuilder("Test"), protocolElement.name).toString();
+        return appendJavaIdentifier(new StringBuilder(TEST_PREFIX), generateTestName(protocolElement.name)).toString();
+    }
+
+    private String generateTestName(String name)
+    {
+        int overage = name.getBytes(StandardCharsets.UTF_8).length - NAME_BYTE_MAX;
+        if (overage > 0)
+        {
+            int newLen = name.length() - overage - 9;
+            while (Character.isSurrogate(name.charAt(newLen - 1)))
+            {
+                newLen--;
+            }
+            StringBuilder builder = new StringBuilder(newLen + 9);
+            builder.append(name, 0, newLen);
+            new Formatter(builder).format("_%08x", name.hashCode());
+            return builder.toString();
+        }
+        return name;
     }
 
     private StringBuilder appendJavaIdentifier(StringBuilder builder, String string)
