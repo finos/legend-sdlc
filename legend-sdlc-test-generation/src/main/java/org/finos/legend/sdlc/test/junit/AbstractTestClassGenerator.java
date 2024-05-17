@@ -31,7 +31,7 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
     private final String packagePrefix;
 
     private static final String TEST_PREFIX = "Test";
-    private static final int NAME_BYTE_MAX = 254 - TEST_PREFIX.getBytes(StandardCharsets.UTF_8).length - JavaFileObject.Kind.SOURCE.extension.getBytes(StandardCharsets.UTF_8).length;
+    private static final int NAME_BYTE_MAX = 254 - TEST_PREFIX.getBytes(StandardCharsets.UTF_16).length - JavaFileObject.Kind.SOURCE.extension.getBytes(StandardCharsets.UTF_16).length;
 
     protected AbstractTestClassGenerator(GeneratorTemplate template, String packagePrefix)
     {
