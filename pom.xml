@@ -58,7 +58,7 @@
         <sonar.projectKey>legend-sdlc</sonar.projectKey>
         <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
 
-        <!-- work around bug where maven.build.timestamp doesn't get propagated to filtering -->
+        <!-- work around bug where maven.build.timestamp doesn't get propagated to filtering  -->
         <timestamp>${maven.build.timestamp}</timestamp>
 
         <!-- Build Variables -->
