@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.junit.Assert;
 import org.junit.Test;
@@ -31,7 +32,7 @@ public class TestPureToEntityConverter
     public void testToEntity()
     {
         Class cls = new Class();
-        cls.superTypes = Collections.singletonList("meta::pure::metamodel::type::Any");
+        cls.superTypes = Collections.singletonList(new PackageableElementPointer("meta::pure::metamodel::type::Any"));
         cls.name = "EmptyClass";
         cls._package = "model::test";
         Entity entity = this.converter.toEntity(cls);
@@ -42,7 +43,7 @@ public class TestPureToEntityConverter
     public void testToEntityIfPossible()
     {
         Class cls = new Class();
-        cls.superTypes = Collections.singletonList("meta::pure::metamodel::type::Any");
+        cls.superTypes = Collections.singletonList(new PackageableElementPointer("meta::pure::metamodel::type::Any"));
         cls.name = "EmptyClass";
         cls._package = "model::test";
         Optional<Entity> entity = this.converter.toEntityIfPossible(cls);

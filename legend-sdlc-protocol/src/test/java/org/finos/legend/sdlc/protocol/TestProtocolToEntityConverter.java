@@ -15,7 +15,9 @@
 package org.finos.legend.sdlc.protocol;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+import java.util.stream.Collectors;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Association;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
@@ -35,7 +37,7 @@ public class TestProtocolToEntityConverter
     {
         PermissiveClassToEntityConverter converter = new PermissiveClassToEntityConverter();
         Class cls = new Class();
-        cls.superTypes = Collections.singletonList("meta::pure::metamodel::type::Any");
+        cls.superTypes = Collections.singletonList(new PackageableElementPointer("meta::pure::metamodel::type::Any"));
         cls.name = "EmptyClass";
         cls._package = "model::test";
         Entity entity = converter.toEntity(cls);
@@ -57,7 +59,7 @@ public class TestProtocolToEntityConverter
     {
         PermissiveClassToEntityConverter converter = new PermissiveClassToEntityConverter();
         Class cls = new Class();
-        cls.superTypes = Collections.singletonList("meta::pure::metamodel::type::Any");
+        cls.superTypes = Collections.singletonList(new PackageableElementPointer("meta::pure::metamodel::type::Any"));
         cls.name = "EmptyClass";
         cls._package = "model::test";
         Optional<Entity> entity = converter.toEntityIfPossible(cls);
@@ -98,7 +100,7 @@ public class TestProtocolToEntityConverter
         Assert.assertEquals(cls.name, entity.getContent().get("name"));
         Assert.assertEquals(cls._package, entity.getContent().get("package"));
         Assert.assertEquals(cls.properties, entity.getContent().get("properties"));
-        Assert.assertEquals(cls.superTypes, entity.getContent().get("superTypes"));
+        Assert.assertEquals(cls.superTypes.stream().map(x -> x.path).collect(Collectors.toList()), entity.getContent().get("superTypes"));
     }
 }
 
