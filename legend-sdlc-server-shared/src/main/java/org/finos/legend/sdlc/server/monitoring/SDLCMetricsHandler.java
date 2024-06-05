@@ -87,7 +87,7 @@ public class SDLCMetricsHandler
         durationSummary.observe(duration);
         if (durationMetricName != null)
         {
-            observeOperation(durationMetricName, duration);
+            SUCCESSFUL_REQUEST_LATENCY_HISTOGRAM.labels(durationMetricName).observe(duration);
             Summary summary = ADDITIONAL_SUMMARIES.getOrCreate(durationMetricName);
             if (summary != null)
             {
