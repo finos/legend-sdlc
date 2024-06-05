@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.generation.model;
 
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
@@ -84,7 +85,7 @@ public class TestModelGenerationFactory
             Class myClass = new Class();
             myClass.name = "MyComplexClass";
             myClass._package = "model";
-            myClass.superTypes = Collections.singletonList("model::MyClass");
+            myClass.superTypes = Collections.singletonList(new PackageableElementPointer("model::MyClass"));
             builder.addElement(myClass);
             return builder.build();
         }
