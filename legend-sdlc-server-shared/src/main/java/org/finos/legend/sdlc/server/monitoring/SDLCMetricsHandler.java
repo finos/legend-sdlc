@@ -55,12 +55,6 @@ public class SDLCMetricsHandler
         }
     };
 
-    public static void observeOperation(String operation, double duration)
-    {
-        Objects.requireNonNull(operation, "SDLC Metric cannot be saved. operation label value is missing");
-        SUCCESSFUL_REQUEST_LATENCY_HISTOGRAM.labels(operation).observe(duration);
-    }
-
     public static void operationStart()
     {
         OPERATION_START_COUNTER.inc();
