@@ -49,8 +49,9 @@ public class WorkspaceEntityChangesResource extends BaseResource
     public Revision performEntityChanges(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to perform entity changes");
-        return executeWithLogging(
+        return execute(
                 "performing changes in user workspace " + workspaceId + " for project " + projectId,
+                "entity changes",
                 () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }

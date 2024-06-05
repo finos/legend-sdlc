@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.monitoring;
 
 import io.prometheus.client.Collector;
 import io.prometheus.client.Counter;
+import io.prometheus.client.Histogram;
 import io.prometheus.client.SimpleTimer;
 import io.prometheus.client.Summary;
 import org.eclipse.collections.api.map.ConcurrentMutableMap;
@@ -34,6 +35,7 @@ public class SDLCMetricsHandler
     private static final Summary OPERATION_COMPLETE_SUMMARY = createDurationSummary("sdlc_operations_completed", "Duration summary for SDLC operations completing with no error or redirect");
     private static final Summary OPERATION_REDIRECT_SUMMARY = createDurationSummary("sdlc_operations_redirected", "Duration summary for SDLC operations terminating with a redirect");
     private static final Summary OPERATION_ERROR_SUMMARY = createDurationSummary("sdlc_operations_errors", "Duration summary for SDLC operations terminating with an error");
+    private static final Histogram SUCCESSFUL_REQUEST_LATENCY_HISTOGRAM = createRequestLatencyHistogram("sdlc_successful_request_latency", "Measure sdlc http request latency");
 
     private static final MetricsRegistry<Summary> ADDITIONAL_SUMMARIES = new MetricsRegistry<Summary>("duration summary")
     {
@@ -79,6 +81,7 @@ public class SDLCMetricsHandler
         durationSummary.observe(duration);
         if (durationMetricName != null)
         {
+            SUCCESSFUL_REQUEST_LATENCY_HISTOGRAM.labels(durationMetricName).observe(duration);
             Summary summary = ADDITIONAL_SUMMARIES.getOrCreate(durationMetricName);
             if (summary != null)
             {
@@ -94,6 +97,15 @@ public class SDLCMetricsHandler
         {
             counter.inc();
         }
+    }
+
+    private static Histogram createRequestLatencyHistogram(String name, String help)
+    {
+        return Histogram.build().name(name)
+                .help(help)
+                .buckets(.1, .2, .5, 1, 2, 5, 10, 30, 100, 300)
+                .labelNames("operation")
+                .register();
     }
 
     private static Summary createDurationSummary(String name, String help)

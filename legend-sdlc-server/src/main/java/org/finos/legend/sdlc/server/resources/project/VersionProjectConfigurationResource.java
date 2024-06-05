@@ -48,8 +48,9 @@ public class VersionProjectConfigurationResource extends BaseResource
     @ApiOperation("Get the configuration for a version of a project")
     public ProjectConfiguration getVersionProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId)
     {
-        return executeWithLogging(
+        return execute(
                 "getting project " + projectId + " configuration for version " + versionId,
+                "get project version",
                 () -> this.projectConfigurationApi.getVersionProjectConfiguration(projectId, versionId)
         );
     }
