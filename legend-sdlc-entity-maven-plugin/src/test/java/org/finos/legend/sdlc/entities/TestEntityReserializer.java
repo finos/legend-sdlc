@@ -126,7 +126,7 @@ public class TestEntityReserializer
         // if we enforce one entity per file, the path needs to match file location
         RuntimeException e = Assert.assertThrows(RuntimeException.class, () -> reserializer.reserializeDirectoryTree(sourceDir, null, targetDir, true));
         Assert.assertEquals(
-                "Error deserializing entity from " + sourceDir.resolve(Paths.get("Firm.pure")) + ": Expected entity with path model::domain::classes::Firma to be located on " + Paths.get("model", "domain" , "classes", "Firma.pure"),
+                "Error deserializing entity from " + sourceDir.resolve(Paths.get("Firm.pure")) + ": Expected entity with path model::domain::classes::Firma to be located on " + Paths.get("model", "domain", "classes", "Firma.pure"),
                 e.getMessage());
 
         // if we don't enforce, it will allow
