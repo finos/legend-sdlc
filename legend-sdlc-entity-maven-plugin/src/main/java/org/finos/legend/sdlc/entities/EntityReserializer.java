@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.entities;
 
+import java.nio.file.Paths;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -114,7 +115,13 @@ public class EntityReserializer
         {
             if (enforceOneEntityPerFile)
             {
-                entities = Collections.singletonList(this.sourceSerializer.deserialize(inputStream));
+                Entity singleEntity = this.sourceSerializer.deserialize(inputStream);
+                Path expectedPath = sourceSerializer.filePathForEntity(singleEntity, Paths.get(""));
+                if (!sourceFile.endsWith(expectedPath))
+                {
+                    throw new RuntimeException("Expected entity with path " + singleEntity.getPath() + " to be located on " + expectedPath);
+                }
+                entities = Collections.singletonList(singleEntity);
             }
             else
             {
