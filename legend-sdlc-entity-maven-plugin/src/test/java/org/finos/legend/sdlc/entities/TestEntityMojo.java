@@ -279,7 +279,7 @@ public class TestEntityMojo
 
         Path srcMain = projectDir.toPath().resolve("src").resolve("main");
         TestHelper.copyResourceDirectoryTree("simple-json-model", Files.createDirectories(srcMain.resolve("legend")));
-        TestHelper.copyResourceDirectoryTree("simple-pure-model/model/domain/enums", Files.createDirectories(srcMain.resolve("pure")));
+        TestHelper.copyResourceDirectoryTree("simple-pure-model/model/domain/enums", Files.createDirectories(srcMain.resolve(Paths.get("pure", "model", "domain", "enums"))));
         TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
 
         String expectedMessage = "Error reserializing entities from " + srcMain.resolve("pure") + " using serializer \"pure\" to " + outputDir + ": Error serializing entity 'model::domain::enums::AddressType' to " + outputDir.resolve(Paths.get("entities", "model", "domain", "enums", "AddressType.json")) + ": target file already exists";
