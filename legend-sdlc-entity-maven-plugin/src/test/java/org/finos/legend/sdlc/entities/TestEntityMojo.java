@@ -65,12 +65,12 @@ public class TestEntityMojo
         TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
 
         // Legend source directory exists (found as a default source directory)
-        Path simpleJsonModelDir = TestHelper.getPathFromResource("simple-json-model");
-        TestHelper.copyDirectoryTree(simpleJsonModelDir, Files.createDirectories(srcMain.resolve("legend")));
+        Path simpleJsonModelDir = TestHelper.getPathFromResource("simple-json-model/entities");
+        TestHelper.copyDirectoryTree(simpleJsonModelDir, Files.createDirectories(srcMain.resolve(Paths.get("legend"))));
         TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
         this.mojoRule.executeMojo(projectDir, GOAL);
 
-        Map<String, Entity> expectedEntities = TestHelper.loadEntities(simpleJsonModelDir);
+        Map<String, Entity> expectedEntities = TestHelper.loadEntities(TestHelper.getPathFromResource("simple-json-model"));
         TestHelper.assertDirectoryTreeFilePaths(
                 Iterate.collect(expectedEntities.keySet(), p -> Paths.get("entities" + outputDir.getFileSystem().getSeparator() + p.replace(EntityPaths.PACKAGE_SEPARATOR, outputDir.getFileSystem().getSeparator()) + ".json"), Sets.mutable.empty()),
                 outputDir);
@@ -278,7 +278,7 @@ public class TestEntityMojo
         Path outputDir = new File(mavenProject.getBuild().getOutputDirectory()).toPath();
 
         Path srcMain = projectDir.toPath().resolve("src").resolve("main");
-        TestHelper.copyResourceDirectoryTree("simple-json-model", Files.createDirectories(srcMain.resolve("legend")));
+        TestHelper.copyResourceDirectoryTree("simple-json-model/entities", Files.createDirectories(srcMain.resolve("legend")));
         TestHelper.copyResourceDirectoryTree("simple-pure-model/model/domain/enums", Files.createDirectories(srcMain.resolve(Paths.get("pure", "model", "domain", "enums"))));
         TestHelper.assertDirectoryEmptyOrNonExistent(outputDir);
 

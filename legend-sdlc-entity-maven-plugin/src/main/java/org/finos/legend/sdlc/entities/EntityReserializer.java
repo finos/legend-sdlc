@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.entities;
 
-import java.nio.file.Paths;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
@@ -93,7 +92,7 @@ public class EntityReserializer
                     }
                     else if ((filter == null) || filter.test(entry))
                     {
-                        entityPaths.addAll(reserializeFile(entry, targetEntitiesDirectory, enforceOneEntityPerFile));
+                        entityPaths.addAll(reserializeFile(sourceDirectory, entry, targetEntitiesDirectory, enforceOneEntityPerFile));
                     }
                 }
             }
@@ -107,7 +106,7 @@ public class EntityReserializer
         return getExtensionFilter(this.sourceSerializer.getDefaultFileExtension());
     }
 
-    private List<String> reserializeFile(Path sourceFile, Path targetDirectory, boolean enforceOneEntityPerFile) throws IOException
+    private List<String> reserializeFile(Path sourceDirectory, Path sourceFile, Path targetDirectory, boolean enforceOneEntityPerFile) throws IOException
     {
         LOGGER.debug("Reading {}", sourceFile);
         List<Entity> entities;
@@ -116,8 +115,8 @@ public class EntityReserializer
             if (enforceOneEntityPerFile)
             {
                 Entity singleEntity = this.sourceSerializer.deserialize(inputStream);
-                Path expectedPath = sourceSerializer.filePathForEntity(singleEntity, Paths.get(""));
-                if (!sourceFile.endsWith(expectedPath))
+                Path expectedPath = sourceSerializer.filePathForEntity(singleEntity, sourceDirectory);
+                if (!sourceFile.equals(expectedPath))
                 {
                     throw new RuntimeException("Expected entity with path " + singleEntity.getPath() + " to be located on " + expectedPath);
                 }
