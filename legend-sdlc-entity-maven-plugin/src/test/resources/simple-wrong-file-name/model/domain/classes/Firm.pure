@@ -1,0 +1,6 @@
+Class model::domain::classes::Firma
+{
+  legalName: String[1];
+  commonName: String[0..1];
+  founded: StrictDate[0..1];
+}

@@ -98,19 +98,41 @@ public class TestEntityReserializer
     public void testTargetFileAlreadyExists() throws IOException
     {
         EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
-        Path sourceDir = TestHelper.getPathFromResource("simple-pure-model/model/domain/enums");
+        Path sourceDir = TestHelper.getPathFromResource("simple-pure-model");
+        Path toFilterPath = TestHelper.getPathFromResource("simple-pure-model/model/domain/enums");
         Path targetDir = this.tempFolder.getRoot().toPath().resolve("target");
 
         Assert.assertTrue(Files.isDirectory(sourceDir));
         Assert.assertTrue(Files.notExists(targetDir));
 
-        List<String> paths = reserializer.reserializeDirectoryTree(sourceDir, targetDir);
+        List<String> paths = reserializer.reserializeDirectoryTree(sourceDir, x -> x.startsWith(toFilterPath), targetDir);
         Assert.assertEquals(Collections.singletonList("model::domain::enums::AddressType"), paths);
 
         IOException e = Assert.assertThrows(IOException.class, () -> reserializer.reserializeDirectoryTree(sourceDir, targetDir));
         Assert.assertEquals(
                 "Error serializing entity 'model::domain::enums::AddressType' to " + targetDir.resolve(Paths.get("entities", "model", "domain", "enums", "AddressType.json")) + ": target file already exists",
                 e.getMessage());
+    }
+
+    @Test
+    public void testSourceFileDoesNotMatchEntityPath() throws IOException
+    {
+        EntityReserializer reserializer = EntityReserializer.newReserializer(new PureEntitySerializer(), EntitySerializers.getDefaultJsonSerializer());
+        Path sourceDir = TestHelper.getPathFromResource("simple-wrong-file-name/model/domain/classes");
+        Path targetDir = this.tempFolder.getRoot().toPath().resolve("target");
+
+        Assert.assertTrue(Files.isDirectory(sourceDir));
+        Assert.assertTrue(Files.notExists(targetDir));
+
+        // if we enforce one entity per file, the path needs to match file location
+        RuntimeException e = Assert.assertThrows(RuntimeException.class, () -> reserializer.reserializeDirectoryTree(sourceDir, null, targetDir, true));
+        Assert.assertEquals(
+                "Error deserializing entity from " + sourceDir.resolve(Paths.get("Firm.pure")) + ": Expected entity with path model::domain::classes::Firma to be located on " + sourceDir.resolve(Paths.get("model", "domain", "classes", "Firma.pure")),
+                e.getMessage());
+
+        // if we don't enforce, it will allow
+        List<String> paths = reserializer.reserializeDirectoryTree(sourceDir, null, targetDir, false);
+        Assert.assertEquals(Collections.singletonList("model::domain::classes::Firma"), paths);
     }
 
     @Test
