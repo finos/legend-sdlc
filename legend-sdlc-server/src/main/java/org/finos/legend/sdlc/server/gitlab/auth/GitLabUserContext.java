@@ -65,11 +65,12 @@ public class GitLabUserContext extends UserContext
         {
             GitLabSession gitLabSession = getGitLabSession();
             GitLabToken token = gitLabSession.getGitLabToken();
+            GitLabTokenResponse tokenResponse;
             if (token == null)
             {
                 try
                 {
-                    token = authorizerManager.authorize(session, this.appInfo);
+                    tokenResponse = authorizerManager.authorize(session, this.appInfo);
                 }
                 catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
                 {
@@ -84,9 +85,12 @@ public class GitLabUserContext extends UserContext
                 {
                     throw new LegendSDLCServerException(e.getMessage(), Status.INTERNAL_SERVER_ERROR, e);
                 }
-                if (token != null)
+                if (tokenResponse != null)
                 {
-                    gitLabSession.setGitLabToken(token);
+                    gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
+                    gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
+                    gitLabSession.setTokenExpiry(tokenResponse.getExpiryIn());
+                    token = gitLabSession.getGitLabToken();
                     LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                 }
                 else if (redirectAllowed)
@@ -99,6 +103,18 @@ public class GitLabUserContext extends UserContext
                     throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                 }
 
+            }
+            else if (gitLabSession.isTokenExpired())
+            {
+                tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
+                if (tokenResponse != null)
+                {
+                    gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
+                    gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
+                    gitLabSession.setTokenExpiry(tokenResponse.getExpiryIn());
+                    token = gitLabSession.getGitLabToken();
+                    LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+                }
             }
             this.api = new GitLabApi(ApiVersion.V4, this.appInfo.getServerInfo().getGitLabURLString(), token.getTokenType(), token.getToken());
         }
@@ -114,7 +130,7 @@ public class GitLabUserContext extends UserContext
             {
                 try
                 {
-                    GitLabToken token = authorizerManager.authorize(session, this.appInfo);
+                    GitLabToken token = authorizerManager.authorize(session, this.appInfo).getAccessToken();
                     if (token == null)
                     {
                         return false;
