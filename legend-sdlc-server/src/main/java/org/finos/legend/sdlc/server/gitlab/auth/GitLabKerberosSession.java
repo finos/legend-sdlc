@@ -98,7 +98,7 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     @Override
     public void setTokenExpiry(long expiryIn)
     {
-        this.tokenManager.setTokenExpiry(Long.valueOf(expiryIn));
+        this.tokenManager.setTokenExpiry(expiryIn);
     }
 
     @Override
