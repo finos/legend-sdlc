@@ -49,6 +49,16 @@ public class TestGitLabTokenManager
     }
 
     @Test
+    public void testEncoding_OneOAuthRefreshToken()
+    {
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
+        GitLabToken refreshToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,
+                "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        tokenManager.setRefreshToken(refreshToken);
+        assertEncoding(tokenManager);
+    }
+
+    @Test
     public void testEncoding_OnePrivateAccessToken()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
@@ -67,6 +77,14 @@ public class TestGitLabTokenManager
         Assert.assertEquals(token, tokenManager.getGitLabToken());
         tokenManager.clearGitLabToken();
         Assert.assertNull(tokenManager.getGitLabToken());
+    }
+
+    @Test
+    public void testExpiry()
+    {
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
+        tokenManager.setTokenExpiry(-1);
+        Assert.assertTrue(tokenManager.isTokenExpired());
     }
 
     private void assertEncoding(GitLabTokenManager tokenManager)
