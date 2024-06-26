@@ -14,15 +14,18 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-
 import java.time.Instant;
+import java.time.LocalDateTime;
 
 public class TestGitLabSession implements GitLabSession
 {
     private final String userId;
 
     private GitLabToken token;
+
+    private GitLabToken refreshToken;
+
+    private LocalDateTime tokenExpiry;
 
     public TestGitLabSession(String userId)
     {
@@ -69,5 +72,29 @@ public class TestGitLabSession implements GitLabSession
     public void setGitLabToken(GitLabToken token)
     {
         this.token = token;
+    }
+
+    @Override
+    public void setRefreshToken(GitLabToken refreshToken)
+    {
+        this.refreshToken = refreshToken;
+    }
+
+    @Override
+    public GitLabToken getRefreshToken()
+    {
+        return this.refreshToken;
+    }
+
+    @Override
+    public void setTokenExpiry(long expiryIn)
+    {
+        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiryIn - 1800);
+    }
+
+    @Override
+    public boolean isTokenExpired()
+    {
+        return LocalDateTime.now().isAfter(this.tokenExpiry);
     }
 }
