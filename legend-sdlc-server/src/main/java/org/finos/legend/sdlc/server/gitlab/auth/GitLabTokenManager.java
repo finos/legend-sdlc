@@ -19,14 +19,18 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.gitlab4j.api.Constants;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 class GitLabTokenManager implements Serializable
 {
     private static final long serialVersionUID = 4579663645788521787L;
+    private static final long DEFAULT_EXPIRY = 7200;
 
     private final GitLabAppInfo appInfo;
     private GitLabToken token;
+    private GitLabToken refreshToken;
+    private LocalDateTime tokenExpiry;
 
     private GitLabTokenManager(GitLabAppInfo appInfo)
     {
@@ -90,12 +94,45 @@ class GitLabTokenManager implements Serializable
         this.token = token;
     }
 
+    public void setRefreshToken(GitLabToken refreshToken)
+    {
+        if (refreshToken == null)
+        {
+            throw new IllegalArgumentException("token may not be null");
+        }
+        if (refreshToken.getTokenType() == null)
+        {
+            throw new IllegalArgumentException("token type may not be null");
+        }
+        this.refreshToken = refreshToken;
+    }
+
+    public void setTokenExpiry(long expiresIn)
+    {
+        if (expiresIn == 0)
+        {
+            expiresIn = DEFAULT_EXPIRY;
+        }
+        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiresIn -  1800);
+    }
+
+    public GitLabToken getRefreshToken()
+    {
+        return this.refreshToken;
+    }
+
+    public boolean isTokenExpired()
+    {
+        return LocalDateTime.now().isAfter(this.tokenExpiry);
+    }
+
     boolean gitLabOAuthCallback(String code)
     {
-        GitLabToken token = GitLabToken.newGitLabToken(Constants.TokenType.OAUTH2_ACCESS,
-            GitLabOAuthAuthenticator.newAuthenticator(this.appInfo).getOAuthTokenFromAuthCode(code));
+        GitLabTokenResponse tokenResponse = GitLabOAuthAuthenticator.newAuthenticator(this.appInfo).getOAuthTokenResponseFromAuthCode(code);
         GitLabToken oldToken = this.token;
-        this.token = token;
+        this.token = tokenResponse.getAccessToken();
+        this.refreshToken = tokenResponse.getRefreshToken();
+        this.setTokenExpiry(tokenResponse.getExpiryIn());
         return !token.equals(oldToken);
     }
 
