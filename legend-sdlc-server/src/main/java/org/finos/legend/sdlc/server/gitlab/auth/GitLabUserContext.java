@@ -104,7 +104,7 @@ public class GitLabUserContext extends UserContext
                 }
 
             }
-            else if (gitLabSession.isTokenExpired())
+            else if (gitLabSession.getRefreshToken() != null && gitLabSession.isTokenExpired())
             {
                 tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
                 if (tokenResponse != null)
