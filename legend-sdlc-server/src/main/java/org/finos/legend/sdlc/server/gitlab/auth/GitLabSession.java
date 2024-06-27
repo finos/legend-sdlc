@@ -30,7 +30,7 @@ public interface GitLabSession extends Session
 
     String getRefreshToken();
 
-    void setTokenExpiry(long expiryIn);
+    void setTokenExpiry(long expiresInSecs);
 
     boolean shouldRefreshToken();
 }

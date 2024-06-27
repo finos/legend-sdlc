@@ -99,7 +99,7 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public void setTokenExpiry(long expiryIn)
+    public void setTokenExpiry(long expiresInSecs)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

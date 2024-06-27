@@ -81,7 +81,7 @@ public class GitLabUserContext extends UserContext
                         {
                             gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
                             gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-                            gitLabSession.setTokenExpiry(tokenResponse.getExpiryInSecs());
+                            gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
                             token = gitLabSession.getGitLabToken();
                             LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                         }
@@ -126,7 +126,7 @@ public class GitLabUserContext extends UserContext
         {
             gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
             gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-            gitLabSession.setTokenExpiry(tokenResponse.getExpiryInSecs());
+            gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
             token = gitLabSession.getGitLabToken();
             LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
         }

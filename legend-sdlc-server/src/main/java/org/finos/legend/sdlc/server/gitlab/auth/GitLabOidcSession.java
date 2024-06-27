@@ -102,7 +102,7 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
     }
 
     @Override
-    public void setTokenExpiry(long expiryIn)
+    public void setTokenExpiry(long expiresInSecs)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

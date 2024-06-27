@@ -20,13 +20,13 @@ public class GitLabTokenResponse
 {
     private final GitLabToken accessToken;
     private final String refreshToken;
-    private final long expiryInSecs;
+    private final long expiresInSecs;
 
-    protected GitLabTokenResponse(String accessToken, String refreshToken, Integer expiryInSecs)
+    protected GitLabTokenResponse(String accessToken, String refreshToken, Integer expiresInSecs)
     {
         this.accessToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken);
         this.refreshToken = refreshToken;
-        this.expiryInSecs = expiryInSecs != null ? expiryInSecs.longValue() : 0L;
+        this.expiresInSecs = expiresInSecs != null ? expiresInSecs.longValue() : 0L;
     }
 
     @Override
@@ -45,13 +45,13 @@ public class GitLabTokenResponse
         GitLabTokenResponse that = (GitLabTokenResponse) other;
         return this.accessToken.equals(that.accessToken) &&
                 this.refreshToken.equals(that.refreshToken) &&
-                this.expiryInSecs == that.expiryInSecs;
+                this.expiresInSecs == that.expiresInSecs;
     }
 
     @Override
     public int hashCode()
     {
-        return this.accessToken.hashCode() + 31 * (this.refreshToken.hashCode() + 31 * Long.hashCode(this.expiryInSecs));
+        return this.accessToken.hashCode() + 31 * (this.refreshToken.hashCode() + 31 * Long.hashCode(this.expiresInSecs));
     }
 
     public GitLabToken getAccessToken()
@@ -64,8 +64,8 @@ public class GitLabTokenResponse
         return this.refreshToken;
     }
 
-    public long getExpiryInSecs()
+    public long getExpiresInSecs()
     {
-        return this.expiryInSecs;
+        return this.expiresInSecs;
     }
 }

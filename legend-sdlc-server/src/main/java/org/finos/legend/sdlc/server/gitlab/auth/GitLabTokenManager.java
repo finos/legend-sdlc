@@ -133,7 +133,7 @@ class GitLabTokenManager implements Serializable
         GitLabToken oldToken = this.token;
         this.token = tokenResponse.getAccessToken();
         this.refreshToken = tokenResponse.getRefreshToken();
-        this.setTokenExpiry(tokenResponse.getExpiryInSecs());
+        this.setTokenExpiry(tokenResponse.getExpiresInSecs());
         return !token.equals(oldToken);
     }
 
