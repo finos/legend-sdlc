@@ -22,6 +22,7 @@ import org.gitlab4j.api.Constants.TokenType;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.time.LocalDateTime;
 import java.util.regex.Pattern;
 
 public class TestGitLabTokenManager
@@ -52,8 +53,7 @@ public class TestGitLabTokenManager
     public void testEncoding_OneOAuthRefreshToken()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        GitLabToken refreshToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,
-                "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
+        String refreshToken = "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875";
         tokenManager.setRefreshToken(refreshToken);
         assertEncoding(tokenManager);
     }
@@ -83,8 +83,8 @@ public class TestGitLabTokenManager
     public void testExpiry()
     {
         GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        tokenManager.setTokenExpiry(-1);
-        Assert.assertTrue(tokenManager.isTokenExpired());
+        tokenManager.setTokenExpiry(LocalDateTime.now().minusSeconds(1));
+        Assert.assertTrue(tokenManager.shouldRefreshToken());
     }
 
     private void assertEncoding(GitLabTokenManager tokenManager)

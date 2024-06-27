@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2024 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,14 +19,14 @@ import org.gitlab4j.api.Constants.TokenType;
 public class GitLabTokenResponse
 {
     private final GitLabToken accessToken;
-    private final GitLabToken refreshToken;
-    private final Integer expiryIn;
+    private final String refreshToken;
+    private final long expiryInSecs;
 
-    protected GitLabTokenResponse(String accessToken, String refreshToken, Integer expiryIn)
+    protected GitLabTokenResponse(String accessToken, String refreshToken, Integer expiryInSecs)
     {
         this.accessToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken);
-        this.refreshToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, refreshToken);
-        this.expiryIn = expiryIn != null ? expiryIn : 0;
+        this.refreshToken = refreshToken;
+        this.expiryInSecs = expiryInSecs != null ? expiryInSecs.longValue() : 0L;
     }
 
     @Override
@@ -45,13 +45,13 @@ public class GitLabTokenResponse
         GitLabTokenResponse that = (GitLabTokenResponse) other;
         return this.accessToken.equals(that.accessToken) &&
                 this.refreshToken.equals(that.refreshToken) &&
-                this.expiryIn == that.expiryIn;
+                this.expiryInSecs == that.expiryInSecs;
     }
 
     @Override
     public int hashCode()
     {
-        return this.accessToken.hashCode() + 31 * (this.refreshToken.hashCode() + 31 * this.expiryIn.hashCode());
+        return this.accessToken.hashCode() + 31 * (this.refreshToken.hashCode() + 31 * Long.hashCode(this.expiryInSecs));
     }
 
     public GitLabToken getAccessToken()
@@ -59,13 +59,13 @@ public class GitLabTokenResponse
         return this.accessToken;
     }
 
-    public GitLabToken getRefreshToken()
+    public String getRefreshToken()
     {
         return this.refreshToken;
     }
 
-    public long getExpiryIn()
+    public long getExpiryInSecs()
     {
-        return this.expiryIn.longValue();
+        return this.expiryInSecs;
     }
 }

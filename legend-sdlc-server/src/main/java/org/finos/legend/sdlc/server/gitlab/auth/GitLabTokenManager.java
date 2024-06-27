@@ -25,11 +25,11 @@ import java.util.Objects;
 class GitLabTokenManager implements Serializable
 {
     private static final long serialVersionUID = 4579663645788521787L;
-    private static final long DEFAULT_EXPIRY = 7200;
+    private static final long DEFAULT_EXPIRY_SECS = 7200;
 
     private final GitLabAppInfo appInfo;
     private GitLabToken token;
-    private GitLabToken refreshToken;
+    private String refreshToken;
     private LocalDateTime tokenExpiry;
 
     private GitLabTokenManager(GitLabAppInfo appInfo)
@@ -94,34 +94,35 @@ class GitLabTokenManager implements Serializable
         this.token = token;
     }
 
-    public void setRefreshToken(GitLabToken refreshToken)
+    public void setRefreshToken(String refreshToken)
     {
         if (refreshToken == null)
         {
             throw new IllegalArgumentException("token may not be null");
         }
-        if (refreshToken.getTokenType() == null)
-        {
-            throw new IllegalArgumentException("token type may not be null");
-        }
         this.refreshToken = refreshToken;
     }
 
-    public void setTokenExpiry(long expiresIn)
+    public void setTokenExpiry(long expiresInSecs)
     {
-        if (expiresIn == 0)
+        if (expiresInSecs <= 0L)
         {
-            expiresIn = DEFAULT_EXPIRY;
+            expiresInSecs = DEFAULT_EXPIRY_SECS;
         }
-        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiresIn -  1800);
+        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiresInSecs * 3 / 4);
     }
 
-    public GitLabToken getRefreshToken()
+    public void setTokenExpiry(LocalDateTime expiry)
+    {
+        this.tokenExpiry = expiry;
+    }
+
+    public String getRefreshToken()
     {
         return this.refreshToken;
     }
 
-    public boolean isTokenExpired()
+    public boolean shouldRefreshToken()
     {
         return LocalDateTime.now().isAfter(this.tokenExpiry);
     }
@@ -132,7 +133,7 @@ class GitLabTokenManager implements Serializable
         GitLabToken oldToken = this.token;
         this.token = tokenResponse.getAccessToken();
         this.refreshToken = tokenResponse.getRefreshToken();
-        this.setTokenExpiry(tokenResponse.getExpiryIn());
+        this.setTokenExpiry(tokenResponse.getExpiryInSecs());
         return !token.equals(oldToken);
     }
 

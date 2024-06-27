@@ -23,9 +23,11 @@ public class TestGitLabSession implements GitLabSession
 
     private GitLabToken token;
 
-    private GitLabToken refreshToken;
+    private String refreshToken;
 
     private LocalDateTime tokenExpiry;
+
+    private static final long DEFAULT_EXPIRY_SECS = 7200;
 
     public TestGitLabSession(String userId)
     {
@@ -75,25 +77,29 @@ public class TestGitLabSession implements GitLabSession
     }
 
     @Override
-    public void setRefreshToken(GitLabToken refreshToken)
+    public void setRefreshToken(String refreshToken)
     {
         this.refreshToken = refreshToken;
     }
 
     @Override
-    public GitLabToken getRefreshToken()
+    public String getRefreshToken()
     {
         return this.refreshToken;
     }
 
     @Override
-    public void setTokenExpiry(long expiryIn)
+    public void setTokenExpiry(long expiresInSecs)
     {
-        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiryIn - 1800);
+        if (expiresInSecs <= 0L)
+        {
+            expiresInSecs = DEFAULT_EXPIRY_SECS;
+        }
+        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiresInSecs * 3 / 4);
     }
 
     @Override
-    public boolean isTokenExpired()
+    public boolean shouldRefreshToken()
     {
         return LocalDateTime.now().isAfter(this.tokenExpiry);
     }

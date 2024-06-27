@@ -85,6 +85,7 @@ public class GitLabApiTestSetupUtil
 
         session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oauthToken));
         session.setRefreshToken(null);
+        session.setTokenExpiry(0L);
         LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
 
         GitLabAuthorizerManager authorizerManager = GitLabAuthorizerManager.newManager(Collections.emptyList());

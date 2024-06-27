@@ -87,13 +87,13 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public void setRefreshToken(GitLabToken token)
+    public void setRefreshToken(String refreshToken)
     {
         throw new UnsupportedOperationException("Not implemented");
     }
 
     @Override
-    public GitLabToken getRefreshToken()
+    public String getRefreshToken()
     {
         return null;
     }
@@ -105,7 +105,7 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public boolean isTokenExpired()
+    public boolean shouldRefreshToken()
     {
         return false;
     }

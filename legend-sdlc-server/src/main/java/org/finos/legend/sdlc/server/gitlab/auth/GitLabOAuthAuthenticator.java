@@ -242,13 +242,13 @@ public class GitLabOAuthAuthenticator
         return executeAndRetrieveTokenResponse(entity, this.appInfo);
     }
 
-    public static GitLabTokenResponse getOAuthTokenFromRefreshToken(GitLabToken refreshToken, GitLabAppInfo appInfo)
+    public static GitLabTokenResponse getOAuthTokenFromRefreshToken(String refreshToken, GitLabAppInfo appInfo)
     {
         HttpEntity entity = EntityBuilder.create()
                 .setParameters(
                         new BasicNameValuePair(APP_ID_PARAM, appInfo.getAppId()),
                         new BasicNameValuePair(APP_SECRET_PARAM, appInfo.getAppSecret()),
-                        new BasicNameValuePair(REFRESH_TOKEN_PARAM, refreshToken.getToken()),
+                        new BasicNameValuePair(REFRESH_TOKEN_PARAM, refreshToken),
                         new BasicNameValuePair(GRANT_TYPE_PARAM, REFRESH_TOKEN_PARAM),
                         new BasicNameValuePair(APP_REDIRECT_URI_PARAM, appInfo.getAppRedirectURI()))
                 .build();
@@ -378,8 +378,8 @@ public class GitLabOAuthAuthenticator
             {
                 case CODE_PARAM:
                 {
-                        code = nvp.getValue();
-                        break;
+                    code = nvp.getValue();
+                    break;
                 }
                 case STATE_PARAM:
                 {

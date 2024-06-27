@@ -84,13 +84,13 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     }
 
     @Override
-    public void setRefreshToken(GitLabToken refreshToken)
+    public void setRefreshToken(String refreshToken)
     {
         this.tokenManager.setRefreshToken(refreshToken);
     }
 
     @Override
-    public GitLabToken getRefreshToken()
+    public String getRefreshToken()
     {
         return this.tokenManager.getRefreshToken();
     }
@@ -102,9 +102,9 @@ public class GitLabKerberosSession extends BaseKerberosSession<KerberosProfile> 
     }
 
     @Override
-    public boolean isTokenExpired()
+    public boolean shouldRefreshToken()
     {
-        return this.tokenManager.isTokenExpired();
+        return this.tokenManager.shouldRefreshToken();
     }
 
     @Override
