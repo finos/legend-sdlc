@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.gitlab4j.api.Constants.TokenType;
 
+import java.util.Objects;
+
 public class GitLabTokenResponse
 {
     private final GitLabToken accessToken;
@@ -44,14 +46,14 @@ public class GitLabTokenResponse
 
         GitLabTokenResponse that = (GitLabTokenResponse) other;
         return this.accessToken.equals(that.accessToken) &&
-                this.refreshToken.equals(that.refreshToken) &&
+                Objects.equals(this.refreshToken, that.refreshToken) &&
                 this.expiresInSecs == that.expiresInSecs;
     }
 
     @Override
     public int hashCode()
     {
-        return this.accessToken.hashCode() + 31 * (this.refreshToken.hashCode() + 31 * Long.hashCode(this.expiresInSecs));
+        return this.accessToken.hashCode() + 31 * (Objects.hashCode(this.refreshToken) + 31 * Long.hashCode(this.expiresInSecs));
     }
 
     public GitLabToken getAccessToken()
