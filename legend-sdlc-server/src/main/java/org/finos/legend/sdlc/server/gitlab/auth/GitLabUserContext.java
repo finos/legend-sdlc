@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.server.guice.UserContext;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -33,11 +34,12 @@ import java.util.Objects;
 @RequestScoped
 public class GitLabUserContext extends UserContext
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabUserContext.class);
+
     private final GitLabAuthorizerManager authorizerManager;
     private final GitLabAppInfo appInfo;
 
     private GitLabApi api;
-    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GitLabUserContext.class);
 
     @Inject
     public GitLabUserContext(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAuthorizerManager authorizerManager, GitLabAppInfo appInfo)
@@ -87,14 +89,9 @@ public class GitLabUserContext extends UserContext
                             LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                         }
                     }
-                    catch (GitLabAuthException e)
-                    {
-                        LOGGER.info(e.getMessage());
-                        token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
-
-                    }
                     catch (Exception e)
                     {
+                        LOGGER.warn("Error refreshing token", e);
                         token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
                     }
                 }
