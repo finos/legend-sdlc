@@ -46,11 +46,11 @@ public class GitLabAuthorizerManager
         return new GitLabAuthorizerManager(gitLabAuthorizers);
     }
 
-    public GitLabToken authorize(Session session, GitLabAppInfo appInfo)
+    public GitLabTokenResponse authorize(Session session, GitLabAppInfo appInfo)
     {
         for (GitLabAuthorizer gitLabAuthorizer : this.gitLabAuthorizers)
         {
-            GitLabToken token = gitLabAuthorizer.authorize(session, appInfo);
+            GitLabTokenResponse token = gitLabAuthorizer.authorize(session, appInfo);
             if (token != null)
             {
                 return token;
