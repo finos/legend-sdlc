@@ -21,6 +21,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -36,6 +37,7 @@ public class GitLabUserContext extends UserContext
     private final GitLabAppInfo appInfo;
 
     private GitLabApi api;
+    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(GitLabUserContext.class);
 
     @Inject
     public GitLabUserContext(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAuthorizerManager authorizerManager, GitLabAppInfo appInfo)
@@ -65,7 +67,6 @@ public class GitLabUserContext extends UserContext
         {
             GitLabSession gitLabSession = getGitLabSession();
             GitLabToken token = gitLabSession.getGitLabToken();
-            GitLabTokenResponse tokenResponse;
             if (token == null)
             {
                 token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
@@ -76,7 +77,7 @@ public class GitLabUserContext extends UserContext
                 {
                     try
                     {
-                        tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
+                        GitLabTokenResponse tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
                         if (tokenResponse != null)
                         {
                             gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
@@ -85,6 +86,12 @@ public class GitLabUserContext extends UserContext
                             token = gitLabSession.getGitLabToken();
                             LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                         }
+                    }
+                    catch (GitLabAuthException e)
+                    {
+                        LOGGER.info(e.getMessage());
+                        token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
+
                     }
                     catch (Exception e)
                     {
