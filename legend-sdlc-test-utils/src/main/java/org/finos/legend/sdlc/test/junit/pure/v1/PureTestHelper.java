@@ -121,6 +121,7 @@ class PureTestHelper
             return PureModelBuilder.newBuilder()
                     .withEntitiesIfPossible(entityLoader.getAllEntities())
                     .withClassLoader(classLoader)
+                    .withParallelCompiler(true)
                     .build();
         }
         catch (Exception e)

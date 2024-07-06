@@ -73,7 +73,11 @@ public class LegendSDLCTestSuiteBuilder
         this.pureVersion = pureVersion;
         this.testableClassifiers = TestableRunnerExtensionLoader.getClassifierPathToTestableRunnerMap(classLoader).keySet();
         this.entities = getEntities(classLoader);
-        PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntitiesIfPossible(this.entities).withClassLoader(classLoader).build();
+        PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder()
+                .withEntitiesIfPossible(this.entities)
+                .withClassLoader(classLoader)
+                .withParallelCompiler(true)
+                .build();
         this.pureModel = pureModelWithContextData.getPureModel();
         this.pureModelContextData = pureModelWithContextData.getPureModelContextData();
         this.protocolIndex = Iterate.groupByUniqueKey(this.pureModelContextData.getElements(), PackageableElement::getPath);

@@ -27,6 +27,8 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
 
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.ServiceLoader;
 import java.util.stream.Stream;
 
@@ -36,6 +38,7 @@ public class PureModelBuilder
     private ClassLoader classLoader;
     private CompilerExtensions extensions;
     private String packagePrefix;
+    private boolean parallelCompiler;
 
     private PureModelBuilder(EntityToPureConverter converter)
     {
@@ -217,7 +220,49 @@ public class PureModelBuilder
 
     private PureModel buildPureModel(PureModelContextData pureModelContextData)
     {
-        return new PureModel(pureModelContextData, getExtensions(), null, this.classLoader, DeploymentMode.PROD, new PureModelProcessParameter(this.packagePrefix), null);
+        ForkJoinPool pool = null;
+
+        if (this.parallelCompiler)
+        {
+            int parallelism = Runtime.getRuntime().availableProcessors();
+
+            if (this.classLoader != null)
+            {
+                pool = new ForkJoinPool(
+                        parallelism,
+                        p ->
+                        {
+                            ForkJoinWorkerThread workerThread = new ForkJoinWorkerThread(p)
+                            {
+
+                            };
+                            workerThread.setContextClassLoader(this.classLoader);
+                            return workerThread;
+                        },
+                        null,
+                        false
+                );
+            }
+            else
+            {
+                pool = new ForkJoinPool(parallelism);
+            }
+        }
+        PureModelProcessParameter pureModelProcessParameter = PureModelProcessParameter.newBuilder()
+                .withPackagePrefix(this.packagePrefix)
+                .withForkJoinPool(pool)
+                .build();
+        try
+        {
+            return new PureModel(pureModelContextData, getExtensions(), null, this.classLoader, DeploymentMode.PROD, pureModelProcessParameter, null);
+        }
+        finally
+        {
+            if (pool != null)
+            {
+                pool.shutdown();
+            }
+        }
     }
 
     private CompilerExtensions getExtensions()
@@ -238,6 +283,12 @@ public class PureModelBuilder
     public static PureModelBuilder newBuilder(EntityToPureConverter converter)
     {
         return new PureModelBuilder(converter);
+    }
+
+    public PureModelBuilder withParallelCompiler(boolean parallelCompiler)
+    {
+        this.parallelCompiler = parallelCompiler;
+        return this;
     }
 
     public static class PureModelWithContextData
