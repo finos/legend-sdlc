@@ -355,7 +355,7 @@ public class GitLabOAuthAuthenticator
     {
         int redirectURILength = getAppRedirectURI().length();
         char nextChar = location.charAt(redirectURILength);
-        if (nextChar != '#' || nextChar != '?')
+        if (nextChar != '#' && nextChar != '?')
         {
             throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": expected URI of the form " + getAppRedirectURI() + "...");
         }
