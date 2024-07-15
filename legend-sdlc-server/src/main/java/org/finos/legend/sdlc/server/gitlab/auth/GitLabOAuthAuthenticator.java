@@ -73,8 +73,6 @@ public class GitLabOAuthAuthenticator
     private static final String OAUTH_TOKEN_PATH = "/oauth/token";
 
     private static final String ACCESS_TOKEN_PARAM = "access_token";
-    private static final String REFRESH_TOKEN_PARAM = "refresh_token";
-    private static final String EXPIRES_IN_PARAM = "expires_in";
     private static final String APP_ID_PARAM = "client_id";
     private static final String APP_REDIRECT_URI_PARAM = "redirect_uri";
     private static final String APP_SECRET_PARAM = "client_secret";
@@ -86,6 +84,7 @@ public class GitLabOAuthAuthenticator
 
     private static final String AUTHORIZATION_CODE_GRANT_TYPE = "authorization_code";
     private static final String CODE_RESPONSE_TYPE = "code";
+    private static final String TOKEN_RESPONSE_TYPE = "token";
     private static final String BEARER_TOKEN_TYPE = "bearer";
 
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy()
@@ -104,7 +103,7 @@ public class GitLabOAuthAuthenticator
         this.appInfo = appInfo;
     }
 
-    public GitLabTokenResponse getOAuthTokenResponseFromSessionCookie(Cookie sessionCookie)
+    public String getOAuthTokenFromSessionCookie(Cookie sessionCookie)
     {
         CookieStore cookieStore = new BasicCookieStore();
         cookieStore.addCookie(sessionCookie);
@@ -112,7 +111,7 @@ public class GitLabOAuthAuthenticator
         try (CloseableHttpClient client = HttpClientBuilder.create().setDefaultCookieStore(cookieStore).setRedirectStrategy(this.redirectStrategy).build())
         {
             String state = getRandomState();
-            URI authURI = buildAuthURI(this.appInfo, state, CODE_RESPONSE_TYPE);
+            URI authURI = buildAuthURI(state);
             try (CloseableHttpResponse response = client.execute(new HttpGet(authURI)))
             {
                 // We expect a redirect to the redirect URI plus a fragment containing the access token
@@ -184,11 +183,8 @@ public class GitLabOAuthAuthenticator
                     throw new GitLabAuthOtherException(message.toString());
                 }
 
-                // Get the code from the location
-                String code = getCodeFromLocation(location, state);
-
-                // get access token from code
-                return getOAuthTokenResponseFromAuthCode(code);
+                // Get the access token from the location
+                return getAccessTokenFromLocation(location, state);
             }
         }
         catch (UserInputRequiredException | GitLabAuthException e)
@@ -229,38 +225,20 @@ public class GitLabOAuthAuthenticator
         }
     }
 
-    GitLabTokenResponse getOAuthTokenResponseFromAuthCode(String code)
-    {
-        HttpEntity entity = EntityBuilder.create()
-                .setParameters(
-                        new BasicNameValuePair(APP_ID_PARAM, this.appInfo.getAppId()),
-                        new BasicNameValuePair(APP_SECRET_PARAM, this.appInfo.getAppSecret()),
-                        new BasicNameValuePair(CODE_PARAM, code),
-                        new BasicNameValuePair(GRANT_TYPE_PARAM, AUTHORIZATION_CODE_GRANT_TYPE),
-                        new BasicNameValuePair(APP_REDIRECT_URI_PARAM, this.appInfo.getAppRedirectURI()))
-                .build();
-        return executeAndRetrieveTokenResponse(entity, this.appInfo);
-    }
-
-    public static GitLabTokenResponse getOAuthTokenFromRefreshToken(String refreshToken, GitLabAppInfo appInfo)
-    {
-        HttpEntity entity = EntityBuilder.create()
-                .setParameters(
-                        new BasicNameValuePair(APP_ID_PARAM, appInfo.getAppId()),
-                        new BasicNameValuePair(APP_SECRET_PARAM, appInfo.getAppSecret()),
-                        new BasicNameValuePair(REFRESH_TOKEN_PARAM, refreshToken),
-                        new BasicNameValuePair(GRANT_TYPE_PARAM, REFRESH_TOKEN_PARAM),
-                        new BasicNameValuePair(APP_REDIRECT_URI_PARAM, appInfo.getAppRedirectURI()))
-                .build();
-        return executeAndRetrieveTokenResponse(entity, appInfo);
-    }
-
-    private static GitLabTokenResponse executeAndRetrieveTokenResponse(HttpEntity entity, GitLabAppInfo appInfo)
+    String getOAuthTokenFromAuthCode(String code)
     {
         try (CloseableHttpClient client = HttpClientBuilder.create().build())
         {
-            URI uri = appInfo.getServerInfo().newURIBuilder().setPath(OAUTH_TOKEN_PATH).build();
+            URI uri = this.appInfo.getServerInfo().newURIBuilder().setPath(OAUTH_TOKEN_PATH).build();
             HttpPost post = new HttpPost(uri);
+            HttpEntity entity = EntityBuilder.create()
+                .setParameters(
+                    new BasicNameValuePair(APP_ID_PARAM, this.appInfo.getAppId()),
+                    new BasicNameValuePair(APP_SECRET_PARAM, this.appInfo.getAppSecret()),
+                    new BasicNameValuePair(CODE_PARAM, code),
+                    new BasicNameValuePair(GRANT_TYPE_PARAM, AUTHORIZATION_CODE_GRANT_TYPE),
+                    new BasicNameValuePair(APP_REDIRECT_URI_PARAM, this.appInfo.getAppRedirectURI()))
+                .build();
             post.setEntity(entity);
             String responseString;
             try (CloseableHttpResponse response = client.execute(post))
@@ -287,19 +265,12 @@ public class GitLabOAuthAuthenticator
             {
                 throw new GitLabAuthOtherException("Could not get access token from URI " + uri + ": no access token in response: " + responseString);
             }
-            Object newRefreshToken = responseObject.get(REFRESH_TOKEN_PARAM);
-            if (!(newRefreshToken instanceof String))
-            {
-                throw new GitLabAuthOtherException("Could not get refresh token from URI " + uri + ": no refresh token in response: " + responseString);
-            }
-            Object expiresIn = responseObject.get(EXPIRES_IN_PARAM);
-
             Object tokenType = responseObject.get(TOKEN_TYPE_PARAM);
             if (!(tokenType instanceof String) || !BEARER_TOKEN_TYPE.equalsIgnoreCase((String) tokenType))
             {
                 throw new GitLabAuthOtherException("Could not get access token from URI " + uri + ": wrong token type in response (expected " + BEARER_TOKEN_TYPE + "): " + responseString);
             }
-            return new GitLabTokenResponse((String) accessToken, (String) newRefreshToken, (Integer) expiresIn);
+            return (String) accessToken;
         }
         catch (GitLabAuthException e)
         {
@@ -311,7 +282,7 @@ public class GitLabOAuthAuthenticator
         }
     }
 
-    private static boolean isSuccessStatus(int statusCode)
+    private boolean isSuccessStatus(int statusCode)
     {
         return (200 <= statusCode) && (statusCode < 300);
     }
@@ -321,7 +292,7 @@ public class GitLabOAuthAuthenticator
         return (301 <= statusCode) && (statusCode < 400);
     }
 
-    private static String readResponseEntityForAuthError(HttpResponse response)
+    private String readResponseEntityForAuthError(HttpResponse response)
     {
         try
         {
@@ -340,6 +311,11 @@ public class GitLabOAuthAuthenticator
         return this.appInfo.getAppRedirectURI();
     }
 
+    private URI buildAuthURI(String state)
+    {
+        return buildAuthURI(this.appInfo, state, TOKEN_RESPONSE_TYPE);
+    }
+
     private String getLocationHeaderValue(HttpResponse response)
     {
         Header locationHeader = response.getFirstHeader("location");
@@ -351,13 +327,13 @@ public class GitLabOAuthAuthenticator
         return (location != null) && location.startsWith(getAppRedirectURI());
     }
 
-    private String getCodeFromLocation(String location, String expectedState)
+    private String getAccessTokenFromLocation(String location, String expectedState)
     {
         int redirectURILength = getAppRedirectURI().length();
         char nextChar = location.charAt(redirectURILength);
-        if (nextChar != '#' && nextChar != '?')
+        if (nextChar != '#')
         {
-            throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": expected URI of the form " + getAppRedirectURI() + "...");
+            throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": expected URI of the form " + getAppRedirectURI() + "#...");
         }
 
         List<NameValuePair> parameters;
@@ -370,15 +346,15 @@ public class GitLabOAuthAuthenticator
             throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": could not parse parameters from fragment", e);
         }
 
-        String code = null;
+        String accessToken = null;
         boolean foundState = false;
         for (NameValuePair nvp : parameters)
         {
             switch (nvp.getName())
             {
-                case CODE_PARAM:
+                case ACCESS_TOKEN_PARAM:
                 {
-                    code = nvp.getValue();
+                    accessToken = nvp.getValue();
                     break;
                 }
                 case STATE_PARAM:
@@ -408,11 +384,11 @@ public class GitLabOAuthAuthenticator
         {
             throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": expected state " + expectedState + ", found no state");
         }
-        if (code == null)
+        if (accessToken == null)
         {
-            throw new GitLabAuthOtherException("Could not get code from redirect URI " + location + ": found no code");
+            throw new GitLabAuthOtherException("Could not get access token from redirect URI " + location + ": found no access token");
         }
-        return code;
+        return accessToken;
     }
 
     private String getRandomState()

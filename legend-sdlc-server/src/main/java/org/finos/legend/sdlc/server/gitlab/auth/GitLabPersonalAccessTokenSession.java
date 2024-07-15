@@ -87,30 +87,6 @@ public class GitLabPersonalAccessTokenSession extends BaseCommonProfileSession<G
     }
 
     @Override
-    public void setRefreshToken(String refreshToken)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public String getRefreshToken()
-    {
-        return null;
-    }
-
-    @Override
-    public void setTokenExpiry(long expiresInSecs)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public boolean shouldRefreshToken()
-    {
-        return false;
-    }
-
-    @Override
     public Token.TokenBuilder encode(Token.TokenBuilder builder)
     {
         return this.tokenManager.encode(super.encode(builder));

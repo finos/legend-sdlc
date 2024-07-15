@@ -19,5 +19,5 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 public interface GitLabAuthorizer
 {
-    GitLabTokenResponse authorize(Session session, GitLabAppInfo appInfo);
+    GitLabToken authorize(Session session, GitLabAppInfo appInfo);
 }

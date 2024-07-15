@@ -25,12 +25,4 @@ public interface GitLabSession extends Session
     void clearGitLabToken();
 
     void setGitLabToken(GitLabToken token);
-
-    void setRefreshToken(String refreshToken);
-
-    String getRefreshToken();
-
-    void setTokenExpiry(long expiresInSecs);
-
-    boolean shouldRefreshToken();
 }

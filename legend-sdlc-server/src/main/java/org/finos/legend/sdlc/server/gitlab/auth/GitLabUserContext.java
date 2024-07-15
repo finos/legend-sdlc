@@ -21,8 +21,6 @@ import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApi.ApiVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -34,8 +32,6 @@ import java.util.Objects;
 @RequestScoped
 public class GitLabUserContext extends UserContext
 {
-    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabUserContext.class);
-
     private final GitLabAuthorizerManager authorizerManager;
     private final GitLabAppInfo appInfo;
 
@@ -71,79 +67,42 @@ public class GitLabUserContext extends UserContext
             GitLabToken token = gitLabSession.getGitLabToken();
             if (token == null)
             {
-                token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
-            }
-            else if (gitLabSession.shouldRefreshToken())
-            {
-                if (gitLabSession.getRefreshToken() != null)
+                try
                 {
-                    try
-                    {
-                        GitLabTokenResponse tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
-                        if (tokenResponse != null)
-                        {
-                            gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
-                            gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-                            gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
-                            token = gitLabSession.getGitLabToken();
-                            LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        LOGGER.warn("Error refreshing token", e);
-                        token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
-                    }
+                    token = authorizerManager.authorize(session, this.appInfo);
+                }
+                catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
+                {
+                    URI redirectURI = GitLabOAuthAuthenticator.buildAppAuthorizationURI(e.getAppInfo(), this.httpRequest);
+                    throw new LegendSDLCServerException(redirectURI.toString(), Status.FOUND);
+                }
+                catch (GitLabAuthFailureException e)
+                {
+                    throw new LegendSDLCServerException(e.getMessage(), Status.FORBIDDEN, e);
+                }
+                catch (GitLabAuthException e)
+                {
+                    throw new LegendSDLCServerException(e.getMessage(), Status.INTERNAL_SERVER_ERROR, e);
+                }
+                if (token != null)
+                {
+                    gitLabSession.setGitLabToken(token);
+                    LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+                }
+                else if (redirectAllowed)
+                {
+                    URI redirectURI = GitLabOAuthAuthenticator.buildAppAuthorizationURI(this.appInfo, this.httpRequest);
+                    throw new LegendSDLCServerException(redirectURI.toString(), Status.FOUND);
                 }
                 else
                 {
-                    token = setGitlabTokenForSession(redirectAllowed, gitLabSession);
+                    throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
                 }
+
             }
             this.api = new GitLabApi(ApiVersion.V4, this.appInfo.getServerInfo().getGitLabURLString(), token.getTokenType(), token.getToken());
         }
         return this.api;
-    }
-
-    private GitLabToken setGitlabTokenForSession(boolean redirectAllowed, GitLabSession gitLabSession)
-    {
-        GitLabToken token;
-        GitLabTokenResponse tokenResponse;
-        try
-        {
-            tokenResponse = authorizerManager.authorize(session, this.appInfo);
-        }
-        catch (GitLabOAuthAuthenticator.UserInputRequiredException e)
-        {
-            URI redirectURI = GitLabOAuthAuthenticator.buildAppAuthorizationURI(e.getAppInfo(), this.httpRequest);
-            throw new LegendSDLCServerException(redirectURI.toString(), Status.FOUND);
-        }
-        catch (GitLabAuthFailureException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Status.FORBIDDEN, e);
-        }
-        catch (GitLabAuthException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Status.INTERNAL_SERVER_ERROR, e);
-        }
-        if (tokenResponse != null)
-        {
-            gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
-            gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-            gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
-            token = gitLabSession.getGitLabToken();
-            LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
-        }
-        else if (redirectAllowed)
-        {
-            URI redirectURI = GitLabOAuthAuthenticator.buildAppAuthorizationURI(this.appInfo, this.httpRequest);
-            throw new LegendSDLCServerException(redirectURI.toString(), Status.FOUND);
-        }
-        else
-        {
-            throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
-        }
-        return token;
     }
 
     public boolean isUserAuthorized()
@@ -155,15 +114,13 @@ public class GitLabUserContext extends UserContext
             {
                 try
                 {
-                    GitLabTokenResponse tokenResponse = authorizerManager.authorize(session, this.appInfo);
-                    if (tokenResponse.getAccessToken() == null)
+                    GitLabToken token = authorizerManager.authorize(session, this.appInfo);
+                    if (token == null)
                     {
                         return false;
                     }
                     // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                    gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
-                    gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-                    gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
+                    gitLabSession.setGitLabToken(token);
                     LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
                 }
                 catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
