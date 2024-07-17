@@ -14,11 +14,6 @@
 
 package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 
-import java.util.Optional;
-import java.util.ServiceLoader;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.stream.Stream;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModelProcessParameter;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.extension.CompilerExtension;
@@ -31,6 +26,11 @@ import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
+
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.ServiceLoader;
+import java.util.stream.Stream;
 
 public class PureModelBuilder
 {
@@ -226,23 +226,27 @@ public class PureModelBuilder
         {
             int parallelism = Runtime.getRuntime().availableProcessors();
 
-            ClassLoader cl = Optional.ofNullable(this.classLoader)
-                    .orElse(Thread.currentThread().getContextClassLoader());
-
-            pool = new ForkJoinPool(
-                    parallelism,
-                    p ->
-                    {
-                        ForkJoinWorkerThread workerThread = new ForkJoinWorkerThread(p)
+            if (this.classLoader != null)
+            {
+                pool = new ForkJoinPool(
+                        parallelism,
+                        p ->
                         {
+                            ForkJoinWorkerThread workerThread = new ForkJoinWorkerThread(p)
+                            {
 
-                        };
-                        workerThread.setContextClassLoader(cl);
-                        return workerThread;
-                    },
-                    null,
-                    false
-            );
+                            };
+                            workerThread.setContextClassLoader(this.classLoader);
+                            return workerThread;
+                        },
+                        null,
+                        false
+                );
+            }
+            else
+            {
+                pool = new ForkJoinPool(parallelism);
+            }
         }
         PureModelProcessParameter pureModelProcessParameter = PureModelProcessParameter.newBuilder()
                 .withPackagePrefix(this.packagePrefix)
