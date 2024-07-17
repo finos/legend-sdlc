@@ -83,8 +83,7 @@ public class ModelGenerationMojo extends AbstractMojo
         // Load Model
         long modelStart = System.nanoTime();
         getLog().info("Start loading model");
-        PureModelBuilder pureModelBuilder = PureModelBuilder.newBuilder()
-                .withParallelCompiler(true);
+        PureModelBuilder pureModelBuilder = PureModelBuilder.newBuilder();
         try (EntityLoader allEntities = EntityLoader.newEntityLoader(Thread.currentThread().getContextClassLoader()))
         {
             pureModelBuilder.addEntitiesIfPossible(allEntities.getAllEntities());

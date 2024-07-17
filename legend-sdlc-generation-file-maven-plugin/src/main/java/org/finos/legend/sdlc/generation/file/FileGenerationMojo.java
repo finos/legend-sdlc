@@ -117,11 +117,7 @@ public class FileGenerationMojo extends AbstractMojo
         }
 
         getLog().info("Compiling model");
-        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder
-                .withSDLC(buildSDLCInfo())
-                .withProtocol(buildProtocol())
-                .withParallelCompiler(true)
-                .build();
+        PureModelBuilder.PureModelWithContextData pureModelWithContextData = pureModelBuilder.withSDLC(buildSDLCInfo()).withProtocol(buildProtocol()).build();
         PureModelContextData pureModelContextData = pureModelWithContextData.getPureModelContextData();
         PureModel pureModel = pureModelWithContextData.getPureModel();
         long modelEnd = System.nanoTime();
