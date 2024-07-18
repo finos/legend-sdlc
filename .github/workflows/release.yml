@@ -28,6 +28,12 @@ on:
       releaseVersion:
         description: "New release version"
         required: true
+      logLevel:
+        type: choice
+        description: Choose logging level
+        options:
+        - info
+        - debug
 
 jobs:
   release:
@@ -73,4 +79,4 @@ jobs:
         run: mvn -B -DpreparationGoals=clean release:prepare -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} -P release
 
       - name: Perform release
-        run: mvn -B release:perform -P release,docker
+        run: mvn -Dorg.slf4j.simpleLogger.defaultLogLevel=${{ github.event.inputs.logLevel }} -B release:perform -P release,docker
