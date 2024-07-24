@@ -152,13 +152,13 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         }
 
         StringBuilder builder = appendPackagePrefixIfPresent(new StringBuilder());
-        EntityPaths.forEachPathElement(variable._class, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
+        EntityPaths.forEachPathElement(variable._class.path, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
         return builder.toString();
     }
 
     private static Class<?> getVariableJavaClass(Variable variable, boolean usePrimitive)
     {
-        switch (variable._class)
+        switch (variable._class.path)
         {
             case "String":
             {
@@ -267,7 +267,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
 
         StringBuilder appendTypeString(StringBuilder builder)
         {
-            return ("Byte".equals(variable._class) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
+            return ("Byte".equals(variable._class.path) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
                     builder.append(this.javaParamRawType) :
                     builder.append("List<? extends ").append(this.javaParamRawType).append('>');
         }

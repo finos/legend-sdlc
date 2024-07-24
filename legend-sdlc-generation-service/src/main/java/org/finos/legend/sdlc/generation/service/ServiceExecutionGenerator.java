@@ -349,7 +349,7 @@ public class ServiceExecutionGenerator
         MutableSet<String> enumerationPaths = Sets.mutable.empty();
         ((PureExecution) service.execution).func.parameters.forEach(var ->
         {
-            String type = var._class;
+            String type = var._class.path;
             if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
             {
                 Enumeration<? extends Enum> enumeration;

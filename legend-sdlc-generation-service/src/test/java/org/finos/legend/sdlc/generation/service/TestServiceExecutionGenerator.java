@@ -436,8 +436,8 @@ public class TestServiceExecutionGenerator
         // Generate
         Set<String> enumClasses = LazyIterate.flatCollect(services, s -> ((PureExecution) s.execution).func.parameters)
                 .collectIf(
-                        p -> !PrimitiveUtilities.isPrimitiveTypeName(p._class),
-                        p -> org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.getUserPathForPackageableElement(PURE_MODEL.getEnumeration(p._class, null)),
+                        p -> !PrimitiveUtilities.isPrimitiveTypeName(p._class.path),
+                        p -> org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.getUserPathForPackageableElement(PURE_MODEL.getEnumeration(p._class.path, null)),
                         Sets.mutable.empty());
 
         // Check generated files

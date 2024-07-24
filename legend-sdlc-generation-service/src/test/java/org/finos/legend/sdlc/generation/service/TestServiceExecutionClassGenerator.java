@@ -193,9 +193,9 @@ public class TestServiceExecutionClassGenerator
         MutableMap<String, Enumeration<? extends Enum>> enumerations = Maps.mutable.empty();
         ((PureExecution) service.execution).func.parameters.forEach(p ->
         {
-            if (!PrimitiveUtilities.isPrimitiveTypeName(p._class))
+            if (!PrimitiveUtilities.isPrimitiveTypeName(p._class.path))
             {
-                enumerations.getIfAbsentPut(p._class, () -> PURE_MODEL.getEnumeration(p._class, null));
+                enumerations.getIfAbsentPut(p._class.path, () -> PURE_MODEL.getEnumeration(p._class.path, null));
             }
         });
         for (Pair<String, Enumeration<? extends Enum>> pair : enumerations.keyValuesView())
