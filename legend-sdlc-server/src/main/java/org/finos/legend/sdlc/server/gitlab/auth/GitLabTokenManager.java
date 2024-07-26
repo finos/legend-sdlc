@@ -151,6 +151,8 @@ class GitLabTokenManager implements Serializable
             builder.putString(this.appInfo.getAppId());
             builder.putString(token.getTokenType().toString());
             builder.putString(token.getToken());
+            builder.putString(this.refreshToken);
+            builder.putString(this.tokenExpiry.toString());
         }
         return builder;
     }
@@ -164,6 +166,8 @@ class GitLabTokenManager implements Serializable
             String appId = reader.getString();
             String typeName = reader.getString();
             String token = reader.getString();
+            String refreshToken = reader.getString();
+            LocalDateTime tokenExpiry = LocalDateTime.parse(reader.getString());
 
             if ((appId != null) && (typeName != null) && (token != null) && appId.equals(this.appInfo.getAppId()))
             {
@@ -178,6 +182,8 @@ class GitLabTokenManager implements Serializable
                     continue;
                 }
                 this.token = GitLabToken.newGitLabToken(type, token);
+                this.refreshToken = refreshToken;
+                this.setTokenExpiry(tokenExpiry);
             }
         }
     }
