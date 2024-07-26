@@ -79,6 +79,7 @@ public class GitLabUserContext extends UserContext
                 {
                     try
                     {
+                        LOGGER.debug("Refreshing token for user: {}", session.getUserId());
                         GitLabTokenResponse tokenResponse = GitLabOAuthAuthenticator.getOAuthTokenFromRefreshToken(gitLabSession.getRefreshToken(), appInfo);
                         if (tokenResponse != null)
                         {
