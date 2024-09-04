@@ -109,6 +109,12 @@ public class TestJUnitTestGeneratorCompilation
         testCompilation("testTestSuites.TestServiceStoreMapping", "testTestSuites::ServiceStoreMapping");
     }
 
+    @Test
+    public void testFunctionTest()
+    {
+        testCompilation("model.domain.TestFunctionTest__String_0_1_", "model::domain::FunctionTest__String_$0_1$_");
+    }
+
     private void testCompilation(String expectedClassName, String entityPath)
     {
         testCompilation(Collections.singletonList(expectedClassName), entityPath);

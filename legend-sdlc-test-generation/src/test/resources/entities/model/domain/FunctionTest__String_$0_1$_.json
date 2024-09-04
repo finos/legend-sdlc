@@ -1,0 +1,22 @@
+{
+  "classifierPath" : "meta::pure::metamodel::function::ConcreteFunctionDefinition",
+  "content" : {
+    "_type" : "function",
+    "body" : [ {
+      "_type" : "string",
+      "value" : ""
+    } ],
+    "name" : "FunctionTest__String_$0_1$_",
+    "package" : "model::domain",
+    "parameters" : [ ],
+    "postConstraints" : [ ],
+    "preConstraints" : [ ],
+    "returnMultiplicity" : {
+      "lowerBound" : 0,
+      "upperBound" : 1
+    },
+    "returnType" : "String",
+    "stereotypes" : [ ],
+    "taggedValues" : [ ]
+  }
+}

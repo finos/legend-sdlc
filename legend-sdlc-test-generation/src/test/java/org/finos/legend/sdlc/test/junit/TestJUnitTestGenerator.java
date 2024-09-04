@@ -175,6 +175,26 @@ public class TestJUnitTestGenerator extends AbstractGenerationTest
     }
 
     @Test
+    public void testFunctionTest()
+    {
+        testGeneration(
+                "model.domain.TestFunctionTest__String_0_1_",
+                "generated/java/model/domain/TestFunctionTest__String_0_1_.java",
+                null,
+                "model::domain::FunctionTest__String_$0_1$_");
+        testGeneration(
+                "org.finos.legend.sdlc.test.junit.junit4.model.domain.TestFunctionTest__String_0_1_",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java",
+                "org.finos.legend.sdlc.test.junit.junit4",
+                "model::domain::FunctionTest__String_$0_1$_");
+        testGeneration(
+                "other.test.pkg.model.domain.TestFunctionTest__String_0_1_",
+                "generated/java/other/test/pkg/model/domain/TestFunctionTest__String_0_1_.java",
+                "other.test.pkg",
+                "model::domain::FunctionTest__String_$0_1$_");
+    }
+
+    @Test
     public void testNonTestable()
     {
         testEmptyGeneration(null, "testTestSuites::ServiceStore");
