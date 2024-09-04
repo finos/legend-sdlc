@@ -87,7 +87,7 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
 
     private StringBuilder appendJavaIdentifier(StringBuilder builder, String string)
     {
-        char replacement = '$';
+        char replacement = '_';
         if (string.isEmpty())
         {
             return builder.append(replacement);
