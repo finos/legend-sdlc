@@ -92,6 +92,13 @@ public class TestJUnitTestGeneratorCompilation
     }
 
     @Test
+    public void testJavaKeyWordCompilation()
+    {
+        testCompilation("model.mapping.Test_public", "model::mapping::public");
+        testCompilation("model._synchronized.Test__", "model::synchronized::_");
+    }
+
+    @Test
     public void testTestService()
     {
         testCompilation("testTestSuites.TestTestService", "testTestSuites::TestService");
@@ -107,6 +114,12 @@ public class TestJUnitTestGeneratorCompilation
     public void testServiceStoreMapping()
     {
         testCompilation("testTestSuites.TestServiceStoreMapping", "testTestSuites::ServiceStoreMapping");
+    }
+
+    @Test
+    public void testFunctionTest()
+    {
+        testCompilation("model.domain.TestFunctionTest__String_0_1_", "model::domain::FunctionTest__String_$0_1$_");
     }
 
     private void testCompilation(String expectedClassName, String entityPath)

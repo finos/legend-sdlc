@@ -1,0 +1,10 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "package": "model::mapping",
+    "_type": "mapping",
+    "name": "public",
+    "classMappings": [],
+    "tests": []
+  }
+}
