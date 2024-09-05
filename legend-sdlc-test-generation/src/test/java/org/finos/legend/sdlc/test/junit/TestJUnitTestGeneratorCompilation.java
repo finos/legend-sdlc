@@ -92,6 +92,13 @@ public class TestJUnitTestGeneratorCompilation
     }
 
     @Test
+    public void testJavaKeyWordCompilation()
+    {
+        testCompilation("model.mapping.Test_public", "model::mapping::public");
+        testCompilation("model._synchronized.Test__", "model::synchronized::_");
+    }
+
+    @Test
     public void testTestService()
     {
         testCompilation("testTestSuites.TestTestService", "testTestSuites::TestService");

@@ -97,7 +97,7 @@ class AbstractTestClassGenerator extends JavaCodeGenerator
         char replacement = '_';
         if (string.isEmpty())
         {
-            return builder.append(replacement);
+            return builder.append(replacement).append(replacement);
         }
         if (SourceVersion.isKeyword(string))
         {

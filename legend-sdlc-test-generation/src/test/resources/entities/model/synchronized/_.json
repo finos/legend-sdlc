@@ -1,0 +1,10 @@
+{
+  "classifierPath": "meta::pure::mapping::Mapping",
+  "content": {
+    "package": "model::synchronized",
+    "_type": "mapping",
+    "name": "_",
+    "classMappings": [],
+    "tests": []
+  }
+}
