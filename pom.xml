@@ -70,8 +70,8 @@
         <java.version.range>[11,12),[17,18),[21,22)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.58.0</legend.engine.version>
-        <legend.pure.version>5.18.0</legend.pure.version>
+        <legend.engine.version>4.60.0</legend.engine.version>
+        <legend.pure.version>5.18.1</legend.pure.version>
         <legend.shared.version>0.25.6</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -622,7 +622,7 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
-                <artifactId>legend-engine-xt-relationalStore-pure</artifactId>
+                <artifactId>legend-engine-xt-relationalStore-core-pure</artifactId>
                 <version>${legend.engine.version}</version>
                 <exclusions>
                     <exclusion>
