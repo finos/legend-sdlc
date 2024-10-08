@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
 
 import java.util.Collection;
@@ -43,6 +44,11 @@ public abstract class EntityAccessResource extends BaseResource
         Predicate<String> classifierPathPredicate = getClassifierPathPredicate(classifierPaths);
         Predicate<Map<String, ?>> contentPredicate = getContentPredicate(stereotypes, taggedValueRegexes);
         return entityAccessContext.getEntities(entityPathPredicate, classifierPathPredicate, contentPredicate, excludeInvalidEntities);
+    }
+
+    protected List<InvalidEntity> getInvalidEntities(EntityAccessContext entityAccessContext)
+    {
+        return entityAccessContext.getInvalidEntities();
     }
 
     private Predicate<String> getEntityPathPredicate(Set<String> packages, boolean includeSubPackages, String nameRegex)
