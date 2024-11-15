@@ -30,6 +30,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.protocol.pure.v1.model.type.PackageableType;
 import org.finos.legend.engine.shared.core.url.StreamProvider;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
@@ -193,9 +194,9 @@ public class TestServiceExecutionClassGenerator
         MutableMap<String, Enumeration<? extends Enum>> enumerations = Maps.mutable.empty();
         ((PureExecution) service.execution).func.parameters.forEach(p ->
         {
-            if (!PrimitiveUtilities.isPrimitiveTypeName(p._class.path))
+            if (!PrimitiveUtilities.isPrimitiveTypeName(((PackageableType)p.genericType.rawType).fullPath))
             {
-                enumerations.getIfAbsentPut(p._class.path, () -> PURE_MODEL.getEnumeration(p._class.path, null));
+                enumerations.getIfAbsentPut(((PackageableType)p.genericType.rawType).fullPath, () -> PURE_MODEL.getEnumeration(((PackageableType)p.genericType.rawType).fullPath, null));
             }
         });
         for (Pair<String, Enumeration<? extends Enum>> pair : enumerations.keyValuesView())

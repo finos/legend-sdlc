@@ -1,32 +1,45 @@
 {
-  "classifierPath": "meta::pure::metamodel::relationship::Association",
-  "content": {
-    "_type": "association",
-    "name": "Employment",
-    "originalMilestonedProperties": [],
-    "package": "model::domain::associations",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 0
+  "classifierPath" : "meta::pure::metamodel::relationship::Association",
+  "content" : {
+    "_type" : "association",
+    "name" : "Employment",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain::associations",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "model::domain::Firm"
         },
-        "name": "employer",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "model::domain::Firm"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0
+      "multiplicity" : {
+        "lowerBound" : 0
+      },
+      "name" : "employer",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "model::domain::Person"
         },
-        "name": "employees",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "model::domain::Person"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "taggedValues": []
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0
+      },
+      "name" : "employees",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "taggedValues" : [ ]
   }
 }

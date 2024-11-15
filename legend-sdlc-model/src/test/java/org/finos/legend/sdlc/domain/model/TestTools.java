@@ -175,8 +175,18 @@ public class TestTools
     {
         Map<String, Object> map = new HashMap<>(3);
         map.put("name", name);
-        map.put("type", type);
+        map.put("genericType", newGenericType(type));
         map.put("multiplicity", newMultiplicity(minMult, maxMult));
+        return map;
+    }
+
+    private static Map<String, ?> newGenericType(String type)
+    {
+        Map<String, Object> packMap = new HashMap<>(3);
+        packMap.put("_type", "packageableType");
+        packMap.put("fullPath", type);
+        Map<String, Object> map = new HashMap<>(3);
+        map.put("rawType", packMap);
         return map;
     }
 

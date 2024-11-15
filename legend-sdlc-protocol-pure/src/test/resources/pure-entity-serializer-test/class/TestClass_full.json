@@ -1,112 +1,143 @@
 {
-  "classifierPath": "meta::pure::metamodel::type::Class",
-  "content": {
-    "_type": "class",
-    "constraints": [],
-    "name": "TestClass",
-    "originalMilestonedProperties": [],
-    "package": "model::domain",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "TestClass",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "oneName",
-        "stereotypes": [
-          {
-            "profile": "model::domain::TestProfile",
-            "value": "identifier"
-          }
-        ],
-        "taggedValues": [
-          {
-            "tag": {
-              "profile": "model::domain::TestProfile",
-              "value": "tag1"
-            },
-            "value": "some value"
-          },
-          {
-            "tag": {
-              "profile": "model::domain::TestProfile",
-              "value": "tag2"
-            },
-            "value": "some other value"
-          }
-        ],
-        "type": "String"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
-        },
-        "name": "anotherName",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
+      "name" : "oneName",
+      "stereotypes" : [ {
+        "profile" : "model::domain::TestProfile",
+        "value" : "identifier"
+      } ],
+      "taggedValues" : [ {
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "value" : "tag1"
         },
-        "name": "oneDate",
-        "stereotypes": [],
-        "taggedValues": [
-          {
-            "tag": {
-              "profile": "model::domain::TestProfile",
-              "value": "tag1"
-            },
-            "value": "some kind of date"
-          }
-        ],
-        "type": "StrictDate"
+        "value" : "some value"
+      }, {
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "value" : "tag2"
+        },
+        "value" : "some other value"
+      } ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
+        },
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
-        },
-        "name": "anotherDate",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "DateTime"
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
       },
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+      "name" : "anotherName",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "StrictDate"
         },
-        "name": "oneNumber",
-        "stereotypes": [
-          {
-            "profile": "model::domain::TestProfile",
-            "value": "stereotype1"
-          },
-          {
-            "profile": "model::domain::TestProfile",
-            "value": "stereotype2"
-          }
-        ],
-        "taggedValues": [],
-        "type": "Integer"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "oneDate",
+      "stereotypes" : [ ],
+      "taggedValues" : [ {
+        "tag" : {
+          "profile" : "model::domain::TestProfile",
+          "value" : "tag1"
         },
-        "name": "moreNumbers",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "Float"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "superTypes": [],
-    "taggedValues": []
+        "value" : "some kind of date"
+      } ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "DateTime"
+        },
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "anotherDate",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "Integer"
+        },
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "oneNumber",
+      "stereotypes" : [ {
+        "profile" : "model::domain::TestProfile",
+        "value" : "stereotype1"
+      }, {
+        "profile" : "model::domain::TestProfile",
+        "value" : "stereotype2"
+      } ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "Float"
+        },
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0
+      },
+      "name" : "moreNumbers",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "superTypes" : [ ],
+    "taggedValues" : [ ]
   }
 }

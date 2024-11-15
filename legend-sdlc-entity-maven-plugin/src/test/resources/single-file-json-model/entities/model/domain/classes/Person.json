@@ -1,38 +1,49 @@
 {
-  "classifierPath": "meta::pure::metamodel::type::Class",
-  "content": {
-    "_type": "class",
-    "constraints": [],
-    "name": "Person",
-    "originalMilestonedProperties": [],
-    "package": "model::domain::classes",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "Person",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain::classes",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "firstName",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "firstName",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "lastName",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "superTypes": [
-      "model::domain::classes::EntityWithAddresses"
-    ],
-    "taggedValues": []
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "lastName",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "superTypes" : [ "model::domain::classes::EntityWithAddresses" ],
+    "taggedValues" : [ ]
   }
 }

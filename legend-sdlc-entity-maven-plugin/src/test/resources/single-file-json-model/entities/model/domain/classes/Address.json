@@ -1,36 +1,49 @@
 {
-  "classifierPath": "meta::pure::metamodel::type::Class",
-  "content": {
-    "_type": "class",
-    "constraints": [],
-    "name": "Address",
-    "originalMilestonedProperties": [],
-    "package": "model::domain::classes",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "Address",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain::classes",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "model::domain::enums::AddressType"
         },
-        "name": "type",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "model::domain::enums::AddressType"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "type",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "address",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "superTypes": [],
-    "taggedValues": []
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
+      },
+      "name" : "address",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "superTypes" : [ ],
+    "taggedValues" : [ ]
   }
 }

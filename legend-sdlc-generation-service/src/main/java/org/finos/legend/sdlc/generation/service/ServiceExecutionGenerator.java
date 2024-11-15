@@ -38,6 +38,7 @@ import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.protocol.pure.v1.model.type.PackageableType;
 import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
@@ -349,7 +350,7 @@ public class ServiceExecutionGenerator
         MutableSet<String> enumerationPaths = Sets.mutable.empty();
         ((PureExecution) service.execution).func.parameters.forEach(var ->
         {
-            String type = var._class.path;
+            String type = ((PackageableType)var.genericType.rawType).fullPath;
             if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
             {
                 Enumeration<? extends Enum> enumeration;
