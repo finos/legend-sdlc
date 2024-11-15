@@ -13,7 +13,15 @@
         "name": "employees",
         "stereotypes": [],
         "taggedValues": [],
-        "type": "model::domain::Person"
+        "genericType" : {
+          "multiplicityArguments" : [ ],
+          "rawType" : {
+            "_type" : "packageableType",
+            "fullPath" : "model::domain::Person"
+          },
+          "typeArguments" : [ ],
+          "typeVariableValues" : [ ]
+        }
       },
       {
         "multiplicity": {
@@ -23,7 +31,15 @@
         "name": "employer",
         "stereotypes": [],
         "taggedValues": [],
-        "type": "model::domain::Firm"
+        "genericType" : {
+          "multiplicityArguments" : [ ],
+          "rawType" : {
+            "_type" : "packageableType",
+            "fullPath" : "model::domain::Firm"
+          },
+          "typeArguments" : [ ],
+          "typeVariableValues" : [ ]
+        }
       }
     ],
     "qualifiedProperties": [],

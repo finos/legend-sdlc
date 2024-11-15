@@ -1,48 +1,66 @@
 {
-  "classifierPath": "meta::pure::metamodel::type::Class",
-  "content": {
-    "_type": "class",
-    "constraints": [],
-    "name": "Firm",
-    "originalMilestonedProperties": [],
-    "package": "model::domain::classes",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 1,
-          "upperBound": 1
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "Firm",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain::classes",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "legalName",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
-        },
-        "name": "commonName",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "String"
+      "multiplicity" : {
+        "lowerBound" : 1,
+        "upperBound" : 1
       },
-      {
-        "multiplicity": {
-          "lowerBound": 0,
-          "upperBound": 1
+      "name" : "legalName",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "String"
         },
-        "name": "founded",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "StrictDate"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "superTypes": [
-      "model::domain::classes::EntityWithAddresses"
-    ],
-    "taggedValues": []
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "commonName",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    }, {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "StrictDate"
+        },
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0,
+        "upperBound" : 1
+      },
+      "name" : "founded",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "superTypes" : [ "model::domain::classes::EntityWithAddresses" ],
+    "taggedValues" : [ ]
   }
 }

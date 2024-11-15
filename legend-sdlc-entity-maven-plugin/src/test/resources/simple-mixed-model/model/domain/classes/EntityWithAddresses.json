@@ -1,25 +1,31 @@
 {
-  "classifierPath": "meta::pure::metamodel::type::Class",
-  "content": {
-    "_type": "class",
-    "constraints": [],
-    "name": "EntityWithAddresses",
-    "originalMilestonedProperties": [],
-    "package": "model::domain::classes",
-    "properties": [
-      {
-        "multiplicity": {
-          "lowerBound": 0
+  "classifierPath" : "meta::pure::metamodel::type::Class",
+  "content" : {
+    "_type" : "class",
+    "constraints" : [ ],
+    "name" : "EntityWithAddresses",
+    "originalMilestonedProperties" : [ ],
+    "package" : "model::domain::classes",
+    "properties" : [ {
+      "genericType" : {
+        "multiplicityArguments" : [ ],
+        "rawType" : {
+          "_type" : "packageableType",
+          "fullPath" : "model::domain::classes::Address"
         },
-        "name": "addresses",
-        "stereotypes": [],
-        "taggedValues": [],
-        "type": "model::domain::classes::Address"
-      }
-    ],
-    "qualifiedProperties": [],
-    "stereotypes": [],
-    "superTypes": [],
-    "taggedValues": []
+        "typeArguments" : [ ],
+        "typeVariableValues" : [ ]
+      },
+      "multiplicity" : {
+        "lowerBound" : 0
+      },
+      "name" : "addresses",
+      "stereotypes" : [ ],
+      "taggedValues" : [ ]
+    } ],
+    "qualifiedProperties" : [ ],
+    "stereotypes" : [ ],
+    "superTypes" : [ ],
+    "taggedValues" : [ ]
   }
 }

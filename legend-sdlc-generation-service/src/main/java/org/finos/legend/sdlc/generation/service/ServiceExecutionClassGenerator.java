@@ -26,6 +26,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.protocol.pure.v1.model.type.PackageableType;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
@@ -152,13 +153,13 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         }
 
         StringBuilder builder = appendPackagePrefixIfPresent(new StringBuilder());
-        EntityPaths.forEachPathElement(variable._class.path, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
+        EntityPaths.forEachPathElement(((PackageableType)variable.genericType.rawType).fullPath, name -> ((builder.length() == 0) ? builder : builder.append('.')).append(JavaSourceHelper.toValidJavaIdentifier(name)));
         return builder.toString();
     }
 
     private static Class<?> getVariableJavaClass(Variable variable, boolean usePrimitive)
     {
-        switch (variable._class.path)
+        switch (((PackageableType)variable.genericType.rawType).fullPath)
         {
             case "String":
             {
@@ -267,7 +268,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
 
         StringBuilder appendTypeString(StringBuilder builder)
         {
-            return ("Byte".equals(variable._class.path) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
+            return ("Byte".equals(((PackageableType)variable.genericType.rawType).fullPath) || !getMultiplicity().isUpperBoundGreaterThan(1)) ?
                     builder.append(this.javaParamRawType) :
                     builder.append("List<? extends ").append(this.javaParamRawType).append('>');
         }
