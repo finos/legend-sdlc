@@ -16,13 +16,13 @@ package org.finos.legend.sdlc.server.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.finos.legend.sdlc.server.backend.BackendConfiguration;
 
 public class LegendSDLCServerConfiguration extends ServerConfiguration
 {
-    @JsonProperty("gitLab")
-    private GitLabConfiguration gitLabConfig;
+    @JsonProperty("backend")
+    private BackendConfiguration backendConfig;
 
     @JsonProperty("projectStructure")
     private ProjectStructureConfiguration projectStructureConfiguration;
@@ -33,9 +33,9 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     @JsonProperty("features")
     private LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
-    public GitLabConfiguration getGitLabConfiguration()
+    public BackendConfiguration getBackendConfiguration()
     {
-        return this.gitLabConfig;
+        return this.backendConfig;
     }
 
     public ProjectStructureConfiguration getProjectStructureConfiguration()
