@@ -149,12 +149,20 @@ public class TestTools
         content.put("name", name);
         content.put("package", pkg);
         content.put("properties", (properties == null) ? Collections.emptyList() : properties);
-        content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList(ANY) : superTypes);
+        content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList(newSuperType(ANY)) : superTypes.stream().map(TestTools::newSuperType).collect(Collectors.toList()));
         return Entity.newEntity(
                 pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Class",
                 content
         );
+    }
+
+    public static Map<String, String> newSuperType(String superType)
+    {
+        Map<String, String> content = new HashMap<>(2);
+        content.put("path", superType);
+        content.put("type", "CLASS");
+        return content;
     }
 
     public static Entity newEnumerationEntity(String name, String pkg, String... values)

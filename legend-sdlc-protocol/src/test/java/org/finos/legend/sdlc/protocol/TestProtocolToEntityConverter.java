@@ -15,6 +15,9 @@
 package org.finos.legend.sdlc.protocol;
 
 import com.fasterxml.jackson.databind.json.JsonMapper;
+
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.stream.Collectors;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
@@ -100,7 +103,7 @@ public class TestProtocolToEntityConverter
         Assert.assertEquals(cls.name, entity.getContent().get("name"));
         Assert.assertEquals(cls._package, entity.getContent().get("package"));
         Assert.assertEquals(cls.properties, entity.getContent().get("properties"));
-        Assert.assertEquals(cls.superTypes.stream().map(x -> x.path).collect(Collectors.toList()), entity.getContent().get("superTypes"));
+        Assert.assertEquals(cls.superTypes.stream().map(x -> x.path).collect(Collectors.toList()),  ((ArrayList<Map<String, ?>>) entity.getContent().get("superTypes")).stream().map(e -> e.get("path")).collect(Collectors.toList()));
     }
 }
 
