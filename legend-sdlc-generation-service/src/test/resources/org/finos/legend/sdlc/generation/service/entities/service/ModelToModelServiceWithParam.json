@@ -163,7 +163,24 @@
             "parameters": [
               {
                 "_type": "var",
-                "class": "meta::pure::mapping::Result",
+                "genericType": {
+                  "rawType": {
+                    "_type": "packageableType",
+                    "fullPath": "meta::pure::mapping::Result"
+                  },
+                  "typeArguments": [
+                    {
+                      "rawType": {
+                        "_type": "packageableType",
+                        "fullPath": "meta::pure::metamodel::type::Any"
+                      }
+                    }
+                  ],
+                  "multiplicityArguments": [{
+                    "lowerBound": 1,
+                    "upperBound": 1
+                  }]
+                },
                 "multiplicity": {
                   "lowerBound": 1,
                   "upperBound": 1

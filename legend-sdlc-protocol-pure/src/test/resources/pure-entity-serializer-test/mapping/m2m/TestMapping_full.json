@@ -217,7 +217,10 @@
             ]
           }
         ],
-        "enumeration": "model::domain::TestEnumeration",
+        "enumeration" : {
+          "path" : "model::domain::TestEnumeration",
+          "type" : "ENUMERATION"
+        },
         "id": "TestEnumerationMappingInt"
       },
       {
@@ -254,7 +257,10 @@
             ]
           }
         ],
-        "enumeration": "model::domain::TestEnumeration",
+        "enumeration" : {
+          "path" : "model::domain::TestEnumeration",
+          "type" : "ENUMERATION"
+        },
         "id": "TestEnumerationMappingString"
       }
     ],

@@ -113,6 +113,12 @@ public class PureModelBuilder
         return this;
     }
 
+    public PureModelBuilder withProtocolConverter()
+    {
+        this.contextDataBuilder.withProtocolConverter();
+        return this;
+    }
+
     public void addEntitiesIfPossible(Stream<? extends Entity> entities)
     {
         this.contextDataBuilder.addEntitiesIfPossible(entities);

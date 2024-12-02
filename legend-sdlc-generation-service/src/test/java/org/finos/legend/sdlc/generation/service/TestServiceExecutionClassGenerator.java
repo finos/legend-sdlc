@@ -89,8 +89,8 @@ public class TestServiceExecutionClassGenerator
         }
         try (EntityLoader entityLoader = EntityLoader.newEntityLoader(Paths.get(url.toURI())))
         {
-            PURE_MODEL_CONTEXT_DATA = PureModelContextDataBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).build();
-            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).build();
+            PURE_MODEL_CONTEXT_DATA = PureModelContextDataBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).withProtocolConverter().build();
+            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).withProtocolConverter().build();
             PURE_MODEL = pureModelWithContextData.getPureModel();
         }
         SERVICES = Iterate.groupByUniqueKey(PURE_MODEL_CONTEXT_DATA.getElementsOfType(Service.class), PackageableElement::getPath);

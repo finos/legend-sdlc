@@ -114,7 +114,7 @@ public class TestServiceExecutionGenerator
         }
         try (EntityLoader entityLoader = EntityLoader.newEntityLoader(Paths.get(url.toURI())))
         {
-            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).build();
+            PureModelBuilder.PureModelWithContextData pureModelWithContextData = PureModelBuilder.newBuilder().withEntities(entityLoader.getAllEntities()).withProtocolConverter().build();
             PURE_MODEL_CONTEXT_DATA = pureModelWithContextData.getPureModelContextData();
             PURE_MODEL = pureModelWithContextData.getPureModel();
         }

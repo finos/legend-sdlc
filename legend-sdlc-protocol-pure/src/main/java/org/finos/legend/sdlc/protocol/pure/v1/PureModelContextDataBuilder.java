@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.impl.utility.ArrayIterate;
@@ -22,6 +23,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.context.SDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 
 import java.util.Optional;
@@ -33,6 +35,7 @@ public class PureModelContextDataBuilder
     private final MutableList<PackageableElement> elements = Lists.mutable.empty();
     private Protocol protocol;
     private SDLC sdlc;
+    private ObjectMapper converterMapper;
 
     private PureModelContextDataBuilder(EntityToPureConverter converter)
     {
@@ -63,6 +66,12 @@ public class PureModelContextDataBuilder
     public PureModelContextDataBuilder withEntity(Entity entity)
     {
         addEntity(entity);
+        return this;
+    }
+
+    public PureModelContextDataBuilder withProtocolConverter()
+    {
+        this.converterMapper = ObjectMapperFactory.getNewStandardObjectMapperWithPureProtocolExtensionSupports();
         return this;
     }
 
@@ -187,7 +196,12 @@ public class PureModelContextDataBuilder
             origin.sdlcInfo = this.sdlc;
             builder.setOrigin(origin);
         }
-        return builder.build();
+        PureModelContextData pureModelContextData = builder.build();
+        if (this.converterMapper != null)
+        {
+            return this.converterMapper.convertValue(builder.build(), PureModelContextData.class);
+        }
+       return  pureModelContextData;
     }
 
     public static PureModelContextDataBuilder newBuilder()
