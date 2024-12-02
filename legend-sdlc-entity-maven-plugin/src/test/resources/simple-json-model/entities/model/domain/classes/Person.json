@@ -43,7 +43,10 @@
     } ],
     "qualifiedProperties" : [ ],
     "stereotypes" : [ ],
-    "superTypes" : [ "model::domain::classes::EntityWithAddresses" ],
+    "superTypes" : [ {
+      "path" : "model::domain::classes::EntityWithAddresses",
+      "type" : "CLASS"
+    } ],
     "taggedValues" : [ ]
   }
 }
