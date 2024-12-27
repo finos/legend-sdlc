@@ -21,6 +21,7 @@
         "name" : "FirmTable",
         "primaryKey" : [ "id" ]
       } ],
+      "tabularFunctions" : [ ],
       "views" : [ ]
     } ],
     "stereotypes" : [ ]

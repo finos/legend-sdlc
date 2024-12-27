@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.EntityToProtocolConverter;

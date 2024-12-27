@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.test.junit.pure.v1;
 
 import org.finos.legend.engine.plan.execution.PlanExecutor;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.test.runner.service.ServiceTestRunner;
 import org.junit.Test;
