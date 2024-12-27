@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.test.junit;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;

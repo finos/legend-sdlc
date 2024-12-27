@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.test.junit;
 
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 
 public class TestTestableTestGenerator extends AbstractTestClassGeneratorTest<PackageableElement, TestableTestGenerator>
 {

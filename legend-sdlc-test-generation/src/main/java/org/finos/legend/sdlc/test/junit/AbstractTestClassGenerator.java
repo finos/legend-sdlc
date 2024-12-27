@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.test.junit;
 
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.PackageableElement;
+import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.generation.JavaCodeGenerator;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
