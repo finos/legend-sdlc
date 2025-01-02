@@ -22,8 +22,8 @@ import java.util.stream.Collectors;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Association;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
+import org.finos.legend.engine.protocol.pure.v1.model.domain.Association;
+import org.finos.legend.engine.protocol.pure.v1.model.domain.Class;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.junit.Assert;
 import org.junit.Test;
@@ -94,7 +94,7 @@ public class TestProtocolToEntityConverter
         }
     }
 
-    public static void assertEntityEqualsClass(org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class cls, Entity entity)
+    public static void assertEntityEqualsClass(org.finos.legend.engine.protocol.pure.v1.model.domain.Class cls, Entity entity)
     {
         Assert.assertNotNull(entity);
         Assert.assertEquals(CLASS_CLASSIFIER_PATH, entity.getClassifierPath());

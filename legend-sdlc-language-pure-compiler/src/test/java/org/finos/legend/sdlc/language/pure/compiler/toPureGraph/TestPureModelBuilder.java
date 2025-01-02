@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.language.pure.compiler.toPureGraph;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Class;
+import org.finos.legend.engine.protocol.pure.v1.model.domain.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.pure.generated.core_pure_serialization_toPureGrammar;
 import org.finos.legend.sdlc.protocol.pure.v1.PureProtocolHelper;
