@@ -28,7 +28,7 @@ import org.finos.legend.engine.language.pure.dsl.generation.extension.ArtifactGe
 import org.finos.legend.engine.protocol.pure.PureClientVersions;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.domain.Function;
+import org.finos.legend.engine.protocol.pure.v1.model.domain.Function;
 import org.finos.legend.sdlc.generation.file.GenerationOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
