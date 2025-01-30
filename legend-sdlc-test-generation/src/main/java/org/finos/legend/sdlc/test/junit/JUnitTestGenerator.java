@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.test.junit;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.finos.legend.engine.protocol.pure.v1.model.PackageableElement;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.mapping.Mapping;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.testable.extension.TestableRunnerExtensionLoader;
@@ -25,6 +25,8 @@ import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.lang.model.SourceVersion;
+import javax.tools.JavaFileObject;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -36,8 +38,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.lang.model.SourceVersion;
-import javax.tools.JavaFileObject;
 
 public class JUnitTestGenerator
 {

@@ -14,12 +14,12 @@
 
 package org.finos.legend.sdlc.protocol.pure.v1;
 
+import org.finos.legend.engine.protocol.pure.m3.type.Class;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PackageableElementPointer;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.protocol.TestProtocolToEntityConverter;
 import org.junit.Assert;
 import org.junit.Test;
-import org.finos.legend.engine.protocol.pure.v1.model.domain.Class;
-import org.finos.legend.sdlc.protocol.TestProtocolToEntityConverter;
 
 import java.util.Collections;
 import java.util.Optional;
@@ -51,4 +51,3 @@ public class TestPureToEntityConverter
         TestProtocolToEntityConverter.assertEntityEqualsClass(cls, entity.get());
     }
 }
-
