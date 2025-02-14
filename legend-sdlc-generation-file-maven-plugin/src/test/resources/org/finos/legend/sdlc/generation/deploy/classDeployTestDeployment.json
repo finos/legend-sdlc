@@ -1,0 +1,26 @@
+[
+  {
+    "key": "classDeployTest",
+    "element": "complex::AddressWithConstraint",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Address",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Firm",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Person",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  }
+]

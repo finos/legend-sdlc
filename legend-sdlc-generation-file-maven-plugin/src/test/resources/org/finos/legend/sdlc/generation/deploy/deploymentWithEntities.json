@@ -1,0 +1,44 @@
+[
+  {
+    "key": "enumTest",
+    "element": "model::City",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "enumTest",
+    "element": "model::Country",
+    "status": "ERROR",
+    "message": "deploy error"
+  },
+  {
+    "key": "enumTest",
+    "element": "model::IncType",
+    "status": "ERROR",
+    "message": "deploy error"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "complex::AddressWithConstraint",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Address",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Firm",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  },
+  {
+    "key": "classDeployTest",
+    "element": "model::Person",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  }
+]

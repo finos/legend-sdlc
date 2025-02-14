@@ -1,0 +1,8 @@
+[
+  {
+    "key": "enumTest",
+    "element": "model::City",
+    "status": "SUCCESS",
+    "message": "deploy success"
+  }
+]

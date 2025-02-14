@@ -40,6 +40,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.fileGen
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
 import org.finos.legend.engine.shared.core.ObjectMapperFactory;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.generation.ReducedProjectConfiguration;
 import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationFactory;
 import org.finos.legend.sdlc.generation.artifact.ArtifactGenerationResult;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
