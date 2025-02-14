@@ -933,6 +933,11 @@
                 <artifactId>legend-engine-external-format-jsonSchema</artifactId>
                 <version>${legend.engine.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.finos.legend.engine</groupId>
+                <artifactId>legend-engine-xts-deployment-model</artifactId>
+                <version>${legend.engine.version}</version>
+            </dependency>
             <!-- External dependencies -->
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>

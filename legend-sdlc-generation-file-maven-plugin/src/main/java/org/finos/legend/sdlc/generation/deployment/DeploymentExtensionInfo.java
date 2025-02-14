@@ -1,4 +1,4 @@
-// Copyright 2023 Goldman Sachs
+// Copyright 2025 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,34 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.generation.file;
+package org.finos.legend.sdlc.generation.deployment;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import org.eclipse.collections.impl.factory.Lists;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-class ReducedProjectConfiguration
+import java.util.List;
+
+public class DeploymentExtensionInfo
 {
-    private String groupId;
-    private String artifactId;
+    public String key;
+    public List<String> classifierPaths;
 
-    private ReducedProjectConfiguration()
+    public List<String> elements = Lists.mutable.empty();
+
+    public DeploymentExtensionInfo()
     {
+
     }
 
-    private ReducedProjectConfiguration(String groupId, String artifactId)
+    public DeploymentExtensionInfo(String key, List<String> classifierPaths)
     {
-        this.groupId = groupId;
-        this.artifactId = artifactId;
+        this.key = key;
+        this.classifierPaths = classifierPaths;
     }
 
-    public String getGroupId()
+    public void setElements(List<String> elements)
     {
-        return this.groupId;
+        this.elements = elements;
     }
-
-    public String getArtifactId()
-    {
-        return this.artifactId;
-    }
-
 }
