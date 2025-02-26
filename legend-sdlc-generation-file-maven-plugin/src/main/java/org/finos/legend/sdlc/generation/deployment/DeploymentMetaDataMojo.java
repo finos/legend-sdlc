@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
 public class DeploymentMetaDataMojo extends AbstractMojo
 {
 
-    @Parameter
+    @Parameter(property = "inclusions")
     private List<File> inclusions;
 
     @Parameter(property = "outputType", defaultValue = "text")
@@ -61,7 +61,7 @@ public class DeploymentMetaDataMojo extends AbstractMojo
         DeploymentExtensionLoader.getExtensionsMetadata().forEach(res -> deploymentData.extensionMetadata.add(new DeploymentExtensionInfo(res.key, res.classifierPaths)));
         if (this.includeElements && !deploymentData.extensionMetadata.isEmpty())
         {
-            if (this.inclusions == null)
+            if (this.inclusions == null || this.inclusions.isEmpty())
             {
                 throw new MojoExecutionException("Inclusions directory required when exporting deployable elements");
             }
