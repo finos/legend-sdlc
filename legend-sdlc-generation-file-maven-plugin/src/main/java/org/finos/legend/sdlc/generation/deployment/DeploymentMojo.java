@@ -52,7 +52,7 @@ public class DeploymentMojo extends AbstractMojo
 
     private static String DEPLOY_PHASE = "Deploy";
 
-    @Parameter
+    @Parameter(property = "inclusions")
     private List<File> inclusions;
 
     @Parameter(defaultValue = "${project}", readonly = true)
@@ -74,7 +74,7 @@ public class DeploymentMojo extends AbstractMojo
     public void execute() throws MojoExecutionException, MojoFailureException
     {
 
-        if (this.inclusions == null && this.inclusions.isEmpty())
+        if (this.inclusions == null || this.inclusions.isEmpty())
         {
             throw new MojoExecutionException("Inclusion directory is required to run deployment");
         }
