@@ -28,6 +28,7 @@ import org.finos.legend.engine.deployment.manager.DeploymentManager;
 import org.finos.legend.engine.deployment.model.DeploymentExtension;
 import org.finos.legend.engine.deployment.model.DeploymentExtensionLoader;
 import org.finos.legend.engine.deployment.model.DeploymentResponse;
+import org.finos.legend.engine.deployment.model.DeploymentStatus;
 import org.finos.legend.engine.protocol.Protocol;
 import org.finos.legend.engine.protocol.pure.PureClientVersions;
 import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
@@ -90,8 +91,9 @@ public class DeploymentMojo extends AbstractMojo
             throw new MojoExecutionException("Error loading entities from model", e);
         }
 
-        PureModelContextData model = pureModelContextDataBuilder.withSDLC(buildSDLCInfo()).withProtocol(buildProtocol()).build();
-        List<DeploymentResponse> responses =  runPhase(model, new ArrayList<>(model.getElements()));
+        PureModelContextData pureModelContextData = pureModelContextDataBuilder.withSDLC(buildSDLCInfo()).withProtocol(buildProtocol()).build();
+        List<DeploymentResponse> responses = runPhase(pureModelContextData, new ArrayList<>(pureModelContextData.getElements()));
+        handleResponses(responses);
         String result;
         try
         {
@@ -140,6 +142,78 @@ public class DeploymentMojo extends AbstractMojo
         return new ObjectMapper().writeValueAsString(deploymentData);
     }
 
+    private void handleResponses(List<DeploymentResponse> responses) throws MojoExecutionException
+    {
+
+        // fail if singular failure
+        if (elementFilter != null || deploymentKeyFilter != null)
+        {
+            String filter = elementFilter == null ? deploymentKeyFilter : elementFilter;
+            if (responses != null && responses.size() == 1)
+            {
+                DeploymentResponse response =  responses.get(0);
+                if (response.status == DeploymentStatus.ERROR)
+                {
+                    throw new MojoExecutionException("Error deploying " + filter);
+                }
+            }
+        }
+    }
+
+    private void printResponses(List<DeploymentResponse> responses)
+    {
+        // print responses
+        if (responses != null)
+        {
+            for (DeploymentResponse response : responses)
+            {
+                printResponse(response);
+            }
+        }
+    }
+
+    private void printResponse(DeploymentResponse response)
+    {
+        if (response.status == DeploymentStatus.ERROR)
+        {
+            getLog().error(responseString(response));
+        }
+        else
+        {
+            getLog().info(responseString(response));
+        }
+    }
+
+
+    private String responseString(DeploymentResponse response)
+    {
+        StringBuilder stringBuilder = new StringBuilder();
+        stringBuilder.append("Printing response ");
+        String filter = this.deploymentKeyFilter != null ? this.deploymentKeyFilter : this.elementFilter;
+        if (filter != null)
+        {
+            stringBuilder.append("with filter :'").append(filter).append("'");
+        }
+        stringBuilder.append("\n");
+        if (response.key != null)
+        {
+            stringBuilder.append("Response key : '").append(response.key).append("'\n");
+        }
+        if (response.element != null)
+        {
+            stringBuilder.append("Response element key : '").append(response.element).append("'\n");
+        }
+        if (response.status != null)
+        {
+            stringBuilder.append("Response status: '").append(response.status).append("'\n");
+        }
+        if (response.message != null)
+        {
+            stringBuilder.append("Response message: \n");
+            stringBuilder.append(response.message);
+        }
+        return stringBuilder.toString();
+    }
 
 
     public List<DeploymentResponse> runPhase(PureModelContextData model, List<PackageableElement> elementList)
@@ -155,6 +229,7 @@ public class DeploymentMojo extends AbstractMojo
         {
             getLog().info("Element filter set with element path: " + this.elementFilter);
             DeploymentResponse response = this.deploymentPhase.equals(DEPLOY_PHASE) ? deploymentManager.deployElement(elementFilter) : deploymentManager.validateElement(elementFilter);
+            printResponse(response);
             return Lists.mutable.with(response);
         }
         else if (deploymentKeyFilter != null)
@@ -166,13 +241,17 @@ public class DeploymentMojo extends AbstractMojo
             }
             if (this.deploymentPhase.equals(DEPLOY_PHASE))
             {
-                return  extension.deployAll(model,  elementList);
+                List<DeploymentResponse> responses = extension.deployAll(model,  elementList);
+                printResponses(responses);
+                return responses;
             }
             else
             {
                 if (extension.requiresValidation())
                 {
-                    return extension.validateAll(model,  elementList);
+                    List<DeploymentResponse> responses = extension.validateAll(model,  elementList);
+                    printResponses(responses);
+                    return responses;
                 }
                 getLog().info("Extension " + extension.getLabel() + " does not require validation. Skipping");
                 return Lists.mutable.empty();
@@ -180,7 +259,9 @@ public class DeploymentMojo extends AbstractMojo
         }
         else
         {
-            return this.deploymentPhase.equals(DEPLOY_PHASE) ? deploymentManager.deploy() : deploymentManager.validate();
+            List<DeploymentResponse> responses = this.deploymentPhase.equals(DEPLOY_PHASE) ? deploymentManager.deploy() : deploymentManager.validate();
+            printResponses(responses);
+            return responses;
         }
 
     }
