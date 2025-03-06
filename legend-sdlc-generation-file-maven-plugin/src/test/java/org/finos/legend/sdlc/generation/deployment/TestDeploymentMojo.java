@@ -21,6 +21,7 @@ import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
 import org.apache.maven.model.PluginExecution;
 import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
+import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
@@ -46,6 +47,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThrows;
 
 public class TestDeploymentMojo
 {
@@ -178,6 +182,35 @@ public class TestDeploymentMojo
         {
         //ignore
         }
+    }
+
+    @Test
+    public void testFailFilterResponse() throws Exception
+    {
+        Path outputFilePath = getFilePathOnTempFolder("cityDeployment.json");
+        File entitiesDir = this.tempFolder.newFolder("testEntities");
+        File[] entitiesDirectories = {entitiesDir};
+        List<Entity> entities;
+        try (EntityLoader testEntities = getEntities("org/finos/legend/sdlc/generation/file/allFormats"))
+        {
+            entities = testEntities.getAllEntities().collect(Collectors.toList());
+        }
+        Assert.assertEquals(13, entities.size());
+        entities.forEach(e -> writeEntityToDirectory(entitiesDir.toPath(), e));
+
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDirectories, outputFilePath, "Deploy", "model::IncType", null);
+        serializeProjectConfiguration(projectDir);
+        MavenProject mavenProject = this.mojoRule.readMavenProject(projectDir);
+
+        File outputDir = new File(mavenProject.getBuild().getOutputDirectory());
+        assertDirectoryEmpty(outputDir);
+        Exception exception = assertThrows(
+                MojoExecutionException.class,
+                () -> executeMojo(projectDir, entitiesDirectories)
+
+        );
+        assertEquals(exception.getMessage(), "Error deploying model::IncType");
+
     }
 
     @Test

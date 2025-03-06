@@ -51,7 +51,7 @@ public class TestBasicEnumDeployExtension implements DeploymentExtension
         {
             return new DeploymentResponse(this.getKey(), packageableElement.getPath(), DeploymentStatus.SUCCESS, "deploy success");
         }
-        return new DeploymentResponse(this.getKey(), packageableElement.getPath(), DeploymentStatus.ERROR, "deploy error");
+        return new DeploymentResponse(this.getKey(), packageableElement.getPath(), DeploymentStatus.ERROR, "Deployment error\nnot named city");
     }
 
     @Override

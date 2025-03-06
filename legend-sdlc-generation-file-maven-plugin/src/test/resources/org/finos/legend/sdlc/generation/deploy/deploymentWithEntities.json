@@ -9,13 +9,13 @@
     "key": "enumTest",
     "element": "model::Country",
     "status": "ERROR",
-    "message": "deploy error"
+    "message": "Deployment error\nnot named city"
   },
   {
     "key": "enumTest",
     "element": "model::IncType",
     "status": "ERROR",
-    "message": "deploy error"
+    "message": "Deployment error\nnot named city"
   },
   {
     "key": "classDeployTest",
