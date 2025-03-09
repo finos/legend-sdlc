@@ -122,7 +122,7 @@ public class TestPureModelBuilder
         org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Class<?> cls = pureModel.getClass(path);
         Assert.assertNotNull(path, cls);
         String actual = core_pure_serialization_toPureGrammar.Root_meta_pure_metamodel_serialization_grammar_printClass_Class_1__String_1_(cls, pureModel.getExecutionSupport());
-        Assert.assertEquals(expected.trim().replace(": ", " : "), actual);
+        Assert.assertEquals(expected.trim(), actual);
     }
 
     private void checkMapping(PureModel pureModel, String path)

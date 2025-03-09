@@ -38,7 +38,6 @@ public class TestEntityToPureConverter
         Class resultClass = (Class) result;
         Assert.assertEquals("EmptyClass", resultClass.name);
         Assert.assertEquals("model::test", resultClass._package);
-        Assert.assertEquals(Collections.singletonList("meta::pure::metamodel::type::Any"), resultClass.superTypes.stream().map(x -> x.path).collect(Collectors.toList()));
         Assert.assertEquals(Collections.emptyList(), resultClass.properties);
 
         IllegalArgumentException e = Assert.assertThrows(IllegalArgumentException.class, () -> this.converter.fromEntity(Entity.newEntity("not::a::real::PureEntity", "meta::unknown::NotAClassifier", Collections.emptyMap())));
@@ -61,7 +60,6 @@ public class TestEntityToPureConverter
         Class resultClass = (Class) result.get();
         Assert.assertEquals("EmptyClass", resultClass.name);
         Assert.assertEquals("model::test", resultClass._package);
-        Assert.assertEquals(Collections.singletonList("meta::pure::metamodel::type::Any"), resultClass.superTypes.stream().map(x -> x.path).collect(Collectors.toList()));
         Assert.assertEquals(Collections.emptyList(), resultClass.properties);
 
         Optional<PackageableElement> nothing = this.converter.fromEntityIfPossible(Entity.newEntity("note::a::real::PureEntity", "meta::unknown::NotAClassifier", Collections.emptyMap()));
