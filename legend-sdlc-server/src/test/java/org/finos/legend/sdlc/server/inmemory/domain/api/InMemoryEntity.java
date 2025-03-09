@@ -88,7 +88,6 @@ public class InMemoryEntity implements Entity
         content.put("name", name);
         content.put("package", pkg);
         content.put("properties", (properties == null) ? Collections.emptyList() : properties);
-        content.put("superTypes", ((superTypes == null) || superTypes.isEmpty()) ? Collections.singletonList("meta::pure::metamodel::type::Any") : superTypes);
         return new InMemoryEntity(
                 pkg + EntityPaths.PACKAGE_SEPARATOR + name,
                 "meta::pure::metamodel::type::Class",

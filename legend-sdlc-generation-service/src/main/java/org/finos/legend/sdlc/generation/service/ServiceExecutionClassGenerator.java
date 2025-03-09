@@ -21,14 +21,14 @@ import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.pure.m3.function.LambdaFunction;
 import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.protocol.pure.v1.model.type.PackageableType;
-import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -88,7 +88,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         {
             throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
         }
-        Lambda lambda = ((PureExecution) execution).func;
+        LambdaFunction lambda = ((PureExecution) execution).func;
         MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         if (execution instanceof PureMultiExecution)
