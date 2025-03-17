@@ -355,7 +355,7 @@ public class ServiceExecutionGenerator
                 .withPlanResourceName(getExecutionPlanResourceName(servicePath))
                 .withFunctionJar(jar, Root_meta_pure_functions_meta_functionType_Function_1__FunctionType_1_(h._function(), pureModel.getExecutionSupport()))
                 .generate();
-        LOGGER.debug("Finished generating main hosted service execution class for {}", servicePath);
+        LOGGER.debug("Finished generating main jar execution class for {}", servicePath);
 
         // Write plan resource and execution class
         LOGGER.debug("Starting writing execution plan for {}", servicePath);
