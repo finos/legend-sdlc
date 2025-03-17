@@ -21,14 +21,16 @@ import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
 import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
-import org.finos.legend.engine.protocol.pure.v1.model.type.PackageableType;
-import org.finos.legend.engine.protocol.pure.v1.model.valueSpecification.raw.Lambda;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
+import org.finos.legend.engine.protocol.pure.m3.function.LambdaFunction;
+import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.FunctionType;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -72,6 +74,18 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return this;
     }
 
+    public ServiceExecutionClassGenerator withFunctionJar(FunctionJar jar, FunctionType fype)
+    {
+        setPackageName(getJavaPackageName(jar._package));
+        setClassName(getJavaClassName(jar.name));
+        setParameter(SERVICE_PARAM, jar);
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(fype);
+        setParameter(STREAM_PROVIDER_PARAMETER_NAME_PARAM, getStreamProviderParameterName(executionParameters));
+        setParameter(IMPORTS_PARAM, getImports(executionParameters));
+        setParameter(EXEC_PARAMS_PARAM, executionParameters);
+        return this;
+    }
+
     private MutableList<String> getImports(MutableList<ExecutionParameter> executionParameters)
     {
         // TODO add imports for non-primitives when possible
@@ -81,6 +95,30 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
 
+    private MutableList<ExecutionParameter> getExecutionParameters(FunctionType f)
+    {
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(f._parameters().size() + 1);
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(f._parameters().size() + 1);
+
+        f._parameters().forEach(p ->
+        {
+            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(p.getName());
+            if (!javaParameterNames.add(javaParameterName))
+            {
+                String initialJavaParameterName = javaParameterName;
+                int i = 2;
+                javaParameterName = initialJavaParameterName + "$" + i;
+                while (!javaParameterNames.add(javaParameterName))
+                {
+                    i++;
+                    javaParameterName = initialJavaParameterName + "$" + i;
+                }
+            }
+            parameters.add(newExecutionParameter(new Variable(p.getName(),/*p._genericType()._rawType().toString()*/ "String", new Multiplicity(1, 1)), javaParameterName));
+        });
+        return parameters;
+    }
+
     private MutableList<ExecutionParameter> getExecutionParameters(Service service)
     {
         Execution execution = service.execution;
@@ -88,7 +126,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         {
             throw new IllegalArgumentException("Only services with Pure executions are supported: " + service.getPath());
         }
-        Lambda lambda = ((PureExecution) execution).func;
+        LambdaFunction lambda = ((PureExecution) execution).func;
         MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(lambda.parameters.size() + 1);
         if (execution instanceof PureMultiExecution)
