@@ -29,10 +29,12 @@ import org.apache.maven.project.MavenProject;
 import org.eclipse.collections.api.RichIterable;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
+import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
@@ -148,6 +150,7 @@ public class ServicesGenerationMojo extends AbstractMojo
 
         long start = System.nanoTime();
         MutableMap<String, Service> servicesByPath = Maps.mutable.empty();
+        MutableMap<String, FunctionJar> functionJarsByPath = Maps.mutable.empty();
         pureModelContextData.getElements().forEach(e ->
         {
             if (e instanceof Service)
@@ -159,11 +162,20 @@ public class ServicesGenerationMojo extends AbstractMojo
                     throw new RuntimeException("Multiple services for path '" + path + "'");
                 }
             }
+            else if (e instanceof FunctionJar)
+            {
+                String path = e.getPath();
+                FunctionJar old = functionJarsByPath.put(path, (FunctionJar) e);
+                if (old != null)
+                {
+                    throw new RuntimeException("Multiple services for path '" + path + "'");
+                }
+            }
         });
         filterServicesByIncludes(servicesByPath);
         filterServicesByExcludes(servicesByPath);
 
-        generateServices(servicesByPath, pureModel, parallelism);
+        generateServices(servicesByPath, functionJarsByPath, pureModel, parallelism);
 
         if (this.addJavaSourceOutputDirectoryAsSource)
         {
@@ -214,17 +226,20 @@ public class ServicesGenerationMojo extends AbstractMojo
         }
     }
 
-    private void generateServices(MutableMap<String, Service> servicesByPath, PureModel pureModel, int parallelism)
+    private void generateServices(MutableMap<String, Service> servicesByPath, MutableMap<String, FunctionJar> functionJarsByPath, PureModel pureModel, int parallelism)
     {
-        if (servicesByPath.isEmpty())
+        if (servicesByPath.isEmpty() && functionJarsByPath.isEmpty())
         {
-            getLog().info("Found 0 services for generation");
+            getLog().info("Found 0 services/function jar for generation");
             return;
         }
 
         if (getLog().isInfoEnabled())
         {
-            getLog().info(Lists.mutable.withAll(servicesByPath.keySet()).toSortedList().makeString("Found " + servicesByPath.size() + " services for generation: ", ", ", ""));
+            MutableList<String> allServices = Lists.mutable.empty();
+            allServices.addAll(servicesByPath.keySet());
+            allServices.addAll(functionJarsByPath.keySet());
+            getLog().info(Lists.mutable.withAll(allServices).toSortedList().makeString("Found " + (allServices.size()) + " services for generation: ", ", ", ""));
         }
 
         JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
@@ -252,6 +267,7 @@ public class ServicesGenerationMojo extends AbstractMojo
         {
             ServiceExecutionGenerator.newBuilder()
                     .withServices(servicesByPath.values())
+                    .withFunctionJars(functionJarsByPath.values())
                     .withPureModel(pureModel)
                     .withPackagePrefix(this.packagePrefix)
                     .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
