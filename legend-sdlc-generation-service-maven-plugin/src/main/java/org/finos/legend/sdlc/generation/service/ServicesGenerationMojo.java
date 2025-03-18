@@ -168,14 +168,14 @@ public class ServicesGenerationMojo extends AbstractMojo
                 FunctionJar old = functionJarsByPath.put(path, (FunctionJar) e);
                 if (old != null)
                 {
-                    throw new RuntimeException("Multiple services for path '" + path + "'");
+                    throw new RuntimeException("Multiple function jars for path '" + path + "'");
                 }
             }
         });
         filterServicesByIncludes(servicesByPath);
         filterServicesByExcludes(servicesByPath);
 
-        generateServices(servicesByPath, functionJarsByPath, pureModel, parallelism);
+        generateServices(servicesByPath, functionJarsByPath, pureModel, pureModelContextData, parallelism);
 
         if (this.addJavaSourceOutputDirectoryAsSource)
         {
@@ -226,7 +226,7 @@ public class ServicesGenerationMojo extends AbstractMojo
         }
     }
 
-    private void generateServices(MutableMap<String, Service> servicesByPath, MutableMap<String, FunctionJar> functionJarsByPath, PureModel pureModel, int parallelism)
+    private void generateServices(MutableMap<String, Service> servicesByPath, MutableMap<String, FunctionJar> functionJarsByPath, PureModel pureModel, PureModelContextData pureModelContextData, int parallelism)
     {
         if (servicesByPath.isEmpty() && functionJarsByPath.isEmpty())
         {
@@ -239,7 +239,8 @@ public class ServicesGenerationMojo extends AbstractMojo
             MutableList<String> allServices = Lists.mutable.empty();
             allServices.addAll(servicesByPath.keySet());
             allServices.addAll(functionJarsByPath.keySet());
-            getLog().info(Lists.mutable.withAll(allServices).toSortedList().makeString("Found " + (allServices.size()) + " services for generation: ", ", ", ""));
+            getLog().info(Lists.mutable.withAll(servicesByPath).toSortedList().makeString("Found " + (servicesByPath.size()) + " services for generation: ", ", ", ""));
+            getLog().info(Lists.mutable.withAll(functionJarsByPath).toSortedList().makeString("Found " + (functionJarsByPath.size()) + " function jars for generation: ", ", ", ""));
         }
 
         JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
@@ -269,6 +270,7 @@ public class ServicesGenerationMojo extends AbstractMojo
                     .withServices(servicesByPath.values())
                     .withFunctionJars(functionJarsByPath.values())
                     .withPureModel(pureModel)
+                    .withPureModelContextData(pureModelContextData)
                     .withPackagePrefix(this.packagePrefix)
                     .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
                     .withJsonMapper(jsonMapper)
