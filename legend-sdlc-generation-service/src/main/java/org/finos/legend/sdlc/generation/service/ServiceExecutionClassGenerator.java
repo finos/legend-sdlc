@@ -24,13 +24,13 @@ import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
 import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
 import org.finos.legend.engine.protocol.pure.m3.function.LambdaFunction;
-import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.FunctionType;
 import org.finos.legend.sdlc.generation.GeneratorTemplate;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -74,12 +74,12 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return this;
     }
 
-    public ServiceExecutionClassGenerator withFunctionJar(FunctionJar jar, FunctionType fype)
+    public ServiceExecutionClassGenerator withFunctionJar(FunctionJar functionJar, PureModelContextData pureModelContextData)
     {
-        setPackageName(getJavaPackageName(jar._package));
-        setClassName(getJavaClassName(jar.name));
-        setParameter(SERVICE_PARAM, jar);
-        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(fype);
+        setPackageName(getJavaPackageName(functionJar._package));
+        setClassName(getJavaClassName(functionJar.name));
+        setParameter(SERVICE_PARAM, functionJar);
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(functionJar, pureModelContextData);
         setParameter(STREAM_PROVIDER_PARAMETER_NAME_PARAM, getStreamProviderParameterName(executionParameters));
         setParameter(IMPORTS_PARAM, getImports(executionParameters));
         setParameter(EXEC_PARAMS_PARAM, executionParameters);
@@ -95,14 +95,11 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
     }
 
-    private MutableList<ExecutionParameter> getExecutionParameters(FunctionType f)
+    private MutableList<ExecutionParameter> getParameters(List<Variable> functionParameters, MutableList<ExecutionParameter> parameters, MutableSet<String> javaParameterNames)
     {
-        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(f._parameters().size() + 1);
-        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(f._parameters().size() + 1);
-
-        f._parameters().forEach(p ->
+        for (Variable legendParameter : functionParameters)
         {
-            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(p.getName());
+            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(legendParameter.name);
             if (!javaParameterNames.add(javaParameterName))
             {
                 String initialJavaParameterName = javaParameterName;
@@ -114,9 +111,18 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
                     javaParameterName = initialJavaParameterName + "$" + i;
                 }
             }
-            parameters.add(newExecutionParameter(new Variable(p.getName(),/*p._genericType()._rawType().toString()*/ "String", new Multiplicity(1, 1)), javaParameterName));
-        });
+            parameters.add(newExecutionParameter(legendParameter, javaParameterName));
+        }
         return parameters;
+    }
+
+
+    private MutableList<ExecutionParameter> getExecutionParameters(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        List<Variable> functionJarParameters = ServiceExecutionGenerator.getFunctionJarParameters(functionJar, pureModelContextData);
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        return getParameters(functionJarParameters, parameters, javaParameterNames);
     }
 
     private MutableList<ExecutionParameter> getExecutionParameters(Service service)
@@ -140,23 +146,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
                 parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
             }
         }
-        for (Variable legendParameter : lambda.parameters)
-        {
-            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(legendParameter.name);
-            if (!javaParameterNames.add(javaParameterName))
-            {
-                String initialJavaParameterName = javaParameterName;
-                int i = 2;
-                javaParameterName = initialJavaParameterName + "$" + i;
-                while (!javaParameterNames.add(javaParameterName))
-                {
-                    i++;
-                    javaParameterName = initialJavaParameterName + "$" + i;
-                }
-            }
-            parameters.add(newExecutionParameter(legendParameter, javaParameterName));
-        }
-        return parameters;
+        return getParameters(lambda.parameters, parameters, javaParameterNames);
     }
 
     private ExecutionParameter newExecutionParameter(Variable variable, String javaParamName)
