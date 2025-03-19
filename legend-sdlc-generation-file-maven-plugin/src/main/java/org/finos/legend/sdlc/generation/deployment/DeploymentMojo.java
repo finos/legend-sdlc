@@ -46,6 +46,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Mojo(name = "run-deployment")
 public class DeploymentMojo extends AbstractMojo
@@ -239,15 +240,21 @@ public class DeploymentMojo extends AbstractMojo
             {
                 throw new RuntimeException("No deployment extension found for: " + deploymentKeyFilter);
             }
+            List<PackageableElement> deployableElements = elementList.stream().filter(extension::isElementDeployable).collect(Collectors.toList());
             if (this.deploymentPhase.equals(DEPLOY_PHASE))
             {
+                if (deployableElements.isEmpty())
+                {
+                    getLog().info("Extension " + extension.getLabel() + " does not have deployable elements. Skipping");
+                    return Lists.mutable.empty();
+                }
                 List<DeploymentResponse> responses = extension.deployAll(model,  elementList);
                 printResponses(responses);
                 return responses;
             }
             else
             {
-                if (extension.requiresValidation())
+                if (extension.requiresValidation() && !deployableElements.isEmpty())
                 {
                     List<DeploymentResponse> responses = extension.validateAll(model,  elementList);
                     printResponses(responses);
