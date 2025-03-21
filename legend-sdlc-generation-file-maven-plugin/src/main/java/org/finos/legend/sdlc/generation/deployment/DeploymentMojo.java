@@ -91,8 +91,9 @@ public class DeploymentMojo extends AbstractMojo
         {
             throw new MojoExecutionException("Error loading entities from model", e);
         }
-
+        long serializeStartTime = System.nanoTime();
         PureModelContextData pureModelContextData = pureModelContextDataBuilder.withSDLC(buildSDLCInfo()).withProtocol(buildProtocol()).build();
+        getLog().info(String.format("Finished loading model (%.9fs), found %,d elements", (System.nanoTime() - serializeStartTime) / 1_000_000_000.0, pureModelContextData.getElements().size()));
         List<DeploymentResponse> responses = runPhase(pureModelContextData, new ArrayList<>(pureModelContextData.getElements()));
         handleResponses(responses);
         String result;
@@ -235,6 +236,7 @@ public class DeploymentMojo extends AbstractMojo
         }
         else if (deploymentKeyFilter != null)
         {
+            getLog().info(String.format("Running %s Phase with deployment extension ID: %s", this.deploymentPhase, this.deploymentKeyFilter));
             DeploymentExtension extension = DeploymentExtensionLoader.extensions().stream().filter(e -> e.getKey().equals(deploymentKeyFilter)).findFirst().orElse(null);
             if (extension == null)
             {
@@ -248,7 +250,9 @@ public class DeploymentMojo extends AbstractMojo
                     getLog().info("Extension " + extension.getLabel() + " does not have deployable elements. Skipping");
                     return Lists.mutable.empty();
                 }
+                long deployTime = System.nanoTime();
                 List<DeploymentResponse> responses = extension.deployAll(model,  elementList);
+                getLog().info(String.format("Deploy complete for extension %s (%.9fs). Deployed %,d elements", this.deploymentKeyFilter, (System.nanoTime() - deployTime) / 1_000_000_000.0, deployableElements.size()));
                 printResponses(responses);
                 return responses;
             }
@@ -256,7 +260,9 @@ public class DeploymentMojo extends AbstractMojo
             {
                 if (extension.requiresValidation() && !deployableElements.isEmpty())
                 {
+                    long validateTime = System.nanoTime();
                     List<DeploymentResponse> responses = extension.validateAll(model,  elementList);
+                    getLog().info(String.format("Validation complete for extension %s (%.9fs). Validated %,d elements", this.deploymentKeyFilter, (System.nanoTime() - validateTime) / 1_000_000_000.0, deployableElements.size()));
                     printResponses(responses);
                     return responses;
                 }
@@ -266,7 +272,10 @@ public class DeploymentMojo extends AbstractMojo
         }
         else
         {
+            getLog().info(String.format("Running %s Phase with no filter set", this.deploymentPhase));
+            long beginTime = System.nanoTime();
             List<DeploymentResponse> responses = this.deploymentPhase.equals(DEPLOY_PHASE) ? deploymentManager.deploy() : deploymentManager.validate();
+            getLog().info(String.format("%s complete for extension %s (%.9fs). Deployed %,d elements", this.deploymentPhase, this.deploymentKeyFilter, (System.nanoTime() - beginTime) / 1_000_000_000.0, elementList.size()));
             printResponses(responses);
             return responses;
         }
