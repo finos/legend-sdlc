@@ -500,6 +500,12 @@
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-service</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
@@ -832,6 +838,12 @@
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-relationalStore-executionPlan</artifactId>
                 <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
@@ -913,6 +925,12 @@
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-extensions-collection-generation</artifactId>
                 <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
