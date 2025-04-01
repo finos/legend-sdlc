@@ -71,7 +71,7 @@
 
         <!-- Legend dependency versions -->
         <legend.engine.version>4.75.3</legend.engine.version>
-        <legend.pure.version>5.39.0</legend.pure.version>
+        <legend.pure.version>5.40.0</legend.pure.version>
         <legend.shared.version>0.25.7</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -500,6 +500,12 @@
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-service</artifactId>
                 <version>${project.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
@@ -832,6 +838,12 @@
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-xt-relationalStore-executionPlan</artifactId>
                 <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
@@ -913,6 +925,12 @@
                 <groupId>org.finos.legend.engine</groupId>
                 <artifactId>legend-engine-extensions-collection-generation</artifactId>
                 <version>${legend.engine.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.checkerframework</groupId>
+                        <artifactId>checker-qual</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.engine</groupId>
