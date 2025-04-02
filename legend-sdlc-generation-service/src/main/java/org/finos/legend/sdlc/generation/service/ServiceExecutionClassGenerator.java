@@ -22,9 +22,11 @@ import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
 import org.finos.legend.engine.protocol.pure.m3.function.LambdaFunction;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
 import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Execution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
@@ -72,6 +74,18 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         return this;
     }
 
+    public ServiceExecutionClassGenerator withFunctionJar(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        setPackageName(getJavaPackageName(functionJar._package));
+        setClassName(getJavaClassName(functionJar.name));
+        setParameter(SERVICE_PARAM, functionJar);
+        MutableList<ExecutionParameter> executionParameters = getExecutionParameters(functionJar, pureModelContextData);
+        setParameter(STREAM_PROVIDER_PARAMETER_NAME_PARAM, getStreamProviderParameterName(executionParameters));
+        setParameter(IMPORTS_PARAM, getImports(executionParameters));
+        setParameter(EXEC_PARAMS_PARAM, executionParameters);
+        return this;
+    }
+
     private MutableList<String> getImports(MutableList<ExecutionParameter> executionParameters)
     {
         // TODO add imports for non-primitives when possible
@@ -79,6 +93,36 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
         imports.remove(null);
         imports.removeIf(c -> "java.lang".equals(c.getPackage().getName()));
         return imports.collect(Class::getName, Lists.mutable.ofInitialCapacity(imports.size())).sortThis();
+    }
+
+    private MutableList<ExecutionParameter> getParameters(List<Variable> functionParameters, MutableList<ExecutionParameter> parameters, MutableSet<String> javaParameterNames)
+    {
+        for (Variable legendParameter : functionParameters)
+        {
+            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(legendParameter.name);
+            if (!javaParameterNames.add(javaParameterName))
+            {
+                String initialJavaParameterName = javaParameterName;
+                int i = 2;
+                javaParameterName = initialJavaParameterName + "$" + i;
+                while (!javaParameterNames.add(javaParameterName))
+                {
+                    i++;
+                    javaParameterName = initialJavaParameterName + "$" + i;
+                }
+            }
+            parameters.add(newExecutionParameter(legendParameter, javaParameterName));
+        }
+        return parameters;
+    }
+
+
+    private MutableList<ExecutionParameter> getExecutionParameters(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        List<Variable> functionJarParameters = ServiceExecutionGenerator.getFunctionJarParameters(functionJar, pureModelContextData);
+        MutableList<ExecutionParameter> parameters = Lists.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        MutableSet<String> javaParameterNames = Sets.mutable.ofInitialCapacity(functionJarParameters.size() + 1);
+        return getParameters(functionJarParameters, parameters, javaParameterNames);
     }
 
     private MutableList<ExecutionParameter> getExecutionParameters(Service service)
@@ -102,23 +146,7 @@ class ServiceExecutionClassGenerator extends AbstractServiceExecutionClassGenera
                 parameters.add(newExecutionParameter(new Variable(executionKey, "String", new Multiplicity(1, 1)), javaParameterName));
             }
         }
-        for (Variable legendParameter : lambda.parameters)
-        {
-            String javaParameterName = JavaSourceHelper.toValidJavaIdentifier(legendParameter.name);
-            if (!javaParameterNames.add(javaParameterName))
-            {
-                String initialJavaParameterName = javaParameterName;
-                int i = 2;
-                javaParameterName = initialJavaParameterName + "$" + i;
-                while (!javaParameterNames.add(javaParameterName))
-                {
-                    i++;
-                    javaParameterName = initialJavaParameterName + "$" + i;
-                }
-            }
-            parameters.add(newExecutionParameter(legendParameter, javaParameterName));
-        }
-        return parameters;
+        return getParameters(lambda.parameters, parameters, javaParameterNames);
     }
 
     private ExecutionParameter newExecutionParameter(Variable variable, String javaParamName)

@@ -26,7 +26,12 @@ import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.set.MutableSet;
+import org.finos.legend.engine.language.functionJar.generation.FunctionJarArtifactGenerator;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
+import org.finos.legend.engine.protocol.pure.m3.function.Function;
+import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
+import org.finos.legend.engine.protocol.pure.m3.valuespecification.Variable;
+import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.language.pure.dsl.service.execution.ServiceRunner;
 import org.finos.legend.engine.language.pure.dsl.service.generation.ServicePlanGenerator;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
@@ -39,13 +44,17 @@ import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.executionPlan.ExecutionPlan;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
+import org.finos.legend.engine.pure.code.core.PureCoreExtensionLoader;
 import org.finos.legend.engine.pure.code.core.LegendPureCoreExtension;
 import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
+import org.finos.legend.pure.generated.Root_meta_external_function_activator_functionJar_FunctionJar;
 import org.finos.legend.pure.generated.Root_meta_pure_extension_Extension;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enum;
 import org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.type.Enumeration;
 import org.finos.legend.pure.m3.execution.ExecutionSupport;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
+import org.finos.legend.pure.m3.navigation.function.FunctionDescriptor;
 import org.finos.legend.sdlc.generation.GeneratedJavaCode;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
@@ -61,18 +70,23 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.RecursiveTask;
 import javax.lang.model.SourceVersion;
 import javax.tools.JavaFileObject;
 
+import static org.finos.legend.pure.generated.platform_pure_essential_meta_graph_pathToElement.Root_meta_pure_functions_meta_pathToElement_String_1__PackageableElement_1_;
+
 public class ServiceExecutionGenerator
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(ServiceExecutionGenerator.class);
 
     private final ListIterable<Service> services;
+    private final ListIterable<FunctionJar> functionJars;
     private final PureModel pureModel;
+    private final PureModelContextData pureModelContextData;
     private final String packagePrefix;
     private final Path javaSourceOutputDirectory;
     private final Path resourceOutputDirectory;
@@ -82,10 +96,12 @@ public class ServiceExecutionGenerator
     private final Iterable<? extends PlanTransformer> transformers;
     private final ForkJoinPool executorService;
 
-    private ServiceExecutionGenerator(ListIterable<Service> services, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, String clientVersion, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, ForkJoinPool executorService)
+    private ServiceExecutionGenerator(ListIterable<Service> services, ListIterable<FunctionJar> functionJars, PureModel pureModel, PureModelContextData pureModelContextData, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, String clientVersion, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, ForkJoinPool executorService)
     {
         this.services = services;
+        this.functionJars = functionJars;
         this.pureModel = pureModel;
+        this.pureModelContextData = pureModelContextData;
         this.packagePrefix = packagePrefix;
         this.javaSourceOutputDirectory = javaSourceOutputDirectory;
         this.resourceOutputDirectory = resourceOutputDirectory;
@@ -99,15 +115,11 @@ public class ServiceExecutionGenerator
     @Deprecated
     public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper)
     {
-        this(Lists.immutable.with(validateService(service)), pureModel, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, resolveClientVersion(null), Lists.immutable.empty(), Lists.immutable.empty(), null);
+        this(Lists.immutable.with(validateService(service)), null, pureModel, null, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, resolveClientVersion(null), Lists.immutable.empty(), Lists.immutable.empty(), null);
     }
 
-    public void generate()
+    public void generateUtil(ExecClassNamesAndEnumerations execClassNamesAndEnums)
     {
-        LOGGER.info("Starting generation of {} services", this.services.size());
-        ExecClassNamesAndEnumerations execClassNamesAndEnums = (this.executorService == null) ?
-                this.services.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generate(service))) :
-                this.executorService.invoke(new ServiceGenerationTask());
         if (execClassNamesAndEnums != null)
         {
             if (execClassNamesAndEnums.enumerations.notEmpty())
@@ -121,7 +133,30 @@ public class ServiceExecutionGenerator
                 writeServiceProviderConfigFile(execClassNamesAndEnums.executionClassNames.sortThis());
             }
         }
+    }
+
+    public void generateFunctionJar()
+    {
+        LOGGER.info("Starting generation of {} function jar", this.functionJars.size());
+        ExecClassNamesAndEnumerations execClassNamesAndEnums = this.functionJars.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generate(service)));
+        generateUtil(execClassNamesAndEnums);
+        LOGGER.info("Finished generation of {} function jar", this.functionJars.size());
+    }
+
+    public void generateService()
+    {
+        LOGGER.info("Starting generation of {} services", this.services.size());
+        ExecClassNamesAndEnumerations execClassNamesAndEnums = (this.executorService == null) ?
+                this.services.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generate(service))) :
+                this.executorService.invoke(new ServiceGenerationTask());
+        generateUtil(execClassNamesAndEnums);
         LOGGER.info("Finished generation of {} services", this.services.size());
+    }
+
+    public void generate()
+    {
+        generateService();
+        generateFunctionJar();
     }
 
     private void writeExecutionPlan(String servicePath, ExecutionPlan plan)
@@ -293,7 +328,55 @@ public class ServiceExecutionGenerator
 
     private ExecClassNamesAndEnumerations generate(int index)
     {
+        LOGGER.info("index gotten is {}", index);
+        if (index >= this.services.size())
+        {
+            generate(this.functionJars.get(index - this.services.size()));
+        }
         return generate(this.services.get(index));
+    }
+
+    private ExecClassNamesAndEnumerations generate(FunctionJar functionJar)
+    {
+        long start = System.nanoTime();
+        String functionJarPath = functionJar.getPath();
+        LOGGER.info("Starting generation for {}", functionJarPath);
+        Root_meta_external_function_activator_functionJar_FunctionJar h = (Root_meta_external_function_activator_functionJar_FunctionJar) Root_meta_pure_functions_meta_pathToElement_String_1__PackageableElement_1_(functionJarPath, pureModel.getExecutionSupport());
+        // Validate service parameter types and collect enumerations to generate
+        ListIterable<Enumeration<? extends Enum>> enumerations = validateFunctionJarParameterTypes(functionJar);
+
+        // Generate plan
+        ExecutionPlan plan = FunctionJarArtifactGenerator.generatePlan(this.pureModel, h, this.pureModelContextData, this.clientVersion, (PureModel pureModel) -> PureCoreExtensionLoader.extensions().flatCollect(e -> e.extraPureCoreExtensions(pureModel.getExecutionSupport())));
+
+        // Write any Java classes from the plan, then remove them from the plan
+        LOGGER.debug("Writing Java source files from plan for {}", functionJarPath);
+        JavaSourceHelper.writeJavaSourceFiles(this.javaSourceOutputDirectory, plan);
+        LOGGER.debug("Finished writing Java source files from plan for {}", functionJarPath);
+        JavaSourceHelper.removeJavaImplementationClasses(plan);
+
+        // Generate execution class for service
+        LOGGER.debug("Starting generating main function jar execution class for {}", functionJarPath);
+        GeneratedJavaCode generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.packagePrefix)
+                .withPlanResourceName(getExecutionPlanResourceName(functionJarPath))
+                .withFunctionJar(functionJar, this.pureModelContextData)
+                .generate();
+        LOGGER.debug("Finished generating main function jar execution class for {}", functionJarPath);
+
+        // Write plan resource and execution class
+        LOGGER.debug("Starting writing execution plan for {}", functionJarPath);
+        writeExecutionPlan(functionJarPath, plan);
+        LOGGER.debug("Finished writing execution plan for {}", functionJarPath);
+        LOGGER.debug("Starting writing main function jar execution class for {}: {}", functionJarPath, generatedJavaClass.getClassName());
+        writeJavaClass(generatedJavaClass);
+        LOGGER.debug("Finished writing main function jar execution class for {}: {}", functionJarPath, generatedJavaClass.getClassName());
+
+        ExecClassNamesAndEnumerations execClassNamesAndEnums = new ExecClassNamesAndEnumerations(generatedJavaClass.getClassName(), enumerations);
+        if (LOGGER.isInfoEnabled())
+        {
+            long end = System.nanoTime();
+            LOGGER.info("Finished generation for {} ({}s)", functionJarPath, String.format("%.9f", (end - start) / 1_000_000_000.0));
+        }
+        return execClassNamesAndEnums;
     }
 
     private ExecClassNamesAndEnumerations generate(Service service)
@@ -339,16 +422,11 @@ public class ServiceExecutionGenerator
         return execClassNamesAndEnums;
     }
 
-    private ListIterable<Enumeration<? extends Enum>> validateServiceParameterTypes(Service service)
+    private ListIterable<Enumeration<? extends Enum>> validateVariable(List<Variable> variables)
     {
-        if (!(service.execution instanceof PureExecution))
-        {
-            throw new RuntimeException("Only services with PureExecution are supported");
-        }
-
         MutableList<Enumeration<? extends Enum>> enumerations = Lists.mutable.empty();
         MutableSet<String> enumerationPaths = Sets.mutable.empty();
-        ((PureExecution) service.execution).func.parameters.forEach(var ->
+        variables.forEach(var ->
         {
             String type = ((PackageableType)var.genericType.rawType).fullPath;
             if (!PrimitiveUtilities.isPrimitiveTypeName(type) && !enumerationPaths.contains(type))
@@ -367,6 +445,55 @@ public class ServiceExecutionGenerator
             }
         });
         return enumerations;
+    }
+
+    public static List<Variable> getFunctionJarParameters(FunctionJar functionJar, PureModelContextData pureModelContextData)
+    {
+        try
+        {
+            // get functionJar function's path in order to get parameters
+            String path = functionJar.function.path;
+
+            String newPath = FunctionDescriptor.functionDescriptorToId(path);
+
+            // Extract elements from pureModelContextData
+            List<PackageableElement> elements = pureModelContextData.getElements();
+            Function ret = null;
+
+            for (PackageableElement ele: elements)
+            {
+                if (ele instanceof Function && (ele.getPath().equals(newPath)))
+                {
+                    ret = (Function)ele;
+                    break;
+                }
+            }
+            if (ret != null)
+            {
+                return ret.parameters;
+            }
+            return Lists.mutable.empty();
+        }
+        catch (Exception e)
+        {
+            LOGGER.info("Invalid function path");
+            throw new RuntimeException(e);
+        }
+    }
+
+    private ListIterable<Enumeration<? extends Enum>> validateFunctionJarParameterTypes(FunctionJar functionJar)
+    {
+        return validateVariable(getFunctionJarParameters(functionJar, this.pureModelContextData));
+    }
+
+    private ListIterable<Enumeration<? extends Enum>> validateServiceParameterTypes(Service service)
+    {
+        if (!(service.execution instanceof PureExecution))
+        {
+            throw new RuntimeException("Only services with PureExecution are supported");
+        }
+
+        return validateVariable(((PureExecution) service.execution).func.parameters);
     }
 
     private ExecutionPlan generateExecutionPlan(Service service, String servicePath)
@@ -428,7 +555,7 @@ public class ServiceExecutionGenerator
         @Override
         protected ExecClassNamesAndEnumerations compute()
         {
-            ExecClassNamesAndEnumerations result = computeForRange(0, ServiceExecutionGenerator.this.services.size());
+            ExecClassNamesAndEnumerations result = computeForRange(0, ServiceExecutionGenerator.this.services.size() + ServiceExecutionGenerator.this.functionJars.size());
             if (this.terminated && !isCompletedAbnormally())
             {
                 LOGGER.warn("Service generation terminated without abnormal completion");
@@ -621,7 +748,9 @@ public class ServiceExecutionGenerator
     public static class Builder
     {
         private final MutableList<Service> services = Lists.mutable.empty();
+        private final MutableList<FunctionJar> functionJars = Lists.mutable.empty();
         private PureModel pureModel;
+        private PureModelContextData pureModelContextData;
         private String packagePrefix;
         private Path javaSourceOutputDirectory;
         private Path resourceOutputDirectory;
@@ -641,15 +770,33 @@ public class ServiceExecutionGenerator
             return this;
         }
 
+        public Builder withFunctionJar(FunctionJar functionJar)
+        {
+            this.functionJars.add(functionJar);
+            return this;
+        }
+
         public Builder withServices(Iterable<? extends Service> services)
         {
             services.forEach(this::withService);
             return this;
         }
 
+        public Builder withFunctionJars(Iterable<? extends FunctionJar> functionJars)
+        {
+            functionJars.forEach(this::withFunctionJar);
+            return this;
+        }
+
         public Builder withPureModel(PureModel pureModel)
         {
             this.pureModel = pureModel;
+            return this;
+        }
+
+        public Builder withPureModelContextData(PureModelContextData pureModelContextData)
+        {
+            this.pureModelContextData = pureModelContextData;
             return this;
         }
 
@@ -738,7 +885,9 @@ public class ServiceExecutionGenerator
 
             return new ServiceExecutionGenerator(
                     this.services,
+                    this.functionJars,
                     this.pureModel,
+                    this.pureModelContextData,
                     this.packagePrefix,
                     this.javaSourceOutputDirectory,
                     this.resourceOutputDirectory,
@@ -762,11 +911,13 @@ public class ServiceExecutionGenerator
     }
 
     @Deprecated
-    public static ServiceExecutionGenerator newGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, String clientVersion)
+    public static ServiceExecutionGenerator newGenerator(Service service, FunctionJar functionJar, PureModel pureModel, PureModelContextData pureModelContextData, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, String clientVersion)
     {
         return new ServiceExecutionGenerator(
                 Lists.immutable.with(validateService(service)),
+                Lists.immutable.with(functionJar),
                 pureModel,
+                pureModelContextData,
                 packagePrefix,
                 javaSourceOutputDirectory,
                 resourceOutputDirectory,
