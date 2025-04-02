@@ -32,6 +32,7 @@ import org.finos.legend.engine.plan.execution.result.json.JsonStreamingResult;
 import org.finos.legend.engine.plan.execution.result.serialization.SerializationFormat;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.plan.platform.java.JavaSourceHelper;
+import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
 import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.m3.multiplicity.Multiplicity;
 import org.finos.legend.engine.protocol.pure.m3.valuespecification.constant.PackageableType;
@@ -86,6 +87,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -95,6 +97,7 @@ public class TestServiceExecutionGenerator
     private static PureModelContextData PURE_MODEL_CONTEXT_DATA;
     private static PureModel PURE_MODEL;
     private static Map<String, Service> SERVICES;
+    private static Map<String, FunctionJar> FUNCTIONJARS;
     private static ObjectMapper OBJECT_MAPPER;
 
     @Rule
@@ -119,6 +122,7 @@ public class TestServiceExecutionGenerator
             PURE_MODEL = pureModelWithContextData.getPureModel();
         }
         SERVICES = Iterate.groupByUniqueKey(PURE_MODEL_CONTEXT_DATA.getElementsOfType(Service.class), PackageableElement::getPath);
+        FUNCTIONJARS = Iterate.groupByUniqueKey(PURE_MODEL_CONTEXT_DATA.getElementsOfType(FunctionJar.class), PackageableElement::getPath);
         OBJECT_MAPPER = new ObjectMapper();
     }
 
@@ -199,6 +203,15 @@ public class TestServiceExecutionGenerator
         Service service = getService("service::RelationalService");
         ClassLoader classLoader = generateAndCompile(packagePrefix, service);
         assertExecuteMethods(classLoader, "org.finos.service.RelationalService");
+    }
+
+    @Test
+    public void testSimpleRelationalForFunctionJar() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        FunctionJar functionJar = getFunctionJar("functionJar::RelationalFunctionJar");
+        ClassLoader classLoader = generateAndCompileFunctionJar(packagePrefix, Collections.singletonList(functionJar));
+        assertExecuteMethods(classLoader, "org.finos.functionJar.RelationalFunctionJar");
     }
 
     @Test
@@ -411,6 +424,11 @@ public class TestServiceExecutionGenerator
         return Objects.requireNonNull(SERVICES.get(servicePath), servicePath);
     }
 
+    private FunctionJar getFunctionJar(String functionJarPath)
+    {
+        return Objects.requireNonNull(FUNCTIONJARS.get(functionJarPath), functionJarPath);
+    }
+
     private Collection<Service> getAllServices()
     {
         return SERVICES.values();
@@ -506,6 +524,100 @@ public class TestServiceExecutionGenerator
         Assert.assertNotNull("ServiceRunner provider configuration file missing", serviceRunnerResourceStream);
         List<String> serviceRunnerProviders = new BufferedReader(new InputStreamReader(serviceRunnerResourceStream)).lines().collect(Collectors.toList());
         List<String> missingServiceProviders = services.stream()
+                .map(PackageableElement::getPath)
+                .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace(EntityPaths.PACKAGE_SEPARATOR, ".")))
+                .sorted()
+                .collect(Collectors.toList());
+        Assert.assertEquals(Collections.emptyList(), missingServiceProviders);
+        return classLoader;
+    }
+
+    private ClassLoader generateAndCompileFunctionJar(String packagePrefix, Collection<? extends FunctionJar> functionJars) throws IOException
+    {
+        ServiceExecutionGenerator generator = ServiceExecutionGenerator.newBuilder()
+                .withFunctionJars(functionJars)
+                .withPureModel(PURE_MODEL)
+                .withPureModelContextData(PURE_MODEL_CONTEXT_DATA)
+                .withPackagePrefix(packagePrefix)
+                .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
+                .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
+                .withClientVersion("vX_X_X")
+                .build();
+        generator.generate();
+
+        // Generate
+        Set<String> enumClasses = LazyIterate.flatCollect(functionJars, j -> ServiceExecutionGenerator.getFunctionJarParameters(j, PURE_MODEL_CONTEXT_DATA))
+                .collectIf(
+                        p -> !PrimitiveUtilities.isPrimitiveTypeName(((PackageableType) p.genericType.rawType).fullPath),
+                        p -> org.finos.legend.pure.m3.navigation.PackageableElement.PackageableElement.getUserPathForPackageableElement(PURE_MODEL.getEnumeration(((PackageableType) p.genericType.rawType).fullPath, null)),
+                        Sets.mutable.empty());
+
+        // Check generated files
+        String separator = this.tmpFolder.getRoot().toPath().getFileSystem().getSeparator();
+
+        // Check execution plan resources generated
+        Set<String> expectedResources = functionJars.stream().map(s -> "plans" + separator + getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".json").collect(Collectors.toSet());
+        expectedResources.add("META-INF" + separator + "services" + separator + ServiceRunner.class.getCanonicalName());
+        Set<String> actualResources = Files.walk(this.classesDirectory, Integer.MAX_VALUE).filter(Files::isRegularFile).map(this.classesDirectory::relativize).map(Path::toString).collect(Collectors.toSet());
+        Assert.assertEquals(expectedResources, actualResources);
+
+        // Check class files generated
+        Set<String> expectedJavaSources = functionJars.stream().map(s -> getPackagePrefix(packagePrefix, separator) + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, separator) + ".java").collect(Collectors.toSet());
+        enumClasses.forEach(v -> expectedJavaSources.add(getPackagePrefix(packagePrefix, separator) + Arrays.stream(v.split(EntityPaths.PACKAGE_SEPARATOR)).map(JavaSourceHelper::toValidJavaIdentifier).collect(Collectors.joining(this.generatedSourcesDirectory.getFileSystem().getSeparator())) + ".java"));
+        Set<String> actualJavaSources = Files.walk(this.generatedSourcesDirectory, Integer.MAX_VALUE).map(this.generatedSourcesDirectory::relativize).map(Path::toString).filter(s -> s.endsWith(".java")).collect(Collectors.toSet());
+        if (!actualJavaSources.containsAll(expectedJavaSources))
+        {
+            Assert.fail(expectedJavaSources.stream().filter(c -> !actualJavaSources.contains(c)).sorted().collect(Collectors.joining(", ", "Missing Java sources: ", "")));
+        }
+
+        // Compile
+        JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
+        MemoryFileManager fileManager = new MemoryFileManager(compiler);
+        List<SourceFile> javaSources = Files.walk(this.generatedSourcesDirectory, Integer.MAX_VALUE).filter(p -> p.getFileName().toString().endsWith(".java")).map(SourceFile::new).collect(Collectors.toList());
+        JavaCompiler.CompilationTask task = compiler.getTask(null, fileManager, diagnosticCollector, Arrays.asList("-classpath", CLASSPATH), null, javaSources);
+        if (!task.call())
+        {
+            Assert.fail(diagnosticCollector.getDiagnostics().toString());
+        }
+        fileManager.writeClassJavaSources(this.classesDirectory, false, new VoidLog());
+
+        // Create new classloader and check that everything expected is present
+        ClassLoader classLoader = new URLClassLoader(new URL[]{this.classesDirectory.toUri().toURL()}, Thread.currentThread().getContextClassLoader());
+
+        // Check plan resources
+        List<String> missingPlanResources = functionJars.stream()
+                .map(s -> "plans/" + getPackagePrefix(packagePrefix, "/") + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "/") + ".json")
+                .filter(n -> classLoader.getResource(n) == null)
+                .sorted()
+                .collect(Collectors.toList());
+        Assert.assertEquals(Collections.emptyList(), missingPlanResources);
+
+        // Check function jar execution classes
+        List<String> missingServiceExecutionClasses = functionJars.stream()
+                .map(s -> getPackagePrefix(packagePrefix, ".") + s.getPath().replace(EntityPaths.PACKAGE_SEPARATOR, "."))
+                .filter(n ->
+                {
+                    try
+                    {
+                        classLoader.loadClass(n);
+                        return false;
+                    }
+                    catch (ClassNotFoundException e)
+                    {
+                        return true;
+                    }
+                })
+                .sorted()
+                .collect(Collectors.toList());
+        Assert.assertEquals(Collections.emptyList(), missingServiceExecutionClasses);
+
+        // Check ServiceRunner provider configuration file
+        InputStream serviceRunnerResourceStream = classLoader.getResourceAsStream("META-INF" + separator + "services" + separator + ServiceRunner.class.getCanonicalName());
+        Assert.assertNotNull("ServiceRunner provider configuration file missing", serviceRunnerResourceStream);
+        List<String> serviceRunnerProviders = new BufferedReader(new InputStreamReader(serviceRunnerResourceStream)).lines().collect(Collectors.toList());
+        List<String> missingServiceProviders = functionJars.stream()
                 .map(PackageableElement::getPath)
                 .filter(path -> !serviceRunnerProviders.contains(getPackagePrefix(packagePrefix, ".") + path.replace(EntityPaths.PACKAGE_SEPARATOR, ".")))
                 .sorted()

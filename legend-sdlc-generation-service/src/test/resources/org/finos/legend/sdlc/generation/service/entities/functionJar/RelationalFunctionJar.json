@@ -1,0 +1,18 @@
+{
+  "content":
+    {
+      "_type": "functionJar",
+      "documentation": "",
+      "name": "RelationalFunctionJar",
+      "function": {
+        "path": "model::TestFunction():TabularDataSet[1]",
+        "type": "FUNCTION"
+      },
+      "ownership": {
+        "_type": "DeploymentOwner",
+        "id": "45656"
+      },
+      "package": "functionJar"
+    },
+  "classifierPath": "meta::external::function::activator::functionJar::FunctionJar"
+}
