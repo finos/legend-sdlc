@@ -770,9 +770,9 @@ public class ServiceExecutionGenerator
             return this;
         }
 
-        public Builder withService(FunctionJar service)
+        public Builder withFunctionJar(FunctionJar functionJar)
         {
-            this.functionJars.add(service);
+            this.functionJars.add(functionJar);
             return this;
         }
 
@@ -782,9 +782,9 @@ public class ServiceExecutionGenerator
             return this;
         }
 
-        public Builder withFunctionJars(Iterable<? extends FunctionJar> services)
+        public Builder withFunctionJars(Iterable<? extends FunctionJar> functionJars)
         {
-            services.forEach(this::withService);
+            functionJars.forEach(this::withFunctionJar);
             return this;
         }
 
