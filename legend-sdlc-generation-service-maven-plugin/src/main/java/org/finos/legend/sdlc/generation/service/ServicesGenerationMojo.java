@@ -239,8 +239,8 @@ public class ServicesGenerationMojo extends AbstractMojo
             MutableList<String> allServices = Lists.mutable.empty();
             allServices.addAll(servicesByPath.keySet());
             allServices.addAll(functionJarsByPath.keySet());
-            getLog().info(Lists.mutable.withAll(servicesByPath).toSortedList().makeString("Found " + (servicesByPath.size()) + " services for generation: ", ", ", ""));
-            getLog().info(Lists.mutable.withAll(functionJarsByPath).toSortedList().makeString("Found " + (functionJarsByPath.size()) + " function jars for generation: ", ", ", ""));
+            getLog().info(Lists.mutable.withAll(servicesByPath.keySet()).toSortedList().makeString("Found " + (servicesByPath.size()) + " services for generation: ", ", ", ""));
+            getLog().info(Lists.mutable.withAll(functionJarsByPath.keySet()).toSortedList().makeString("Found " + (functionJarsByPath.size()) + " function jars for generation: ", ", ", ""));
         }
 
         JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
