@@ -1,0 +1,122 @@
+{
+  "content":
+  {
+    "_type": "function",
+    "body": [
+      {
+        "_type": "func",
+        "function": "from",
+        "parameters": [
+          {
+            "_type": "func",
+            "function": "project",
+            "parameters": [
+              {
+                "_type": "func",
+                "function": "getAll",
+                "parameters": [
+                  {
+                    "_type": "packageableElementPtr",
+                    "fullPath": "model::SourcePerson"
+                  }
+                ]
+              },
+              {
+                "_type": "collection",
+                "multiplicity": {
+                  "lowerBound": 2,
+                  "upperBound": 2
+                },
+                "values": [
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "property",
+                        "parameters": [
+                          {
+                            "_type": "var",
+                            "name": "x"
+                          }
+                        ],
+                        "property": "firstName"
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ]
+                  },
+                  {
+                    "_type": "lambda",
+                    "body": [
+                      {
+                        "_type": "property",
+                        "parameters": [
+                          {
+                            "_type": "var",
+                            "name": "x"
+                          }
+                        ],
+                        "property": "lastName"
+                      }
+                    ],
+                    "parameters": [
+                      {
+                        "_type": "var",
+                        "name": "x"
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "_type": "collection",
+                "multiplicity": {
+                  "lowerBound": 2,
+                  "upperBound": 2
+                },
+                "values": [
+                  {
+                    "_type": "string",
+                    "value": "firstName"
+                  },
+                  {
+                    "_type": "string",
+                    "value": "lastName"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "_type": "packageableElementPtr",
+            "fullPath": "model::RelationalMapping"
+          },
+          {
+            "_type": "packageableElementPtr",
+            "fullPath": "model::RelationalRuntime"
+          }
+        ]
+      }
+    ],
+    "name": "TestFunction__TabularDataSet_1_",
+    "package": "model",
+    "parameters": [],
+    "postConstraints": [],
+    "preConstraints": [],
+    "returnGenericType": {
+      "rawType": {
+        "_type": "packageableType",
+        "fullPath": "meta::pure::tds::TabularDataSet"
+      }
+    },
+    "returnMultiplicity": {
+      "lowerBound": 1,
+      "upperBound": 1
+    }
+  },
+  "classifierPath": "meta::pure::metamodel::function::ConcreteFunctionDefinition"
+}
