@@ -70,8 +70,8 @@
         <java.version.range>[11,12),[17,18),[21,22)</java.version.range>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.75.3</legend.engine.version>
-        <legend.pure.version>5.40.0</legend.pure.version>
+        <legend.engine.version>4.76.0</legend.engine.version>
+        <legend.pure.version>5.41.0</legend.pure.version>
         <legend.shared.version>0.25.7</legend.shared.version>
 
         <!-- Dependency versions -->
@@ -1465,17 +1465,6 @@
                 <groupId>org.freemarker</groupId>
                 <artifactId>freemarker</artifactId>
                 <version>${freemarker.version}</version>
-            </dependency>
-            <!-- Override transitive dependencies to force same version everywhere -->
-            <dependency>
-                <groupId>com.github.tomakehurst</groupId>
-                <artifactId>wiremock-jre8</artifactId>
-                <version>2.35.2</version>
-            </dependency>
-            <dependency>
-                <groupId>jakarta.xml.bind</groupId>
-                <artifactId>jakarta.xml.bind-api</artifactId>
-                <version>2.3.3</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
