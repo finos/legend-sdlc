@@ -23,7 +23,7 @@ import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.language.pure.dsl.generation.compiler.toPureGraph.GenerationCompilerExtension;
 import org.finos.legend.engine.language.pure.dsl.generation.compiler.toPureGraph.HelperGenerationSpecificationBuilder;
 import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
-import org.finos.legend.engine.protocol.pure.v1.model.SourceInformation;
+import org.finos.legend.engine.protocol.pure.m3.SourceInformation;
 import org.finos.legend.engine.protocol.pure.v1.model.context.EngineErrorType;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
@@ -88,11 +88,11 @@ public class ModelGenerationFactory
         {
             throw new RuntimeException("Invalid generation specifications, missing path '" + this.generationSpecification.name);
         }
-        LOGGER.info("Generation generation specification '" + generationSpecification.getPath() + "'");
+        LOGGER.info("Generation generation specification '{}'", generationSpecification.getPath());
         List<GenerationTreeNode> nodes = this.generationSpecification.generationNodes;
         for (GenerationTreeNode node : nodes)
         {
-            LOGGER.info("Start generating generation model element '" + node.generationElement + "'");
+            LOGGER.info("Start generating generation model element '{}'", node.generationElement);
             List<Function3<String, SourceInformation, CompileContext, org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement>> extraModelGenerationSpecificationResolvers = ListIterate.flatCollect(HelperGenerationSpecificationBuilder.getGenerationCompilerExtensions(this.pureModel.getContext()), GenerationCompilerExtension::getExtraModelGenerationSpecificationResolvers);
             org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement generationElement = extraModelGenerationSpecificationResolvers.stream().map(resolver -> resolver.value(node.generationElement, node.sourceInformation, this.pureModel.getContext())).filter(Objects::nonNull).findFirst()
                     .orElseThrow(() -> new EngineException("Can't find generation element '" + node.generationElement + "'", node.sourceInformation, EngineErrorType.COMPILATION));
@@ -108,14 +108,14 @@ public class ModelGenerationFactory
         try
         {
             PureModelContextData generatedModelFromModelGenerator = modelGeneratorInterface.generateModel();
-            LOGGER.info("Finished generating model for '" + modelGeneratorInterface.getName() + "', " + generatedModelFromModelGenerator.getElements().size() + " elements generated");
+            LOGGER.info("Finished generating model for '{}', {} elements generated", modelGeneratorInterface.getName(), generatedModelFromModelGenerator.getElements().size());
             this.fullModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
             this.generatedModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
         }
-        catch (Exception error)
+        catch (Throwable t)
         {
-            LOGGER.info("Error generating element '" + modelGeneratorInterface.getName() + "'", error.getMessage());
-            throw error;
+            LOGGER.info("Error generating element '{}'", modelGeneratorInterface.getName(), t);
+            throw t;
         }
         LOGGER.info("Recompiling graph with generated elements");
         this.pureModel = new PureModel(this.fullModelBuilder.build(), null, null, DeploymentMode.PROD);
@@ -127,7 +127,7 @@ public class ModelGenerationFactory
         LOGGER.info("Validating generated elements");
         PureModelContextData generatedPureModelContextData = this.generatedModelBuilder.build();
         validateGeneratedElements(generatedPureModelContextData);
-        LOGGER.info("Finished generating generation specification. Generated " + generatedPureModelContextData.getElements().size() + " elements");
+        LOGGER.info("Finished generating generation specification. Generated {} elements", generatedPureModelContextData.getElements().size());
         return generatedPureModelContextData;
     }
 
@@ -158,5 +158,4 @@ public class ModelGenerationFactory
     {
         return this.pureModel;
     }
-
 }
