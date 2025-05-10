@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -84,4 +85,27 @@ public class VersionEntitiesResource extends EntityAccessResource
                 () -> this.entityApi.getVersionEntityAccessContext(projectId, versionId).getEntity(path)
         );
     }
+
+    @GET
+    @Path("invalidEntities")
+    @ApiOperation("Get invalid entities of a version")
+    public List<InvalidEntity> getInvalidEntities(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId)
+    {
+        return executeWithLogging(
+                "getting invalid entities in version " + versionId + " for project " + projectId,
+                () -> getInvalidEntities(this.entityApi.getVersionEntityAccessContext(projectId, versionId))
+        );
+    }
+
+    @GET
+    @Path("invalidEntities/{path}")
+    @ApiOperation("Get an invalid entity of a version by its path")
+    public InvalidEntity getInvalidEntityByPath(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId, @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting invalid entity " + path + " in version " + versionId + " for project " + projectId,
+                () -> this.entityApi.getVersionEntityAccessContext(projectId, versionId).getInvalidEntity(path)
+        );
+    }
+
 }
