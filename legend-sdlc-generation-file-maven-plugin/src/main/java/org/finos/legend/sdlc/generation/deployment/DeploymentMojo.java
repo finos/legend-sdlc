@@ -292,8 +292,10 @@ public class DeploymentMojo extends AbstractMojo
     {
         try
         {
+            MavenProject rootMavenProject = findRootMavenProject();
             ObjectMapper mapper = ObjectMapperFactory.getNewStandardObjectMapper();
-            ReducedProjectConfiguration projectConfiguration = mapper.readValue(findProjectJsonPath().toFile(), ReducedProjectConfiguration.class);
+            Path baseDir = rootMavenProject.getBasedir().toPath();
+            ReducedProjectConfiguration projectConfiguration = mapper.readValue(baseDir.resolve("project.json").toFile(), ReducedProjectConfiguration.class);
             AlloySDLC sdlcInfo = new AlloySDLC();
             sdlcInfo.groupId = projectConfiguration.getGroupId();
             sdlcInfo.artifactId = projectConfiguration.getArtifactId();
@@ -307,20 +309,15 @@ public class DeploymentMojo extends AbstractMojo
         }
     }
 
-    private Path findProjectJsonPath()
+    private MavenProject findRootMavenProject()
     {
         MavenProject currentMavenProject = this.mavenProject;
-        Path projectJsonPath = null;
-        while (currentMavenProject.hasParent() && projectJsonPath == null)
+        while (currentMavenProject.hasParent())
         {
             currentMavenProject = currentMavenProject.getParent();
-            Path baseDir = currentMavenProject.getBasedir().toPath();
-            if (Files.exists(baseDir.resolve("project.json")))
-            {
-                projectJsonPath = baseDir.resolve("project.json");
-            }
         }
 
-        return projectJsonPath;
+        return currentMavenProject;
     }
+
 }
