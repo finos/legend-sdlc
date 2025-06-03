@@ -228,8 +228,8 @@ import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
-import org.pac4j.core.context.J2EContext;
-import org.pac4j.core.context.session.J2ESessionStore;
+import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.context.session.JEESessionStore;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.jax.rs.pac4j.JaxRsContext;
 import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
@@ -568,7 +568,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             return new HazelcastSessionStore(
                     config.getHazelcastSession().getConfigFilePath(),
                     Maps.immutable.with(
-                            J2EContext.class, new J2ESessionStore(),
+                            JEEContext.class, new JEESessionStore(),
                             JaxRsContext.class, new ServletSessionStore()).castToMap(), "LegendSSO");
         }
         return null;
