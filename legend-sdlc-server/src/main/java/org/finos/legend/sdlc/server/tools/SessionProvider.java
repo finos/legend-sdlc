@@ -25,11 +25,11 @@ import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenCredentials
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenExtractor;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfileCreator;
-import org.pac4j.core.context.J2EContext;
-import org.pac4j.core.context.Pac4jConstants;
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.util.Pac4jConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,9 +56,9 @@ public class SessionProvider
     {
         if (sessionStore != null)
         {
-            WebContext context = new J2EContext(httpRequest, httpResponse);
+            WebContext context = new JEEContext(httpRequest, httpResponse);
             Map<String, CommonProfile> profileMap =
-                    (Map<String, CommonProfile>) sessionStore.get(context, Pac4jConstants.USER_PROFILES);
+                    (Map<String, CommonProfile>) sessionStore.get(context, Pac4jConstants.USER_PROFILES).orElse(null);
 
             if (profileMap != null)
             {
@@ -129,11 +129,11 @@ public class SessionProvider
                                                                    GitLabAppInfo appInfo,
                                                                    GitlabPersonalAccessTokenClient client)
     {
-        WebContext context = new J2EContext(httpRequest, httpResponse);
+        WebContext context = new JEEContext(httpRequest, httpResponse);
         GitlabPersonalAccessTokenExtractor extractor = new GitlabPersonalAccessTokenExtractor(client.headerTokenName);
         GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(client.host);
         GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, client.host, client.apiVersion);
-        GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context);
+        GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context).get();
 
         try
         {
@@ -145,7 +145,7 @@ public class SessionProvider
             return null;
         }
 
-        GitlabPersonalAccessTokenProfile profile = creator.create(credentials, context);
+        GitlabPersonalAccessTokenProfile profile = (GitlabPersonalAccessTokenProfile) creator.create(credentials, context).get();
         return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
     }
 }

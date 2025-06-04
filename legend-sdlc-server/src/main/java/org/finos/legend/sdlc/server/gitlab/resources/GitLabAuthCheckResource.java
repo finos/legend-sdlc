@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.pac4j.core.client.Client;
-import org.pac4j.core.context.Pac4jConstants;
+import org.pac4j.core.util.Pac4jConstants;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;

@@ -72,7 +72,7 @@
         <!-- Legend dependency versions -->
         <legend.engine.version>4.86.1</legend.engine.version>
         <legend.pure.version>5.48.0</legend.pure.version>
-        <legend.shared.version>0.26.0</legend.shared.version>
+        <legend.shared.version>0.27.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -103,7 +103,8 @@
         <json-smart.version>2.4.7</json-smart.version>
         <junit.version>4.13.1</junit.version>
         <maven.version>3.9.2</maven.version>
-        <pac4j.version>3.8.3</pac4j.version>
+        <pac4j.version>4.5.8</pac4j.version>
+        <pac4j.jax-rs.version>4.0.0</pac4j.jax-rs.version>
         <slf4j.version>1.7.36</slf4j.version>
         <snakeyaml.version>1.33</snakeyaml.version>
 
@@ -1035,7 +1036,7 @@
             <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>oauth2-oidc-sdk</artifactId>
-                <version>6.5</version>
+                <version>8.22</version>
             </dependency>
 
             <dependency>
@@ -1437,7 +1438,7 @@
             <dependency>
                 <groupId>org.pac4j.jax-rs</groupId>
                 <artifactId>core</artifactId>
-                <version>3.0.0</version>
+                <version>${pac4j.jax-rs.version}</version>
             </dependency>
 
             <dependency>

@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.auth;
 
-import org.pac4j.core.context.J2EContext;
+import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
@@ -45,7 +45,7 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
     {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
-        WebContext webContext = new J2EContext(httpRequest, httpResponse);
+        WebContext webContext = new JEEContext(httpRequest, httpResponse);
 
         ProfileManager<P> manager = new ProfileManager<>(webContext);
         List<P> profiles = manager.getAll(true);
