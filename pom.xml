@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.finos</groupId>
         <artifactId>finos</artifactId>
-        <version>4</version>
+        <version>7</version>
     </parent>
 
     <name>Legend SDLC</name>
@@ -68,6 +68,7 @@
         <maven.build.timestamp.format>yyyy-MM-dd HH:mm</maven.build.timestamp.format>
         <maven.compiler.release>8</maven.compiler.release>
         <java.version.range>[11,12),[17,18),[21,22)</java.version.range>
+        <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
         <legend.engine.version>4.88.6</legend.engine.version>
@@ -137,7 +138,6 @@
                     <artifactId>dockerfile-maven-plugin</artifactId>
                     <version>1.4.13</version>
                 </plugin>
-
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-checkstyle-plugin</artifactId>
@@ -244,6 +244,15 @@
         </pluginManagement>
 
         <plugins>
+           <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                     <autoPublish>true</autoPublish>
+                    <waitUntil>published</waitUntil>
+                </configuration>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
@@ -295,16 +304,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <plugin>
-                <groupId>org.sonatype.plugins</groupId>
-                <artifactId>nexus-staging-maven-plugin</artifactId>
-                <extensions>true</extensions>
-                <configuration>
-                    <serverId>ossrh</serverId>
-                    <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                    <autoReleaseAfterClose>true</autoReleaseAfterClose>
-                </configuration>
-            </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
@@ -1482,21 +1482,7 @@
         </dependencies>
     </dependencyManagement>
 
-    <repositories>
-        <repository>
-            <id>ossrh</id>
-            <name>OSSRH Public Group</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/snapshots/</url>
-            <snapshots>
-                <enabled>true</enabled>
-            </snapshots>
-        </repository>
-        <repository>
-            <id>ossrh-releases</id>
-            <name>OSSRH Public Releases Group</name>
-            <url>https://s01.oss.sonatype.org/content/repositories/releases/</url>
-        </repository>
-    </repositories>
+
 
     <profiles>
         <profile>
