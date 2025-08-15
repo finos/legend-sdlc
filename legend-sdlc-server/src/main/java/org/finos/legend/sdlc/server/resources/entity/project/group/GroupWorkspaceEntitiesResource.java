@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.CreateOrUpdateEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
@@ -84,6 +85,18 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
         );
     }
 
+    @GET
+    @Path("invalidEntities")
+    @ApiOperation("Get invalid entities of the group workspace")
+    public List<InvalidEntity> getInvalidEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
+    {
+        return execute(
+                "getting invalid entities in group workspace " + workspaceId + " for project " + projectId,
+                "get invalid entities of the group workspace",
+                () -> getInvalidEntities(this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId))
+        );
+    }
+
     @DELETE
     @ApiOperation(value = "Delete multiple entities in a group workspace", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
     public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
@@ -120,6 +133,17 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
         return executeWithLogging(
                 "getting entity " + path + " in group workspace " + workspaceId + " for project " + projectId,
                 () -> this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+        );
+    }
+
+    @GET
+    @Path("invalidEntities/{path}")
+    @ApiOperation("Get an invalid entity of the group workspace by its path")
+    public InvalidEntity getInvalidEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
+    {
+        return executeWithLogging(
+                "getting invalid entity " + path + " in group workspace " + workspaceId + " for project " + projectId,
+                () -> this.entityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getInvalidEntity(path)
         );
     }
 
