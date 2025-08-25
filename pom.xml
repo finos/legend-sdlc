@@ -101,6 +101,7 @@
         <jersey2-guice.version>1.0.6</jersey2-guice.version>
         <jetty.version>9.4.44.v20210927</jetty.version>
         <json-smart.version>2.4.7</json-smart.version>
+        <joda.time.version>2.10.14</joda.time.version>
         <junit.version>4.13.1</junit.version>
         <maven.version>3.9.2</maven.version>
         <pac4j.version>4.5.8</pac4j.version>
@@ -1190,7 +1191,7 @@
             <dependency>
                 <groupId>joda-time</groupId>
                 <artifactId>joda-time</artifactId>
-                <version>2.10.12</version>
+                <version>${joda.time.version}</version>
             </dependency>
 
             <dependency>
