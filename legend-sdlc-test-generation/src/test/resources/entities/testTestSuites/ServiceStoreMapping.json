@@ -330,7 +330,15 @@
     "includedMappings": [],
     "associationMappings": [],
     "enumerationMappings": [],
-    "tests": [],
+    "tests": [
+      {
+        "name": "dummyTest",
+        "assert": {
+          "_type": "expectedOutputMappingTestAssert",
+          "expectedOutput": "{\"name\":\"Metallurgy Inc.\",\"employees\":[{\"fullName\":\"Pierre DeBelen\"},{\"fullName\":\"Dave Wathen\"}]}"
+        }
+      }
+    ],
     "package": "testTestSuites"
   },
   "classifierPath": "meta::pure::mapping::Mapping"

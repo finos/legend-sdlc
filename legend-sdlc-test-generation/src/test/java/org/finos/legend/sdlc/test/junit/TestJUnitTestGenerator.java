@@ -64,174 +64,223 @@ public class TestJUnitTestGenerator extends AbstractGenerationTest
     public void testRelationalMapping()
     {
         testGeneration(
-                "execution.TestRelationalMapping",
-                "generated/java/execution/TestRelationalMapping.java",
                 null,
-                "execution::RelationalMapping");
+                "execution::RelationalMapping",
+                "generated/java/execution/TestRelationalMapping.java");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.execution.TestRelationalMapping",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "execution::RelationalMapping");
+                "execution::RelationalMapping",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java");
         testGeneration(
-                "other.test.pkg.execution.TestRelationalMapping",
-                "generated/java/other/test/pkg/execution/TestRelationalMapping.java",
                 "other.test.pkg",
-                "execution::RelationalMapping");
+                "execution::RelationalMapping",
+                "generated/java/other/test/pkg/execution/TestRelationalMapping.java");
     }
 
     @Test
     public void testSingleQuoteInResultM2M()
     {
-        testGeneration("legend.demo.TestSingleQuoteInResultM2M",
-                "generated/java/legend/demo/TestSingleQuoteInResultM2M.java",
+        testGeneration(
                 null,
-                "legend::demo::SingleQuoteInResultM2M");
-        testGeneration("org.finos.legend.sdlc.test.junit.junit4.legend.demo.TestSingleQuoteInResultM2M",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "legend::demo::SingleQuoteInResultM2M",
+                "generated/java/legend/demo/TestSingleQuoteInResultM2M.java");
+        testGeneration(
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "legend::demo::SingleQuoteInResultM2M");
-        testGeneration("other.test.pkg.legend.demo.TestSingleQuoteInResultM2M",
-                "generated/java/other/test/pkg/legend/demo/TestSingleQuoteInResultM2M.java",
+                "legend::demo::SingleQuoteInResultM2M",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java");
+        testGeneration(
                 "other.test.pkg",
-                "legend::demo::SingleQuoteInResultM2M");
+                "legend::demo::SingleQuoteInResultM2M",
+                "generated/java/other/test/pkg/legend/demo/TestSingleQuoteInResultM2M.java");
     }
 
     @Test
     public void testSourceToTargetM2M()
     {
-        testGeneration("model.mapping.TestSourceToTargetM2M",
-                "generated/java/model/mapping/TestSourceToTargetM2M.java",
+        testGeneration(
                 null,
-                "model::mapping::SourceToTargetM2M");
-        testGeneration("org.finos.legend.sdlc.test.junit.junit4.model.mapping.TestSourceToTargetM2M",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java",
+                "model::mapping::SourceToTargetM2M",
+                "generated/java/model/mapping/TestSourceToTargetM2M.java");
+        testGeneration(
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "model::mapping::SourceToTargetM2M");
-        testGeneration("other.test.pkg.model.mapping.TestSourceToTargetM2M",
-                "generated/java/other/test/pkg/model/mapping/TestSourceToTargetM2M.java",
+                "model::mapping::SourceToTargetM2M",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java");
+        testGeneration(
                 "other.test.pkg",
-                "model::mapping::SourceToTargetM2M");
+                "model::mapping::SourceToTargetM2M",
+                "generated/java/other/test/pkg/model/mapping/TestSourceToTargetM2M.java");
     }
 
     @Test
     public void testTestService()
     {
         testGeneration(
-                "testTestSuites.TestTestService",
-                "generated/java/testTestSuites/TestTestService.java",
                 null,
-                "testTestSuites::TestService");
+                "testTestSuites::TestService",
+                "generated/java/testTestSuites/TestTestService.java");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestTestService",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "testTestSuites::TestService");
+                "testTestSuites::TestService",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java");
         testGeneration(
-                "other.test.pkg.testTestSuites.TestTestService",
-                "generated/java/other/test/pkg/testTestSuites/TestTestService.java",
                 "other.test.pkg",
-                "testTestSuites::TestService");
+                "testTestSuites::TestService",
+                "generated/java/other/test/pkg/testTestSuites/TestTestService.java");
     }
 
     @Test
     public void testTestService2()
     {
         testGeneration(
-                "testTestSuites.TestTestService2",
-                "generated/java/testTestSuites/TestTestService2.java",
                 null,
-                "testTestSuites::TestService2");
+                "testTestSuites::TestService2",
+                "generated/java/testTestSuites/TestTestService2.java");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestTestService2",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "testTestSuites::TestService2");
+                "testTestSuites::TestService2",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java");
         testGeneration(
-                "other.test.pkg.testTestSuites.TestTestService2",
-                "generated/java/other/test/pkg/testTestSuites/TestTestService2.java",
                 "other.test.pkg",
-                "testTestSuites::TestService2");
+                "testTestSuites::TestService2",
+                "generated/java/other/test/pkg/testTestSuites/TestTestService2.java");
     }
 
     @Test
-    public void testServiceStoreMapping()
+    public void testServiceWithoutTests()
+    {
+        testEmptyGeneration(
+                null,
+                "testTestSuites::MyServiceHasNoTest");
+        testEmptyGeneration(
+                "org.finos.legend.sdlc.test.junit.junit4",
+                "testTestSuites::MyServiceHasNoTest");
+        testEmptyGeneration(
+                "other.test.pkg",
+                "testTestSuites::MyServiceHasNoTest");
+    }
+
+    @Test
+    public void testMappingWithoutTests()
+    {
+        testEmptyGeneration(
+                null,
+                "model::mapping::public");
+        testEmptyGeneration(
+                "org.finos.legend.sdlc.test.junit.junit4",
+                "model::mapping::public");
+        testEmptyGeneration(
+                "other.test.pkg",
+                "model::mapping::public");
+    }
+
+    @Test
+    public void testMappingWithTests()
     {
         testGeneration(
-                "testTestSuites.TestServiceStoreMapping",
-                "generated/java/testTestSuites/TestServiceStoreMapping.java",
                 null,
-                "testTestSuites::ServiceStoreMapping");
+                "testTestSuites::ServiceStoreMapping",
+                "generated/java/testTestSuites/TestServiceStoreMapping.java");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.testTestSuites.TestServiceStoreMapping",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "testTestSuites::ServiceStoreMapping");
+                "testTestSuites::ServiceStoreMapping",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java");
         testGeneration(
-                "other.test.pkg.testTestSuites.TestServiceStoreMapping",
-                "generated/java/other/test/pkg/testTestSuites/TestServiceStoreMapping.java",
                 "other.test.pkg",
-                "testTestSuites::ServiceStoreMapping");
+                "testTestSuites::ServiceStoreMapping",
+                "generated/java/other/test/pkg/testTestSuites/TestServiceStoreMapping.java");
     }
 
     @Test
     public void testFunctionTest()
     {
         testGeneration(
-                "model.domain.TestFunctionTest__String_0_1_",
-                "generated/java/model/domain/TestFunctionTest__String_0_1_.java",
                 null,
-                "model::domain::FunctionTest__String_$0_1$_");
+                "model::domain::FunctionTest__String_1_",
+                "generated/java/model/domain/TestFunctionTest__String_1_.java");
         testGeneration(
-                "org.finos.legend.sdlc.test.junit.junit4.model.domain.TestFunctionTest__String_0_1_",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java",
                 "org.finos.legend.sdlc.test.junit.junit4",
-                "model::domain::FunctionTest__String_$0_1$_");
+                "model::domain::FunctionTest__String_1_",
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
         testGeneration(
-                "other.test.pkg.model.domain.TestFunctionTest__String_0_1_",
-                "generated/java/other/test/pkg/model/domain/TestFunctionTest__String_0_1_.java",
                 "other.test.pkg",
-                "model::domain::FunctionTest__String_$0_1$_");
+                "model::domain::FunctionTest__String_1_",
+                "generated/java/other/test/pkg/model/domain/TestFunctionTest__String_1_.java");
     }
+
+    @Test
+    public void testFunctionWithoutTest()
+    {
+        testEmptyGeneration(
+                null,
+                "model::domain::FunctionNoTest__String_$0_1$_");
+        testEmptyGeneration(
+                "org.finos.legend.sdlc.test.junit.junit4",
+                "model::domain::FunctionNoTest__String_$0_1$_");
+        testEmptyGeneration(
+                "other.test.pkg",
+                "model::domain::FunctionNoTest__String_$0_1$_");
+    }
+
+
 
     @Test
     public void testNonTestable()
     {
-        testEmptyGeneration(null, "testTestSuites::ServiceStore");
-        testEmptyGeneration("org.finos.legend.sdlc.test.junit.junit4", "testTestSuites::ServiceStore");
-        testEmptyGeneration("other.test.pkg", "testTestSuites::ServiceStore");
-    }
-
-    private void testGeneration(String expectedClassName, String expectedCodeResource, String rootPackage, String entityPath)
-    {
-        Entity entity = ENTITY_LOADER.getEntity(entityPath);
-        Assert.assertNotNull(entityPath, entity);
-        String expectedCode = loadTextResource(expectedCodeResource);
-        List<GeneratedJavaCode> generatedCode = JUnitTestGenerator.newGenerator(rootPackage).generateTestClasses(entity);
-        if (generatedCode.size() == 1)
-        {
-            assertGeneratedJavaCode(expectedClassName, expectedCode, generatedCode.get(0));
-        }
-        else
-        {
-            Assert.assertEquals(Collections.singletonMap(expectedClassName, expectedCode), toJavaCodeMap(generatedCode));
-        }
-    }
-
-    private void testGeneration(SortedMap<String, String> expectedCode, String rootPackage, String entityPath)
-    {
-        Entity entity = ENTITY_LOADER.getEntity(entityPath);
-        List<GeneratedJavaCode> generatedCode = JUnitTestGenerator.newGenerator(rootPackage).generateTestClasses(entity);
-        Assert.assertEquals(expectedCode, toJavaCodeMap(generatedCode));
+        testEmptyGeneration(
+                null,
+                "testTestSuites::ServiceStore");
+        testEmptyGeneration(
+                "org.finos.legend.sdlc.test.junit.junit4",
+                "testTestSuites::ServiceStore");
+        testEmptyGeneration(
+                "other.test.pkg",
+                "testTestSuites::ServiceStore");
     }
 
     private void testEmptyGeneration(String rootPackage, String entityPath)
     {
-        testGeneration(Collections.emptySortedMap(), rootPackage, entityPath);
+        testGeneration(rootPackage, entityPath, null);
     }
 
-    private SortedMap<String, String> toJavaCodeMap(Iterable<? extends GeneratedJavaCode> generatedJavaCode)
+    private void testGeneration(String rootPackage, String entityPath, String expectedCodeResource)
     {
-        return Iterate.toMap(generatedJavaCode, GeneratedJavaCode::getClassName, GeneratedText::getText, SortedMaps.mutable.empty());
+        Entity entity = ENTITY_LOADER.getEntity(entityPath);
+        Assert.assertNotNull(entityPath, entity);
+        List<GeneratedJavaCode> generatedCode = JUnitTestGenerator.newGenerator(rootPackage).generateTestClasses(entity);
+
+        if (expectedCodeResource == null)
+        {
+            Assert.assertEquals(0, generatedCode.size());
+        }
+        else
+        {
+            String expectedCode = loadTextResource(expectedCodeResource);
+            String expectedClassName = expectedClassName(rootPackage, entityPath);
+
+            Assert.assertEquals(1, generatedCode.size());
+            assertGeneratedJavaCode(expectedClassName, expectedCode, generatedCode.get(0));
+        }
+
+    }
+
+    private String expectedClassName(String rootPackage, String entityPath)
+    {
+        String entityPathModified = entityPath.replace("$", "");
+        String[] parts = entityPathModified.split("::");
+        StringBuilder classNameBuilder = new StringBuilder();
+
+        for (int i = 0; i < parts.length; i++)
+        {
+            if (i > 0)
+            {
+                classNameBuilder.append(".");
+            }
+            if (i == parts.length - 1)
+            {
+                classNameBuilder.append("Test");
+            }
+            classNameBuilder.append(parts[i]);
+        }
+        return (rootPackage == null ? "" : rootPackage + ".") + classNameBuilder;
     }
 }

@@ -1,0 +1,68 @@
+{
+  "classifierPath": "meta::pure::metamodel::function::ConcreteFunctionDefinition",
+  "content": {
+    "_type": "function",
+    "body": [
+      {
+        "_type": "func",
+        "function": "plus",
+        "parameters": [
+          {
+            "_type": "collection",
+            "multiplicity": {
+              "lowerBound": 2,
+              "upperBound": 2
+            },
+            "values": [
+              {
+                "_type": "string",
+                "value": "Hello"
+              },
+              {
+                "_type": "string",
+                "value": " World!"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "name": "FunctionTest__String_1_",
+    "package": "model::domain",
+    "parameters": [],
+    "postConstraints": [],
+    "preConstraints": [],
+    "returnGenericType": {
+      "rawType": {
+        "_type": "packageableType",
+        "fullPath": "String"
+      }
+    },
+    "returnMultiplicity": {
+      "lowerBound": 1,
+      "upperBound": 1
+    },
+    "tests": [
+      {
+        "_type": "functionTestSuite",
+        "id": "default",
+        "tests": [
+          {
+            "_type": "functionTest",
+            "assertions": [
+              {
+                "_type": "equalTo",
+                "expected": {
+                  "_type": "string",
+                  "value": "Hello World!"
+                },
+                "id": "default"
+              }
+            ],
+            "id": "testPass"
+          }
+        ]
+      }
+    ]
+  }
+}

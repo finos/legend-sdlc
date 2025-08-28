@@ -113,6 +113,11 @@ public class JUnitTestGenerator
 
     private List<GeneratedJavaCode> generateTestClasses(PackageableElement element)
     {
+        if (TestableRunnerExtensionLoader.isTestableEmpty(element))
+        {
+            return Collections.emptyList();
+        }
+
         if (element instanceof Mapping)
         {
             return Collections.singletonList(new MappingTestGenerator(this.rootPackage).withMapping((Mapping) element).generate());
@@ -121,6 +126,7 @@ public class JUnitTestGenerator
         {
             return Collections.singletonList(new ServiceTestGenerator(this.rootPackage).withService((Service) element).generate());
         }
+
         return Collections.singletonList(new TestableTestGenerator(this.rootPackage).withTestable(element).generate());
     }
 
