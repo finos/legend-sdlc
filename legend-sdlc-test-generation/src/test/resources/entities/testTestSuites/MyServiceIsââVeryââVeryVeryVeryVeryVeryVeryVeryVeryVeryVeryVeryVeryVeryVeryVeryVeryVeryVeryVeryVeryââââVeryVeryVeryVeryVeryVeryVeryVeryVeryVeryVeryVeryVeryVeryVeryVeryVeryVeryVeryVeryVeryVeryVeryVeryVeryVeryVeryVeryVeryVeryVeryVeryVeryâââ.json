@@ -264,7 +264,90 @@
         "runtime": "testTestSuites::ServiceStoreRuntime"
       }
     },
-    "testSuites": [],
+    "testSuites": [
+      {
+        "_type": "serviceTestSuite",
+        "id": "testSuite1",
+        "sourceInformation": {
+          "sourceId": "",
+          "startLine": 20,
+          "startColumn": 5,
+          "endLine": 52,
+          "endColumn": 5
+        },
+        "tests": [
+          {
+            "_type": "serviceTest",
+            "id": "test1",
+            "sourceInformation": {
+              "sourceId": "",
+              "startLine": 35,
+              "startColumn": 9,
+              "endLine": 50,
+              "endColumn": 9
+            },
+            "serializationFormat": "PURE",
+            "assertions": [
+              {
+                "_type": "equalToJson",
+                "id": "assert1",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 40,
+                  "startColumn": 15,
+                  "endLine": 48,
+                  "endColumn": 16
+                },
+                "expected": {
+                  "_type": "externalFormat",
+                  "sourceInformation": {
+                    "sourceId": "",
+                    "startLine": 43,
+                    "startColumn": 19,
+                    "endLine": 47,
+                    "endColumn": 20
+                  },
+                  "contentType": "application/json",
+                  "data": "{ \"kerberos\": \"dummy kerberos\", \"employeeID\": \"dummy id\", \"title\": \"dummy title\", \"firstName\": \"dummy firstName\", \"lastName\": \"dummy lastname\", \"countryCode\": \"dummy countryCode\" }"
+                }
+              }
+            ]
+          }
+        ],
+        "testData": {
+          "connectionsTestData": [
+            {
+              "id": "connection_1",
+              "data": {
+                "_type": "reference",
+                "sourceInformation": {
+                  "sourceId": "",
+                  "startLine": 27,
+                  "startColumn": 13,
+                  "endLine": 30,
+                  "endColumn": 14
+                },
+                "dataElement": "testTestSuites::TestData"
+              },
+              "sourceInformation": {
+                "sourceId": "",
+                "startLine": 26,
+                "startColumn": 11,
+                "endLine": 30,
+                "endColumn": 14
+              }
+            }
+          ],
+          "sourceInformation": {
+            "sourceId": "",
+            "startLine": 22,
+            "startColumn": 7,
+            "endLine": 32,
+            "endColumn": 7
+          }
+        }
+      }
+    ],
     "package": "testTestSuites"
   },
   "classifierPath": "meta::legend::service::metamodel::Service"

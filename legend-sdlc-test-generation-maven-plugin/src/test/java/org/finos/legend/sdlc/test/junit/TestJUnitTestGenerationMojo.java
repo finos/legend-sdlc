@@ -107,7 +107,13 @@ public class TestJUnitTestGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir);
 
-        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java", "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java", "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java");
+        SortedMap<String, String> expected = loadExpectedJavaSources(
+                "org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java",
+                "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java",
+                "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);
@@ -125,7 +131,11 @@ public class TestJUnitTestGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir);
 
-        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java", "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java");
+        SortedMap<String, String> expected = loadExpectedJavaSources(
+                "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);
@@ -143,7 +153,10 @@ public class TestJUnitTestGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir);
 
-        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java", "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java");
+        SortedMap<String, String> expected = loadExpectedJavaSources(
+                "org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java",
+                "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);
@@ -161,7 +174,10 @@ public class TestJUnitTestGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir);
 
-        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java");
+        SortedMap<String, String> expected = loadExpectedJavaSources(
+                "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);
@@ -179,7 +195,14 @@ public class TestJUnitTestGenerationMojo
         assertDirectoryEmpty(outputDir);
         executeMojo(projectDir);
 
-        SortedMap<String, String> expected = loadExpectedJavaSources("org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java", "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java", "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java", "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java", "org/finos/legend/sdlc/test/junit/junit4/model/TestMyMapping.java", "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java");
+        SortedMap<String, String> expected = loadExpectedJavaSources(
+                "org/finos/legend/sdlc/test/junit/junit4/execution/TestRelationalMapping.java",
+                "org/finos/legend/sdlc/test/junit/junit4/legend/demo/TestSingleQuoteInResultM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/mapping/TestSourceToTargetM2M.java",
+                "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService.java",
+                "org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestTestService2.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/TestMyMapping.java",
+                "org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
 
         SortedMap<String, String> actual = loadJavaSourcesFromDirectory(outputDir.toPath());
         Assert.assertEquals(expected, actual);

@@ -76,50 +76,57 @@ public class TestJUnitTestGeneratorCompilation
     @Test
     public void testRelationalMapping()
     {
-        testCompilation("execution.TestRelationalMapping", "execution::RelationalMapping");
+        testCompilation(
+                "execution.TestRelationalMapping",
+                "execution::RelationalMapping");
     }
 
     @Test
     public void testSingleQuoteInResultM2M()
     {
-        testCompilation("legend.demo.TestSingleQuoteInResultM2M", "legend::demo::SingleQuoteInResultM2M");
+        testCompilation(
+                "legend.demo.TestSingleQuoteInResultM2M",
+                "legend::demo::SingleQuoteInResultM2M");
     }
 
     @Test
     public void testSourceToTargetM2M()
     {
-        testCompilation("model.mapping.TestSourceToTargetM2M", "model::mapping::SourceToTargetM2M");
-    }
-
-    @Test
-    public void testJavaKeyWordCompilation()
-    {
-        testCompilation("model.mapping.Test_public", "model::mapping::public");
-        testCompilation("model._synchronized.Test__", "model::synchronized::_");
+        testCompilation(
+                "model.mapping.TestSourceToTargetM2M",
+                "model::mapping::SourceToTargetM2M");
     }
 
     @Test
     public void testTestService()
     {
-        testCompilation("testTestSuites.TestTestService", "testTestSuites::TestService");
+        testCompilation(
+                "testTestSuites.TestTestService",
+                "testTestSuites::TestService");
     }
 
     @Test
     public void testTestService2()
     {
-        testCompilation("testTestSuites.TestTestService2", "testTestSuites::TestService2");
+        testCompilation(
+                "testTestSuites.TestTestService2",
+                "testTestSuites::TestService2");
     }
 
     @Test
     public void testServiceStoreMapping()
     {
-        testCompilation("testTestSuites.TestServiceStoreMapping", "testTestSuites::ServiceStoreMapping");
+        testCompilation(
+                "testTestSuites.TestServiceStoreMapping",
+                "testTestSuites::ServiceStoreMapping");
     }
 
     @Test
     public void testFunctionTest()
     {
-        testCompilation("model.domain.TestFunctionTest__String_0_1_", "model::domain::FunctionTest__String_$0_1$_");
+        testCompilation(
+                "model.domain.TestFunctionTest__String_1_",
+                "model::domain::FunctionTest__String_1_");
     }
 
     private void testCompilation(String expectedClassName, String entityPath)
@@ -133,6 +140,7 @@ public class TestJUnitTestGeneratorCompilation
         Assert.assertNotNull(entityPath, entity);
 
         List<GeneratedJavaCode> generatedCode = JUnitTestGenerator.newGenerator(ROOT_PACKAGE).generateTestClasses(entity);
+
         JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         DiagnosticCollector<JavaFileObject> diagnosticCollector = new DiagnosticCollector<>();
         InMemoryFileManager fileManager = new InMemoryFileManager(compiler);

@@ -62,15 +62,15 @@ public class TestJUnitTestGeneratorSerialization extends AbstractGenerationTest
     public void testWriteTestClassesWithoutRootPackage() throws IOException
     {
         testWriteTestClasses(null, "generated/java/execution/TestRelationalMapping.java",
-                "generated/java/execution/TestRelationalMapping.java", "generated/java/legend/demo/TestSingleQuoteInResultM2M.java",
-                "generated/java/model/mapping/TestSourceToTargetM2M.java", "generated/java/testTestSuites/TestTestService.java",
-                "generated/java/testTestSuites/TestTestService2.java", "generated/java/testTestSuites/TestServiceStoreMapping.java",
+                "generated/java/execution/TestRelationalMapping.java",
+                "generated/java/legend/demo/TestSingleQuoteInResultM2M.java",
+                "generated/java/model/mapping/TestSourceToTargetM2M.java",
+                "generated/java/testTestSuites/TestTestService.java",
+                "generated/java/testTestSuites/TestTestService2.java",
+                "generated/java/testTestSuites/TestServiceStoreMapping.java",
                 "generated/java/testTestSuites/TestMyServiceIsVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVery_38d23576.java",
                 "generated/java/testTestSuites/TestMyServiceIsââVeryââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryââââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryV_a0bb3f4b.java",
-                "generated/java/model/domain/TestFunctionTest__String_0_1_.java",
-                "generated/java/model/_synchronized/Test__.java",
-                "generated/java/model/mapping/Test_public.java"
-        );
+                "generated/java/model/domain/TestFunctionTest__String_1_.java");
     }
 
     @Test
@@ -85,10 +85,7 @@ public class TestJUnitTestGeneratorSerialization extends AbstractGenerationTest
                 "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestServiceStoreMapping.java",
                 "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestMyServiceIsVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVery_38d23576.java",
                 "generated/java/org/finos/legend/sdlc/test/junit/junit4/testTestSuites/TestMyServiceIsââVeryââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryââââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryV_a0bb3f4b.java",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_0_1_.java",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/_synchronized/Test__.java",
-                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/mapping/Test_public.java"
-        );
+                "generated/java/org/finos/legend/sdlc/test/junit/junit4/model/domain/TestFunctionTest__String_1_.java");
     }
 
     @Test
@@ -103,10 +100,7 @@ public class TestJUnitTestGeneratorSerialization extends AbstractGenerationTest
                 "generated/java/other/test/pkg/testTestSuites/TestServiceStoreMapping.java",
                 "generated/java/other/test/pkg/testTestSuites/TestMyServiceIsVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVery_38d23576.java",
                 "generated/java/other/test/pkg/testTestSuites/TestMyServiceIsââVeryââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryââââVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryVeryV_a0bb3f4b.java",
-                "generated/java/other/test/pkg/model/domain/TestFunctionTest__String_0_1_.java",
-                "generated/java/other/test/pkg/model/_synchronized/Test__.java",
-                "generated/java/other/test/pkg/model/mapping/Test_public.java"
-        );
+                "generated/java/other/test/pkg/model/domain/TestFunctionTest__String_1_.java");
     }
 
     private void testWriteTestClasses(String rootPackage, String... expectedResources) throws IOException
