@@ -87,7 +87,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
-import java.util.function.Function;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -211,6 +211,15 @@ public class TestServiceExecutionGenerator
         String packagePrefix = "org.finos";
         FunctionJar functionJar = getFunctionJar("functionJar::RelationalFunctionJar");
         ClassLoader classLoader = generateAndCompileFunctionJar(packagePrefix, Collections.singletonList(functionJar));
+        assertExecuteMethods(classLoader, "org.finos.functionJar.RelationalFunctionJar");
+    }
+
+    @Test
+    public void testServiceAndFunctionJarWithExecutorService() throws Exception
+    {
+        String packagePrefix = "org.finos";
+        FunctionJar functionJar = getFunctionJar("functionJar::RelationalFunctionJar");
+        ClassLoader classLoader = generateAndCompileFunctionJarWithExecutorService(packagePrefix, Collections.singletonList(functionJar));
         assertExecuteMethods(classLoader, "org.finos.functionJar.RelationalFunctionJar");
     }
 
@@ -544,6 +553,29 @@ public class TestServiceExecutionGenerator
                 .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
                 .withClientVersion("vX_X_X")
                 .build();
+
+        return generateAndCompileFunctionJarUtil(generator, packagePrefix, functionJars);
+    }
+
+    private ClassLoader generateAndCompileFunctionJarWithExecutorService(String packagePrefix, Collection<? extends FunctionJar> functionJars) throws IOException
+    {
+        ServiceExecutionGenerator generator = ServiceExecutionGenerator.newBuilder()
+                .withFunctionJars(functionJars)
+                .withPureModel(PURE_MODEL)
+                .withPureModelContextData(PURE_MODEL_CONTEXT_DATA)
+                .withPackagePrefix(packagePrefix)
+                .withOutputDirectories(this.generatedSourcesDirectory, this.classesDirectory)
+                .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
+                .withClientVersion("vX_X_X")
+                .withExecutorService(new ForkJoinPool())
+                .build();
+
+        return generateAndCompileFunctionJarUtil(generator, packagePrefix, functionJars);
+    }
+
+    private ClassLoader generateAndCompileFunctionJarUtil(ServiceExecutionGenerator generator, String packagePrefix, Collection<? extends FunctionJar> functionJars) throws IOException
+    {
         generator.generate();
 
         // Generate
