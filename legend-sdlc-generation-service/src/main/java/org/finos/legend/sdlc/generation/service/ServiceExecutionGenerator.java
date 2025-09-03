@@ -331,7 +331,7 @@ public class ServiceExecutionGenerator
         LOGGER.info("index gotten is {}", index);
         if (index >= this.services.size())
         {
-            generate(this.functionJars.get(index - this.services.size()));
+            return generate(this.functionJars.get(index - this.services.size()));
         }
         return generate(this.services.get(index));
     }
