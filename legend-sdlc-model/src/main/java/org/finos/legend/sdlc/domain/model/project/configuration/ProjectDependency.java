@@ -14,7 +14,9 @@
 
 package org.finos.legend.sdlc.domain.model.project.configuration;
 
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 public abstract class ProjectDependency extends Dependency
@@ -22,6 +24,11 @@ public abstract class ProjectDependency extends Dependency
     public abstract String getProjectId();
 
     public abstract String getVersionId();
+
+    public List<ProjectDependencyExclusion> getExclusions()
+    {
+        return Collections.emptyList();
+    }
 
     @Override
     public boolean equals(Object other)
@@ -37,7 +44,7 @@ public abstract class ProjectDependency extends Dependency
         }
 
         ProjectDependency that = (ProjectDependency) other;
-        return Objects.equals(this.getProjectId(), that.getProjectId()) && Objects.equals(this.getVersionId(), that.getVersionId());
+        return Objects.equals(this.getProjectId(), that.getProjectId()) && Objects.equals(this.getVersionId(), that.getVersionId()) && Objects.equals(this.getExclusions(), that.getExclusions());
     }
 
     @Override
@@ -95,7 +102,7 @@ public abstract class ProjectDependency extends Dependency
         return newProjectDependency(projectId, versionId);
     }
 
-    public static ProjectDependency newProjectDependency(String projectId, String versionId)
+    public static ProjectDependency newProjectDependency(String projectId, String versionId, List<ProjectDependencyExclusion> exclusions)
     {
         return new ProjectDependency()
         {
@@ -110,7 +117,18 @@ public abstract class ProjectDependency extends Dependency
             {
                 return versionId;
             }
+
+            @Override
+            public List<ProjectDependencyExclusion> getExclusions()
+            {
+                return exclusions == null ? Collections.emptyList() : exclusions;
+            }
         };
+    }
+
+    public static ProjectDependency newProjectDependency(String projectId, String versionId)
+    {
+        return newProjectDependency(projectId, versionId, null);
     }
 
     public static Comparator<ProjectDependency> getDefaultComparator()

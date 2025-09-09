@@ -18,6 +18,8 @@ import org.finos.legend.sdlc.domain.model.TestTools;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 
 public class TestProjectDependency
@@ -75,5 +77,23 @@ public class TestProjectDependency
 
         TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency(null, "1.2.3"), comparator);
         TestTools.assertCompareTo(-1, testProject123, ProjectDependency.newProjectDependency("test-project", null), comparator);
+    }
+
+    @Test
+    public void testProjectDependencyExclusions()
+    {
+        ProjectDependencyExclusion exclusion1 = ProjectDependencyExclusion.newProjectDependencyExclusion("org.finos.legend.sdlc.test:exclusion-project-1");
+        ProjectDependencyExclusion exclusion2 = ProjectDependencyExclusion.newProjectDependencyExclusion("org.finos.legend.sdlc.test:exclusion-project-2");
+        ProjectDependency dependencyWithExclusions = ProjectDependency.newProjectDependency("test-project", "1.2.3", Arrays.asList(exclusion1, exclusion2));
+        Assert.assertEquals(Arrays.asList(exclusion1, exclusion2), dependencyWithExclusions.getExclusions());
+
+        ProjectDependency dependencyWithoutExclusions = ProjectDependency.newProjectDependency("test-project", "1.2.3");
+        Assert.assertEquals(Collections.emptyList(), dependencyWithoutExclusions.getExclusions());
+        Assert.assertNotEquals(dependencyWithExclusions, dependencyWithoutExclusions);
+
+        ProjectDependency dependencyWithOnexclusion = ProjectDependency.newProjectDependency("test-project", "1.2.3", Arrays.asList(exclusion1));
+        Assert.assertEquals(Arrays.asList(exclusion1), dependencyWithOnexclusion.getExclusions());
+        Assert.assertNotEquals(dependencyWithExclusions, dependencyWithOnexclusion);
+        Assert.assertNotEquals(dependencyWithoutExclusions, dependencyWithOnexclusion);
     }
 }
