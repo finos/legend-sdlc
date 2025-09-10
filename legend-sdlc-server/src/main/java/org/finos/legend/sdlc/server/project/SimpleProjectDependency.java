@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
@@ -23,19 +24,24 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependencyExclusion;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 public class SimpleProjectDependency extends ProjectDependency
 {
     private final String projectId;
     private final String versionId;
+    private final List<ProjectDependencyExclusion> exclusions;
 
     @JsonCreator
-    public SimpleProjectDependency(@JsonProperty("projectId") String projectId, @JsonProperty("versionId") @JsonDeserialize(using = VersionIdDeserializer.class) String versionId)
+    public SimpleProjectDependency(@JsonProperty("projectId") String projectId, @JsonProperty("versionId") @JsonDeserialize(using = VersionIdDeserializer.class) String versionId, @JsonProperty("exclusions") @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ProjectDependencyExclusion> exclusions)
     {
         this.projectId = projectId;
         this.versionId = versionId;
+        this.exclusions = exclusions == null ? Collections.emptyList() : exclusions;
     }
 
     @Override
@@ -48,6 +54,12 @@ public class SimpleProjectDependency extends ProjectDependency
     public String getVersionId()
     {
         return this.versionId;
+    }
+
+    @Override
+    public List<ProjectDependencyExclusion> getExclusions()
+    {
+        return this.exclusions;
     }
 
     private static class VersionIdDeserializer extends JsonDeserializer<String>

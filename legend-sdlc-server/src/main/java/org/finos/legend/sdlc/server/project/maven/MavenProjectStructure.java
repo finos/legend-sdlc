@@ -33,6 +33,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
+import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependencyExclusion;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
@@ -66,6 +67,7 @@ import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public abstract class MavenProjectStructure extends ProjectStructure
@@ -374,9 +376,23 @@ public abstract class MavenProjectStructure extends ProjectStructure
     public static Stream<Dependency> projectDependencyToMavenDependencies(ProjectDependency projectDependency, Collection<? extends ArtifactType> artifactTypes, boolean setVersion)
     {
         String versionString = setVersion ? projectDependency.getVersionId() : null;
+        List<ProjectDependencyExclusion> projectDependencyExclusions = projectDependency.getExclusions() == null ? Collections.emptyList() : projectDependency.getExclusions();
         Pair<String, String> mavenCoordinates = getGroupAndArtifactIdFromProjectDependency(projectDependency);
         Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
-        return resolvedArtifactTypes.stream().map(artifactType -> newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString));
+        return resolvedArtifactTypes.stream().map(artifactType ->
+        {
+            Dependency newDependency = newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString);
+            if (!projectDependencyExclusions.isEmpty())
+            {
+                List<Exclusion> exclusions = projectDependencyExclusions.stream().map(e ->
+                {
+                    Pair<String, String> projectDependencyExclusionMavenCoordinates = getGroupAndArtifactIdFromProjectDependencyExclusion(e);
+                    return newMavenExclusion(projectDependencyExclusionMavenCoordinates.getOne(), projectDependencyExclusionMavenCoordinates.getTwo());
+                }).collect(Collectors.toList());
+                newDependency.setExclusions(exclusions);
+            }
+            return newDependency;
+        });
     }
 
     @Deprecated
@@ -400,6 +416,17 @@ public abstract class MavenProjectStructure extends ProjectStructure
     private static Pair<String, String> getGroupAndArtifactIdFromProjectDependency(ProjectDependency projectDependency)
     {
         String projectId = Objects.requireNonNull(projectDependency.getProjectId(), "project dependency project id may not be null");
+        return parseProjectId(projectId);
+    }
+
+    private static Pair<String, String> getGroupAndArtifactIdFromProjectDependencyExclusion(ProjectDependencyExclusion projectDependencyExclusion)
+    {
+        String projectId = Objects.requireNonNull(projectDependencyExclusion.getProjectId(), "project dependency exclusion project id may not be null");
+        return parseProjectId(projectId);
+    }
+
+    private static Pair<String, String> parseProjectId(String projectId)
+    {
         int index = projectId.indexOf(':');
         if ((index <= 0) || (index == (projectId.length() - 1)))
         {
