@@ -4,6 +4,7 @@
     "_type" : "relational",
     "filters" : [ ],
     "includedStores" : [ ],
+    "includedStoreSpecifications" : [ ],
     "joins" : [ ],
     "name" : "TestDatabase",
     "package" : "model::domain::stores",
