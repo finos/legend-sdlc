@@ -19,6 +19,7 @@ import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.eclipse.collections.impl.block.factory.Functions;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
@@ -27,6 +28,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.finos.legend.sdlc.server.backend.BackendConfiguration;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -72,7 +74,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         if (GITLAB_MODE.equals(this.mode))
         {
             // Add GitLab bundle
-            bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
+            bootstrap.addBundle(new GitLabBundle<>(Functions.chain(LegendSDLCServerConfiguration::getBackendConfiguration, BackendConfiguration::getGitLabConfiguration)));
         }
 
         // Guice bootstrapping..
