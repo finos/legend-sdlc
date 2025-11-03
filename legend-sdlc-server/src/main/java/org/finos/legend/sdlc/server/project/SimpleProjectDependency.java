@@ -37,7 +37,7 @@ public class SimpleProjectDependency extends ProjectDependency
     private final List<ProjectDependencyExclusion> exclusions;
 
     @JsonCreator
-    public SimpleProjectDependency(@JsonProperty("projectId") String projectId, @JsonProperty("versionId") @JsonDeserialize(using = VersionIdDeserializer.class) String versionId, @JsonProperty("exclusions") @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ProjectDependencyExclusion> exclusions)
+    public SimpleProjectDependency(@JsonProperty("projectId") String projectId, @JsonProperty("versionId") @JsonDeserialize(using = VersionIdDeserializer.class) String versionId, @JsonProperty("exclusions") @JsonDeserialize(as = SimpleProjectDependencyExclusion.class) @JsonInclude(JsonInclude.Include.NON_EMPTY) List<ProjectDependencyExclusion> exclusions)
     {
         this.projectId = projectId;
         this.versionId = versionId;
