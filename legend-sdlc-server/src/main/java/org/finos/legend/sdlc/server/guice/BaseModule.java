@@ -94,8 +94,8 @@ public class BaseModule extends AbstractBaseModule
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabAuthCheckResource.class);
-            binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
-            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getGitLabConfiguration()));
+            binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getBackendConfiguration().getGitLabConfiguration());
+            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getBackendConfiguration().getGitLabConfiguration()));
             binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
         }
         configureMetadataApi(binder);
@@ -108,7 +108,7 @@ public class BaseModule extends AbstractBaseModule
 
     private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
     {
-        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getGitLabConfiguration().getGitLabAuthorizers();
+        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getBackendConfiguration().getGitLabConfiguration().getGitLabAuthorizers();
         if (gitLabAuthorizers == null)
         {
             return GitLabAuthorizerManager.newManager(Collections.emptyList());
