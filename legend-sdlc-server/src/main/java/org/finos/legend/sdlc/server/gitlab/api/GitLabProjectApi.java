@@ -741,6 +741,18 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         return (userLevel != null) && checkUserAction(projectId, action, userLevel);
     }
 
+    private List<ProtectedTag> getProtectedTags(GitLabProjectId projectId)
+    {
+        try
+        {
+            return withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
+        }
+        catch (Exception e)
+        {
+            throw buildException(e, () -> "Failed to get protected tags for " + projectId.getGitLabId());
+        }
+    }
+
     @Override
     public Set<UserPermission> getAllUsersAuthorizedActions(String id, Set<AuthorizableProjectAction> actions)
     {
@@ -748,8 +760,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         {
             GitLabProjectId projectId = parseProjectId(id);
             List<Member> members = getGitLabApi().getProjectApi().getAllMembers(projectId.getGitLabId());
-            List<ProtectedTag> protectedTags = withRetries(() -> getGitLabApi().getTagsApi().getProtectedTags(projectId.getGitLabId()));
-            return processUserAuthorizedActions(protectedTags, members, actions);
+            if (!members.isEmpty() && actions.contains(AuthorizableProjectAction.CREATE_VERSION))
+            {
+                LOGGER.debug("Fetching protected tags for project {} as CREATE_VERSION action is requested", projectId.getGitLabId());
+                List<ProtectedTag> protectedTags = getProtectedTags(projectId);
+                LOGGER.debug("Fetched {} protected tags for project {} as CREATE_VERSION action is requested", protectedTags.size(), projectId.getGitLabId());
+                return processUserAuthorizedActions(protectedTags, members, actions);
+            }
+            return processUserAuthorizedActions(Collections.emptyList(), members, actions);
         }
         catch (Exception e)
         {
