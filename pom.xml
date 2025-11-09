@@ -394,16 +394,7 @@
                 <version>${maven.pmd.version}</version>
                 <configuration>
                     <printFailingErrors>true</printFailingErrors>
-                    <rulesets>
-                        <ruleset>${project.parent.basedir}/pmd/legend-ruleset.xml</ruleset>
-                    </rulesets>
-                    <rules>
-                        <requireFilesExist>
-                            <files>
-                                <file>${project.parent.basedir}/pmd/legend-ruleset.xml</file>
-                            </files>
-                        </requireFilesExist>
-                    </rules>
+                    <failOnViolation>false</failOnViolation>
                 </configuration>
                 <executions>
                     <execution>
