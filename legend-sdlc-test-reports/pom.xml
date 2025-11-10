@@ -36,7 +36,7 @@
                     <dependency>
                         <groupId>com.github.mikkoi</groupId>
                         <artifactId>maven-enforcer-rule-depend-on-all-projects</artifactId>
-                        <version>0.1.1</version>
+                        <version>1.0.0</version>
                     </dependency>
                 </dependencies>
                 <configuration>
