@@ -506,26 +506,31 @@
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-generation-model-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-version-package-maven-plugin</artifactId>
                 <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
@@ -536,6 +541,23 @@
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-test-generation</artifactId>
                 <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation</artifactId>
+                <version>${project.version}</version>
+                <type>maven-plugin</type>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation-maven-plugin</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-test-generation-maven-plugin</artifactId>
+                <version>${project.version}</version>
+                <type>maven-plugin</type>
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
