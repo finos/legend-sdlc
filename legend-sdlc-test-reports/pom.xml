@@ -32,6 +32,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.mikkoi</groupId>
+                        <artifactId>maven-enforcer-rule-depend-on-all-projects</artifactId>
+                        <version>0.1.1</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <rules combine.self="override">
                         <requireJavaVersion>
@@ -39,6 +46,23 @@
                         </requireJavaVersion>
                     </rules>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>depend-on-all-projects</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <dependOnAllProjects>
+                                    <includeRootProject>false</includeRootProject>
+                                    <errorIfUnknownProject>true</errorIfUnknownProject>
+                                </dependOnAllProjects>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
