@@ -1435,6 +1435,11 @@
                 <artifactId>core</artifactId>
                 <version>${pac4j.jax-rs.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.zaxxer</groupId>
+                <artifactId>HikariCP</artifactId>
+                <version>7.0.2</version>
+            </dependency>
 
             <dependency>
                 <groupId>org.slf4j</groupId>
