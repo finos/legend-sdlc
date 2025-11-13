@@ -40,9 +40,9 @@ server:
         timeZone: UTC
   rootPath: /api
 
-#features:
-#  canCreateProject: true
-#  canCreateVersion: true
+features:
+  canCreateProject: true
+  canCreateVersion: true
 
 filterPriorities:
   GitLab: 1
@@ -55,45 +55,28 @@ pac4j:
   clients:
     - org.finos.legend.server.pac4j.gitlab.GitlabClient:
         name: gitlab
-        clientId: $APP_ID
-        secret: $APP_SECRET
-        discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
+        clientId: <>
+        secret: <>
+        discoveryUri: https://gitlab.com/.well-known/openid-configuration
         scope: openid profile api
-#  hazelcastSession:
-#    enabled: true
-#    configFilePath: legend-sdlc-server/src/test/resources/hazelcast.yaml
   bypassPaths:
     - /api/info
-    - /api/server/info
-    - /api/server/platforms
-    - /api/auth/authorized
 
 gitLab:
   newProjectVisibility: public
-  projectIdPrefix: SAMPLE
   projectTag: legend
-  server:
-    scheme: https
-    host: $GITLAB_HOST
-  app:
-    id: $APP_ID
-    secret: $APP_SECRET
-    redirectURI: http://$SDLC_SERVER_HOST/api/auth/callback
+  prod:
+    server:
+      scheme: https
+      host: gitlab.com
+    app:
+      id: <>
+      secret: <>
+      redirectURI: http://localhost:6100/api/auth/callback
 
 projectStructure:
   extensionProvider:
     org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider: {}
-  platforms:
-    legend-engine:
-      groupId: org.finos.legend.engine
-      platformVersion:
-        #version: 3.3.1
-        fromPackage: legend-engine-protocol-pure
-    legend-sdlc:
-      groupId: org.finos.legend.sdlc
-      platformVersion:
-        #version: 0.77.1
-        fromPackage: legend-sdlc-server
 
 logging:
   # Change this to affect library class logging

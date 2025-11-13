@@ -142,6 +142,11 @@ public class GitLabUserContext extends UserContext
         }
         else
         {
+            token = gitLabSession.getGitLabToken();
+            if (token != null)
+            {
+                return token;
+            }
             throw new LegendSDLCServerException("{\"message\":\"Authorization required\",\"auth_uri\":\"/auth/authorize\"}", Status.FORBIDDEN);
         }
         return token;
