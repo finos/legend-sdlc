@@ -193,12 +193,6 @@
             <artifactId>maven-compat</artifactId>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>org.finos.legend.engine</groupId>
-            <artifactId>legend-engine-xt-functionJar-protocol</artifactId>
-            <version>${legend.engine.version}</version>
-            <scope>compile</scope>
-        </dependency>
         <!-- TEST -->
     </dependencies>
 </project>
