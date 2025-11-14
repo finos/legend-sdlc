@@ -39,10 +39,10 @@ server:
         archivedFileCount: 5
         timeZone: UTC
   rootPath: /api
-
-#features:
-#  canCreateProject: true
-#  canCreateVersion: true
+# Remove if gitlab instance does not support below features
+features:
+  canCreateProject: true
+  canCreateVersion: true
 
 filterPriorities:
   GitLab: 1
@@ -59,9 +59,9 @@ pac4j:
         secret: $APP_SECRET
         discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
         scope: openid profile api
-#  hazelcastSession:
-#    enabled: true
-#    configFilePath: legend-sdlc-server/src/test/resources/hazelcast.yaml
+  authorizers:
+    - id: isAuthenticated
+      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer
   bypassPaths:
     - /api/info
     - /api/server/info
@@ -71,7 +71,8 @@ pac4j:
 gitLab:
   newProjectVisibility: public
   projectIdPrefix: SAMPLE
-  projectTag: legend
+  # could leverage `legend` as well for different realms of projects
+  projectTag: pure
   server:
     scheme: https
     host: $GITLAB_HOST
@@ -83,17 +84,6 @@ gitLab:
 projectStructure:
   extensionProvider:
     org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider: {}
-  platforms:
-    legend-engine:
-      groupId: org.finos.legend.engine
-      platformVersion:
-        #version: 3.3.1
-        fromPackage: legend-engine-protocol-pure
-    legend-sdlc:
-      groupId: org.finos.legend.sdlc
-      platformVersion:
-        #version: 0.77.1
-        fromPackage: legend-sdlc-server
 
 logging:
   # Change this to affect library class logging
