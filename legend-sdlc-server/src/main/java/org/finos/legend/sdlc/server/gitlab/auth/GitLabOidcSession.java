@@ -24,6 +24,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Objects;
 
 public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> implements GitLabSession
@@ -143,6 +144,14 @@ public class GitLabOidcSession extends BaseCommonProfileSession<OidcProfile> imp
                         if (issuer.equals(tokenManager.getAppInfo().getServerInfo().getGitLabURLString()))
                         {
                             tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken.getValue()));
+                            if (profile.getRefreshToken() != null)
+                            {
+                                tokenManager.setRefreshToken(profile.getRefreshToken().getValue());
+                            }
+                            if (profile.getExpiration() != null)
+                            {
+                                tokenManager.setTokenExpiry(profile.getExpiration().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime());
+                            }
                             LOGGER.debug("Storing access token from OpenID Connect (OIDC) profile");
                         }
                     }
