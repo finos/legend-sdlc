@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.project;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependencyExclusion;
 
 public class SimpleProjectDependencyExclusion extends ProjectDependencyExclusion
@@ -22,7 +23,7 @@ public class SimpleProjectDependencyExclusion extends ProjectDependencyExclusion
     private final String projectId;
 
     @JsonCreator
-    public SimpleProjectDependencyExclusion(String projectId)
+    public SimpleProjectDependencyExclusion(@JsonProperty("projectId") String projectId)
     {
         this.projectId = projectId;
     }
