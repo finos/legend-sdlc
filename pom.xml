@@ -71,9 +71,9 @@
         <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.113.1</legend.engine.version>
-        <legend.pure.version>5.67.0</legend.pure.version>
-        <legend.shared.version>0.29.0</legend.shared.version>
+        <legend.engine.version>4.114.1</legend.engine.version>
+        <legend.pure.version>5.68.0</legend.pure.version>
+        <legend.shared.version>0.30.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -103,6 +103,7 @@
         <json-smart.version>2.4.7</json-smart.version>
         <joda.time.version>2.10.14</joda.time.version>
         <junit.version>4.13.1</junit.version>
+        <mockito.version>3.5.10</mockito.version>
         <maven.version>3.9.2</maven.version>
         <pac4j.version>4.5.8</pac4j.version>
         <pac4j.jax-rs.version>4.0.0</pac4j.jax-rs.version>
@@ -1206,7 +1207,11 @@
                 <artifactId>junit</artifactId>
                 <version>${junit.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-core</artifactId>
+                <version>${mockito.version}</version>
+            </dependency>
             <dependency>
                 <groupId>net.minidev</groupId>
                 <artifactId>json-smart</artifactId>
