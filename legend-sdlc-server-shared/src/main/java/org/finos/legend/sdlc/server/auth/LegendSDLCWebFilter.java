@@ -16,6 +16,8 @@ package org.finos.legend.sdlc.server.auth;
 
 import org.pac4j.core.context.JEEContext;
 import org.pac4j.core.context.WebContext;
+import org.pac4j.core.context.session.JEESessionStore;
+import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.slf4j.Logger;
@@ -23,6 +25,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Objects;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -37,6 +40,7 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
 {
     public static final String SESSION_TOKEN_COOKIE_NAME = "LegendSDLCSession";
     public static final String SESSION_ATTRIBUTE = "org.finos.legend.sdlc.server.Session";
+    public static final String SESSION_STORE = "PAC4J_SESSION_STORE";
 
     protected static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCWebFilter.class);
 
@@ -45,8 +49,8 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
     {
         HttpServletRequest httpRequest = (HttpServletRequest) servletRequest;
         HttpServletResponse httpResponse = (HttpServletResponse) servletResponse;
-        WebContext webContext = new JEEContext(httpRequest, httpResponse);
-
+        SessionStore<JEEContext> sessionStore = getSessionStore(httpRequest);
+        WebContext webContext = new JEEContext(httpRequest, httpResponse, sessionStore);
         ProfileManager<P> manager = new ProfileManager<>(webContext);
         List<P> profiles = manager.getAll(true);
         if (profiles.isEmpty())
@@ -134,6 +138,16 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
         {
             filterChain.doFilter(httpRequest, httpResponse);
         }
+    }
+
+    static SessionStore<JEEContext> getSessionStore(HttpServletRequest httpRequest)
+    {
+        Object sessionStore = httpRequest.getServletContext().getAttribute(SESSION_STORE);
+        if (Objects.nonNull(sessionStore) && sessionStore instanceof SessionStore)
+        {
+            return (SessionStore<JEEContext>) sessionStore;
+        }
+        return JEESessionStore.INSTANCE;
     }
 
     protected abstract Session newSession(List<P> profiles, Cookie sessionCookie) throws IOException, ServletException;
