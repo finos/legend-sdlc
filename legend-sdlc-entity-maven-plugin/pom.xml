@@ -3,7 +3,7 @@
     <parent>
         <groupId>org.finos.legend.sdlc</groupId>
         <artifactId>legend-sdlc</artifactId>
-        <version>0.212.1-SNAPSHOT</version>
+        <version>0.213.0</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
