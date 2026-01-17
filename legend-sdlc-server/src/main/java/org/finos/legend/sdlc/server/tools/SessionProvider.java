@@ -112,6 +112,19 @@ public class SessionProvider
                     LOGGER.debug("got SDLC session from HTTP session (depth {})", depth);
                     return sdlcSession;
                 }
+
+                // Try to create session from pac4j profiles in the HTTP session
+                // This handles the case where SecurityFilter has authenticated the user
+                // but LegendSDLCWebFilter hasn't yet created an SDLC Session
+                sdlcSession = tryCreateSessionFromPac4jProfiles(httpRequest, httpSession);
+                if (sdlcSession != null)
+                {
+                    LOGGER.debug("created SDLC session from pac4j profiles (depth {})", depth);
+                    // Cache the session for subsequent calls
+                    LegendSDLCWebFilter.setSessionAttributeOnServletRequest(request, sdlcSession);
+                    LegendSDLCWebFilter.setSessionOnHttpSession(httpSession, sdlcSession);
+                    return sdlcSession;
+                }
             }
         }
 
@@ -121,6 +134,47 @@ public class SessionProvider
         }
 
         LOGGER.debug("Did not find session at depth {}; no more nested requests to check; request: {}; request class: {}", depth, request, request.getClass());
+        return null;
+    }
+
+    private static Session tryCreateSessionFromPac4jProfiles(HttpServletRequest httpRequest, HttpSession httpSession)
+    {
+        try
+        {
+            // Check for pac4j profiles stored in session
+            Object profilesObj = httpSession.getAttribute(Pac4jConstants.USER_PROFILES);
+            if (profilesObj instanceof Map)
+            {
+                @SuppressWarnings("unchecked")
+                Map<String, CommonProfile> profileMap = (Map<String, CommonProfile>) profilesObj;
+
+                // Try to find a supported profile
+                for (CommonProfile profile : profileMap.values())
+                {
+                    if (GitLabSessionBuilder.isSupportedProfile(profile))
+                    {
+                        // Get GitLabAppInfo from servlet context
+                        Object appInfoObj = httpRequest.getServletContext().getAttribute("org.finos.legend.sdlc.GitLabAppInfo");
+                        if (appInfoObj instanceof GitLabAppInfo)
+                        {
+                            GitLabAppInfo appInfo = (GitLabAppInfo) appInfoObj;
+                            Session session = GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
+                            LOGGER.debug("Created session from pac4j profile: {}", profile);
+                            return session;
+                        }
+                        else
+                        {
+                            LOGGER.debug("GitLabAppInfo not found in servlet context, cannot create session from profile");
+                        }
+                        break;
+                    }
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            LOGGER.debug("Error trying to create session from pac4j profiles", e);
+        }
         return null;
     }
 

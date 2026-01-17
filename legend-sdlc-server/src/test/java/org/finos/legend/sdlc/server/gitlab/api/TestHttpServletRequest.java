@@ -41,6 +41,28 @@ import java.util.Map;
 public class TestHttpServletRequest implements HttpServletRequest
 {
     private final Map<String, Object> attributes = new HashMap<>();
+    private HttpSession session;
+    private ServletContext servletContext;
+
+    public TestHttpServletRequest()
+    {
+    }
+
+    public TestHttpServletRequest(HttpSession session, ServletContext servletContext)
+    {
+        this.session = session;
+        this.servletContext = servletContext;
+    }
+
+    public void setSession(HttpSession session)
+    {
+        this.session = session;
+    }
+
+    public void setServletContext(ServletContext servletContext)
+    {
+        this.servletContext = servletContext;
+    }
 
     @Override
     public String getAuthType()
@@ -159,13 +181,13 @@ public class TestHttpServletRequest implements HttpServletRequest
     @Override
     public HttpSession getSession(boolean b)
     {
-        return null;
+        return this.session;
     }
 
     @Override
     public HttpSession getSession()
     {
-        return null;
+        return this.session;
     }
 
     @Override
@@ -417,7 +439,7 @@ public class TestHttpServletRequest implements HttpServletRequest
     @Override
     public ServletContext getServletContext()
     {
-        return null;
+        return this.servletContext;
     }
 
     @Override
