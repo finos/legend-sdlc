@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.domain.api.entity;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.entity.InvalidEntity;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,10 @@ public interface EntityAccessContext
     }
 
     List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid);
+
+    InvalidEntity getInvalidEntity(String path);
+
+    List<InvalidEntity> getInvalidEntities();
 
     List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate);
 }
