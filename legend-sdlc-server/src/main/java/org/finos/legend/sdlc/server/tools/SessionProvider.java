@@ -42,7 +42,6 @@ import java.util.Map;
 
 public class SessionProvider
 {
-
     private static final Logger LOGGER = LoggerFactory.getLogger(SessionProvider.class);
 
     private final SessionStore sessionStore;
@@ -130,9 +129,11 @@ public class SessionProvider
                                                                    GitlabPersonalAccessTokenClient client)
     {
         WebContext context = new JEEContext(httpRequest, httpResponse);
+        String host = (client.host == null) ? client.gitlabHost : client.host;
+        String apiVersion = (client.apiVersion == null) ? client.gitlabApiVersion : client.apiVersion;
         GitlabPersonalAccessTokenExtractor extractor = new GitlabPersonalAccessTokenExtractor(client.headerTokenName);
-        GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(client.host);
-        GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, client.host, client.apiVersion);
+        GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(host);
+        GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, host, apiVersion);
         GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context).get();
 
         try
