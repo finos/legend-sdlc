@@ -367,54 +367,288 @@ public class TestSessionProvider
             return Collections.enumeration(this.attributes.keySet());
         }
 
-        // All other methods return null/default values
-        @Override public String getContextPath() { return ""; }
-        @Override public ServletContext getContext(String uripath) { return null; }
-        @Override public int getMajorVersion() { return 3; }
-        @Override public int getMinorVersion() { return 1; }
-        @Override public int getEffectiveMajorVersion() { return 3; }
-        @Override public int getEffectiveMinorVersion() { return 1; }
-        @Override public String getMimeType(String file) { return null; }
-        @Override public java.util.Set<String> getResourcePaths(String path) { return null; }
-        @Override public java.net.URL getResource(String path) { return null; }
-        @Override public java.io.InputStream getResourceAsStream(String path) { return null; }
-        @Override public javax.servlet.RequestDispatcher getRequestDispatcher(String path) { return null; }
-        @Override public javax.servlet.RequestDispatcher getNamedDispatcher(String name) { return null; }
-        @Override @Deprecated public javax.servlet.Servlet getServlet(String name) { return null; }
-        @Override @Deprecated public Enumeration<javax.servlet.Servlet> getServlets() { return Collections.emptyEnumeration(); }
-        @Override @Deprecated public Enumeration<String> getServletNames() { return Collections.emptyEnumeration(); }
-        @Override public void log(String msg) { }
-        @Override @Deprecated public void log(Exception exception, String msg) { }
-        @Override public void log(String message, Throwable throwable) { }
-        @Override public String getRealPath(String path) { return null; }
-        @Override public String getServerInfo() { return "TestServer/1.0"; }
-        @Override public String getInitParameter(String name) { return null; }
-        @Override public Enumeration<String> getInitParameterNames() { return Collections.emptyEnumeration(); }
-        @Override public boolean setInitParameter(String name, String value) { return false; }
-        @Override public String getServletContextName() { return "TestContext"; }
-        @Override public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, String className) { return null; }
-        @Override public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, javax.servlet.Servlet servlet) { return null; }
-        @Override public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, Class<? extends javax.servlet.Servlet> servletClass) { return null; }
-        @Override public <T extends javax.servlet.Servlet> T createServlet(Class<T> clazz) { return null; }
-        @Override public javax.servlet.ServletRegistration getServletRegistration(String servletName) { return null; }
-        @Override public Map<String, ? extends javax.servlet.ServletRegistration> getServletRegistrations() { return Collections.emptyMap(); }
-        @Override public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className) { return null; }
-        @Override public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, javax.servlet.Filter filter) { return null; }
-        @Override public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends javax.servlet.Filter> filterClass) { return null; }
-        @Override public <T extends javax.servlet.Filter> T createFilter(Class<T> clazz) { return null; }
-        @Override public javax.servlet.FilterRegistration getFilterRegistration(String filterName) { return null; }
-        @Override public Map<String, ? extends javax.servlet.FilterRegistration> getFilterRegistrations() { return Collections.emptyMap(); }
-        @Override public javax.servlet.SessionCookieConfig getSessionCookieConfig() { return null; }
-        @Override public void setSessionTrackingModes(java.util.Set<javax.servlet.SessionTrackingMode> sessionTrackingModes) { }
-        @Override public java.util.Set<javax.servlet.SessionTrackingMode> getDefaultSessionTrackingModes() { return Collections.emptySet(); }
-        @Override public java.util.Set<javax.servlet.SessionTrackingMode> getEffectiveSessionTrackingModes() { return Collections.emptySet(); }
-        @Override public void addListener(String className) { }
-        @Override public <T extends java.util.EventListener> void addListener(T t) { }
-        @Override public void addListener(Class<? extends java.util.EventListener> listenerClass) { }
-        @Override public <T extends java.util.EventListener> T createListener(Class<T> clazz) { return null; }
-        @Override public javax.servlet.descriptor.JspConfigDescriptor getJspConfigDescriptor() { return null; }
-        @Override public ClassLoader getClassLoader() { return getClass().getClassLoader(); }
-        @Override public void declareRoles(String... roleNames) { }
-        @Override public String getVirtualServerName() { return "localhost"; }
+        @Override
+        public String getContextPath()
+        {
+            return "";
+        }
+
+        @Override
+        public ServletContext getContext(String uripath)
+        {
+            return null;
+        }
+
+        @Override
+        public int getMajorVersion()
+        {
+            return 3;
+        }
+
+        @Override
+        public int getMinorVersion()
+        {
+            return 1;
+        }
+
+        @Override
+        public int getEffectiveMajorVersion()
+        {
+            return 3;
+        }
+
+        @Override
+        public int getEffectiveMinorVersion()
+        {
+            return 1;
+        }
+
+        @Override
+        public String getMimeType(String file)
+        {
+            return null;
+        }
+
+        @Override
+        public java.util.Set<String> getResourcePaths(String path)
+        {
+            return null;
+        }
+
+        @Override
+        public java.net.URL getResource(String path)
+        {
+            return null;
+        }
+
+        @Override
+        public java.io.InputStream getResourceAsStream(String path)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.RequestDispatcher getRequestDispatcher(String path)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.RequestDispatcher getNamedDispatcher(String name)
+        {
+            return null;
+        }
+
+        @Override
+        @Deprecated
+        public javax.servlet.Servlet getServlet(String name)
+        {
+            return null;
+        }
+
+        @Override
+        @Deprecated
+        public Enumeration<javax.servlet.Servlet> getServlets()
+        {
+            return Collections.emptyEnumeration();
+        }
+
+        @Override
+        @Deprecated
+        public Enumeration<String> getServletNames()
+        {
+            return Collections.emptyEnumeration();
+        }
+
+        @Override
+        public void log(String msg)
+        {
+        }
+
+        @Override
+        @Deprecated
+        public void log(Exception exception, String msg)
+        {
+        }
+
+        @Override
+        public void log(String message, Throwable throwable)
+        {
+        }
+
+        @Override
+        public String getRealPath(String path)
+        {
+            return null;
+        }
+
+        @Override
+        public String getServerInfo()
+        {
+            return "TestServer/1.0";
+        }
+
+        @Override
+        public String getInitParameter(String name)
+        {
+            return null;
+        }
+
+        @Override
+        public Enumeration<String> getInitParameterNames()
+        {
+            return Collections.emptyEnumeration();
+        }
+
+        @Override
+        public boolean setInitParameter(String name, String value)
+        {
+            return false;
+        }
+
+        @Override
+        public String getServletContextName()
+        {
+            return "TestContext";
+        }
+
+        @Override
+        public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, String className)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, javax.servlet.Servlet servlet)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.ServletRegistration.Dynamic addServlet(String servletName, Class<? extends javax.servlet.Servlet> servletClass)
+        {
+            return null;
+        }
+
+        @Override
+        public <T extends javax.servlet.Servlet> T createServlet(Class<T> clazz)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.ServletRegistration getServletRegistration(String servletName)
+        {
+            return null;
+        }
+
+        @Override
+        public Map<String, ? extends javax.servlet.ServletRegistration> getServletRegistrations()
+        {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, String className)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, javax.servlet.Filter filter)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.FilterRegistration.Dynamic addFilter(String filterName, Class<? extends javax.servlet.Filter> filterClass)
+        {
+            return null;
+        }
+
+        @Override
+        public <T extends javax.servlet.Filter> T createFilter(Class<T> clazz)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.FilterRegistration getFilterRegistration(String filterName)
+        {
+            return null;
+        }
+
+        @Override
+        public Map<String, ? extends javax.servlet.FilterRegistration> getFilterRegistrations()
+        {
+            return Collections.emptyMap();
+        }
+
+        @Override
+        public javax.servlet.SessionCookieConfig getSessionCookieConfig()
+        {
+            return null;
+        }
+
+        @Override
+        public void setSessionTrackingModes(java.util.Set<javax.servlet.SessionTrackingMode> sessionTrackingModes)
+        {
+        }
+
+        @Override
+        public java.util.Set<javax.servlet.SessionTrackingMode> getDefaultSessionTrackingModes()
+        {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public java.util.Set<javax.servlet.SessionTrackingMode> getEffectiveSessionTrackingModes()
+        {
+            return Collections.emptySet();
+        }
+
+        @Override
+        public void addListener(String className)
+        {
+        }
+
+        @Override
+        public <T extends java.util.EventListener> void addListener(T t)
+        {
+        }
+
+        @Override
+        public void addListener(Class<? extends java.util.EventListener> listenerClass)
+        {
+        }
+
+        @Override
+        public <T extends java.util.EventListener> T createListener(Class<T> clazz)
+        {
+            return null;
+        }
+
+        @Override
+        public javax.servlet.descriptor.JspConfigDescriptor getJspConfigDescriptor()
+        {
+            return null;
+        }
+
+        @Override
+        public ClassLoader getClassLoader()
+        {
+            return getClass().getClassLoader();
+        }
+
+        @Override
+        public void declareRoles(String... roleNames)
+        {
+        }
+
+        @Override
+        public String getVirtualServerName()
+        {
+            return "localhost";
+        }
     }
 }
