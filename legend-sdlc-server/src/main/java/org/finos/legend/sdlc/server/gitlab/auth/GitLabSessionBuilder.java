@@ -125,7 +125,7 @@ public class GitLabSessionBuilder extends SessionBuilder<GitLabSession>
         throw new IllegalStateException("Unsupported profile type: " + profile);
     }
 
-    static boolean isSupportedProfile(CommonProfile profile)
+    public static boolean isSupportedProfile(CommonProfile profile)
     {
         return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }

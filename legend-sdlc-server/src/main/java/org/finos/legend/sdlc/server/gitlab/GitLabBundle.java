@@ -41,6 +41,8 @@ public class GitLabBundle<C extends Configuration> implements ConfiguredBundle<C
     {
     }
 
+    public static final String GITLAB_APP_INFO_ATTRIBUTE = "org.finos.legend.sdlc.GitLabAppInfo";
+
     @Override
     public void run(C configuration, Environment environment)
     {
@@ -49,6 +51,10 @@ public class GitLabBundle<C extends Configuration> implements ConfiguredBundle<C
         {
             throw new RuntimeException("Could not find GitLabConfiguration");
         }
+
+        // Store GitLabAppInfo in servlet context for use by SessionProvider
+        GitLabAppInfo appInfo = GitLabAppInfo.newAppInfo(gitLabConfig);
+        environment.getApplicationContext().setAttribute(GITLAB_APP_INFO_ATTRIBUTE, appInfo);
 
         Filter filter = GitLabWebFilter.fromConfig(gitLabConfig);
         GitLabServerHealthCheck healthCheck = GitLabServerHealthCheck.fromConfig(gitLabConfig);
