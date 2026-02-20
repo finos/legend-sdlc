@@ -71,9 +71,9 @@
         <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.120.1</legend.engine.version>
-        <legend.pure.version>5.75.0</legend.pure.version>
-        <legend.shared.version>0.32.0</legend.shared.version>
+        <legend.engine.version>4.121.2</legend.engine.version>
+        <legend.pure.version>5.77.0</legend.pure.version>
+        <legend.shared.version>0.33.0</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
