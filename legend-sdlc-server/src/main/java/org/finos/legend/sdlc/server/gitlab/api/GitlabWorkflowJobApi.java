@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.map.primitive.LongObjectMap;
+import org.eclipse.collections.api.map.primitive.IntObjectMap;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
@@ -78,16 +78,16 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
 
         return new GitLabWorkflowJobAccessContext(projectId)
         {
-            private LongObjectMap<Pipeline> pipelinesById;
+            private IntObjectMap<Pipeline> pipelinesById;
 
             @Override
-            protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
+            protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
             {
                 return getPipelinesById().get(pipelineId);
             }
 
             @Override
-            protected Job getJob(long pipelineId, long jobId) throws GitLabApiException
+            protected Job getJob(int pipelineId, int jobId) throws GitLabApiException
             {
                 Job job = super.getJob(pipelineId, jobId);
                 return ((job != null) && (getPipeline(pipelineId) != null)) ? job : null;
@@ -99,7 +99,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
                 return "review " + reviewId + " of project " + projectId;
             }
 
-            private LongObjectMap<Pipeline> getPipelinesById() throws GitLabApiException
+            private IntObjectMap<Pipeline> getPipelinesById() throws GitLabApiException
             {
                 if (this.pipelinesById == null)
                 {
@@ -138,7 +138,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         {
             LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
 
-            long pipelineId = getWorkflowPipelineId(workflowId);
+            int pipelineId = getWorkflowPipelineId(workflowId);
 
             JobApi jobApi = getGitLabApi().getJobApi();
             List<Job> jobs;
@@ -272,9 +272,9 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             return fromGitLabJob(result);
         }
 
-        protected long getWorkflowPipelineId(String workflowId)
+        protected int getWorkflowPipelineId(String workflowId)
         {
-            long pipelineId = parseLongId(workflowId);
+            int pipelineId = parseIntegerId(workflowId);
 
             // Validate that the pipeline exists and is a workflow pipeline
             Pipeline pipeline;
@@ -296,14 +296,14 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             return pipelineId;
         }
 
-        protected abstract Pipeline getPipeline(long pipelineId) throws GitLabApiException;
+        protected abstract Pipeline getPipeline(int pipelineId) throws GitLabApiException;
 
         protected Job getJob(String workflowId, String workflowJobId)
         {
             Job job;
             try
             {
-                job = getJob(parseLongId(workflowId), parseLongId(workflowJobId));
+                job = getJob(parseIntegerId(workflowId), parseIntegerId(workflowJobId));
             }
             catch (Exception e)
             {
@@ -319,7 +319,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             return job;
         }
 
-        protected Job getJob(long pipelineId, long jobId) throws GitLabApiException
+        protected Job getJob(int pipelineId, int jobId) throws GitLabApiException
         {
             JobApi jobApi = getGitLabApi().getJobApi();
             Job job = withRetries(() -> jobApi.getJob(this.gitLabProjectId.getGitLabId(), jobId));
@@ -345,13 +345,13 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         }
 
         @Override
-        protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
+        protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
         {
             return getRefPipeline(this.gitLabProjectId.getGitLabId(), this.ref, pipelineId);
         }
 
         @Override
-        protected Job getJob(long pipelineId, long jobId) throws GitLabApiException
+        protected Job getJob(int pipelineId, int jobId) throws GitLabApiException
         {
             Job job = super.getJob(pipelineId, jobId);
             return ((job != null) && this.ref.equals(job.getRef())) ? job : null;

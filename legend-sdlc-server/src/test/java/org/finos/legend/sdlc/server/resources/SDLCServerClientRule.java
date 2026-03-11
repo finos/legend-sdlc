@@ -37,7 +37,6 @@ import org.junit.runners.model.Statement;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.ext.ContextResolver;
 
 public class SDLCServerClientRule implements TestRule
 {
@@ -60,6 +59,20 @@ public class SDLCServerClientRule implements TestRule
 
     private void before()
     {
+        this.objectMapper = new ObjectMapper();
+        this.objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        this.objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+        this.objectMapper.addMixIn(Project.class, InMemoryMixins.Project.class);
+        this.objectMapper.addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
+        this.objectMapper.addMixIn(Entity.class, InMemoryMixins.Entity.class);
+        this.objectMapper.addMixIn(Revision.class, InMemoryMixins.Revision.class);
+        this.objectMapper.addMixIn(Review.class, InMemoryMixins.Review.class);
+        this.objectMapper.addMixIn(ProjectRevision.class, ProjectRevisionMixin.class);
+        this.objectMapper.addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
+        this.objectMapper.addMixIn(Patch.class, InMemoryMixins.Patch.class);
+        this.objectMapper.addMixIn(VersionId.class, VersionIdMixin.class);
+        this.objectMapper.findAndRegisterModules();
         this.client = this.createClient();
     }
 
@@ -70,43 +83,9 @@ public class SDLCServerClientRule implements TestRule
 
     private Client createClient()
     {
-        return ClientBuilder.newClient().register(SDLCServerClientRuleJacksonJsonProvider.class);
-    }
-
-    private static class SDLCServerClientRuleJacksonJsonProvider extends JacksonJsonProvider implements ContextResolver<ObjectMapper>
-    {
-        private final ObjectMapper objectMapper;
-
-        public SDLCServerClientRuleJacksonJsonProvider()
-        {
-            this.objectMapper = new ObjectMapper()
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
-                    .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-                    .addMixIn(Project.class, InMemoryMixins.Project.class)
-                    .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
-                    .addMixIn(Entity.class, InMemoryMixins.Entity.class)
-                    .addMixIn(Revision.class, InMemoryMixins.Revision.class)
-                    .addMixIn(Review.class, InMemoryMixins.Review.class)
-                    .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
-                    .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
-                    .addMixIn(VersionId.class, VersionIdMixin.class)
-                    .addMixIn(Patch.class, InMemoryMixins.Patch.class);
-
-            // NOTE: this call needs to be called separately and not part of the fluent-style declaration block
-            // above, else things might go wrong in test, this could be due to the weird interaction between
-            // gitlab4j-api and our old version of dropwizard and their dependencies and service loader magic,
-            // that we haven't quite figured out just yet. We should clean this up when we upgrade DropWizard
-            // See https://github.com/FasterXML/jackson-databind/issues/2983
-            // See https://github.com/finos/legend-sdlc/pull/414
-            this.objectMapper.findAndRegisterModules();
-        }
-
-        @Override
-        public ObjectMapper getContext(Class<?> type)
-        {
-            return this.objectMapper;
-        }
+        JacksonJsonProvider jacksonJsonProvider = new JacksonJsonProvider();
+        jacksonJsonProvider.setMapper(this.objectMapper);
+        return ClientBuilder.newClient().register(jacksonJsonProvider);
     }
 }
 

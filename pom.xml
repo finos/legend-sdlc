@@ -88,7 +88,7 @@
         <eclipsecollections.version>10.2.0</eclipsecollections.version>
         <findbugs.version>3.0.0</findbugs.version>
         <freemarker.version>2.3.30</freemarker.version>
-        <gitlab4j.version>5.8.0</gitlab4j.version>
+        <gitlab4j.version>4.16.0</gitlab4j.version>
         <guava.version>31.1-jre</guava.version>
         <guice.version>6.0.0</guice.version>        
         <hibernate-validator.version>5.4.3.Final</hibernate-validator.version>
@@ -1378,16 +1378,6 @@
                 <groupId>org.gitlab4j</groupId>
                 <artifactId>gitlab4j-api</artifactId>
                 <version>${gitlab4j.version}</version>
-               <exclusions>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.module</groupId>
-                        <artifactId>jackson-module-jaxb-annotations</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.fasterxml.jackson.jaxrs</groupId>
-                        <artifactId>jackson-jaxrs-base</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
