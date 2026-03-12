@@ -283,7 +283,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
 
     private boolean tryEnsureMinAccessLevel(GitLabApi gitLabApi, org.gitlab4j.api.models.Project project, AccessLevel accessLevel)
     {
-        int projectId = project.getId();
+        long projectId = project.getId();
 
         User currentUser;
         try
@@ -298,7 +298,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
         }
 
         org.gitlab4j.api.ProjectApi projectApi = gitLabApi.getProjectApi();
-        int userId = currentUser.getId();
+        long userId = currentUser.getId();
         CallUntil<AccessLevel, ?> callUntil = CallUntil.callUntil(() ->
         {
             try

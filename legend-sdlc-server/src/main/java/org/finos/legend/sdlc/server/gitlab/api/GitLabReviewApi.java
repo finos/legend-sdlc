@@ -17,11 +17,11 @@ package org.finos.legend.sdlc.server.gitlab.api;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.list.MutableList;
-import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
+import org.eclipse.collections.api.map.primitive.MutableLongObjectMap;
 import org.eclipse.collections.api.set.SetIterable;
-import org.eclipse.collections.api.set.primitive.MutableIntSet;
-import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
-import org.eclipse.collections.impl.factory.primitive.IntSets;
+import org.eclipse.collections.api.set.primitive.MutableLongSet;
+import org.eclipse.collections.impl.factory.primitive.LongObjectMaps;
+import org.eclipse.collections.impl.factory.primitive.LongSets;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -110,7 +110,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
                 // TODO: we might want to do this differently since the number of revision IDs can be huge
                 // we can have a threshold for which we change our strategy to  to make a single call for
                 // merge requests by the other criteria and then filter by revisionIds.
-                MutableIntSet mergeRequestIds = IntSets.mutable.empty();
+                MutableLongSet mergeRequestIds = LongSets.mutable.empty();
                 CommitsApi commitsApi = getGitLabApi().getCommitsApi();
                 // Combine all MRs associated with each revision
                 mergeRequestStream = revisionIdSet.stream().flatMap(revisionId ->
@@ -177,7 +177,7 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
 
     private Stream<Review> getReviewStream(MergeRequestFilter mergeRequestFilter)
     {
-        MutableIntObjectMap<String> defaultBranchByProject = IntObjectMaps.mutable.empty();
+        MutableLongObjectMap<String> defaultBranchByProject = LongObjectMaps.mutable.empty();
         String idPrefix = getGitLabConfiguration().getProjectIdPrefix();
         try
         {
@@ -969,12 +969,12 @@ public class GitLabReviewApi extends GitLabApiWithFileAccess implements ReviewAp
         return newReview(mergeRequest.getIid(), projectId, workspaceInfo, mergeRequest.getTitle(), mergeRequest.getDescription(), mergeRequest.getCreatedAt(), mergeRequest.getUpdatedAt(), mergeRequest.getClosedAt(), mergeRequest.getMergedAt(), mergeRequest.getState(), mergeRequest.getAuthor(), mergeRequest.getMergeCommitSha(), mergeRequest.getWebUrl(), mergeRequest.getLabels());
     }
 
-    private static Review newReview(Integer reviewId, String projectId, WorkspaceSpecification workspaceSpec, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
+    private static Review newReview(Long reviewId, String projectId, WorkspaceSpecification workspaceSpec, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
     {
         return newReview(reviewId, projectId, workspaceSpec.getId(), workspaceSpec.getType(), title, description, createdAt, lastUpdatedAt, closedAt, committedAt, reviewState, author, commitRevisionId, webURL, labels);
     }
 
-    private static Review newReview(Integer reviewId, String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
+    private static Review newReview(Long reviewId, String projectId, String workspaceId, WorkspaceType workspaceType, String title, String description, Date createdAt, Date lastUpdatedAt, Date closedAt, Date committedAt, String reviewState, AbstractUser<?> author, String commitRevisionId, String webURL, List<String> labels)
     {
         return newReview(toStringIfNotNull(reviewId), projectId, workspaceId, workspaceType, title, description, toInstantIfNotNull(createdAt), toInstantIfNotNull(lastUpdatedAt), toInstantIfNotNull(closedAt), toInstantIfNotNull(committedAt), getReviewState(reviewState), fromGitLabAbstractUser(author), commitRevisionId, webURL, labels);
     }
