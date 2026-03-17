@@ -23,6 +23,8 @@ import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundle;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.ws.rs.ext.ContextResolver;
 import org.eclipse.collections.impl.utility.LazyIterate;
 import org.eclipse.jetty.server.session.SessionHandler;
 import org.eclipse.jetty.servlets.CrossOriginFilter;
@@ -115,6 +117,16 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         // Temporal configuration
         environment.jersey().getResourceConfig().register(new TemporalConverterProvider());
         environment.getObjectMapper().configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
+
+        // Ensure Jersey uses the same ObjectMapper
+        environment.jersey().register(new ContextResolver<ObjectMapper>()
+        {
+            @Override
+            public ObjectMapper getContext(Class<?> type)
+            {
+                return environment.getObjectMapper();
+            }
+        });
 
         // Error handling
         boolean includeStackTraces = Optional.ofNullable(configuration.getErrorHandlingConfiguration()).map(ErrorHandlingConfiguration::getIncludeStackTrace).orElse(false);

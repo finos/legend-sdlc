@@ -96,7 +96,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         return new GitLabWorkflowAccessContext(gitLabProjectId)
         {
             @Override
-            protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
+            protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
             {
                 return getMergeRequestPipeline(this.gitLabProjectId.getGitLabId(), mergeRequest.getIid(), pipelineId);
             }
@@ -133,7 +133,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         @Override
         public Workflow getWorkflow(String workflowId)
         {
-            int pipelineId = parseIntegerIdIfNotNull(workflowId);
+            long pipelineId = parseLongIdIfNotNull(workflowId);
             Pipeline pipeline;
             try
             {
@@ -230,7 +230,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
             }
         }
 
-        protected abstract Pipeline getPipeline(int pipelineId) throws GitLabApiException;
+        protected abstract Pipeline getPipeline(long pipelineId) throws GitLabApiException;
 
         protected abstract Pager<Pipeline> getPipelines() throws GitLabApiException;
 
@@ -289,7 +289,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
         }
 
         @Override
-        protected Pipeline getPipeline(int pipelineId) throws GitLabApiException
+        protected Pipeline getPipeline(long pipelineId) throws GitLabApiException
         {
             return getRefPipeline(this.gitLabProjectId.getGitLabId(), this.ref, pipelineId);
         }

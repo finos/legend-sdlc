@@ -14,8 +14,13 @@
 
 package org.finos.legend.sdlc.server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
+import io.dropwizard.jackson.Jackson;
 import io.dropwizard.setup.Bootstrap;
+import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -24,12 +29,17 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.InMemoryModule;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
+import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 import org.finos.legend.sdlc.domain.model.review.Review;
+
+import javax.ws.rs.ext.ContextResolver;
+
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
@@ -44,15 +54,13 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     protected void configureApis(Bootstrap<LegendSDLCServerConfiguration> bootstrap)
     {
         super.configureApis(bootstrap);
+    }
 
-        bootstrap.getObjectMapper().addMixIn(Project.class, InMemoryMixins.Project.class);
-        bootstrap.getObjectMapper().addMixIn(Workspace.class, InMemoryMixins.Workspace.class);
-        bootstrap.getObjectMapper().addMixIn(Entity.class, InMemoryMixins.Entity.class);
-        bootstrap.getObjectMapper().addMixIn(Revision.class, InMemoryMixins.Revision.class);
-        bootstrap.getObjectMapper().addMixIn(ProjectDependency.class, ProjectDependencyMixin.class);
-        bootstrap.getObjectMapper().addMixIn(VersionId.class, VersionIdMixin.class);
-        bootstrap.getObjectMapper().addMixIn(Review.class, InMemoryMixins.Review.class);
-        bootstrap.getObjectMapper().addMixIn(Patch.class, InMemoryMixins.Patch.class);
+    @Override
+    public void run(LegendSDLCServerConfiguration configuration, Environment environment)
+    {
+        super.run(configuration, environment);
+        environment.jersey().register(LegendSDLCServerForTestJacksonJsonProvider.class);
     }
 
     @Override
@@ -82,5 +90,31 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     public static void main(String... args) throws Exception
     {
         new LegendSDLCServerForTest().run(args);
+    }
+
+    private static class LegendSDLCServerForTestJacksonJsonProvider extends JacksonJsonProvider implements ContextResolver<ObjectMapper>
+    {
+        private final ObjectMapper objectMapper;
+
+        public LegendSDLCServerForTestJacksonJsonProvider()
+        {
+            this.objectMapper = Jackson.newObjectMapper();
+            this.objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
+                    .addMixIn(Project.class, InMemoryMixins.Project.class)
+                    .addMixIn(Workspace.class, InMemoryMixins.Workspace.class)
+                    .addMixIn(Entity.class, InMemoryMixins.Entity.class)
+                    .addMixIn(Revision.class, InMemoryMixins.Revision.class)
+                    .addMixIn(Review.class, InMemoryMixins.Review.class)
+                    .addMixIn(ProjectRevision.class, ProjectRevisionMixin.class)
+                    .addMixIn(ProjectDependency.class, ProjectDependencyMixin.class)
+                    .addMixIn(VersionId.class, VersionIdMixin.class)
+                    .addMixIn(Patch.class, InMemoryMixins.Patch.class);
+        }
+
+        @Override
+        public ObjectMapper getContext(Class<?> type)
+        {
+            return this.objectMapper;
+        }
     }
 }
