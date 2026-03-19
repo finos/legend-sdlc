@@ -217,8 +217,8 @@ public class GitLabProjectApiTestResource
         Set<AuthorizableProjectAction> actionSet = Collections.singleton(AuthorizableProjectAction.COMMIT_REVIEW);
         List<ProtectedTag> protectedTags = null;
         List<Member> members = new ArrayList<>();
-        members.add(new Member().withAccessLevel(AccessLevel.MAINTAINER).withName("haveAccess").withId(1));
-        members.add(new Member().withAccessLevel(AccessLevel.NONE).withName("noAccess").withId(2));
+        members.add(new Member().withAccessLevel(AccessLevel.MAINTAINER).withName("haveAccess").withId(1L));
+        members.add(new Member().withAccessLevel(AccessLevel.NONE).withName("noAccess").withId(2L));
         Set<UserPermission> users = this.gitLabProjectApi.processUserAuthorizedActions(protectedTags, members, actionSet);
         Set<UserPermission> expectedUsers = new HashSet<>();
         expectedUsers.add(createUserPermission("1", "haveAccess", Collections.singleton(AuthorizableProjectAction.COMMIT_REVIEW)));
