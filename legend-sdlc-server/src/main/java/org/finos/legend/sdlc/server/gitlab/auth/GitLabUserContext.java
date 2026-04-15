@@ -149,29 +149,30 @@ public class GitLabUserContext extends UserContext
 
     public boolean isUserAuthorized()
     {
-        if (this.api == null)
+        GitLabSession gitLabSession = getGitLabSession();
+        if (gitLabSession.shouldRefreshToken())
         {
-            GitLabSession gitLabSession = getGitLabSession();
-            if (gitLabSession.getGitLabToken() == null)
+            return false;
+        }
+        if (this.api == null && gitLabSession.getGitLabToken() == null)
+        {
+            try
             {
-                try
+                GitLabTokenResponse tokenResponse = authorizerManager.authorize(session, this.appInfo);
+                if (tokenResponse.getAccessToken() == null)
                 {
-                    GitLabTokenResponse tokenResponse = authorizerManager.authorize(session, this.appInfo);
-                    if (tokenResponse.getAccessToken() == null)
-                    {
-                        return false;
-                    }
-                    // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
-                    gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
-                    gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
-                    gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
-                    LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
-                }
-                catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
-                {
-                    // These exceptions indicate the mode is not yet authorized or that authorization has failed.
                     return false;
                 }
+                // If we can get the token, then the mode is authorized. But since we have it, we might as well save it.
+                gitLabSession.setGitLabToken(tokenResponse.getAccessToken());
+                gitLabSession.setRefreshToken(tokenResponse.getRefreshToken());
+                gitLabSession.setTokenExpiry(tokenResponse.getExpiresInSecs());
+                LegendSDLCWebFilter.setSessionCookie(this.httpResponse, gitLabSession);
+            }
+            catch (GitLabAuthFailureException | GitLabOAuthAuthenticator.UserInputRequiredException e)
+            {
+                // These exceptions indicate the mode is not yet authorized or that authorization has failed.
+                return false;
             }
         }
         return true;
