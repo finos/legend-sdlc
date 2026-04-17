@@ -37,6 +37,7 @@
         <module>legend-sdlc-protocol-pure</module>
         <module>legend-sdlc-language-pure-compiler</module>
         <module>legend-sdlc-server-shared</module>
+        <module>legend-sdlc-project-files</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-server-fs</module>
         <module>legend-sdlc-generation-shared</module>
@@ -477,6 +478,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server-shared</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-project-files</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
