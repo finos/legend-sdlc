@@ -162,5 +162,6 @@ public class TestProjectStructureStaticMethods
         Assert.assertNull(config.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(projectId, config.getProjectId());
         Assert.assertEquals(ProjectType.MANAGED, config.getProjectType());
+        Assert.assertNull(config.getProduceShadedServiceJar());
     }
 }
