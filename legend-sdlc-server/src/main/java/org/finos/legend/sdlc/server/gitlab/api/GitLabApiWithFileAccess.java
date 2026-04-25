@@ -74,6 +74,8 @@ import org.gitlab4j.api.models.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.core.Response.Status;
+import javax.ws.rs.core.Response.Status.Family;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -91,8 +93,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 
 abstract class GitLabApiWithFileAccess extends BaseGitLabApi
 {
@@ -112,7 +112,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
     @Deprecated
     protected ProjectConfiguration getProjectConfiguration(String projectId, VersionId patchReleaseVersionId)
     {
-        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(patchReleaseVersionId));
+        return getProjectConfiguration(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId));
     }
 
     protected ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification)

@@ -27,16 +27,14 @@ import org.finos.legend.sdlc.server.application.review.CreateReviewCommand;
 import org.finos.legend.sdlc.server.application.review.EditReviewCommand;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
 import org.finos.legend.sdlc.server.domain.api.review.ReviewApi.ReviewUpdateStatus;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.ReviewFilterResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -47,6 +45,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/reviews")
 @Api("Reviews")
@@ -86,7 +87,7 @@ public class PatchReviewsResource extends ReviewFilterResource
         }
         return executeWithLogging(
                 (state == null) ? ("getting reviews for project " + projectId) : ("getting reviews for project " + projectId + " for patch release version " + patchReleaseVersionId + " with state " + state),
-                () -> this.reviewApi.getReviews(projectId, versionId, state, revisionIds, this.getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.reviewApi.getReviews(projectId, versionId, state, revisionIds, getWorkspaceIdAndTypePredicate(workspaceIdRegex, workspaceTypes), ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -161,7 +162,12 @@ public class PatchReviewsResource extends ReviewFilterResource
         return execute(
                 "creating review \"" + command.getTitle() + "\" in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 "create a review",
-                () -> this.reviewApi.createReview(projectId, SourceSpecification.newSourceSpecification(command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), null, versionId), command.getTitle(), command.getDescription(), command.getLabels())
+                () ->
+                {
+                    WorkspaceSource workspaceSource = WorkspaceSource.patchWorkspaceSource(versionId);
+                    WorkspaceSpecification workspaceSpecification = WorkspaceSpecification.newWorkspaceSpecification(command.getWorkspaceId(), Optional.ofNullable(command.getWorkspaceType()).orElse(WorkspaceType.USER), null, workspaceSource);
+                    return this.reviewApi.createReview(projectId, workspaceSpecification, command.getTitle(), command.getDescription(), command.getLabels());
+                }
         );
     }
 

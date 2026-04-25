@@ -28,6 +28,7 @@ import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.backend.metadata.InMemoryMetadataBackend;
 import org.junit.Assert;
@@ -817,17 +818,17 @@ public class TestModelBuilderTest
 
     private String revisionId(String projectId, String workspaceId)
     {
-        return this.backend.getRevisionApi().getUserWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId, String workspaceId, WorkspaceType type)
     {
-        return this.backend.getRevisionApi().getWorkspaceRevisionContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, type)).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, type))).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId)
     {
-        return this.backend.getRevisionApi().getProjectRevisionContext(projectId).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId();
     }
 
     private List<Entity> findEntitiesInMetadata(String projectId, String versionId)

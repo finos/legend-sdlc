@@ -25,6 +25,8 @@ import org.apache.maven.model.PluginExecution;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.junit.Assert;
 
@@ -54,7 +56,7 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     public void testBuild()
     {
         super.testBuild();
-        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getProjectFileAccessContext(PROJECT_ID));
+        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getFileAccessContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()));
         Assert.assertNotNull(mavenModel);
         Assert.assertEquals(GROUP_ID, mavenModel.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, mavenModel.getArtifactId());
@@ -64,7 +66,7 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     public void testUpdateGroupAndArtifactIds()
     {
         super.testUpdateGroupAndArtifactIds();
-        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getProjectFileAccessContext(PROJECT_ID));
+        Model mavenModel = MavenProjectStructure.getProjectMavenModel(this.fileAccessProvider.getFileAccessContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()));
         Assert.assertNotNull(mavenModel);
         Assert.assertEquals(GROUP_ID_2, mavenModel.getGroupId());
         Assert.assertEquals(ARTIFACT_ID_2, mavenModel.getArtifactId());
@@ -75,7 +77,10 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
 
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        SourceSpecification sourceSpecification = (workspaceId == null) ?
+                                                  SourceSpecification.projectSourceSpecification() :
+                                                  SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId);
 
         // Check validity of the main pom.xml
         Model mavenModel = MavenProjectStructure.getProjectMavenModel(fileAccessContext);
@@ -509,16 +514,16 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
         public int hashCode()
         {
             return (this.dependency == null) ?
-                    0 :
-                    Objects.hash(
-                            this.dependency.getGroupId(),
-                            this.dependency.getArtifactId(),
-                            this.dependency.getVersion(),
-                            this.dependency.getScope(),
-                            this.dependency.getClassifier(),
-                            this.dependency.getType(),
-                            this.dependency.getOptional()
-                    );
+                   0 :
+                   Objects.hash(
+                           this.dependency.getGroupId(),
+                           this.dependency.getArtifactId(),
+                           this.dependency.getVersion(),
+                           this.dependency.getScope(),
+                           this.dependency.getClassifier(),
+                           this.dependency.getType(),
+                           this.dependency.getOptional()
+                   );
         }
 
         @Override
@@ -585,12 +590,12 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
         public int hashCode()
         {
             return (this.plugin == null) ?
-                    0 :
-                    Objects.hash(
-                            this.plugin.getGroupId(),
-                            this.plugin.getArtifactId(),
-                            this.plugin.getVersion()
-                    );
+                   0 :
+                   Objects.hash(
+                           this.plugin.getGroupId(),
+                           this.plugin.getArtifactId(),
+                           this.plugin.getVersion()
+                   );
         }
 
         @Override
@@ -655,12 +660,12 @@ TestMavenProjectStructure<T extends MavenProjectStructure> extends TestProjectSt
         public int hashCode()
         {
             return (this.parent == null) ?
-                    0 :
-                    Objects.hash(
-                            this.parent.getGroupId(),
-                            this.parent.getArtifactId(),
-                            this.parent.getVersion()
-                    );
+                   0 :
+                   Objects.hash(
+                           this.parent.getGroupId(),
+                           this.parent.getArtifactId(),
+                           this.parent.getVersion()
+                   );
         }
 
         @Override

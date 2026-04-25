@@ -77,19 +77,13 @@ public interface RevisionApi
     @Deprecated
     default RevisionAccessContext getUserWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return getRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
+        return getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER)));
     }
 
     @Deprecated
     default RevisionAccessContext getGroupWorkspaceRevisionContext(String projectId, String workspaceId)
     {
-        return getRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId));
-    }
-
-    @Deprecated
-    default RevisionAccessContext getWorkspaceRevisionContext(String projectId, String workspaceId)
-    {
-        return getRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId));
+        return getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)));
     }
 
     @Deprecated
@@ -152,13 +146,13 @@ public interface RevisionApi
     @Deprecated
     default RevisionAccessContext getUserWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return getEntityRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), entityPath);
+        return getEntityRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER)), entityPath);
     }
 
     @Deprecated
     default RevisionAccessContext getGroupWorkspaceEntityRevisionContext(String projectId, String workspaceId, String entityPath)
     {
-        return getEntityRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), entityPath);
+        return getEntityRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), entityPath);
     }
 
     @Deprecated
@@ -175,13 +169,13 @@ public interface RevisionApi
     @Deprecated
     default RevisionAccessContext getUserWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return getPackageRevisionContext(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId), packagePath);
+        return getPackageRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER)), packagePath);
     }
 
     @Deprecated
     default RevisionAccessContext getGroupWorkspacePackageRevisionContext(String projectId, String workspaceId, String packagePath)
     {
-        return getPackageRevisionContext(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId), packagePath);
+        return getPackageRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), packagePath);
     }
 
     @Deprecated

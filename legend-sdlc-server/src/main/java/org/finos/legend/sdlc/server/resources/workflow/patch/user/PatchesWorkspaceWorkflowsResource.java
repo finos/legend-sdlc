@@ -17,12 +17,14 @@ package org.finos.legend.sdlc.server.resources.workflow.patch.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -77,7 +79,7 @@ public class PatchesWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflows for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkflowAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -98,7 +100,7 @@ public class PatchesWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflow " + workflowId + " for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkflowAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflow(workflowId)
         );
     }
 }

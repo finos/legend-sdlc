@@ -23,6 +23,8 @@ import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -77,7 +79,7 @@ public class PatchesGroupWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflows for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflows(revisionIds, statuses, limit)
+                () -> this.workflowApi.getWorkflowAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflows(revisionIds, statuses, limit)
         );
     }
 
@@ -98,7 +100,7 @@ public class PatchesGroupWorkspaceWorkflowsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflow " + workflowId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowApi.getWorkspaceWorkflowAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflow(workflowId)
+                () -> this.workflowApi.getWorkflowAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflow(workflowId)
         );
     }
 }

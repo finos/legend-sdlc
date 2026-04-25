@@ -28,6 +28,8 @@ import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -387,7 +389,7 @@ public class GitLabEntityApiTestResource
         Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newUserWorkspaceSourceSpecification(workspaceName, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
@@ -540,7 +542,7 @@ public class GitLabEntityApiTestResource
         Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceName, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 

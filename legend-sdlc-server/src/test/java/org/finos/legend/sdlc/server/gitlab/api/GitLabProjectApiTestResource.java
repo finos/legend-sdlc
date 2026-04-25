@@ -76,7 +76,7 @@ public class GitLabProjectApiTestResource
                 "/testprojone-file-generation/pom.xml",
                 "/testprojone-service-execution/pom.xml",
                 "/testprojone-versioned-entities/pom.xml"
-        ), this.gitLabProjectApi.getProjectFileAccessProvider().getProjectFileAccessContext(projectId).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
+        ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
     public void runCreateManagedProjectTest() throws LegendSDLCServerException

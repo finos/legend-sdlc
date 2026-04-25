@@ -24,11 +24,14 @@ import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.junit.Assert;
 import org.slf4j.Logger;
@@ -221,7 +224,7 @@ public class GitLabComparisonApiTestResource
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
         Revision fromRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
@@ -249,9 +252,9 @@ public class GitLabComparisonApiTestResource
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
         Revision toRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
-        List<EntityDiff> entityDiffs = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getEntityDiffs();
-        String fromRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getFromRevisionId();
-        String toRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getToRevisionId();
+        List<EntityDiff> entityDiffs = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getEntityDiffs();
+        String fromRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getFromRevisionId();
+        String toRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getToRevisionId();
 
         Assert.assertNotNull(fromRevision);
         Assert.assertNotNull(toRevision);
@@ -263,9 +266,9 @@ public class GitLabComparisonApiTestResource
 
         Revision projectFromRevision = gitLabRevisionApi.getProjectRevisionContext(projectId, patchReleaseVersionId).getCurrentRevision();
         Revision projectToRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
-        List<EntityDiff> projectEntityDiffs = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getEntityDiffs();
-        String projectFromRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getFromRevisionId();
-        String projectToRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getToRevisionId();
+        List<EntityDiff> projectEntityDiffs = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getEntityDiffs();
+        String projectFromRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getFromRevisionId();
+        String projectToRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getToRevisionId();
 
         Assert.assertNotNull(projectFromRevision);
         Assert.assertEquals(projectFromRevision.getId(), projectFromRevisionId);
@@ -295,7 +298,7 @@ public class GitLabComparisonApiTestResource
         Version version = gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
         Patch patch = gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId);
+        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspaceOne = gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
         Revision fromRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
@@ -323,9 +326,9 @@ public class GitLabComparisonApiTestResource
         Assert.assertEquals(initalEntity.getContent(), entityContentMap);
 
         Revision toRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
-        List<EntityDiff> entityDiffs = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getEntityDiffs();
-        String fromRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getFromRevisionId();
-        String toRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getToRevisionId();
+        List<EntityDiff> entityDiffs = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getEntityDiffs();
+        String fromRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getFromRevisionId();
+        String toRevisionId = gitLabComparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getToRevisionId();
 
         Assert.assertNotNull(fromRevision);
         Assert.assertNotNull(toRevision);
@@ -337,9 +340,9 @@ public class GitLabComparisonApiTestResource
 
         Revision projectFromRevision = gitLabRevisionApi.getProjectRevisionContext(projectId, patchReleaseVersionId).getCurrentRevision();
         Revision projectToRevision = gitLabRevisionApi.getWorkspaceRevisionContext(projectId, sourceSpecification).getCurrentRevision();
-        List<EntityDiff> projectEntityDiffs = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getEntityDiffs();
-        String projectFromRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getFromRevisionId();
-        String projectToRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId)).getToRevisionId();
+        List<EntityDiff> projectEntityDiffs = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getEntityDiffs();
+        String projectFromRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getFromRevisionId();
+        String projectToRevisionId = gitLabComparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)))).getToRevisionId();
 
         Assert.assertNotNull(projectFromRevision);
         Assert.assertEquals(projectFromRevision.getId(), projectFromRevisionId);

@@ -14,7 +14,6 @@
 
 package org.finos.legend.sdlc.server.project;
 
-import ch.qos.logback.core.joran.util.PropertySetter;
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Parent;
@@ -25,6 +24,8 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.maven.LegendTestUtilsMavenHelper;
 import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
 import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
@@ -64,7 +65,10 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected void assertStateValid(T projectStructure, String projectId, String workspaceId, String revisionId)
     {
         super.assertStateValid(projectStructure, projectId, workspaceId, revisionId);
-        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId);
+        SourceSpecification sourceSpecification = (workspaceId == null) ?
+                                                  SourceSpecification.projectSourceSpecification() :
+                                                  SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        ProjectFileAccessProvider.FileAccessContext fileAccessContext = this.fileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId);
         Model entitiesMavenModel = projectStructure.getModuleMavenModel(projectStructure.getEntitiesModuleName(), fileAccessContext);
         Assert.assertNotNull(projectStructure.getEntitiesModuleName(), entitiesMavenModel);
         assertMavenEntitiesModelValid(entitiesMavenModel, projectStructure);
@@ -129,17 +133,17 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
     protected void assertMavenEntitiesModelValid(Model mavenEntitiesModel, T projectStructure)
     {
         assertMavenModelValid(
-            projectStructure.getEntitiesModuleName(),
-            mavenEntitiesModel,
-            projectStructure,
-            ps -> ps.getProjectConfiguration().getGroupId(),
-            ps -> ps.getModuleFullName(ps.getEntitiesModuleName()),
-            this::getExpectedParent,
-            this::collectExpectedEntitiesModelProperties,
-            this::collectExpectedEntitiesModelDependencies,
-            this::collectExpectedEntitiesModelPlugins,
-            this::collectExpectedEntitiesModelDependencyManagement,
-            null);
+                projectStructure.getEntitiesModuleName(),
+                mavenEntitiesModel,
+                projectStructure,
+                ps -> ps.getProjectConfiguration().getGroupId(),
+                ps -> ps.getModuleFullName(ps.getEntitiesModuleName()),
+                this::getExpectedParent,
+                this::collectExpectedEntitiesModelProperties,
+                this::collectExpectedEntitiesModelDependencies,
+                this::collectExpectedEntitiesModelPlugins,
+                this::collectExpectedEntitiesModelDependencyManagement,
+                null);
     }
 
     protected void assertMavenOtherModuleModelValid(String otherModuleName, Model mavenOtherModuleModel, T projectStructure, Map<ModuleConfigType, Method> moduleExpectedConfigMethods)
@@ -152,17 +156,17 @@ public abstract class TestMultiModuleMavenProjectStructure<T extends MultiModule
         };
         BiConsumer<? super T, Consumer<Plugin>> pluginCollector = (ps, c) -> invokeExpectedConfigMethod(moduleExpectedConfigMethods.get(ModuleConfigType.PLUGINS), otherModuleName, ps, c);
         assertMavenModelValid(
-            otherModuleName,
-            mavenOtherModuleModel,
-            projectStructure,
-            ps -> ps.getProjectConfiguration().getGroupId(),
-            ps -> ps.getModuleFullName(otherModuleName),
-            this::getExpectedParent,
-            propertyCollector,
-            dependencyCollector,
-            pluginCollector,
-            null,
-            null);
+                otherModuleName,
+                mavenOtherModuleModel,
+                projectStructure,
+                ps -> ps.getProjectConfiguration().getGroupId(),
+                ps -> ps.getModuleFullName(otherModuleName),
+                this::getExpectedParent,
+                propertyCollector,
+                dependencyCollector,
+                pluginCollector,
+                null,
+                null);
     }
 
     protected void collectExpectedEntitiesModelProperties(T projectStructure, BiConsumer<String, String> propertyConsumer)

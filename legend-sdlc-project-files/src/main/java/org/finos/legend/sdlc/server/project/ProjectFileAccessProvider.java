@@ -14,13 +14,8 @@
 
 package org.finos.legend.sdlc.server.project;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.tools.IOTools;
 
 import java.io.IOException;
@@ -32,7 +27,6 @@ import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -210,86 +204,6 @@ public interface ProjectFileAccessProvider
         return getFileAccessContext(projectId, sourceSpecification, null);
     }
 
-    // Deprecated File Access APIs
-
-    @Deprecated
-    default FileAccessContext getProjectFileAccessContext(String projectId)
-    {
-        return getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification());
-    }
-
-    @Deprecated
-    default FileAccessContext getProjectRevisionFileAccessContext(String projectId, String revisionId)
-    {
-        Objects.requireNonNull(revisionId, "revisionId may not be null");
-        return getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification(), revisionId);
-    }
-
-    @Deprecated
-    default FileAccessContext getWorkspaceFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getFileAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType, WorkspaceSource.projectWorkspaceSource())));
-    }
-
-    @Deprecated
-    default FileAccessContext getWorkspaceRevisionFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        Objects.requireNonNull(revisionId, "revisionId may not be null");
-        return getFileAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType, WorkspaceSource.projectWorkspaceSource())), revisionId);
-    }
-
-    @Deprecated
-    default FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, workspaceAccessType, revisionId);
-    }
-
-    /**
-     * Get a file access context. The project id must always be supplied, but workspace
-     * and revision ids are optional. If workspace is specified, workspace access type is also required
-     * <p>
-     * If a workspace id is supplied, then the access context is for that workspace.
-     * Otherwise, it is for the trunk or master branch of the project.
-     * <p>
-     * If a revision id is supplied, then the access context is for that particular
-     * revision of the project or workspace. Otherwise, the access context is for
-     * the current state of the project or workspace. Note that as the current
-     * state may change over time, calls to the access context may yield different
-     * results over time.
-     *
-     * @param projectId           project id
-     * @param workspaceId         workspace id (optional)
-     * @param workspaceType       type for the workspace (e.g. user, group) (optional)
-     * @param workspaceAccessType access type for the workspace (e.g. conflict resolution, backup) (optional)
-     * @param revisionId          revision id (optional)
-     * @return access context
-     */
-    @Deprecated
-    default FileAccessContext getFileAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
-    }
-
-    /**
-     * Get a file access context for a version of a project. Both the project and
-     * version ids must be supplied.
-     *
-     * @param projectId project id
-     * @param versionId version id
-     * @return access context
-     */
-    @Deprecated
-    default FileAccessContext getFileAccessContext(String projectId, VersionId versionId)
-    {
-        return getFileAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId));
-    }
-
     // Revision Access Context
 
     interface RevisionAccessContext
@@ -328,109 +242,6 @@ public interface ProjectFileAccessProvider
         return getRevisionAccessContext(projectId, sourceSpecification, null);
     }
 
-    // Deprecated Revision Access APIs
-
-    @Deprecated
-    default RevisionAccessContext getProjectRevisionAccessContext(String projectId)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.projectSourceSpecification(), null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getProjectPathRevisionAccessContext(String projectId, String path)
-    {
-        Objects.requireNonNull(path, "path may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.projectSourceSpecification(), Collections.singleton(path));
-    }
-
-    @Deprecated
-    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType)), null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getWorkspaceRevisionAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
-        {
-            throw new IllegalArgumentException("source specification must be a workspace source specification");
-        }
-        return getRevisionAccessContext(projectId, sourceSpecification, null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getWorkspacePathRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        Objects.requireNonNull(path, "path may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType)), Collections.singleton(path));
-    }
-
-    @Deprecated
-    default RevisionAccessContext getWorkspacePathsRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, Iterable<? extends String> paths)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        Objects.requireNonNull(paths, "paths may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType)), paths);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getVersionRevisionAccessContext(String projectId, VersionId versionId)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getVersionPathRevisionAccessContext(String projectId, VersionId versionId, String path)
-    {
-        Objects.requireNonNull(path, "path may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), Collections.singleton(path));
-    }
-
-    @Deprecated
-    default RevisionAccessContext getVersionPathRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
-    {
-        Objects.requireNonNull(paths, "paths may not be null");
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), paths);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, String path)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), (path == null) ? null : Collections.singleton(path));
-    }
-
-    @Deprecated
-    default RevisionAccessContext getRevisionAccessContext(String projectId, VersionId versionId, Iterable<? extends String> paths)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), paths);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), null);
-    }
-
-    @Deprecated
-    default RevisionAccessContext getRevisionAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String path)
-    {
-        return getRevisionAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), (path == null) ? null : Collections.singleton(path));
-    }
-
     // File Modification Context
 
     interface FileModificationContext
@@ -462,50 +273,6 @@ public interface ProjectFileAccessProvider
     default FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification)
     {
         return getFileModificationContext(projectId, sourceSpecification, null);
-    }
-
-    @Deprecated
-    default FileModificationContext getProjectFileModificationContext(String projectId)
-    {
-        return getFileModificationContext(projectId, SourceSpecification.projectSourceSpecification(), null);
-    }
-
-    @Deprecated
-    default FileModificationContext getProjectFileModificationContext(String projectId, String revisionId)
-    {
-        Objects.requireNonNull(revisionId, "revisionId may not be null");
-        return getFileModificationContext(projectId, SourceSpecification.projectSourceSpecification(), revisionId);
-    }
-
-    @Deprecated
-    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        return getFileModificationContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), null);
-    }
-
-    @Deprecated
-    default FileModificationContext getWorkspaceFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        Objects.requireNonNull(workspaceId, "workspaceId may not be null");
-        Objects.requireNonNull(workspaceType, "workspaceType may not be null");
-        Objects.requireNonNull(workspaceAccessType, "workspaceAccessType may not be null");
-        Objects.requireNonNull(revisionId, "revisionId may not be null");
-        return getFileModificationContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
-    }
-
-    @Deprecated
-    default FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return getFileModificationContext(projectId, workspaceId, WorkspaceType.USER, workspaceAccessType, revisionId);
-    }
-
-    @Deprecated
-    default FileModificationContext getFileModificationContext(String projectId, String workspaceId, WorkspaceType workspaceType, WorkspaceAccessType workspaceAccessType, String revisionId)
-    {
-        return getFileModificationContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType), revisionId);
     }
 
     enum WorkspaceAccessType

@@ -306,7 +306,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .update();
-        ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.workspaceSourceSpecification(addDependenciesWorkspaceSpec),null, this.fileAccessProvider);
+        ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.workspaceSourceSpecification(addDependenciesWorkspaceSpec), null, this.fileAccessProvider);
         Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterWorkspaceConfig.getArtifactId());
@@ -435,7 +435,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         operations.add(ProjectFileOperation.modifyFile("/project.json", serializedConfig));
         this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("set dependencies", operations);
 
-        ProjectConfiguration afterUpdateProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration afterUpdateProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, afterUpdateProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterUpdateProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterUpdateProjectConfig.getArtifactId());
@@ -507,7 +508,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
@@ -519,7 +521,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         String addDependenciesWorkspaceId = "AddDependencies";
         WorkspaceSpecification addDependenciesWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(addDependenciesWorkspaceId, WorkspaceType.USER);
         this.fileAccessProvider.createWorkspace(PROJECT_ID, addDependenciesWorkspaceId);
-        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());
@@ -548,7 +551,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         this.fileAccessProvider.commitWorkspace(PROJECT_ID, addDependenciesWorkspaceId);
 
-        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, afterProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterProjectConfig.getArtifactId());
@@ -614,7 +618,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, removeDependencyWorkspaceId);
 
-            ProjectConfiguration afterRemovalProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration afterRemovalProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, afterRemovalProjectConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, afterRemovalProjectConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, afterRemovalProjectConfig.getArtifactId());
@@ -625,7 +630,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             assertStateValid(PROJECT_ID, null, null);
         }
 
-        ProjectConfiguration projectConfigUpdateRevisionConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration projectConfigUpdateRevisionConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, projectConfigUpdateRevisionConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, projectConfigUpdateRevisionConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, projectConfigUpdateRevisionConfig.getArtifactId());
@@ -658,7 +664,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, otherProjectStructure);
             Revision revision = this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-            ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, beforeConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, beforeConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, beforeConfig.getArtifactId());
@@ -681,7 +688,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
             assertStateValid(PROJECT_ID, null, null);
 
-            ProjectConfiguration afterConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration afterConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, afterConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, afterConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, afterConfig.getArtifactId());
@@ -782,7 +790,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, otherProjectStructure);
             Revision revision = this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-            ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration beforeConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, beforeConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, beforeConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, beforeConfig.getArtifactId());
@@ -808,7 +817,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, workspaceId);
             assertStateValid(PROJECT_ID, null, null);
 
-            ProjectConfiguration afterConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration afterConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, afterConfig.getProjectId());
             Assert.assertEquals(GROUP_ID_2, afterConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID_2, afterConfig.getArtifactId());
@@ -853,7 +863,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .update();
         Assert.assertNull(revision3);
-        Assert.assertEquals(revision, this.fileAccessProvider.getWorkspaceRevisionAccessContext(PROJECT_ID, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE).getCurrentRevision());
+        Assert.assertEquals(revision, this.fileAccessProvider.getRevisionAccessContext(PROJECT_ID, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)), null).getCurrentRevision());
         assertStateValid(PROJECT_ID, workspaceId, null);
     }
 
@@ -888,7 +898,10 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
     protected final void assertStateValid(String projectId, String workspaceId, String revisionId)
     {
-        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), revisionId, this.fileAccessProvider);
+        SourceSpecification sourceSpecification = (workspaceId == null) ?
+                                                  SourceSpecification.projectSourceSpecification() :
+                                                  SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        ProjectConfiguration configuration = ProjectStructure.getProjectConfiguration(projectId, sourceSpecification, revisionId, this.fileAccessProvider);
         Assert.assertNotNull(configuration);
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(configuration);
         Assert.assertEquals(this.projectStructureVersion, projectStructure.getVersion());
@@ -905,7 +918,10 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         if (!expectedFiles.isEmpty() || !unexpectedFiles.isEmpty())
         {
-            Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
+            SourceSpecification sourceSpecification = (workspaceId == null) ?
+                                                      SourceSpecification.projectSourceSpecification() :
+                                                      SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+            Map<String, String> actualFiles = this.fileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId).getFiles().collect(Collectors.toMap(ProjectFileAccessProvider.ProjectFile::getPath, ProjectFileAccessProvider.ProjectFile::getContentAsString));
             expectedFiles.forEach((path, expectedContent) ->
             {
                 String actualContent = actualFiles.get(path);
@@ -962,7 +978,10 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
     private List<Entity> getActualEntities(String projectId, String workspaceId, String revisionId)
     {
-        return getActualEntities(this.fileAccessProvider.getFileAccessContext(projectId, workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, revisionId));
+        SourceSpecification sourceSpecification = (workspaceId == null) ?
+                                                  SourceSpecification.projectSourceSpecification() :
+                                                  SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE));
+        return getActualEntities(this.fileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId));
     }
 
     private List<Entity> getActualEntities(ProjectFileAccessProvider.FileAccessContext fileAccessContext)
@@ -1102,7 +1121,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
@@ -1113,7 +1133,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         String addGenerationsWorkspaceId = "AddGeneration";
         this.fileAccessProvider.createWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
-        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());
@@ -1126,13 +1147,13 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
         ProjectStructure.newUpdateBuilder(this.fileAccessProvider, PROJECT_ID)
                 .withProjectConfigurationUpdater(ProjectConfigurationUpdater.newUpdater().withArtifactGenerationsToAdd(generations))
-                .withWorkspace(SourceSpecification.newSourceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE))
+                .withSourceSpecification(SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)))
                 .withMessage("Add generation")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
                 .update();
 
-        ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.newSourceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE), null, this.fileAccessProvider);
+        ProjectConfiguration afterWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE)), null, this.fileAccessProvider);
         Assert.assertEquals(PROJECT_ID, afterWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterWorkspaceConfig.getArtifactId());
@@ -1144,7 +1165,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         this.fileAccessProvider.commitWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
 
 
-        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, afterProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterProjectConfig.getArtifactId());
@@ -1180,7 +1202,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             WorkspaceSpecification removeDependencyWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(removeDependencyWorkspaceId, WorkspaceType.USER);
 
             this.fileAccessProvider.createWorkspace(PROJECT_ID, removeDependencyWorkspaceId);
-            ProjectConfiguration beforeRemovalConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration beforeRemovalConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, beforeRemovalConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, beforeRemovalConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, beforeRemovalConfig.getArtifactId());
@@ -1210,7 +1233,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
             this.fileAccessProvider.commitWorkspace(PROJECT_ID, removeDependencyWorkspaceId);
 
-            ProjectConfiguration afterRemovalProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration afterRemovalProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, afterRemovalProjectConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, afterRemovalProjectConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, afterRemovalProjectConfig.getArtifactId());
@@ -1221,7 +1245,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             assertStateValid(PROJECT_ID, null, null);
         }
 
-        ProjectConfiguration projectConfigUpdateRevisionConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration projectConfigUpdateRevisionConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, projectConfigUpdateRevisionConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, projectConfigUpdateRevisionConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, projectConfigUpdateRevisionConfig.getArtifactId());
@@ -1266,7 +1291,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
@@ -1278,7 +1304,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         String addGenerationsWorkspaceId = "AddGeneration";
         WorkspaceSpecification addGenerationsWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER);
         this.fileAccessProvider.createWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
-        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());
@@ -1309,7 +1336,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         this.fileAccessProvider.commitWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
 
 
-        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration afterProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, afterProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, afterProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, afterProjectConfig.getArtifactId());
@@ -1328,7 +1356,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
         this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
@@ -1340,7 +1369,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         String addGenerationsWorkspaceId = "AddInvalidGeneration";
         WorkspaceSpecification addGenerationsWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER);
         this.fileAccessProvider.createWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
-        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());
@@ -1447,7 +1477,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             List<ProjectFileOperation> addEntityOperations = ListIterate.collectWith(testEntities, this::generateAddOperationForEntity, projectStructure);
             this.fileAccessProvider.getFileModificationContext(PROJECT_ID, SourceSpecification.projectSourceSpecification()).submit("Add entities", addEntityOperations);
 
-            ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration beforeProjectConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, beforeProjectConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, beforeProjectConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, beforeProjectConfig.getArtifactId());
@@ -1459,7 +1490,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             String addGenerationsWorkspaceId = "AddGeneration";
             WorkspaceSpecification addGenerationsWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER);
             this.fileAccessProvider.createWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
-            ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+            ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+            ;
             Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
             Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
             Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());
@@ -1514,7 +1546,8 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
         String addGenerationsWorkspaceId = "AddGeneration" + type.name();
         WorkspaceSpecification addGenerationsWorkspaceSpec = WorkspaceSpecification.newWorkspaceSpecification(addGenerationsWorkspaceId, WorkspaceType.USER);
         this.fileAccessProvider.createWorkspace(PROJECT_ID, addGenerationsWorkspaceId);
-        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);;
+        ProjectConfiguration beforeWorkspaceConfig = ProjectStructure.getProjectConfiguration(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null, this.fileAccessProvider);
+        ;
         Assert.assertEquals(PROJECT_ID, beforeWorkspaceConfig.getProjectId());
         Assert.assertEquals(GROUP_ID, beforeWorkspaceConfig.getGroupId());
         Assert.assertEquals(ARTIFACT_ID, beforeWorkspaceConfig.getArtifactId());

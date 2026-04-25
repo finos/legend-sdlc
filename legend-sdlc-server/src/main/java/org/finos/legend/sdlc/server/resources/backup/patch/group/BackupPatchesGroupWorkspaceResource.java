@@ -18,11 +18,14 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;
@@ -69,7 +72,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))
         );
     }
 
@@ -90,7 +93,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if backup group workspace " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isBackupWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceOutdated(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))
         );
     }
 
@@ -110,7 +113,7 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "discarding backup group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.discardBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.backupApi.discardBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))
         );
     }
 
@@ -133,8 +136,8 @@ public class BackupPatchesGroupWorkspaceResource extends BaseResource
             throw new LegendSDLCServerException(e.getMessage(), Response.Status.BAD_REQUEST, e);
         }
         executeWithLogging(
-                forceRecovery ? "force " : "" + "recovering group workspace " + workspaceId + " from backup in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.recoverBackupWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId), forceRecovery)
+                forceRecovery ? "force " : "recovering group workspace " + workspaceId + " from backup in project " + projectId + " for patch release version " + patchReleaseVersionId,
+                () -> this.backupApi.recoverBackupWorkspace(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)), forceRecovery)
         );
     }
 }

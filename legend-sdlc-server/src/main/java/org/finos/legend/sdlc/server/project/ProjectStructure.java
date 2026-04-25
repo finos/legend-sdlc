@@ -48,7 +48,11 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationConsumer;
+import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
@@ -59,6 +63,8 @@ import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionP
 import org.finos.legend.sdlc.server.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
+import javax.lang.model.SourceVersion;
+import javax.ws.rs.core.Response.Status;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -75,8 +81,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
-import javax.lang.model.SourceVersion;
-import javax.ws.rs.core.Response.Status;
 
 public abstract class ProjectStructure
 {
@@ -342,7 +346,7 @@ public abstract class ProjectStructure
     @Deprecated
     public static ProjectConfiguration getProjectConfiguration(String projectId, String workspaceId, String revisionId, ProjectFileAccessProvider projectFileAccessProvider, WorkspaceAccessType workspaceAccessType)
     {
-        return getProjectConfiguration(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType), revisionId, projectFileAccessProvider);
+        return getProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, workspaceAccessType)), revisionId, projectFileAccessProvider);
     }
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessProvider)
@@ -352,7 +356,7 @@ public abstract class ProjectStructure
 
     public static ProjectConfiguration getProjectConfiguration(String projectId, VersionId versionId, ProjectFileAccessProvider projectFileAccessProvider)
     {
-        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, versionId));
+        return getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId)));
     }
 
     public static ProjectConfiguration getProjectConfiguration(FileAccessContext fileAccessContext)
@@ -399,17 +403,14 @@ public abstract class ProjectStructure
     private static Revision updateProjectConfiguration(UpdateBuilder updateBuilder, boolean requireRevisionId)
     {
         String projectId = updateBuilder.getProjectId();
-        String workspaceId = updateBuilder.getSourceSpecification().getWorkspaceId();
-        VersionId patchReleaseVersionId = updateBuilder.getSourceSpecification().getPatchReleaseVersionId();
-        WorkspaceType workspaceType = updateBuilder.getSourceSpecification().getWorkspaceType();
-        WorkspaceAccessType workspaceAccessType = updateBuilder.getSourceSpecification().getWorkspaceAccessType();
+        SourceSpecification sourceSpecification = updateBuilder.getSourceSpecification();
         ProjectFileAccessProvider projectFileAccessProvider = updateBuilder.getProjectFileAccessProvider();
 
         String revisionId;
         if (updateBuilder.getRevisionId() == null)
         {
             // if revisionId not specified, get the current revision
-            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType).getCurrentRevision();
+            Revision currentRevision = projectFileAccessProvider.getRevisionAccessContext(projectId, sourceSpecification, null).getCurrentRevision();
             if (currentRevision != null)
             {
                 revisionId = currentRevision.getId();
@@ -417,10 +418,27 @@ public abstract class ProjectStructure
             else if (requireRevisionId)
             {
                 StringBuilder builder = new StringBuilder("Could not find current revision for ");
-                if (workspaceId != null)
+                sourceSpecification.visit(new SourceSpecificationConsumer()
                 {
-                    builder.append(workspaceType.getLabel()).append(" ").append(workspaceAccessType.getLabel()).append(" ").append(workspaceId).append("in ");
-                }
+                    @Override
+                    protected void accept(VersionSourceSpecification sourceSpec)
+                    {
+                        sourceSpec.getVersionId().appendVersionIdString(builder.append("version ")).append(" of ");
+                    }
+
+                    @Override
+                    protected void accept(PatchSourceSpecification sourceSpec)
+                    {
+                        sourceSpec.getVersionId().appendVersionIdString(builder.append("patch version ")).append(" of ");
+                    }
+
+                    @Override
+                    protected void accept(WorkspaceSourceSpecification sourceSpec)
+                    {
+                        WorkspaceSpecification workspaceSpec = sourceSpec.getWorkspaceSpecification();
+                        builder.append(workspaceSpec.getType().getLabel()).append(" ").append(workspaceSpec.getAccessType().getLabel()).append(" ").append(workspaceSpec.getId()).append("in ");
+                    }
+                });
                 builder.append("project ").append(projectId).append(": it may be corrupt");
                 throw new LegendSDLCServerException(builder.toString());
             }
@@ -434,7 +452,7 @@ public abstract class ProjectStructure
             revisionId = updateBuilder.getRevisionId();
         }
 
-        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType, patchReleaseVersionId), revisionId));
+        FileAccessContext fileAccessContext = CachingFileAccessContext.wrap(projectFileAccessProvider.getFileAccessContext(projectId, sourceSpecification, revisionId));
 
         ProjectFile configFile = getProjectConfigurationFile(fileAccessContext);
         ProjectConfiguration currentConfig = (configFile == null) ? getDefaultProjectConfiguration(projectId) : readProjectConfiguration(configFile);
@@ -565,7 +583,7 @@ public abstract class ProjectStructure
         }
 
         // Submit changes
-        return projectFileAccessProvider.getFileModificationContext(projectId, workspaceId, workspaceType, workspaceAccessType, revisionId).submit(updateBuilder.getMessage(), operations);
+        return projectFileAccessProvider.getFileModificationContext(projectId, sourceSpecification, revisionId).submit(updateBuilder.getMessage(), operations);
     }
 
     private static void validateProjectConfiguration(ProjectConfiguration config)
@@ -680,7 +698,7 @@ public abstract class ProjectStructure
         {
             try
             {
-                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), VersionId.parseVersionId(dep.getVersionId())));
+                ProjectConfiguration dependencyConfig = getProjectConfiguration(projectFileAccessProvider.getFileAccessContext(dep.getProjectId(), SourceSpecification.versionSourceSpecification(VersionId.parseVersionId(dep.getVersionId()))));
                 if ((dependencyConfig == null) || (dependencyConfig.getArtifactId() == null) || (dependencyConfig.getGroupId() == null))
                 {
                     unknownDependencies.add(dep);

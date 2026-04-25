@@ -17,9 +17,12 @@ package org.finos.legend.sdlc.server.resources.comparison.patch.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -63,7 +66,7 @@ public class ComparisonPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting comparison between current user workspace revision and project revision at workspace creation, for user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.comparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.comparisonApi.getWorkspaceCreationComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -84,7 +87,7 @@ public class ComparisonPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting comparison between current user workspace revision and current project revision, for user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.comparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.comparisonApi.getWorkspaceProjectComparison(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 }

@@ -24,14 +24,14 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 
+import javax.inject.Inject;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
 
 public class DependenciesApiImpl implements DependenciesApi
 {
@@ -57,7 +57,7 @@ public class DependenciesApiImpl implements DependenciesApi
     @Override
     public Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, VersionId patchReleaseVersionId, String revisionId, boolean transitive)
     {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectRevisionProjectConfiguration(projectId, patchReleaseVersionId, revisionId);
+        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(projectId, (patchReleaseVersionId == null) ? SourceSpecification.projectSourceSpecification() : SourceSpecification.patchSourceSpecification(patchReleaseVersionId), revisionId);
         return searchUpstream(projectConfiguration, transitive);
     }
 

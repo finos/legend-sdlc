@@ -17,11 +17,14 @@ package org.finos.legend.sdlc.server.resources.conflictResolution.patch.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -68,7 +71,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspaceWithConflictResolution(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -89,7 +92,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if user workspace with conflict resolution " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceWithConflictResolutionOutdated(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -109,7 +112,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "discarding conflict resolution for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -130,7 +133,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "discarding all conflict resolution changes for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.conflictResolutionApi.discardConflictResolution(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -152,7 +155,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "accept conflict resolution for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), command)
+                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId))), command)
         );
     }
 }

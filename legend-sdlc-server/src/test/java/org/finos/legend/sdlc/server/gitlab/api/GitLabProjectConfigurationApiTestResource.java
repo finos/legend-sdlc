@@ -21,10 +21,13 @@ import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.junit.Assert;
 
@@ -122,27 +125,27 @@ public class GitLabProjectConfigurationApiTestResource
         Patch patch = this.gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
 
-        Workspace createdWorkspaceOne = this.gitLabWorkspaceApi.newWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId));
+        Workspace createdWorkspaceOne = this.gitLabWorkspaceApi.newWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(createdWorkspaceOne);
         Assert.assertEquals(workspaceOneId, createdWorkspaceOne.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
         Assert.assertNotNull(createdWorkspaceOne.getUserId());
 
-        ProjectConfiguration projectConfiguration = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceOneId, patchReleaseVersionId));
+        ProjectConfiguration projectConfiguration = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(projectConfiguration);
         Assert.assertEquals(artifactId, projectConfiguration.getArtifactId());
         Assert.assertEquals(groupId, projectConfiguration.getGroupId());
 
-        Workspace createdWorkspaceTwo = this.gitLabWorkspaceApi.newWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceTwoId, patchReleaseVersionId));
+        Workspace createdWorkspaceTwo = this.gitLabWorkspaceApi.newWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceTwoId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(createdWorkspaceTwo);
         Assert.assertEquals(workspaceTwoId, createdWorkspaceTwo.getWorkspaceId());
         Assert.assertEquals(projectId, createdWorkspaceTwo.getProjectId());
         Assert.assertNull(createdWorkspaceTwo.getUserId());
 
-        ProjectConfiguration projectConfigurationTwo = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceTwoId, patchReleaseVersionId));
+        ProjectConfiguration projectConfigurationTwo = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceTwoId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(projectConfigurationTwo);
         Assert.assertEquals(artifactId, projectConfigurationTwo.getArtifactId());
