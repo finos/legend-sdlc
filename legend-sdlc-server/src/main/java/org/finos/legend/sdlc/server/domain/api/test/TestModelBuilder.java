@@ -33,14 +33,16 @@ import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.tools.StringTools;
 
+import javax.inject.Inject;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 
 public class TestModelBuilder
 {
@@ -69,10 +71,11 @@ public class TestModelBuilder
         DepotProjectId upstreamDepotProjectId = getDepotProjectId(upstreamProjectId);
         DepotProjectId downstreamDepotProjectId = DepotProjectId.parseProjectId(downstreamProjectId);
 
-        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, SourceSpecification.newSourceSpecification(upstreamWorkspaceId, type), upstreamRevisionId, false);
+        WorkspaceSourceSpecification workspaceSourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(upstreamWorkspaceId, type));
+        Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, workspaceSourceSpecification, upstreamRevisionId, false);
         Set<DepotProjectVersion> dependencies = processDependencies(upstreamDepotProjectId, downstreamDepotProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, SourceSpecification.newSourceSpecification(upstreamWorkspaceId, type), upstreamRevisionId).getEntities(null, null, null);
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, workspaceSourceSpecification, upstreamRevisionId).getEntities(null, null, null);
         return getEntities(downstreamDepotProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 

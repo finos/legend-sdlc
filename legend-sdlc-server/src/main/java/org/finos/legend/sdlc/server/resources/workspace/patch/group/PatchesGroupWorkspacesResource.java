@@ -22,6 +22,8 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -95,7 +97,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "getting group workspace " + workspaceId + " for patch release " + patchReleaseVersionId +  " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -116,7 +118,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if group workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isWorkspaceOutdated(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceOutdated(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -137,7 +139,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if group workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is in conflict resolution mode",
-                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isWorkspaceInConflictResolutionMode(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -158,7 +160,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "creating new group workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.newWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.newWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
 
         );
     }
@@ -180,7 +182,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         executeWithLogging(
                 "deleting group workspace " + workspaceId + " for patch release " + patchReleaseVersionId + " for project " + projectId,
-                () -> this.workspaceApi.deleteWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.deleteWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -201,7 +203,7 @@ public class PatchesGroupWorkspacesResource extends BaseResource
         }
         return executeWithLogging(
                 "updating user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId + " to latest revision",
-                () -> this.workspaceApi.updateWorkspace(projectId, SourceSpecification.newGroupWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.updateWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 }

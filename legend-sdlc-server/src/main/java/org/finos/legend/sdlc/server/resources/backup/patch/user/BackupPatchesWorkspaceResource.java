@@ -18,11 +18,15 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;
@@ -69,7 +73,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "getting backup user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workspaceApi.getBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.getBackupWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -90,7 +94,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
         }
         return executeWithLogging(
                 "checking if backup user workspace " + workspaceId + " of project " + projectId + " for patch release version " + patchReleaseVersionId + " is outdated",
-                () -> this.workspaceApi.isBackupWorkspaceOutdated(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.workspaceApi.isBackupWorkspaceOutdated(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -110,7 +114,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "discarding backup user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.discardBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId))
+                () -> this.backupApi.discardBackupWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))))
         );
     }
 
@@ -134,7 +138,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 forceRecovery ? "force " : "" + "recovering user workspace " + workspaceId + " from backup in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.backupApi.recoverBackupWorkspace(projectId, SourceSpecification.newUserWorkspaceSourceSpecification(workspaceId, versionId), forceRecovery)
+                () -> this.backupApi.recoverBackupWorkspace(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))), forceRecovery)
         );
     }
 }

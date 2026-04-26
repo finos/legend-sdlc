@@ -22,6 +22,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -76,7 +77,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getProjectRevisionAccessContext(projectId);
+                return getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.projectSourceSpecification(), null);
             }
         };
     }
@@ -92,7 +93,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected String getRef()
             {
-                return getBranchName(gitLabProjectId, SourceSpecification.newSourceSpecification(workspaceId, workspaceType, workspaceAccessType));
+                return getBranchName(gitLabProjectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType)));
             }
 
             @Override
@@ -104,7 +105,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getWorkspaceRevisionAccessContext(projectId, workspaceId, workspaceType, workspaceAccessType);
+                return getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType)), null);
             }
         };
     }
@@ -131,7 +132,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
             @Override
             protected ProjectFileAccessProvider.RevisionAccessContext getRevisionAccessContext()
             {
-                return getProjectFileAccessProvider().getVersionRevisionAccessContext(projectId, versionId);
+                return getProjectFileAccessProvider().getRevisionAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId), null);
             }
         };
     }

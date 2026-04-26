@@ -21,14 +21,14 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import java.util.List;
-import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -40,6 +40,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.util.List;
+import java.util.Set;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/workflows/{workflowId}/jobs")
 @Api("Workflows")
@@ -75,7 +77,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflow jobs for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJobs(workflowId, statuses)
+                () -> this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflowJobs(workflowId, statuses)
         );
     }
 
@@ -100,7 +102,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -128,7 +130,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
                 "getting workflow job logs " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    String logs = this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).getWorkflowJobLog(workflowId, workflowJobId);
+                    String logs = this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).getWorkflowJobLog(workflowId, workflowJobId);
                     return Response.ok(logs)
                             .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + workflowJobId + ".log\"")
                             .build();
@@ -157,7 +159,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
         }
         return executeWithLogging(
                 "running workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).runWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).runWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -182,7 +184,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
         }
         return executeWithLogging(
                 "retrying workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).retryWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).retryWorkflowJob(workflowId, workflowJobId)
         );
     }
 
@@ -208,7 +210,7 @@ public class PatchesGroupWorkspaceWorkflowJobsResource extends BaseResource
         }
         return executeWithLogging(
                 "canceling workflow job " + workflowJobId + " for group workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.workflowJobApi.getWorkspaceWorkflowJobAccessContext(projectId, SourceSpecification.newSourceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, versionId)).cancelWorkflowJob(workflowId, workflowJobId)
+                () -> this.workflowJobApi.getWorkflowJobAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, ProjectFileAccessProvider.WorkspaceAccessType.WORKSPACE, WorkspaceSource.patchWorkspaceSource(versionId)))).cancelWorkflowJob(workflowId, workflowJobId)
         );
     }
 }
