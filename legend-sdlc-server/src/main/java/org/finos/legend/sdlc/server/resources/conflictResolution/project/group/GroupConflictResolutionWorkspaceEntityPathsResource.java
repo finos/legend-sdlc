@@ -17,7 +17,11 @@ package org.finos.legend.sdlc.server.resources.conflictResolution.project.group;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -66,7 +70,7 @@ public class GroupConflictResolutionWorkspaceEntityPathsResource extends EntityA
     {
         return executeWithLogging(
                 "getting entity paths in group workspace " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getGroupWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.CONFLICT_RESOLUTION))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

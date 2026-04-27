@@ -18,7 +18,10 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -72,7 +75,7 @@ public class GroupWorkspaceRevisionEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entities in revision " + revisionId + " of group workspace " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getGroupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -87,7 +90,7 @@ public class GroupWorkspaceRevisionEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity " + path + " in revision " + revisionId + " of group workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getGroupWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), revisionId).getEntity(path)
         );
     }
 }

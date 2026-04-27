@@ -18,7 +18,11 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -70,7 +74,7 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entities in backup user workspace " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -81,7 +85,7 @@ public class BackupWorkspaceEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity " + path + " in backup user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getBackupUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP))).getEntity(path)
         );
     }
 }

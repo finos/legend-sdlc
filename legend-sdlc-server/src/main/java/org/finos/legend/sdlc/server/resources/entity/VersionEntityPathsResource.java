@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -66,7 +67,7 @@ public class VersionEntityPathsResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity paths in version " + versionId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getVersionEntityAccessContext(projectId, versionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

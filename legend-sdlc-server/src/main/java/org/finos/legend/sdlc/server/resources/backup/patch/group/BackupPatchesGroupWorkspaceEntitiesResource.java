@@ -89,7 +89,7 @@ public class BackupPatchesGroupWorkspaceEntitiesResource extends EntityAccessRes
         }
         return executeWithLogging(
                 "getting entities in backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -110,7 +110,7 @@ public class BackupPatchesGroupWorkspaceEntitiesResource extends EntityAccessRes
         }
         return executeWithLogging(
                 "getting entity " + path + " in backup group workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getBackupWorkspaceEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId)))).getEntity(path)
         );
     }
 }

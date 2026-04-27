@@ -18,12 +18,16 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.CreateOrUpdateEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -79,7 +83,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "getting entities in user workspace " + workspaceId + " for project " + projectId,
                 "get entities of the user workspace",
-                () -> getEntities(this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -88,14 +92,15 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
     {
         List<String> entityPathsToDelete = command.getEntitiesToDelete();
+        WorkspaceSourceSpecification workspaceSourceSpec = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER));
         return (entityPathsToDelete == null) ?
                 executeWithLogging(
                         "deleting all entities in user workspace " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteAllEntities(command.getMessage())
+                        () -> this.entityApi.getEntityModificationContext(projectId, workspaceSourceSpec).deleteAllEntities(command.getMessage())
                 ) :
                 executeWithLogging(
                         "deleting " + entityPathsToDelete.size() + " entities in user workspace " + workspaceId + " for project " + projectId,
-                        () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntities(entityPathsToDelete, command.getMessage())
+                        () -> this.entityApi.getEntityModificationContext(projectId, workspaceSourceSpec).deleteEntities(entityPathsToDelete, command.getMessage())
                 );
     }
 
@@ -107,7 +112,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         return execute(
                 "updating entities in user workspace " + workspaceId + " for project " + projectId,
                 "update entities",
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
+                () -> this.entityApi.getEntityModificationContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).updateEntities(command.getEntities(), command.isReplace(), command.getMessage())
         );
     }
 
@@ -118,7 +123,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).getEntity(path)
         );
     }
 
@@ -130,7 +135,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
         return executeWithLogging(
                 "Creating or updating entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
+                () -> this.entityApi.getEntityModificationContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).createOrUpdateEntity(path, command.getClassifierPath(), command.getContent(), command.getMessage())
         );
     }
 
@@ -142,7 +147,7 @@ public class WorkspaceEntitiesResource extends EntityAccessResource
         LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");
         return executeWithLogging(
                 "deleting entity " + path + " in user workspace " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(path, command.getMessage())
+                () -> this.entityApi.getEntityModificationContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).deleteEntity(path, command.getMessage())
         );
     }
 }

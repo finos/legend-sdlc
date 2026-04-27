@@ -86,7 +86,7 @@ public class BackupPatchesWorkspaceRevisionEntityPathsResource extends EntityAcc
         }
         return executeWithLogging(
                 "getting entity paths in revision " + revisionId + " of backup user workspace " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntityPaths(this.entityApi.getBackupWorkspaceRevisionEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP, WorkspaceSource.patchWorkspaceSource(versionId))), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

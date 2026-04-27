@@ -86,7 +86,7 @@ public class ConflictResolutionPatchesWorkspaceRevisionEntityPathsResource exten
         }
         return executeWithLogging(
                 "getting entity paths in revision " + revisionId + " of user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntityPaths(this.entityApi.getWorkspaceWithConflictResolutionRevisionEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId))), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId))), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

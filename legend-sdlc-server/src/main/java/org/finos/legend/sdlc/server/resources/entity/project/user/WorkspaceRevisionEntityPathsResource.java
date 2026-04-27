@@ -17,7 +17,10 @@ package org.finos.legend.sdlc.server.resources.entity.project.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -67,7 +70,7 @@ public class WorkspaceRevisionEntityPathsResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity paths in revision " + revisionId + " of user workspace " + workspaceId + " for project " + projectId,
-                () -> getEntityPaths(this.entityApi.getUserWorkspaceRevisionEntityAccessContext(projectId, workspaceId, revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
+                () -> getEntityPaths(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER)), revisionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes)
         );
     }
 }

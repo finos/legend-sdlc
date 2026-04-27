@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
 import javax.inject.Inject;
@@ -70,7 +71,7 @@ public class VersionEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entities in version " + versionId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getVersionEntityAccessContext(projectId, versionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -81,7 +82,7 @@ public class VersionEntitiesResource extends EntityAccessResource
     {
         return executeWithLogging(
                 "getting entity " + path + " in version " + versionId + " for project " + projectId,
-                () -> this.entityApi.getVersionEntityAccessContext(projectId, versionId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId)).getEntity(path)
         );
     }
 }

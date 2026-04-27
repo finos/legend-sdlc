@@ -140,7 +140,7 @@ public class TestModelBuilderTest
         this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
         this.metadata.project("org.test:A").addDependency("1.0.0","org.test:B:1.0.0", "org.test:C:1.0.0");
 
-        Entity entityB1InVersion1 = this.backend.getEntityApi().getVersionEntityAccessContext("PROD-1", "1.0.0").getEntity("PROD-1::b1");
+        Entity entityB1InVersion1 = this.backend.getEntityApi().getEntityAccessContext("PROD-1", SourceSpecification.versionSourceSpecification("1.0.0")).getEntity("PROD-1::b1");
 
         List<Entity> entitiesBefore = findEntitiesInMetadata("org.test:A", "1.0.0");
         Assert.assertEquals(
@@ -151,7 +151,7 @@ public class TestModelBuilderTest
                 .removeEntities("w1", entityB1InVersion1);
 
         // entity b1 not found in ws1
-        IllegalStateException e = Assert.assertThrows(IllegalStateException.class, () -> this.backend.getEntityApi().getUserWorkspaceEntityAccessContext("PROD-1", "w1").getEntity("PROD-1::b1"));
+        IllegalStateException e = Assert.assertThrows(IllegalStateException.class, () -> this.backend.getEntityApi().getEntityAccessContext("PROD-1", SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification("w1", WorkspaceType.USER))).getEntity("PROD-1::b1"));
         Assert.assertEquals("Entity with path PROD-1::b1 not found", e.getMessage());
 
         List<Entity> entitiesAfter = this.testModelBuilder.buildEntitiesForTest(
@@ -265,7 +265,7 @@ public class TestModelBuilderTest
         this.metadata.project("org.test:C").addVersionedClasses("1.0.0", "c1", "c2");
         this.metadata.project("org.test:A").addDependency("1.0.0", "org.test:B:1.0.0", "org.test:C:1.0.0");
 
-        Entity entityB1InVersion1 = this.backend.getEntityApi().getVersionEntityAccessContext("PROD-1", "1.0.0").getEntity("PROD-1::b1");
+        Entity entityB1InVersion1 = this.backend.getEntityApi().getEntityAccessContext("PROD-1", SourceSpecification.versionSourceSpecification("1.0.0")).getEntity("PROD-1::b1");
 
         List<Entity> entitiesBefore = findEntitiesInMetadata("org.test:A", "1.0.0");
         Assert.assertEquals(
@@ -275,7 +275,7 @@ public class TestModelBuilderTest
         this.backend.project("PROD-1")
                 .addEntities("w1", WorkspaceType.GROUP, TestTools.newClassEntity("b1", "PROD-1", Collections.singletonList(TestTools.newProperty("prop1", "Integer", 1, 100))));
 
-        Entity entityB1InWorkspace = this.backend.getEntityApi().getGroupWorkspaceEntityAccessContext("PROD-1", "w1").getEntity("PROD-1::b1");
+        Entity entityB1InWorkspace = this.backend.getEntityApi().getEntityAccessContext("PROD-1", SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification("w1", WorkspaceType.GROUP))).getEntity("PROD-1::b1");
 
         Assert.assertNotEquals("Version of the entity PROD-1::b1 in 1.0.0 is the same as in workspace ws1", entityB1InVersion1.getContent(), entityB1InWorkspace.getContent());
 

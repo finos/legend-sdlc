@@ -16,9 +16,12 @@ package org.finos.legend.sdlc.server.resources.entity.project.user;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -52,7 +55,7 @@ public class WorkspaceEntityChangesResource extends BaseResource
         return execute(
                 "performing changes in user workspace " + workspaceId + " for project " + projectId,
                 "entity changes",
-                () -> this.entityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
+                () -> this.entityApi.getEntityModificationContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER))).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage())
         );
     }
 }

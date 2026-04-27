@@ -89,7 +89,7 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
         }
         return executeWithLogging(
                 "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId)))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId)))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -110,7 +110,7 @@ public class ConflictResolutionPatchesWorkspaceEntitiesResource extends EntityAc
         }
         return executeWithLogging(
                 "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.entityApi.getWorkspaceWithConflictResolutionEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId)))).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId)))).getEntity(path)
         );
     }
 }

@@ -18,11 +18,13 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
-import java.util.List;
-import java.util.Set;
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DefaultValue;
@@ -32,6 +34,8 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
+import java.util.List;
+import java.util.Set;
 
 @Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/entities")
 @Api("Conflict Resolution")
@@ -70,7 +74,7 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
     {
         return executeWithLogging(
                 "getting entities in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> getEntities(this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION))), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -81,7 +85,7 @@ public class ConflictResolutionWorkspaceEntitiesResource extends EntityAccessRes
     {
         return executeWithLogging(
                 "getting entity " + path + " in user workspace with conflict resolution " + workspaceId + " for project " + projectId,
-                () -> this.entityApi.getUserWorkspaceWithConflictResolutionEntityAccessContext(projectId, workspaceId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION))).getEntity(path)
         );
     }
 }

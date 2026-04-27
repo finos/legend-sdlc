@@ -20,6 +20,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextDa
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.PureModelContextDataResource;
@@ -67,12 +68,12 @@ public class PatchPureModelContextDataResource extends PureModelContextDataResou
                 "getting Pure model context data for project " + projectId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getProjectRevisionContext(projectId, versionId).getCurrentRevision();
+                    Revision revision = this.revisionApi.getRevisionContext(projectId, SourceSpecification.patchSourceSpecification(versionId)).getCurrentRevision();
                     if (revision == null)
                     {
                         throw new LegendSDLCServerException("Could not find latest revision for project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersionId);
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getProjectEntityAccessContext(projectId, versionId));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(versionId)));
                 });
     }
 }

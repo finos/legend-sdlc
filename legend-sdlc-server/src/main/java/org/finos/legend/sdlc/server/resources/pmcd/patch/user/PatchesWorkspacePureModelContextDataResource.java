@@ -21,8 +21,9 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -71,12 +72,13 @@ public class PatchesWorkspacePureModelContextDataResource extends PureModelConte
                 "getting Pure model context data for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getWorkspaceRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId)))).getCurrentRevision();
+                    WorkspaceSourceSpecification workspaceSourceSpec = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId)));
+                    Revision revision = this.revisionApi.getRevisionContext(projectId, workspaceSourceSpec).getCurrentRevision();
                     if (revision == null)
                     {
                         throw new LegendSDLCServerException("Could not find latest revision for user workspace " + workspaceId + " in project " + projectId + "; project may be corrupt" + " for patch release version " + patchReleaseVersionId);
                     }
-                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getWorkspaceEntityAccessContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(versionId)))));
+                    return getPureModelContextData(projectId, revision.getId(), this.entityApi.getEntityAccessContext(projectId, workspaceSourceSpec));
                 });
     }
 }

@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.PureModelContextDataResource;
 
 import javax.inject.Inject;
@@ -50,7 +51,7 @@ public class ProjectRevisionPureModelContextDataResource extends PureModelContex
     {
         return executeWithLogging(
                 "getting Pure model context data for project " + projectId + " at revision " + revisionId,
-                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getProjectRevisionEntityAccessContext(projectId, revisionId))
+                () -> getPureModelContextData(projectId, revisionId, this.entityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification(), revisionId))
         );
     }
 }

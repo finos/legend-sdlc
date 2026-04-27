@@ -27,6 +27,7 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
@@ -94,8 +95,9 @@ public class GitLabEntityApiTestResource
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newUserWorkspace(projectId, workspaceName);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        WorkspaceSourceSpecification workspaceSourceSpec = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER));
+        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
@@ -107,9 +109,9 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        this.gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
-        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
+        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), modifiedProjectEntities);
@@ -124,8 +126,8 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-128", "numerical-analysis",
                 "math-110", "linear-algebra");
-        this.gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
-        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());
@@ -141,14 +143,14 @@ public class GitLabEntityApiTestResource
                 "name", "entitytwo",
                 "cs-194", "computational-imaging",
                 "cs-189", "machine-learning");
-        this.gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
-        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(postAddWorkspaceEntities);
         Assert.assertEquals(2, postAddWorkspaceEntities.size());
 
-        this.gitLabEntityApi.getUserWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(entityPath, classifierPath);
-        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(postDeleteWorkspaceEntities);
         Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
@@ -157,7 +159,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
         Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
 
-        List<String> paths = this.gitLabEntityApi.getUserWorkspaceEntityAccessContext(projectId, workspaceId).getEntityPaths(null, null, null);
+        List<String> paths = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntityPaths(null, null, null);
 
         Assert.assertNotNull(paths);
         Assert.assertEquals(1, paths.size());
@@ -217,7 +219,7 @@ public class GitLabEntityApiTestResource
         }
         LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
 
-        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
@@ -242,8 +244,9 @@ public class GitLabEntityApiTestResource
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newGroupWorkspace(projectId, workspaceName);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        WorkspaceSourceSpecification workspaceSourceSpec = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP));
+        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
@@ -255,9 +258,9 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        this.gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
-        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
+        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), modifiedProjectEntities);
@@ -272,8 +275,8 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-128", "numerical-analysis",
                 "math-110", "linear-algebra");
-        this.gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
-        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());
@@ -289,14 +292,14 @@ public class GitLabEntityApiTestResource
                 "name", "entitytwo",
                 "cs-194", "computational-imaging",
                 "cs-189", "machine-learning");
-        this.gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
-        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(postAddWorkspaceEntities);
         Assert.assertEquals(2, postAddWorkspaceEntities.size());
 
-        this.gitLabEntityApi.getGroupWorkspaceEntityModificationContext(projectId, workspaceId).deleteEntity(entityPath, classifierPath);
-        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, workspaceSourceSpec).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntities(null, null, null);
 
         Assert.assertNotNull(postDeleteWorkspaceEntities);
         Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
@@ -305,7 +308,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
         Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
 
-        List<String> paths = this.gitLabEntityApi.getGroupWorkspaceEntityAccessContext(projectId, workspaceId).getEntityPaths(null, null, null);
+        List<String> paths = this.gitLabEntityApi.getEntityAccessContext(projectId, workspaceSourceSpec).getEntityPaths(null, null, null);
 
         Assert.assertNotNull(paths);
         Assert.assertEquals(1, paths.size());
@@ -364,7 +367,7 @@ public class GitLabEntityApiTestResource
         }
         LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
 
-        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
@@ -386,16 +389,16 @@ public class GitLabEntityApiTestResource
         Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
-        Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        WorkspaceSourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
@@ -407,9 +410,9 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
-        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), modifiedProjectEntities);
@@ -424,8 +427,8 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-128", "numerical-analysis",
                 "math-110", "linear-algebra");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
-        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());
@@ -441,14 +444,14 @@ public class GitLabEntityApiTestResource
                 "name", "entitytwo",
                 "cs-194", "computational-imaging",
                 "cs-189", "machine-learning");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
-        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(postAddWorkspaceEntities);
         Assert.assertEquals(2, postAddWorkspaceEntities.size());
 
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).deleteEntity(entityPath, classifierPath);
-        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(postDeleteWorkspaceEntities);
         Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
@@ -457,7 +460,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
         Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
 
-        List<String> paths = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntityPaths(null, null, null);
+        List<String> paths = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntityPaths(null, null, null);
 
         Assert.assertNotNull(paths);
         Assert.assertEquals(1, paths.size());
@@ -517,7 +520,7 @@ public class GitLabEntityApiTestResource
         }
         LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
 
-        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());
@@ -539,16 +542,16 @@ public class GitLabEntityApiTestResource
         Project createdProject = this.gitLabProjectApi.createProject(projectName, description, ProjectType.MANAGED, groupId, artifactId, tags);
 
         String projectId = createdProject.getProjectId();
-        Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = this.gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patch = this.gitLabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
-        SourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
+        WorkspaceSourceSpecification sourceSpecification = SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceName, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId)));
 
         Workspace createdWorkspace = this.gitLabWorkspaceApi.newWorkspace(projectId, sourceSpecification);
 
         String workspaceId = createdWorkspace.getWorkspaceId();
-        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
-        List<Entity> initialProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        List<Entity> initialWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        List<Entity> initialProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertEquals(Collections.emptyList(), initialWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), initialProjectEntities);
@@ -560,9 +563,9 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-113", "abstract-algebra",
                 "math-185", "complex-analysis");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
-        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
-        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).createEntity(entityPath, classifierPath, entityContentMap, "initial entity");
+        List<Entity> modifiedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        List<Entity> modifiedProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(modifiedWorkspaceEntities);
         Assert.assertEquals(Collections.emptyList(), modifiedProjectEntities);
@@ -577,8 +580,8 @@ public class GitLabEntityApiTestResource
                 "name", "entity",
                 "math-128", "numerical-analysis",
                 "math-110", "linear-algebra");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
-        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).updateEntity(entityPath, classifierPath, newEntityContentMap, "update entity");
+        List<Entity> updatedWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(updatedWorkspaceEntities);
         Assert.assertEquals(1, updatedWorkspaceEntities.size());
@@ -594,14 +597,14 @@ public class GitLabEntityApiTestResource
                 "name", "entitytwo",
                 "cs-194", "computational-imaging",
                 "cs-189", "machine-learning");
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
-        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).createEntity(entityPathTwo, classifierPathTwo, newEntityContentMapTwo, "second entity");
+        List<Entity> postAddWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(postAddWorkspaceEntities);
         Assert.assertEquals(2, postAddWorkspaceEntities.size());
 
-        this.gitLabEntityApi.getWorkspaceEntityModificationContext(projectId, sourceSpecification).deleteEntity(entityPath, classifierPath);
-        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
+        this.gitLabEntityApi.getEntityModificationContext(projectId, sourceSpecification).deleteEntity(entityPath, classifierPath);
+        List<Entity> postDeleteWorkspaceEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntities(null, null, null);
 
         Assert.assertNotNull(postDeleteWorkspaceEntities);
         Assert.assertEquals(1, postDeleteWorkspaceEntities.size());
@@ -610,7 +613,7 @@ public class GitLabEntityApiTestResource
         Assert.assertEquals(remainedEntity.getClassifierPath(), classifierPathTwo);
         Assert.assertEquals(remainedEntity.getContent(), newEntityContentMapTwo);
 
-        List<String> paths = this.gitLabEntityApi.getWorkspaceEntityAccessContext(projectId, sourceSpecification).getEntityPaths(null, null, null);
+        List<String> paths = this.gitLabEntityApi.getEntityAccessContext(projectId, sourceSpecification).getEntityPaths(null, null, null);
 
         Assert.assertNotNull(paths);
         Assert.assertEquals(1, paths.size());
@@ -670,7 +673,7 @@ public class GitLabEntityApiTestResource
         }
         LOGGER.info("Waited {} times for branch to be deleted post merge", callUntilBranchDeleted.getTryCount());
 
-        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getProjectEntityAccessContext(projectId, patchReleaseVersionId).getEntities(null, null, null);
+        List<Entity> postCommitProjectEntities = this.gitLabEntityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getEntities(null, null, null);
 
         Assert.assertNotNull(postCommitProjectEntities);
         Assert.assertEquals(1, postCommitProjectEntities.size());

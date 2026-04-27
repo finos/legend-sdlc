@@ -75,7 +75,7 @@ public class TestModelBuilder
         Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getWorkspaceRevisionUpstreamProjects(upstreamProjectId, workspaceSourceSpecification, upstreamRevisionId, false);
         Set<DepotProjectVersion> dependencies = processDependencies(upstreamDepotProjectId, downstreamDepotProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getWorkspaceRevisionEntityAccessContext(upstreamProjectId, workspaceSourceSpecification, upstreamRevisionId).getEntities(null, null, null);
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getEntityAccessContext(upstreamProjectId, workspaceSourceSpecification, upstreamRevisionId).getEntities(null, null, null);
         return getEntities(downstreamDepotProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 
@@ -99,7 +99,7 @@ public class TestModelBuilder
         Set<ProjectDependency> latestUpstreamLevel1Dependencies = this.dependenciesApi.getProjectRevisionUpstreamProjects(upstreamProjectId, upstreamRevisionId, false);
         Set<DepotProjectVersion> dependencies = processDependencies(upstreamDepotProjectId, downstreamDepotProjectId, downstreamVersionId, transformProjectDependencySet(latestUpstreamLevel1Dependencies));
 
-        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getProjectRevisionEntityAccessContext(upstreamProjectId, upstreamRevisionId).getEntities(null, null, null);
+        List<Entity> upstreamProjectWorkspaceEntities = this.entityApi.getEntityAccessContext(upstreamProjectId, SourceSpecification.projectSourceSpecification(), upstreamRevisionId).getEntities(null, null, null);
         return getEntities(downstreamDepotProjectId, downstreamVersionId, dependencies, upstreamProjectWorkspaceEntities);
     }
 

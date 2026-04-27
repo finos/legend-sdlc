@@ -20,6 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
@@ -83,7 +84,7 @@ public class PatchesProjectEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entities for project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> getEntities(this.entityApi.getProjectEntityAccessContext(projectId, versionId), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
+                () -> getEntities(this.entityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(versionId)), classifierPaths, packages, includeSubPackages, nameRegex, stereotypes, taggedValueRegexes, excludeInvalid)
         );
     }
 
@@ -104,7 +105,7 @@ public class PatchesProjectEntitiesResource extends EntityAccessResource
         }
         return executeWithLogging(
                 "getting entity " + path + " for project " + projectId,
-                () -> this.entityApi.getProjectEntityAccessContext(projectId, versionId).getEntity(path)
+                () -> this.entityApi.getEntityAccessContext(projectId, SourceSpecification.patchSourceSpecification(versionId)).getEntity(path)
         );
     }
 }
