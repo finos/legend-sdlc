@@ -17,8 +17,12 @@ package org.finos.legend.sdlc.server.resources.backup.project.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
@@ -58,7 +62,7 @@ public class BackupWorkspaceRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revision for user backup workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP))).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -71,7 +75,7 @@ public class BackupWorkspaceRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for backup user workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getBackupUserWorkspaceRevisionContext(projectId, workspaceId).getRevision(revisionId)
+                () -> this.revisionApi.getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.BACKUP))).getRevision(revisionId)
         );
     }
 }

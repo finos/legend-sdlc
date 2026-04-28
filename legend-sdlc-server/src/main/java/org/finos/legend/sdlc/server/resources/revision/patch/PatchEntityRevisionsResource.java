@@ -19,6 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
@@ -72,7 +73,7 @@ public class PatchEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revisions for entity " + path + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getProjectEntityRevisionContext(projectId, versionId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getEntityRevisionContext(projectId, SourceSpecification.patchSourceSpecification(versionId), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -96,7 +97,7 @@ public class PatchEntityRevisionsResource extends BaseResource
         }
         return executeWithLogging(
                 "getting revision " + revisionId + " for entity " + path + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.revisionApi.getProjectEntityRevisionContext(projectId, versionId, path).getRevision(revisionId)
+                () -> this.revisionApi.getEntityRevisionContext(projectId, SourceSpecification.patchSourceSpecification(versionId), path).getRevision(revisionId)
         );
     }
 }

@@ -26,11 +26,11 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Set;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
 
 public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTest
 {
@@ -62,7 +62,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
         this.backend.project("C").addVersionedClasses("1.0.0", "c1", "c2");
         this.backend.project("A").addDependency("C:1.0.0");
         this.backend.project("B").addDependency("A:1.0.0");
-        String projectBRevisionId = this.backend.getRevisionApi().getProjectRevisionContext("B").getCurrentRevision().getId();
+        String projectBRevisionId = this.backend.getRevisionApi().getRevisionContext("B", SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId();
 
         // B directly depends on A
         String url = String.format("/api/projects/B/revisions/%s/upstreamProjects", projectBRevisionId);
@@ -104,7 +104,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
 
         this.backend.project("B").addEntities("w1", TestTools.newClassEntity("b3", "B"));
 
-        String workspace1CurrentRevision = this.backend.getRevisionApi().getUserWorkspaceRevisionContext("B", "w1").getCurrentRevision().getId();
+        String workspace1CurrentRevision = this.backend.getRevisionApi().getRevisionContext("B", SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification("w1", WorkspaceType.USER))).getCurrentRevision().getId();
 
         // B directly depends on A
         String url = String.format("/api/projects/B/workspaces/w1/revisions/%s/upstreamProjects", workspace1CurrentRevision);
@@ -123,7 +123,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
         this.backend.project("A").addDependency("C:1.0.0");
         this.backend.project("B").addDependency("A:1.0.0");
         this.backend.project("B").addPatch(VersionId.parseVersionId("1.0.1"));
-        String patchRevisionId = this.backend.getRevisionApi().getProjectRevisionContext("B", VersionId.parseVersionId("1.0.1")).getCurrentRevision().getId();
+        String patchRevisionId = this.backend.getRevisionApi().getRevisionContext("B", SourceSpecification.patchSourceSpecification(VersionId.parseVersionId("1.0.1"))).getCurrentRevision().getId();
 
         // B directly depends on A
         String url = String.format("/api/projects/B/patches/1.0.1/revisions/%s/upstreamProjects", patchRevisionId);
@@ -151,7 +151,7 @@ public class TestDependenciesResource extends AbstractLegendSDLCServerResourceTe
 
         this.backend.project("B").addEntities("w1", Arrays.asList(TestTools.newClassEntity("b3", "B")), VersionId.parseVersionId("1.0.1"));
 
-        String workspace1CurrentRevision = this.backend.getRevisionApi().getWorkspaceRevisionContext("B", SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification("w1", WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(VersionId.parseVersionId("1.0.1"))))).getCurrentRevision().getId();
+        String workspace1CurrentRevision = this.backend.getRevisionApi().getRevisionContext("B", SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification("w1", WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(VersionId.parseVersionId("1.0.1"))))).getCurrentRevision().getId();
 
         // B directly depends on A
         String url = String.format("/api/projects/B/patches/1.0.1/workspaces/w1/revisions/%s/upstreamProjects", workspace1CurrentRevision);

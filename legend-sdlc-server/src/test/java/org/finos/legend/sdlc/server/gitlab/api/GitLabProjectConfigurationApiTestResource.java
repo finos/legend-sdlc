@@ -121,7 +121,7 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertNull(createdProject.getProjectType());
 
         String projectId = createdProject.getProjectId();
-        Version version = this.gitlabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = this.gitlabVersionApi.newVersion(projectId, NewVersionType.MINOR, this.gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patch = this.gitlabPatchApi.newPatch(projectId, version.getId());
         VersionId patchReleaseVersionId = patch.getPatchReleaseVersionId();
 
@@ -132,7 +132,7 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertEquals(projectId, createdWorkspaceOne.getProjectId());
         Assert.assertNotNull(createdWorkspaceOne.getUserId());
 
-        ProjectConfiguration projectConfiguration = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
+        ProjectConfiguration projectConfiguration = this.gitLabProjectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceOneId, WorkspaceType.USER, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(projectConfiguration);
         Assert.assertEquals(artifactId, projectConfiguration.getArtifactId());
@@ -145,7 +145,7 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertEquals(projectId, createdWorkspaceTwo.getProjectId());
         Assert.assertNull(createdWorkspaceTwo.getUserId());
 
-        ProjectConfiguration projectConfigurationTwo = this.gitLabProjectConfigurationApi.getWorkspaceProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceTwoId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
+        ProjectConfiguration projectConfigurationTwo = this.gitLabProjectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceTwoId, WorkspaceType.GROUP, WorkspaceSource.patchWorkspaceSource(patchReleaseVersionId))));
 
         Assert.assertNotNull(projectConfigurationTwo);
         Assert.assertEquals(artifactId, projectConfigurationTwo.getArtifactId());
@@ -169,7 +169,7 @@ public class GitLabProjectConfigurationApiTestResource
         Assert.assertNull(createdProject.getProjectType());
 
         String projectId = createdProject.getProjectId();
-        Version version = this.gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = this.gitlabVersionApi.newVersion(projectId, NewVersionType.PATCH, this.gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
 
         ProjectConfiguration projectConfigurationTwo = this.gitLabProjectConfigurationApi.getVersionProjectConfiguration(projectId, version.getId());
 

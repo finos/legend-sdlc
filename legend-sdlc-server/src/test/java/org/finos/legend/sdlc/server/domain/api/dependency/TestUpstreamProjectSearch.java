@@ -19,6 +19,7 @@ import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.junit.Assert;
 import org.junit.Before;
@@ -178,12 +179,12 @@ public class TestUpstreamProjectSearch
 
     private String revisionId(String projectId)
     {
-        return this.revisionId(projectId, null);
+        return this.backend.getRevisionApi().getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId();
     }
 
     private String revisionId(String projectId, VersionId patchReleaseVersionId)
     {
-        return this.backend.getRevisionApi().getProjectRevisionContext(projectId, patchReleaseVersionId).getCurrentRevision().getId();
+        return this.backend.getRevisionApi().getRevisionContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId)).getCurrentRevision().getId();
     }
 
     private MutableSet<String> toProjectRevisionStringSet(Iterable<? extends ProjectDependency> projectDependencies)

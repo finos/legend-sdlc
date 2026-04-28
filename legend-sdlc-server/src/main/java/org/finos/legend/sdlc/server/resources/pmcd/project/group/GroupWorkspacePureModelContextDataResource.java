@@ -58,7 +58,7 @@ public class GroupWorkspacePureModelContextDataResource extends PureModelContext
                 "getting Pure model context data for group workspace " + workspaceId + " in project " + projectId,
                 () ->
                 {
-                    Revision revision = this.revisionApi.getGroupWorkspaceRevisionContext(projectId, workspaceId).getCurrentRevision();
+                    Revision revision = this.revisionApi.getRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP))).getCurrentRevision();
                     if (revision == null)
                     {
                         throw new LegendSDLCServerException("Could not find latest revision for group workspace " + workspaceId + " in project " + projectId + "; project may be corrupt");

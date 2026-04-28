@@ -17,8 +17,11 @@ package org.finos.legend.sdlc.server.resources.revision.project.group;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
@@ -59,7 +62,7 @@ public class GroupWorkspacePackageRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revisions for package " + path + " in group workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getGroupWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getPackageRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -73,7 +76,7 @@ public class GroupWorkspacePackageRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for package " + path + " in group workspace " + workspaceId + " for project " + projectId,
-                () -> this.revisionApi.getGroupWorkspacePackageRevisionContext(projectId, workspaceId, path).getRevision(revisionId)
+                () -> this.revisionApi.getPackageRevisionContext(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.GROUP)), path).getRevision(revisionId)
         );
     }
 }

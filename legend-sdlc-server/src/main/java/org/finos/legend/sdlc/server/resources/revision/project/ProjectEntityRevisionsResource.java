@@ -18,6 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.time.EndInstant;
@@ -58,7 +59,7 @@ public class ProjectEntityRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revisions for entity " + path + " in project " + projectId,
-                () -> this.revisionApi.getProjectEntityRevisionContext(projectId, path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
+                () -> this.revisionApi.getEntityRevisionContext(projectId, SourceSpecification.projectSourceSpecification(), path).getRevisions(null, ResolvedInstant.getResolvedInstantIfNonNull(since), ResolvedInstant.getResolvedInstantIfNonNull(until), limit)
         );
     }
 
@@ -71,7 +72,7 @@ public class ProjectEntityRevisionsResource extends BaseResource
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for entity " + path + " in project " + projectId,
-                () -> this.revisionApi.getProjectEntityRevisionContext(projectId, path).getRevision(revisionId)
+                () -> this.revisionApi.getEntityRevisionContext(projectId, SourceSpecification.projectSourceSpecification(), path).getRevision(revisionId)
         );
     }
 }

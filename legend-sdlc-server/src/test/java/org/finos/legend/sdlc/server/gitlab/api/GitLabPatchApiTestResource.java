@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.version.Version;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
@@ -62,7 +63,7 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
-        Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patch = gitLabPatchApi.newPatch(projectId, version.getId());
 
         Assert.assertNotNull(patch);
@@ -87,7 +88,7 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
-        Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version version = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patch = gitLabPatchApi.newPatch(projectId, version.getId());
 
         Assert.assertNotNull(patch);
@@ -117,14 +118,14 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals(Sets.mutable.withAll(tags), Sets.mutable.withAll(createdProject.getTags()));
 
         String projectId = createdProject.getProjectId();
-        Version versionOne = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version versionOne = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patchOne = gitLabPatchApi.newPatch(projectId, versionOne.getId());
 
         Assert.assertNotNull(patchOne);
         Assert.assertEquals(projectId, patchOne.getProjectId());
         Assert.assertEquals("0.0.2", patchOne.getPatchReleaseVersionId().toVersionIdString());
 
-        Version versionTwo = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getProjectRevisionContext(projectId).getCurrentRevision().getId(), "");
+        Version versionTwo = gitLabVersionApi.newVersion(projectId, NewVersionType.PATCH, gitLabRevisionApi.getRevisionContext(projectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision().getId(), "");
         Patch patchTwo = gitLabPatchApi.newPatch(projectId, versionTwo.getId());
 
         Assert.assertNotNull(patchTwo);
