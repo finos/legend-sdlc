@@ -23,31 +23,11 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>legend-sdlc-project-files</artifactId>
-    <name>Legend SDLC Project Files</name>
+    <artifactId>legend-sdlc-shared</artifactId>
+    <name>Legend SDLC Shared Utilities</name>
     <packaging>jar</packaging>
 
     <dependencies>
-        <!-- SDLC -->
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-model</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-shared</artifactId>
-        </dependency>
-
-        <!-- Eclipse Collections -->
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.collections</groupId>
-            <artifactId>eclipse-collections</artifactId>
-        </dependency>
-
         <!-- TEST -->
         <dependency>
             <groupId>junit</groupId>

@@ -26,10 +26,10 @@ public class TestStringTools
     @Test
     public void testAppendThrowableMessageIfPresent_VacuousCases()
     {
-        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String)null, null));
-        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String)null, new RuntimeException()));
-        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String)null, new Throwable()));
-        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String)null, new UnknownHostException()));
+        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String) null, null));
+        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String) null, new RuntimeException()));
+        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String) null, new Throwable()));
+        Assert.assertNull(StringTools.appendThrowableMessageIfPresent((String) null, new UnknownHostException()));
 
         Assert.assertEquals("", StringTools.appendThrowableMessageIfPresent("", null));
         Assert.assertEquals("", StringTools.appendThrowableMessageIfPresent("", new RuntimeException()));
@@ -42,9 +42,9 @@ public class TestStringTools
     {
         String message = "the quick brown fox jumped over the lazy dog";
 
-        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String)null, new RuntimeException(message)));
-        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String)null, new Throwable(message)));
-        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String)null, new IOException(message)));
+        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String) null, new RuntimeException(message)));
+        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String) null, new Throwable(message)));
+        Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent((String) null, new IOException(message)));
 
         Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent("", new RuntimeException(message)));
         Assert.assertEquals(message, StringTools.appendThrowableMessageIfPresent("", new Throwable(message)));
@@ -54,9 +54,9 @@ public class TestStringTools
         Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred", new Throwable(message)));
         Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred", new IOException(message)));
 
-        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new RuntimeException(message), (String)null));
-        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new Throwable(message), (String)null));
-        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new IOException(message), (String)null));
+        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new RuntimeException(message), (String) null));
+        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new Throwable(message), (String) null));
+        Assert.assertEquals("An error occurred: " + message, StringTools.appendThrowableMessageIfPresent("An error occurred: ", new IOException(message), (String) null));
 
         Assert.assertEquals("An error occurred; " + message, StringTools.appendThrowableMessageIfPresent("An error occurred", new RuntimeException(message), "; "));
         Assert.assertEquals("An error occurred; " + message, StringTools.appendThrowableMessageIfPresent("An error occurred", new Throwable(message), "; "));
@@ -80,10 +80,10 @@ public class TestStringTools
     {
         String unknownHostPrefix = "unknown host - ";
         String hostName = "some.host.somewhere";
-        Assert.assertEquals(unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent((String)null, new UnknownHostException(hostName)));
+        Assert.assertEquals(unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent((String) null, new UnknownHostException(hostName)));
         Assert.assertEquals(unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent("", new UnknownHostException(hostName)));
         Assert.assertEquals("Access error: " + unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent("Access error", new UnknownHostException(hostName)));
-        Assert.assertEquals("Access error: " + unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent("Access error: ", new UnknownHostException(hostName), (String)null));
+        Assert.assertEquals("Access error: " + unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent("Access error: ", new UnknownHostException(hostName), (String) null));
         Assert.assertEquals("Access error; " + unknownHostPrefix + hostName, StringTools.appendThrowableMessageIfPresent("Access error", new UnknownHostException(hostName), "; "));
     }
 

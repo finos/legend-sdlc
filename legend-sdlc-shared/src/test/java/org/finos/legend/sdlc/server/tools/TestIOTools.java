@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.server.tools;
 
-import org.eclipse.collections.api.factory.Lists;
-import org.eclipse.collections.api.list.ImmutableList;
 import org.junit.Assert;
 import org.junit.ClassRule;
 import org.junit.Test;
@@ -29,6 +27,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
@@ -95,7 +94,7 @@ public class TestIOTools
     public void testReadAllToString() throws IOException
     {
         Random random = new Random();
-        ImmutableList<Charset> charsets = Lists.immutable.with(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1, StandardCharsets.US_ASCII, StandardCharsets.UTF_16);
+        List<Charset> charsets = Arrays.asList(StandardCharsets.UTF_8, StandardCharsets.ISO_8859_1, StandardCharsets.US_ASCII, StandardCharsets.UTF_16);
         for (int i = 0; i < 65_537; i = Math.max(1, i * 2))
         {
             byte[] bytes = new byte[i];
@@ -220,7 +219,7 @@ public class TestIOTools
         {
             throw new Exception(expectedMessage);
         });
-        List<Exception> exceptions = Lists.mutable.empty();
+        List<Exception> exceptions = new ArrayList<>();
         Stream<String> stream = IOTools.streamCloseableSpliterator(spliterator, false, exceptions::add);
         Assert.assertFalse(spliterator.isClosed);
         List<String> result = stream.filter(s -> !spliterator.isClosed).collect(Collectors.toList());
@@ -308,7 +307,7 @@ public class TestIOTools
         });
         List<String> list = Collections.unmodifiableList(Arrays.asList("A", "B", "C", "D", "E", "F", "G", "G-MAN", "G-MAN", "HOOVER"));
         Stream<String> stream = list.stream();
-        List<Exception> exceptions = Lists.mutable.empty();
+        List<Exception> exceptions = new ArrayList<>();
         IOTools.closeCloseableOnStreamClose(stream, closeable, exceptions::add);
         List<String> result = stream.collect(Collectors.toList());
         stream.close();
