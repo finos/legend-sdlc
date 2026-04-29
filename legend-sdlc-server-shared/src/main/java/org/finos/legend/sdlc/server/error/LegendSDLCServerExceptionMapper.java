@@ -14,17 +14,18 @@
 
 package org.finos.legend.sdlc.server.error;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URI;
-import java.net.URISyntaxException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.Provider;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 @Provider
-public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendSDLCServerException>
+public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendSDLCException>
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerExceptionMapper.class);
 
@@ -39,21 +40,22 @@ public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendS
     }
 
     @Override
-    public Response toResponse(LegendSDLCServerException exception)
+    public Response toResponse(LegendSDLCException exception)
     {
-        Status status = exception.getStatus();
-        switch (status.getFamily())
+        Status status = Status.fromStatusCode(exception.getStatusCode());
+        int statusCode = status.getStatusCode();
+        switch (statusCode / 100)
         {
-            case CLIENT_ERROR:
+            case 4:
             {
                 // we do not return a stack trace for client errors, regardless of the value of includeStackTrace
-                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCServerException(exception, false));
+                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCException(exception, false));
             }
-            case SERVER_ERROR:
+            case 5:
             {
-                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
+                return buildResponse(status, ExtendedErrorMessage.fromLegendSDLCException(exception, this.includeStackTrace));
             }
-            case REDIRECTION:
+            case 3:
             {
                 // TODO consider cases other than 301, 302, 303, and 307
                 URI redirectLocation = getRedirectLocation(exception);
@@ -67,24 +69,24 @@ public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendS
                 // Could not get a redirect location from an exception indicating there should be a redirect
                 // Send back an internal server error instead
                 LOGGER.warn("Could not get redirect URI from exception with status: {}", status);
-                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
+                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCException(exception, this.includeStackTrace));
             }
             default:
             {
                 // Exception with non-error HTTP status
                 // Send back an internal server error instead
                 LOGGER.warn("Exception with non-error HTTP status: {}", status);
-                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCServerException(exception, this.includeStackTrace));
+                return buildResponse(Status.INTERNAL_SERVER_ERROR, ExtendedErrorMessage.fromLegendSDLCException(exception, this.includeStackTrace));
             }
         }
     }
 
-    private static URI getRedirectLocation(LegendSDLCServerException exception)
+    private static URI getRedirectLocation(LegendSDLCException exception)
     {
         String message = exception.getMessage();
         if (message == null)
         {
-            LOGGER.warn("A LegendSDLCServerException with status {} should have the redirect location as its message, found null", exception.getStatus());
+            LOGGER.warn("A LegendSDLCServerException with status {} should have the redirect location as its message, found null", exception.getStatusCode());
             return null;
         }
 
@@ -94,7 +96,7 @@ public class LegendSDLCServerExceptionMapper extends BaseExceptionMapper<LegendS
         }
         catch (URISyntaxException e)
         {
-            LOGGER.warn("Invalid redirect location for LegendSDLCServerException with status {}: {}", exception.getStatus(), message);
+            LOGGER.warn("Invalid redirect location for LegendSDLCServerException with status {}: {}", exception.getStatusCode(), message);
             return null;
         }
     }
