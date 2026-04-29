@@ -41,7 +41,6 @@ public class ProjectConfigurationUpdater
     private String artifactId;
     private boolean platformConfigurationsIsSet = false;
     private Boolean runDependencyTests;
-    private Boolean produceShadedServiceJar;
     private MutableList<PlatformConfiguration> platformConfigurations;
     private final MutableSet<ProjectDependency> projectDependenciesToAdd = Sets.mutable.empty();
     private final MutableSet<ProjectDependency> projectDependenciesToRemove = Sets.mutable.empty();
@@ -71,12 +70,6 @@ public class ProjectConfigurationUpdater
     public ProjectConfigurationUpdater withRunDependencyTests(boolean runDependencyTests)
     {
         setRunDependencyTests(runDependencyTests);
-        return this;
-    }
-
-    public ProjectConfigurationUpdater withProduceShadedServiceJar(boolean produceShadedServiceJar)
-    {
-        setProduceShadedServiceJar(produceShadedServiceJar);
         return this;
     }
 
@@ -197,16 +190,6 @@ public class ProjectConfigurationUpdater
     public boolean getRunDependencyTests()
     {
         return this.runDependencyTests;
-    }
-
-    public void setProduceShadedServiceJar(boolean produceShadedServiceJar)
-    {
-        this.produceShadedServiceJar = produceShadedServiceJar;
-    }
-
-    public Boolean getProduceShadedServiceJar()
-    {
-        return produceShadedServiceJar;
     }
 
     // Project dependencies to add
@@ -453,8 +436,6 @@ public class ProjectConfigurationUpdater
 
         Boolean newRunDependencyTests = (this.runDependencyTests == null) ? configuration.getRunDependencyTests() : this.runDependencyTests;
 
-        Boolean newProduceShadedServiceJar = (this.produceShadedServiceJar == null) ? configuration.getProduceShadedServiceJar() : this.produceShadedServiceJar;
-
         // Project dependencies
         List<ProjectDependency> newProjectDependencies;
         if (this.projectDependenciesToAdd.isEmpty() && this.projectDependenciesToRemove.isEmpty())
@@ -551,12 +532,6 @@ public class ProjectConfigurationUpdater
             public Boolean getRunDependencyTests()
             {
                 return newRunDependencyTests;
-            }
-
-            @Override
-            public Boolean getProduceShadedServiceJar()
-            {
-                return newProduceShadedServiceJar;
             }
 
             @Override

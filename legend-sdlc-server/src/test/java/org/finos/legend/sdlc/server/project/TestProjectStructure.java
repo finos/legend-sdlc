@@ -802,7 +802,6 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
             this.fileAccessProvider.createWorkspace(PROJECT_ID, workspaceId);
             ProjectStructure.newUpdateBuilder(this.fileAccessProvider, PROJECT_ID)
                     .withProjectConfigurationUpdater(ProjectConfigurationUpdater.newUpdater()
-                            .withProduceShadedServiceJar(true)
                             .withProjectStructureVersion(this.projectStructureVersion)
                             .withProjectStructureExtensionVersion(this.projectStructureExtensionVersion)
                             .withGroupId(GROUP_ID_2)

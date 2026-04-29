@@ -48,11 +48,6 @@ public interface ProjectConfiguration
         return null;
     }
 
-    default Boolean getProduceShadedServiceJar()
-    {
-        return false;
-    }
-
     @Deprecated
     default List<ArtifactGeneration> getArtifactGenerations()
     {

@@ -340,10 +340,7 @@ public class ProjectStructureV13Factory extends ProjectStructureVersionFactory
         public void configureServiceExecutionModule(MavenModelConfiguration configuration)
         {
             configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getPlugin(this));
-            if (Boolean.TRUE.equals(getProjectConfiguration().getProduceShadedServiceJar()))
-            {
-                configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getShadePlugin());
-            }
+            configuration.addPlugin(this.legendServiceExecutionGenerationPluginMavenHelper.getShadePlugin());
 
             configuration.addDependency(getExtensionsCollectionDependency(EXECUTION_EXTENSIONS_COLLECTION_KEY, false, false));
         }

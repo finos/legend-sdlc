@@ -73,7 +73,6 @@ public class TestProjectConfigurationUpdater
                 .withPlatformConfigurations(Lists.fixedSize.with(newPlatformConfiguration("plat1", "1.2.3")))
                 .withGroupId("new.group.id")
                 .withArtifactId("new-artifact-id")
-                .withProduceShadedServiceJar(true)
                 .withProjectDependenciesToAdd(ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"), ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"))
                 .withProjectDependenciesToRemove(ProjectDependency.newProjectDependency("org.test:to-remove", "3.2.1"))
                 .withMetamodelDependenciesToAdd(MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3))
@@ -86,10 +85,8 @@ public class TestProjectConfigurationUpdater
                 .withProjectStructureVersion(12, 5)
                 .withPlatformConfigurations(newPlatformConfiguration("plat1", "1.2.3"))
                 .withGroupArtifactIds("new.group.id", "new-artifact-id")
-                .withProduceShadedServiceJar(true)
                 .withProjectDependencies(ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"), ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"))
                 .withMetamodelDependencies(MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3));
-
         assertNotEquals(emptyConfig, updatedEmptyConfig);
         assertEquals(expectedUpdatedEmptyConfig, updatedEmptyConfig);
 
@@ -101,16 +98,13 @@ public class TestProjectConfigurationUpdater
                 .withProjectDependencies(ProjectDependency.newProjectDependency("org.test:q-project", "99.0.0.1"), ProjectDependency.newProjectDependency("org.test:to-remove", "3.2.1"))
                 .withMetamodelDependencies(MetamodelDependency.newMetamodelDependency("meta0", 5), MetamodelDependency.newMetamodelDependency("meta-remove", 5));
         ProjectConfiguration updatedNonEmptyConfig = updater.update(nonEmptyConfig);
-
         ProjectConfiguration expectedUpdatedNonEmptyConfig = newConfig()
                 .withProjectId("NEW-PROJ-1234")
                 .withProjectStructureVersion(12, 5)
                 .withPlatformConfigurations(newPlatformConfiguration("plat1", "1.2.3"))
                 .withGroupArtifactIds("new.group.id", "new-artifact-id")
-                .withProduceShadedServiceJar(true)
                 .withProjectDependencies(ProjectDependency.newProjectDependency("org.test:other-project", "0.0.1"), ProjectDependency.newProjectDependency("org.test:q-project", "99.0.0.1"), ProjectDependency.newProjectDependency("org.test:some-project", "56.7.7"))
                 .withMetamodelDependencies(MetamodelDependency.newMetamodelDependency("meta0", 5), MetamodelDependency.newMetamodelDependency("meta1", 1), MetamodelDependency.newMetamodelDependency("meta2", 3));
-
         assertNotEquals(nonEmptyConfig, updatedEmptyConfig);
         assertEquals(expectedUpdatedNonEmptyConfig, updatedNonEmptyConfig);
     }
@@ -193,7 +187,6 @@ public class TestProjectConfigurationUpdater
         private String artifactId;
         private final MutableList<ProjectDependency> projectDependencies = Lists.mutable.empty();
         private final MutableList<MetamodelDependency> metamodelDependencies = Lists.mutable.empty();
-        private boolean produceShadedServiceJar;
 
         @Override
         public String getProjectId()
@@ -227,18 +220,6 @@ public class TestProjectConfigurationUpdater
         public TestProjectConfiguration withProjectStructureVersion(int version)
         {
             return withProjectStructureVersion(ProjectStructureVersion.newProjectStructureVersion(version));
-        }
-
-        public TestProjectConfiguration withProduceShadedServiceJar(boolean produceShadedServiceJar)
-        {
-            this.produceShadedServiceJar = produceShadedServiceJar;
-            return this;
-        }
-
-        @Override
-        public Boolean getProduceShadedServiceJar()
-        {
-            return this.produceShadedServiceJar;
         }
 
         @Override

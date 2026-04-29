@@ -41,7 +41,6 @@ public class UpdateProjectConfigurationCommand
     private final List<ArtifactGeneration> artifactGenerationsToAdd;
     private final List<String> artifactGenerationsNamesToRemove;
     private final Boolean runDependencyTests;
-    private final Boolean produceShadedServiceJar;
 
     @JsonCreator
     public UpdateProjectConfigurationCommand(
@@ -55,8 +54,7 @@ public class UpdateProjectConfigurationCommand
             @JsonProperty("projectDependenciesToRemove") @JsonDeserialize(contentAs = SimpleProjectDependency.class) List<ProjectDependency> projectDependenciesToRemove,
             @JsonProperty("artifactGenerationsToAdd") @JsonDeserialize(contentAs = SimpleArtifactGeneration.class) List<ArtifactGeneration> artifactGenerationsToAdd,
             @JsonProperty("artifactGenerationsToRemove") List<String> artifactGenerationNamesToRemove,
-            @JsonProperty("runDependencyTests") Boolean runDependencyTests,
-            @JsonProperty("produceShadedServiceJar") Boolean produceShadedServiceJar
+            @JsonProperty("runDependencyTests") Boolean runDependencyTests
     )
     {
         this.message = message;
@@ -70,7 +68,6 @@ public class UpdateProjectConfigurationCommand
         this.artifactGenerationsToAdd = artifactGenerationsToAdd;
         this.artifactGenerationsNamesToRemove = artifactGenerationNamesToRemove;
         this.runDependencyTests = runDependencyTests;
-        this.produceShadedServiceJar = produceShadedServiceJar;
     }
 
     public String getMessage()
@@ -103,11 +100,6 @@ public class UpdateProjectConfigurationCommand
         if (this.runDependencyTests != null)
         {
             configUpdater.setRunDependencyTests(runDependencyTests);
-        }
-
-        if (this.produceShadedServiceJar != null)
-        {
-            configUpdater.setProduceShadedServiceJar(produceShadedServiceJar);
         }
         return configUpdater;
     }

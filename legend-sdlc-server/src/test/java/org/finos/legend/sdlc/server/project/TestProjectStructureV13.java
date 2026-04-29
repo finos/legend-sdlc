@@ -127,10 +127,7 @@ public class TestProjectStructureV13 extends TestMultiGenerationProjectStructure
     protected void collectExpectedServiceExecutionModulePlugins(String name, ProjectStructureV13 projectStructure, Consumer<Plugin> pluginConsumer)
     {
         pluginConsumer.accept(new LegendServiceExecutionGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-service-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency()).getPlugin(projectStructure));
-        if (Boolean.TRUE.equals(projectStructure.getProjectConfiguration().getProduceShadedServiceJar()))
-        {
-            pluginConsumer.accept(new LegendServiceExecutionGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-service-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency()).getShadePlugin());
-        }
+        pluginConsumer.accept(new LegendServiceExecutionGenerationPluginMavenHelper("org.finos.legend.sdlc", "legend-sdlc-generation-service-maven-plugin","${platform.legend-sdlc.version}", getGenerationDependency()).getShadePlugin());
     }
 
     @MultiModuleMavenProjectStructure.ModuleConfig(artifactType = ArtifactType.service_execution, type = MultiModuleMavenProjectStructure.ModuleConfigType.DEPENDENCIES)
