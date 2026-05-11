@@ -50,7 +50,7 @@ public interface ProjectConfiguration
 
     default Boolean getProduceShadedServiceJar()
     {
-        return false;
+        return null;
     }
 
     @Deprecated
