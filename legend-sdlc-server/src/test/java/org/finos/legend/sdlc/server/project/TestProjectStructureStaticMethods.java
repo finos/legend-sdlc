@@ -104,7 +104,7 @@ public class TestProjectStructureStaticMethods
     @Test
     public void testGetLatestProjectStructureVersion()
     {
-        Assert.assertEquals(13, ProjectStructure.getLatestProjectStructureVersion());
+        Assert.assertEquals(14, ProjectStructure.getLatestProjectStructureVersion());
     }
 
     @Test
@@ -162,5 +162,6 @@ public class TestProjectStructureStaticMethods
         Assert.assertNull(config.getProjectStructureVersion().getExtensionVersion());
         Assert.assertEquals(projectId, config.getProjectId());
         Assert.assertEquals(ProjectType.MANAGED, config.getProjectType());
+        Assert.assertNull(config.getProduceShadedServiceJar());
     }
 }
