@@ -60,6 +60,7 @@ import org.gitlab4j.api.models.Member;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.Permissions;
 import org.gitlab4j.api.models.ProjectAccess;
+import org.gitlab4j.api.models.ProjectFilter;
 import org.gitlab4j.api.models.ProtectedTag;
 import org.gitlab4j.api.models.User;
 import org.gitlab4j.api.models.Visibility;
@@ -109,7 +110,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String searchString, Iterable<String> tags, Integer limit)
+    public List<Project> getProjects(boolean user, String searchString, Iterable<String> tags, Iterable<String> excludeTags, Integer limit)
     {
         boolean limited = false;
         if (limit != null)
@@ -125,10 +126,20 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             limited = true;
         }
         Set<String> tagSet = (tags == null) ? Collections.emptySet() : toLegendSDLCTagSet(tags);
+        Set<String> excludeTagSet = (excludeTags == null) ? Collections.emptySet() : toLegendSDLCTagSet(excludeTags);
         String search = (tagSet.contains("legend_sandbox") && searchString == null) ? getCurrentUser() : searchString;
         try
         {
-            Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(null, null, null, null, search, true, null, user, null, null, ITEMS_PER_PAGE));
+            // Push the Legend SDLC marker tag down to GitLab as a topic filter so the server only
+            // returns projects that carry the marker. The in-memory isLegendSDLCProject check below
+            // is retained as a defensive guard (e.g. for case-sensitivity differences across GitLab
+            // versions, or potential substring collisions on the topic name).
+            ProjectFilter filter = new ProjectFilter()
+                    .withSearch(search)
+                    .withSimple(true)
+                    .withMembership(user)
+                    .withTopic(getLegendSDLCProjectTag());
+            Pager<org.gitlab4j.api.models.Project> pager = withRetries(() -> getGitLabApi().getProjectApi().getProjects(filter, ITEMS_PER_PAGE));
             Stream<org.gitlab4j.api.models.Project> stream = PagerTools.stream(pager).filter(this::isLegendSDLCProject);
             if (!tagSet.isEmpty())
             {
@@ -136,6 +147,14 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 {
                     List<String> tagList = p.getTagList();
                     return (tagList != null) && Iterate.anySatisfy(p.getTagList(), tagSet::contains);
+                });
+            }
+            if (!excludeTagSet.isEmpty())
+            {
+                stream = stream.filter(p ->
+                {
+                    List<String> tagList = p.getTagList();
+                    return (tagList == null) || !Iterate.anySatisfy(tagList, excludeTagSet::contains);
                 });
             }
             if (limited)
@@ -155,21 +174,34 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                 }
                 message.append("projects");
                 List<String> tagList = (tags == null) ? Collections.emptyList() : Lists.mutable.withAll(tags);
-                if ((search != null) || !tagList.isEmpty())
+                List<String> excludeTagList = (excludeTags == null) ? Collections.emptyList() : Lists.mutable.withAll(excludeTags);
+                if ((search != null) || !tagList.isEmpty() || !excludeTagList.isEmpty())
                 {
                     message.append(" (");
+                    boolean needsComma = false;
                     if (search != null)
                     {
                         message.append("search=\"").append(search).append("\"");
-                        if (!tagList.isEmpty())
-                        {
-                            message.append(", ");
-                        }
+                        needsComma = true;
                     }
                     if (!tagList.isEmpty())
                     {
+                        if (needsComma)
+                        {
+                            message.append(", ");
+                        }
                         tagList.sort(Comparator.naturalOrder());
                         message.append("tags=[").append(String.join(", ", tagList)).append("]");
+                        needsComma = true;
+                    }
+                    if (!excludeTagList.isEmpty())
+                    {
+                        if (needsComma)
+                        {
+                            message.append(", ");
+                        }
+                        excludeTagList.sort(Comparator.naturalOrder());
+                        message.append("excludeTags=[").append(String.join(", ", excludeTagList)).append("]");
                     }
                     message.append(')');
                 }
