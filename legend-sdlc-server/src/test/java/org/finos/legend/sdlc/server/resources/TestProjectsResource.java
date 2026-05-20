@@ -15,16 +15,27 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.apache.http.client.HttpResponseException;
+import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import javax.ws.rs.client.Invocation;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
 {
+    @Before
+    public void resetBackend()
+    {
+        this.backend.reinitialize();
+    }
+
     @Test
     public void testGetAllProjects() throws HttpResponseException
     {
@@ -48,6 +59,99 @@ public class TestProjectsResource extends AbstractLegendSDLCServerResourceTest
         Assert.assertEquals("project-A", findProject(projects, "A").getName());
         Assert.assertEquals("project-B", findProject(projects, "B").getName());
         Assert.assertEquals("project-C", findProject(projects, "C").getName());
+    }
+
+    @Test
+    public void testGetProjectsFilteredByTag() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("finance");
+        this.backend.project("B").addTags("finance", "production");
+        this.backend.project("C").addTags("sandbox");
+
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects").queryParam("tag", "finance").request());
+        Assert.assertEquals(Sets.mutable.with("A", "B"), ids);
+    }
+
+    @Test
+    public void testGetProjectsFilteredByMultipleTagsIsOrSemantics() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("finance");
+        this.backend.project("B").addTags("production");
+        this.backend.project("C").addTags("sandbox");
+
+        // tag filter is OR — projects matching any of the tags should be returned
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects")
+                .queryParam("tag", "finance")
+                .queryParam("tag", "sandbox")
+                .request());
+        Assert.assertEquals(Sets.mutable.with("A", "C"), ids);
+    }
+
+    @Test
+    public void testGetProjectsFilteredByExcludeTag() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("finance");
+        this.backend.project("B").addTags("finance", "archived");
+        this.backend.project("C").addTags("sandbox");
+
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects").queryParam("excludeTag", "archived").request());
+        Assert.assertEquals(Sets.mutable.with("A", "C"), ids);
+    }
+
+    @Test
+    public void testGetProjectsFilteredByMultipleExcludeTagsIsOrSemantics() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("finance");
+        this.backend.project("B").addTags("archived");
+        this.backend.project("C").addTags("deprecated");
+        this.backend.project("D").addTags("trading");
+
+        // excludeTag filter is OR — projects with any of the excluded tags should be dropped
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects")
+                .queryParam("excludeTag", "archived")
+                .queryParam("excludeTag", "deprecated")
+                .request());
+        Assert.assertEquals(Sets.mutable.with("A", "D"), ids);
+    }
+
+    @Test
+    public void testGetProjectsExcludeTagWinsOverIncludeTag() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("finance");
+        this.backend.project("B").addTags("finance", "archived");
+        this.backend.project("C").addTags("finance", "deprecated");
+
+        // include finance AND exclude archived: B is dropped despite matching include
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects")
+                .queryParam("tag", "finance")
+                .queryParam("excludeTag", "archived")
+                .request());
+        Assert.assertEquals(Sets.mutable.with("A", "C"), ids);
+    }
+
+    @Test
+    public void testGetProjectsExcludeTagWithUntaggedProjects() throws HttpResponseException
+    {
+        this.backend.project("A").addTags("archived");
+        this.backend.project("B"); // no tags
+        this.backend.project("C").addTags("finance");
+
+        // projects with no tags should not be excluded
+        Set<String> ids = getProjectIds(this.clientFor("/api/projects").queryParam("excludeTag", "archived").request());
+        Assert.assertEquals(Sets.mutable.with("B", "C"), ids);
+    }
+
+    private static Set<String> getProjectIds(Invocation.Builder request) throws HttpResponseException
+    {
+        Response response = request.get();
+        if (response.getStatus() != 200)
+        {
+            throw new HttpResponseException(response.getStatus(), "Error during http call with status: " + response.getStatus() + " , entity: " + response.readEntity(String.class));
+        }
+        List<Project> projects = response.readEntity(new GenericType<List<Project>>()
+        {
+        });
+        return projects.stream().map(Project::getProjectId).collect(Collectors.toSet());
     }
 
     private Project findProject(List<Project> projects, String projectId)

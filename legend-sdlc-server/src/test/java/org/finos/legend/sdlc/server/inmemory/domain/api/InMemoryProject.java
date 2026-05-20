@@ -26,6 +26,7 @@ import org.finos.legend.sdlc.domain.model.review.ReviewState;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -34,6 +35,7 @@ import javax.inject.Inject;
 public class InMemoryProject implements Project
 {
     private String projectId;
+    private final ArrayList<String> tags = new ArrayList<>();
     private final MutableMap<String, InMemoryPatch> patches = Maps.mutable.empty();
     private final MutableMap<String, InMemoryWorkspace> userWorkspaces = Maps.mutable.empty(); // Store the key as default_{workspaceId} if sourceBranch is default branch otherwise key ad {branchName}_{workspaceId}
     private final MutableMap<String, InMemoryWorkspace> groupWorkspaces = Maps.mutable.empty();
@@ -74,7 +76,15 @@ public class InMemoryProject implements Project
     @Override
     public List<String> getTags()
     {
-        return null;
+        return this.tags;
+    }
+
+    public void addTags(Iterable<String> tagsToAdd)
+    {
+        if (tagsToAdd != null)
+        {
+            tagsToAdd.forEach(this.tags::add);
+        }
     }
 
     @Override

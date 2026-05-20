@@ -109,6 +109,12 @@ public class InMemoryBackend
             this.metadata = metadata;
         }
 
+        public ProjectBuilder addTags(String... tags)
+        {
+            this.project.addTags(java.util.Arrays.asList(tags));
+            return this;
+        }
+
         public void addWorkspace(String workspaceId, WorkspaceType workspaceType)
         {
            this.addWorkspace(workspaceId, workspaceType, null);

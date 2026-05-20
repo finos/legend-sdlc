@@ -76,7 +76,7 @@ public class FileSystemProjectApi extends FileSystemApiWithFileAccess implements
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
+    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<String> excludeTags, Integer limit)
     {
         List<Project> gitRepos = new ArrayList<>();
         try (Stream<Path> paths = Files.list(Paths.get(getRootDirectory())))
