@@ -37,13 +37,12 @@ public interface ProjectApi
         return this.getProjects(user, search, tags, null, null);
     }
 
-    @Deprecated
-    default List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<ProjectType> types, Integer limit)
+    default List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
     {
-        return this.getProjects(user, search, tags, limit);
+        return this.getProjects(user, search, tags, null, limit);
     }
 
-    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit);
+    List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<String> excludeTags, Integer limit);
 
     Project createProject(String name, String description, ProjectType type, String groupId, String artifactId, Iterable<String> tags);
 

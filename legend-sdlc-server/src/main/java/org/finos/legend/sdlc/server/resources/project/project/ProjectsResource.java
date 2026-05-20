@@ -73,6 +73,8 @@ public class ProjectsResource extends BaseResource
                                      @ApiParam("only include projects the user is associated with") boolean user,
                                      @QueryParam("tag")
                                      @ApiParam("only include projects with one or more of these tags") Set<String> tags,
+                                     @QueryParam("excludeTag")
+                                     @ApiParam("exclude projects that have one or more of these tags") Set<String> excludeTags,
                                      @QueryParam("limit")
                                      @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
                                      // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
@@ -82,7 +84,7 @@ public class ProjectsResource extends BaseResource
         return execute(
             "getting projects",
             "get projects",
-            () -> this.projectApi.getProjects(user, search, tags, limit));
+            () -> this.projectApi.getProjects(user, search, tags, excludeTags, limit));
     }
 
     @GET

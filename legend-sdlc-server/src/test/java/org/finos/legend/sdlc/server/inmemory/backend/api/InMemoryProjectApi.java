@@ -15,6 +15,8 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.factory.Sets;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
@@ -47,12 +49,33 @@ public class InMemoryProjectApi implements ProjectApi
     }
 
     @Override
-    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Integer limit)
+    public List<Project> getProjects(boolean user, String search, Iterable<String> tags, Iterable<String> excludeTags, Integer limit)
     {
-        List<Project> projects = Lists.mutable.withAll(this.backend.getAllProjects());
+        org.eclipse.collections.api.list.MutableList<Project> projects = Lists.mutable.withAll(this.backend.getAllProjects());
+
+        Set<String> tagSet = (tags == null) ? Sets.mutable.empty() : Sets.mutable.withAll(tags);
+        if (!tagSet.isEmpty())
+        {
+            projects = projects.select(p ->
+            {
+                List<String> projectTags = p.getTags();
+                return (projectTags != null) && Iterate.anySatisfy(projectTags, tagSet::contains);
+            });
+        }
+
+        Set<String> excludeTagSet = (excludeTags == null) ? Sets.mutable.empty() : Sets.mutable.withAll(excludeTags);
+        if (!excludeTagSet.isEmpty())
+        {
+            projects = projects.reject(p ->
+            {
+                List<String> projectTags = p.getTags();
+                return (projectTags != null) && Iterate.anySatisfy(projectTags, excludeTagSet::contains);
+            });
+        }
+
         if (limit != null && projects.size() > limit)
         {
-            projects = projects.subList(0, limit);
+            return projects.subList(0, limit);
         }
         return projects;
     }
