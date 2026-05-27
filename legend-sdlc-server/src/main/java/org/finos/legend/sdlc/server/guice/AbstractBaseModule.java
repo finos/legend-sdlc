@@ -569,7 +569,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
                     config.getHazelcastSession().getConfigFilePath(),
                     Maps.immutable.with(
                             JEEContext.class, new JEESessionStore(),
-                            JaxRsContext.class, new ServletSessionStore()).castToMap(), "LegendSSO");
+                            JaxRsContext.class, new ServletSessionStore()).castToMap(), config.getSessionTokenName());
         }
         return null;
     }
