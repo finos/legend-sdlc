@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.ClientCookie;
 import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.BasicCookieStore;
@@ -55,7 +55,7 @@ public abstract class GitLabSAMLAuthenticator
         {
             String responseString;
             URI authURI = buildAuthURI();
-            try (CloseableHttpResponse response = client.execute(new HttpGet(authURI)))
+            try (CloseableHttpResponse response = client.execute(new HttpPost(authURI)))
             {
                 int statusCode = response.getStatusLine().getStatusCode();
                 switch (statusCode)
