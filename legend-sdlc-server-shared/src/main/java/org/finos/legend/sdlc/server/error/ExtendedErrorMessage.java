@@ -17,12 +17,13 @@ package org.finos.legend.sdlc.server.error;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.jersey.errors.ErrorMessage;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Response;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.time.Instant;
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.Response;
 
 class ExtendedErrorMessage extends ErrorMessage
 {
@@ -60,9 +61,9 @@ class ExtendedErrorMessage extends ErrorMessage
 
     static ExtendedErrorMessage fromThrowable(Throwable t, boolean includeStackTrace)
     {
-        if (t instanceof LegendSDLCServerException)
+        if (t instanceof LegendSDLCException)
         {
-            return fromLegendSDLCServerException((LegendSDLCServerException) t, includeStackTrace);
+            return fromLegendSDLCException((LegendSDLCException) t, includeStackTrace);
         }
         if (t instanceof WebApplicationException)
         {
@@ -71,9 +72,15 @@ class ExtendedErrorMessage extends ErrorMessage
         return fromThrowable(t, getDefaultStatusCode(), null, null, includeStackTrace);
     }
 
+    @Deprecated
     static ExtendedErrorMessage fromLegendSDLCServerException(LegendSDLCServerException e, boolean includeStackTrace)
     {
-        return fromThrowable(e, e.getStatus().getStatusCode(), null, null, includeStackTrace);
+        return fromThrowable(e, e.getStatus(), null, null, includeStackTrace);
+    }
+
+    static ExtendedErrorMessage fromLegendSDLCException(LegendSDLCException e, boolean includeStackTrace)
+    {
+        return fromThrowable(e, e.getStatusCode(), null, null, includeStackTrace);
     }
 
     static ExtendedErrorMessage fromWebApplicationException(WebApplicationException e, boolean includeStackTrace)
@@ -94,16 +101,15 @@ class ExtendedErrorMessage extends ErrorMessage
 
     private static String getMessage(Throwable t)
     {
-        String message = t.getMessage();
-        if (message == null)
+        for (Throwable current = t; current != null; current = current.getCause())
         {
-            Throwable cause = t.getCause();
-            if (cause != null)
+            String message = current.getMessage();
+            if (message != null)
             {
-                return getMessage(cause);
+                return message;
             }
         }
-        return message;
+        return null;
     }
 
     private static String getStackTrace(Throwable t)
