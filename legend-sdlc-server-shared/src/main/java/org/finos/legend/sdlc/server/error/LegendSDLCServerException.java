@@ -14,43 +14,40 @@
 
 package org.finos.legend.sdlc.server.error;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
+
+import javax.ws.rs.core.Response.Status;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.ws.rs.core.Response.Status;
 
-public class LegendSDLCServerException extends RuntimeException
+public class LegendSDLCServerException extends LegendSDLCException
 {
     private static final long serialVersionUID = -427388642530259672L;
-    private static final Status DEFAULT_STATUS = Status.INTERNAL_SERVER_ERROR;
-
-    private final Status status;
 
     public LegendSDLCServerException(String message, Status httpStatus, Throwable cause)
     {
-        super(message, cause);
-        this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
+        super(message, toStatusCode(httpStatus), cause);
     }
 
     public LegendSDLCServerException(String message, Status httpStatus)
     {
-        super(message);
-        this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
+        super(message, toStatusCode(httpStatus));
     }
 
     public LegendSDLCServerException(String message, Throwable cause)
     {
-        this(message, null, cause);
+        super(message, cause);
     }
 
     public LegendSDLCServerException(String message)
     {
-        this(message, (Status) null);
+        super(message);
     }
 
     public Status getStatus()
     {
-        return this.status;
+        return Status.fromStatusCode(getStatusCode());
     }
 
     public static <T> T validateNonNull(T arg, String message)
@@ -89,5 +86,10 @@ public class LegendSDLCServerException extends RuntimeException
             throw new LegendSDLCServerException((messageFn == null) ? null : messageFn.apply(arg), (httpStatus == null) ? Status.BAD_REQUEST : httpStatus);
         }
         return arg;
+    }
+
+    private static int toStatusCode(Status status)
+    {
+        return (status == null) ? DEFAULT_STATUS_CODE : status.getStatusCode();
     }
 }
