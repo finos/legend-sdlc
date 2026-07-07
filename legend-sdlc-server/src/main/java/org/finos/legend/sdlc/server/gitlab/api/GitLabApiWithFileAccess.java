@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpe
 import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -1054,9 +1055,9 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 return finalCommit;
             }
-            catch (LegendSDLCServerException e)
+            catch (LegendSDLCException e)
             {
-                throw new LegendSDLCServerException("Error committing to " + getDescription() + " with a temporary branch", e.getStatus(), e);
+                throw new LegendSDLCServerException("Error committing to " + getDescription() + " with a temporary branch", Status.fromStatusCode(e.getStatusCode()), e);
             }
             catch (Exception e)
             {

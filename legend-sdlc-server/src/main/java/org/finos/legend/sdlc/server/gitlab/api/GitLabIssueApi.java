@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -105,7 +106,7 @@ public class GitLabIssueApi extends BaseGitLabApi implements IssueApi
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
             withRetries(() -> getGitLabApi().getIssuesApi().deleteIssue(gitLabProjectId.getGitLabId(), parseLongIdIfNotNull(issueId)));
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             throw e;
         }

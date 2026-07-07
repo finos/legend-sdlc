@@ -36,6 +36,7 @@ import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -163,7 +164,7 @@ abstract class BaseGitLabApi
         {
             return this.userContext.getGitLabAPI();
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             throw e;
         }

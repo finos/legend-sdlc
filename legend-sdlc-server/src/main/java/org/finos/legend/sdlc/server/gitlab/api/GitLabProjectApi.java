@@ -33,6 +33,7 @@ import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -630,7 +631,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project updatedProject = new org.gitlab4j.api.models.Project().withId(currentProject.getId()).withDescription(newDescription);
             withRetries(() -> getGitLabApi().getProjectApi().updateProject(updatedProject));
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             throw e;
         }
