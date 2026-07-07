@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.project.EntitySourceDirectory;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
@@ -269,8 +270,8 @@ public class GitLabComparisonApi extends GitLabApiWithFileAccess implements Comp
                 return;
             }
 
-            ProjectStructure.EntitySourceDirectory oldPathSourceDirectory = fromProjectStructure.findSourceDirectoryForEntityFilePath(oldPath);
-            ProjectStructure.EntitySourceDirectory newPathSourceDirectory = toProjectStructure.findSourceDirectoryForEntityFilePath(newPath);
+            EntitySourceDirectory oldPathSourceDirectory = fromProjectStructure.findSourceDirectoryForEntityFilePath(oldPath);
+            EntitySourceDirectory newPathSourceDirectory = toProjectStructure.findSourceDirectoryForEntityFilePath(newPath);
 
             // entity file change
             if ((oldPathSourceDirectory != null) || (newPathSourceDirectory != null))

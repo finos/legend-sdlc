@@ -18,7 +18,7 @@ import org.apache.maven.model.Dependency;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.EntitySourceDirectory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -53,12 +53,12 @@ public class LegendEntityPluginMavenHelper extends AbstractLegendMavenPluginHelp
         configConsumer.accept(MavenPluginTools.newDom("sourceDirectories", sourceDirectories));
     }
 
-    private Xpp3Dom getSourceDirectoryConfig(ProjectStructure.EntitySourceDirectory sourceDirectory)
+    private Xpp3Dom getSourceDirectoryConfig(EntitySourceDirectory sourceDirectory)
     {
         return getSourceDirectoryConfig(sourceDirectory.getDirectory(), sourceDirectory.getSerializer());
     }
 
-    private Xpp3Dom getSourceDirectoryConfig(ProjectStructure.EntitySourceDirectory sourceDirectory, String modulePath)
+    private Xpp3Dom getSourceDirectoryConfig(EntitySourceDirectory sourceDirectory, String modulePath)
     {
         String rawDirectory = sourceDirectory.getDirectory();
         String directory = rawDirectory.startsWith(modulePath) ? rawDirectory.substring(modulePath.length()) : rawDirectory;

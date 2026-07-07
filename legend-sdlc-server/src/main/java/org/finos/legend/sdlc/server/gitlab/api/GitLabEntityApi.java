@@ -33,6 +33,7 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
+import org.finos.legend.sdlc.server.project.EntitySourceDirectory;
 import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
@@ -163,7 +164,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             {
                 ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
                 ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+                for (EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
                 {
                     String filePath = sourceDirectory.entityPathToFilePath(path);
                     ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
@@ -447,7 +448,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                 }
 
                 Entity entity = Entity.newEntity(entityPath, change.getClassifierPath(), change.getContent());
-                ProjectStructure.EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+                EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
                 if (sourceDirectory == null)
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
@@ -476,7 +477,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": could not find entity \"" + entityPath + "\"");
                 }
 
-                ProjectStructure.EntitySourceDirectory newSourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+                EntitySourceDirectory newSourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
                 if (newSourceDirectory == null)
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
@@ -499,7 +500,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
             case RENAME:
             {
                 String currentEntityPath = change.getEntityPath();
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+                for (EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
                 {
                     String filePath = sourceDirectory.entityPathToFilePath(currentEntityPath);
                     if (fileAccessContext.fileExists(filePath))
@@ -567,12 +568,12 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(accessContext);
-        List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
+        List<EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
         ProjectFileAccessProvider.FileAccessContext cachingAccessContext = (sourceDirectories.size() > 1) ? CachingFileAccessContext.wrap(accessContext) : accessContext;
         return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(cachingAccessContext, sd));
     }
 
-    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, ProjectStructure.EntitySourceDirectory sourceDirectory)
+    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, EntitySourceDirectory sourceDirectory)
     {
         return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
                 .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
@@ -731,12 +732,12 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
 
     private static class EntityProjectFile
     {
-        private final ProjectStructure.EntitySourceDirectory sourceDirectory;
+        private final EntitySourceDirectory sourceDirectory;
         private final ProjectFileAccessProvider.ProjectFile file;
         private String path;
         private Entity entity;
 
-        private EntityProjectFile(ProjectStructure.EntitySourceDirectory sourceDirectory, ProjectFileAccessProvider.ProjectFile file)
+        private EntityProjectFile(EntitySourceDirectory sourceDirectory, ProjectFileAccessProvider.ProjectFile file)
         {
             this.sourceDirectory = sourceDirectory;
             this.file = file;

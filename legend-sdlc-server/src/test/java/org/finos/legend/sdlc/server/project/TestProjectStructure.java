@@ -962,7 +962,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
 
     private ProjectFileOperation generateAddOperationForEntity(Entity entity, ProjectStructure projectStructure)
     {
-        ProjectStructure.EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+        EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
         if (sourceDirectory == null)
         {
             throw new RuntimeException("Cannot find source directory for entity \"" + entity.getPath() + "\" with classifier \"" + entity.getClassifierPath() + "\"");
