@@ -34,6 +34,7 @@ import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructureUpdater;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
@@ -147,7 +148,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             {
                 throw new LegendSDLCServerException("Could not find current revision for " + getReferenceInfo(projectId, sourceSpec) + ": it may be corrupt");
             }
-            return ProjectStructure.newUpdateBuilder(fileAccessProvider, projectId)
+            return ProjectStructureUpdater.newUpdateBuilder(fileAccessProvider, projectId)
                     .withProjectConfigurationUpdater(updater)
                     .withSourceSpecification(sourceSpec)
                     .withRevisionId(currentRevision.getId())

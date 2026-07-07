@@ -43,6 +43,7 @@ import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructureUpdater;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -297,7 +298,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             {
                 configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
             }
-            ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+            ProjectStructureUpdater.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
                     .withMessage("Build project structure")
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
@@ -518,7 +519,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId);
-            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
+            ProjectStructureUpdater.UpdateBuilder builder = ProjectStructureUpdater.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
                     .withWorkspace(workspaceSpec)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);

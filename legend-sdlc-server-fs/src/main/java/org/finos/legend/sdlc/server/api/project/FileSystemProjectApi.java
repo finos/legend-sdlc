@@ -30,6 +30,7 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructureUpdater;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -146,7 +147,7 @@ public class FileSystemProjectApi extends FileSystemApiWithFileAccess implements
         {
             configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
         }
-        ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+        ProjectStructureUpdater.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
                 .withMessage("Build project structure")
                 .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                 .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
