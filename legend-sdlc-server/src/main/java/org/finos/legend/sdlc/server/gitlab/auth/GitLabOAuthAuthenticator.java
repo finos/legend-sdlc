@@ -44,7 +44,7 @@ import org.eclipse.collections.impl.utility.StringIterate;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenBuilder;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;

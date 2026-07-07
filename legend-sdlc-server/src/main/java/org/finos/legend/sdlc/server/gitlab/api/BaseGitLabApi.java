@@ -45,7 +45,7 @@ import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.server.tools.ThrowingRunnable;
 import org.finos.legend.sdlc.server.tools.ThrowingSupplier;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;

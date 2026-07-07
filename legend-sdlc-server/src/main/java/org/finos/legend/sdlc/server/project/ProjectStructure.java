@@ -60,7 +60,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFil
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import javax.lang.model.SourceVersion;

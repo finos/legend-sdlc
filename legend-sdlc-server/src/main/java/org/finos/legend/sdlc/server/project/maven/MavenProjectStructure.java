@@ -41,8 +41,8 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccess
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
-import org.finos.legend.sdlc.server.tools.IOTools;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.IOTools;
+import org.finos.legend.sdlc.tools.StringTools;
 
 import java.io.IOException;
 import java.io.Reader;

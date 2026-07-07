@@ -25,7 +25,7 @@ import org.apache.http.util.EntityUtils;
 import org.finos.legend.sdlc.server.depot.DepotServerInfo;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

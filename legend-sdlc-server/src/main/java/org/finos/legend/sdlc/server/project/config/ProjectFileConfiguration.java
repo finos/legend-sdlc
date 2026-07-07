@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.project.config;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import org.finos.legend.sdlc.server.tools.IOTools;
+import org.finos.legend.sdlc.tools.IOTools;
 
 import java.io.IOException;
 import java.net.URL;

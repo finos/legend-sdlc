@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,28 +14,32 @@
 
 package org.finos.legend.sdlc.server.error;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
+
+import javax.ws.rs.core.Response.Status;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.ws.rs.core.Response.Status;
 
-public class LegendSDLCServerException extends RuntimeException
+/**
+ * @deprecated Use {@link LegendSDLCException}, which carries the status code as a plain int and has no JAX-RS
+ * dependency. This subclass is retained for temporarily so that existing code throwing, catching, or mapping
+ * it (and using the JAX-RS {@link Status} API) keeps working; it will then be removed.
+ */
+@Deprecated
+public class LegendSDLCServerException extends LegendSDLCException
 {
     private static final long serialVersionUID = -427388642530259672L;
     private static final Status DEFAULT_STATUS = Status.INTERNAL_SERVER_ERROR;
 
-    private final Status status;
-
     public LegendSDLCServerException(String message, Status httpStatus, Throwable cause)
     {
-        super(message, cause);
-        this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
+        super(message, ((httpStatus == null) ? DEFAULT_STATUS : httpStatus).getStatusCode(), cause);
     }
 
     public LegendSDLCServerException(String message, Status httpStatus)
     {
-        super(message);
-        this.status = (httpStatus == null) ? DEFAULT_STATUS : httpStatus;
+        super(message, ((httpStatus == null) ? DEFAULT_STATUS : httpStatus).getStatusCode());
     }
 
     public LegendSDLCServerException(String message, Throwable cause)
@@ -50,7 +54,7 @@ public class LegendSDLCServerException extends RuntimeException
 
     public Status getStatus()
     {
-        return this.status;
+        return Status.fromStatusCode(getStatusCode());
     }
 
     public static <T> T validateNonNull(T arg, String message)
