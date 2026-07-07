@@ -18,7 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions;
 
 import javax.inject.Inject;
 import javax.ws.rs.GET;

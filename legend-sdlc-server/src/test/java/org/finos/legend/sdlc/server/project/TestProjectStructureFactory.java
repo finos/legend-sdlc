@@ -14,6 +14,13 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructureFactory;
+import org.finos.legend.sdlc.structure.ProjectStructureV0Factory;
+import org.finos.legend.sdlc.structure.ProjectStructureV11Factory;
+import org.finos.legend.sdlc.structure.ProjectStructureV12Factory;
+import org.finos.legend.sdlc.structure.ProjectStructureV13Factory;
+
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
 import org.eclipse.collections.impl.factory.Lists;

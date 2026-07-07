@@ -25,8 +25,8 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 
 import java.util.Collections;

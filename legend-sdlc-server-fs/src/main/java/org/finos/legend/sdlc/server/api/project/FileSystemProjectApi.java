@@ -29,12 +29,12 @@ import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.project.ProjectStructureUpdater;
-import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
 
 import org.eclipse.jgit.api.Git;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;

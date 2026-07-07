@@ -14,6 +14,12 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.EntitySourceDirectory;
+import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.structure.SimpleProjectConfiguration;
+import org.finos.legend.sdlc.structure.SimpleArtifactGeneration;
+
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.StreamReadFeature;
@@ -47,7 +53,7 @@ import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
 import org.junit.Before;

@@ -14,6 +14,9 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.EntitySourceDirectory;
+import org.finos.legend.sdlc.structure.ProjectStructure;
+
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.finos.legend.sdlc.domain.model.entity.Entity;

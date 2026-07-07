@@ -26,10 +26,10 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.project.maven.LegendTestUtilsMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure.ModuleConfigType;
+import org.finos.legend.sdlc.structure.maven.LegendTestUtilsMavenHelper;
+import org.finos.legend.sdlc.structure.maven.MavenProjectStructure;
+import org.finos.legend.sdlc.structure.maven.MultiModuleMavenProjectStructure;
+import org.finos.legend.sdlc.structure.maven.MultiModuleMavenProjectStructure.ModuleConfigType;
 import org.junit.Assert;
 import org.junit.Test;
 

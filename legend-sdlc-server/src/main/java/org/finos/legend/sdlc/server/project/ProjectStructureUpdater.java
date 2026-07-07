@@ -43,9 +43,13 @@ import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpeci
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
+import org.finos.legend.sdlc.structure.EntitySourceDirectory;
+import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.structure.SimpleProjectConfiguration;
 import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.tools.StringTools;
 
 import java.util.Arrays;

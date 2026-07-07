@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.SimpleProjectDependency;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.exc.MismatchedInputException;
 import com.fasterxml.jackson.databind.exc.UnrecognizedPropertyException;

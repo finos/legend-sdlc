@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.ProjectStructure;
+
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Model;
 import org.apache.maven.model.Plugin;
@@ -23,10 +25,10 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.project.maven.LegendVersionPackagePluginMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure.ModuleConfig;
+import org.finos.legend.sdlc.structure.maven.LegendVersionPackagePluginMavenHelper;
+import org.finos.legend.sdlc.structure.maven.MavenProjectStructure;
+import org.finos.legend.sdlc.structure.maven.MultiModuleMavenProjectStructure;
+import org.finos.legend.sdlc.structure.maven.MultiModuleMavenProjectStructure.ModuleConfig;
 import org.junit.Assert;
 
 import java.lang.reflect.Method;

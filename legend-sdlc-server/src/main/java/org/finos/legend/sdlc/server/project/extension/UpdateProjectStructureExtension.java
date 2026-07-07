@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +14,13 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
-import java.util.Collections;
-import java.util.List;
-
-public interface UpdateProjectStructureExtension
+/**
+ * @deprecated Use {@link org.finos.legend.sdlc.structure.extension.UpdateProjectStructureExtension}, which this
+ * interface merely extends. Note that this extension is discovered via {@code ServiceLoader} under the relocated
+ * interface: implementations must re-key their {@code META-INF/services} registration to the relocated name, or
+ * they will not be loaded. This bridge is retained temporarily for compatibility and will then be removed.
+ */
+@Deprecated
+public interface UpdateProjectStructureExtension extends org.finos.legend.sdlc.structure.extension.UpdateProjectStructureExtension
 {
-    default List<String> getExtraVersionEntityValidationPaths(int version)
-    {
-        return Collections.emptyList();
-    }
-
-    default List<String> getExtraTestSuiteFilePaths(int version)
-    {
-        return Collections.emptyList();
-    }
 }

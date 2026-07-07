@@ -19,12 +19,12 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
 import org.junit.BeforeClass;
 import org.junit.Test;
 

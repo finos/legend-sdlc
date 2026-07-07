@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,13 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-
-import java.util.function.Consumer;
-
-public interface ProjectStructureExtension
+/**
+ * @deprecated Use {@link org.finos.legend.sdlc.structure.extension.ProjectStructureExtension}, which this interface
+ * merely extends. Existing implementations of this interface remain valid — they are implementations of the
+ * relocated interface — but should re-implement the relocated interface directly. This bridge is retained
+ * temporarily for compatibility and will then be removed.
+ */
+@Deprecated
+public interface ProjectStructureExtension extends org.finos.legend.sdlc.structure.extension.ProjectStructureExtension
 {
-    int getVersion();
-
-    int getProjectStructureVersion();
-
-    void collectUpdateProjectConfigurationOperations(ProjectConfiguration oldConfig, ProjectConfiguration newConfig, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Consumer<ProjectFileOperation> operationConsumer);
 }

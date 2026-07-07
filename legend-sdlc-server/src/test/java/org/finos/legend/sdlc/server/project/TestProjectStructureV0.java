@@ -14,9 +14,11 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.structure.ProjectStructureV0Factory;
+
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectStructureV0Factory.ProjectStructureV0;
+import org.finos.legend.sdlc.structure.ProjectStructureV0Factory.ProjectStructureV0;
 
 import java.util.Collections;
 import java.util.List;

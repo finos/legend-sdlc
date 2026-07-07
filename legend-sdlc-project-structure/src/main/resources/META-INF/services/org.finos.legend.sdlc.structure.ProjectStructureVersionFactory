@@ -1,0 +1,4 @@
+org.finos.legend.sdlc.structure.ProjectStructureV0Factory
+org.finos.legend.sdlc.structure.ProjectStructureV11Factory
+org.finos.legend.sdlc.structure.ProjectStructureV12Factory
+org.finos.legend.sdlc.structure.ProjectStructureV13Factory

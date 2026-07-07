@@ -14,6 +14,9 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
+
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.api.factory.Maps;
@@ -22,7 +25,7 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.eclipse.collections.impl.utility.MapIterate;
 import org.finos.legend.sdlc.server.project.EmptyFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.project.config.ProjectFileConfiguration;
 import org.finos.legend.sdlc.server.project.extension.SimpleProjectStructureExtensionProvider.ExtensionConfiguration;
 import org.junit.AfterClass;

@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.project.maven;
 
+import org.finos.legend.sdlc.structure.maven.MavenPluginTools;
+
 import org.apache.maven.model.Plugin;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
 import org.junit.Assert;
