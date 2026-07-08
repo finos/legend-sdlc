@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.project;
+package org.finos.legend.sdlc.project.files;
 
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.ProjectFile;
 
 import java.util.Map;
 import java.util.stream.Stream;

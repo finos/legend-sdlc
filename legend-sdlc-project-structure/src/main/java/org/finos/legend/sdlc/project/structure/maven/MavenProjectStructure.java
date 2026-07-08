@@ -37,9 +37,9 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.tools.IOTools;

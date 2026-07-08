@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
-import org.finos.legend.sdlc.server.project.ProjectPaths;
+import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.GitLabApi;

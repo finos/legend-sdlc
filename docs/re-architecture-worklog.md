@@ -162,6 +162,31 @@ For Phase 3 (carry-ins):
 - `ProjectStructure.PROJECT_STRUCTURE_FACTORY` is a process-global static (loads
   factories from `ProjectStructure`'s classloader at class-init). Preserved as-is;
   it is on the §4.5 "no process-global mutable state below L4" audit list.
-- L1 package rename (`server.project` → `projectfiles`) and the
-  `SourceSpecification` L1/L4 split were *not* done (plan permits deferral; the
-  moved L2 code imports L1 types from their `server.*` packages for now).
+- ~~L1 package rename~~ *(done post-phase, see below)*; the `SourceSpecification`
+  L1/L4 split was *not* done (plan permits deferral).
+
+## Post-phase package renames (2026-07-08)
+
+Two renames landed after the Phase 2 commits, both while the `reorg` branch is
+still pre-release:
+
+- **L2**: `org.finos.legend.sdlc.structure[.maven|.extension]` →
+  `org.finos.legend.sdlc.project.structure[.maven|.extension]` (user decision on
+  the package convention). Service key re-keyed to match; the dual-key legacy
+  lookup still reads the historical `server.project` key.
+- **L1 storage SPI**: `org.finos.legend.sdlc.server.project` →
+  `org.finos.legend.sdlc.project.files` for `ProjectFileAccessProvider`,
+  `ProjectFileOperation`, `ProjectFiles`, `ProjectPaths`, and the three
+  `FileAccessContext` helpers (+ tests). **No deprecation bridges**: an interface
+  with nested types cannot be aliased in a way that keeps consumer code
+  compiling, and external L1 consumers are speculative (§5's promises cover
+  extension implementors, not storage providers); the migration recipe documents
+  the import rename instead. The `SourceSpecification`/`WorkspaceSpecification`
+  taxonomy deliberately **keeps** its `server.domain.api.*` packages: §3.3
+  earmarks it for the L1/L4 split, so its final package is a Phase 4
+  design-review decision — renaming it now would mean renaming it twice.
+- The old `org.finos.legend.sdlc.server.project` package now contains only
+  server-side residents: `ProjectStructureUpdater` (L3-bound),
+  `ProjectConfigurationStatusReport`, `config/`, and the concrete extension
+  impls. The updater and same-package tests gained explicit imports of the
+  relocated L1/L2 types.

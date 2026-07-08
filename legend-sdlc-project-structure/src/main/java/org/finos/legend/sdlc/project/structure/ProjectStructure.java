@@ -44,11 +44,11 @@ import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.ProjectFile;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.tools.StringTools;
 
 import javax.lang.model.SourceVersion;

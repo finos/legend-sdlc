@@ -33,11 +33,11 @@ import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpe
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-import org.finos.legend.sdlc.server.project.ProjectFiles;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFiles;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
+import org.finos.legend.sdlc.project.files.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;

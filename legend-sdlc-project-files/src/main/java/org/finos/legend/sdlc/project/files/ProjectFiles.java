@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.project;
+package org.finos.legend.sdlc.project.files;
 
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.ProjectFile;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.ProjectFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;

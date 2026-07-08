@@ -38,7 +38,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
 import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
 import java.util.List;
 import javax.inject.Inject;

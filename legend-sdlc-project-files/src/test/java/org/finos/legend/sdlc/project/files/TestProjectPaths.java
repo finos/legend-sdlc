@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.project;
+package org.finos.legend.sdlc.project.files;
 
 import org.eclipse.collections.impl.factory.Lists;
 import org.junit.Assert;

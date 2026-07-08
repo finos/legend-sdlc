@@ -160,7 +160,7 @@ the remaining concept-level APIs (reviews, versions, patches, workflows, builds)
   disruptive in early phases, an acceptable interim is to move `SourceSpecification`
   as-is and split later; the phase plan allows both.)
 - Packages migrate from `org.finos.legend.sdlc.server.project` to
-  `org.finos.legend.sdlc.projectfiles` (or similar non-`server` package) — see §5 for
+  `org.finos.legend.sdlc.project.files` — see §5 for
   the compatibility strategy.
 
 **`legend-sdlc-project-structure` (L2) — as per the extraction doc, unchanged in scope:**
@@ -479,7 +479,7 @@ module must behave well when it is absent.
 - **REST API**: unchanged routes, payloads, and semantics for GitLab deployments.
   The capability model only changes responses for endpoints that today fail anyway.
 - **Java packages**: extracted classes leave `org.finos.legend.sdlc.server.*` for
-  non-server packages (`org.finos.legend.sdlc.projectfiles`, `…sdlc.project.structure`,
+  non-server packages (`org.finos.legend.sdlc.project.files`, `…sdlc.project.structure`,
   `…sdlc.core`, `…sdlc.backend.*`). Unlike the extraction doc (which proposed keeping
   the `server.*` package in the new modules), this plan accepts a source-incompatible
   rename **with a deprecation bridge**: the old `server.*` names remain for one release

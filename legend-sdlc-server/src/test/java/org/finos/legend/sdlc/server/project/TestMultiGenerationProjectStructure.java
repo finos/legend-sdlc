@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 
 import org.apache.maven.model.Dependency;

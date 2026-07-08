@@ -16,8 +16,8 @@ package org.finos.legend.sdlc.project.structure;
 
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.FileAccessContext;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 
 import java.util.Collections;
 import java.util.EnumSet;

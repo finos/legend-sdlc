@@ -16,6 +16,7 @@ directly.
 | `EntitySourceDirectory` nested in `ProjectStructure` | top-level `org.finos.legend.sdlc.project.structure.EntitySourceDirectory` |
 | `ProjectStructure.newUpdateBuilder(…)` / `ProjectStructure.UpdateBuilder` | `ProjectStructureUpdater.newUpdateBuilder(…)` / `ProjectStructureUpdater.UpdateBuilder` (still `org.finos.legend.sdlc.server.project`, in `legend-sdlc-server`; moves to the core module in Phase 3) |
 | Structure code throws `LegendSDLCServerException` (JAX-RS `Status`) | throws `org.finos.legend.sdlc.error.LegendSDLCException` (int status code, same values); `LegendSDLCServerException` is its deprecated subclass |
+| `org.finos.legend.sdlc.server.project.ProjectFileAccessProvider` (and `ProjectFileOperation`, `ProjectFiles`, `ProjectPaths`, `AbstractFileAccessContext`, `CachingFileAccessContext`, `EmptyFileAccessContext`) in `legend-sdlc-project-files` | `org.finos.legend.sdlc.project.files.*` (same module; **no deprecated bridges** — update imports and recompile). The `SourceSpecification`/`WorkspaceSpecification` taxonomy keeps its `server.domain.api.*` packages until the backend-SPI phase decides its final home. |
 
 ## If you implement project structure extensions (the expected case)
 

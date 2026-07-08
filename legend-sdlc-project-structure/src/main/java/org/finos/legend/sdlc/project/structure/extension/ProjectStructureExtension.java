@@ -16,8 +16,8 @@ package org.finos.legend.sdlc.project.structure.extension;
 
 import org.finos.legend.sdlc.domain.model.project.configuration.ConfigurationProperty;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 
 import java.util.Collections;
 import java.util.List;
