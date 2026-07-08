@@ -239,7 +239,7 @@ The extraction can be done incrementally to reduce risk:
     Eclipse Collections, Jackson, `maven-model`, and `plexus-utils`.
 10. ✅ Move the read-side classes into the new module. ~~Keep the same Java package
     (`org.finos.legend.sdlc.server.project`) to minimize source-level breakage.~~ *(Superseded,
-    per the banner above: moved to the re-architecture's `org.finos.legend.sdlc.structure`
+    per the banner above: moved to the re-architecture's `org.finos.legend.sdlc.project.structure`
     packages; see `project-structure-migration.md`.)*
 11. ✅ Add `legend-sdlc-project-structure` as a dependency of `legend-sdlc-server`.
 12. ✅ Update `ProjectStructureUpdater`, config, and extension classes in `legend-sdlc-server`

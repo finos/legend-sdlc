@@ -97,7 +97,7 @@ What moved:
   `ProjectStructure` (write-side stripped), top-level `EntitySourceDirectory`,
   factories (`ProjectStructureFactory`, `ProjectStructureVersionFactory`,
   V0/V11/V12/V13), `ProjectStructurePlatformExtensions`, the `Simple*` config
-  classes (`org.finos.legend.sdlc.structure`), the whole maven family
+  classes (`org.finos.legend.sdlc.project.structure`), the whole maven family
   (`…structure.maven`), and the extension SPI **interfaces**
   (`…structure.extension`) including `UpdateProjectStructureExtension` — an
   addition to the plan's list, forced because V11+ factories consume it; it is

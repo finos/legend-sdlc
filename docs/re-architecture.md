@@ -479,7 +479,7 @@ module must behave well when it is absent.
 - **REST API**: unchanged routes, payloads, and semantics for GitLab deployments.
   The capability model only changes responses for endpoints that today fail anyway.
 - **Java packages**: extracted classes leave `org.finos.legend.sdlc.server.*` for
-  non-server packages (`org.finos.legend.sdlc.projectfiles`, `…sdlc.structure`,
+  non-server packages (`org.finos.legend.sdlc.projectfiles`, `…sdlc.project.structure`,
   `…sdlc.core`, `…sdlc.backend.*`). Unlike the extraction doc (which proposed keeping
   the `server.*` package in the new modules), this plan accepts a source-incompatible
   rename **with a deprecation bridge**: the old `server.*` names remain for one release

@@ -16,9 +16,9 @@ package org.finos.legend.sdlc.server.project.config;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
-import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions;
-import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions.ExtensionsCollection;
-import org.finos.legend.sdlc.structure.ProjectStructurePlatformExtensions.Platform;
+import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions.ExtensionsCollection;
+import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions.Platform;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration.ExtensionsCollectionMetadata;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration.PlatformMetadata;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration.PlatformVersion;

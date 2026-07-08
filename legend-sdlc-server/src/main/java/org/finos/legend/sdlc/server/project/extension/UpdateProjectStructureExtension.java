@@ -15,12 +15,12 @@
 package org.finos.legend.sdlc.server.project.extension;
 
 /**
- * @deprecated Use {@link org.finos.legend.sdlc.structure.extension.UpdateProjectStructureExtension}, which this
+ * @deprecated Use {@link org.finos.legend.sdlc.project.structure.extension.UpdateProjectStructureExtension}, which this
  * interface merely extends. Note that this extension is discovered via {@code ServiceLoader} under the relocated
  * interface: implementations must re-key their {@code META-INF/services} registration to the relocated name, or
  * they will not be loaded. This bridge is retained temporarily for compatibility and will then be removed.
  */
 @Deprecated
-public interface UpdateProjectStructureExtension extends org.finos.legend.sdlc.structure.extension.UpdateProjectStructureExtension
+public interface UpdateProjectStructureExtension extends org.finos.legend.sdlc.project.structure.extension.UpdateProjectStructureExtension
 {
 }

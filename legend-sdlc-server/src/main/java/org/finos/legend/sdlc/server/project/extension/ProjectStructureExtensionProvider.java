@@ -15,12 +15,12 @@
 package org.finos.legend.sdlc.server.project.extension;
 
 /**
- * @deprecated Use {@link org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider}, which this
+ * @deprecated Use {@link org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider}, which this
  * interface merely extends. Existing implementations of this interface remain valid — they are implementations of
  * the relocated interface — but should re-implement the relocated interface directly. This bridge is retained
  * temporarily for compatibility and will then be removed.
  */
 @Deprecated
-public interface ProjectStructureExtensionProvider extends org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider
+public interface ProjectStructureExtensionProvider extends org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider
 {
 }

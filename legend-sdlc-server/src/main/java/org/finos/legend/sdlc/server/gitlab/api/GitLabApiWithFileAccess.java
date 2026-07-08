@@ -50,7 +50,7 @@ import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.RevisionAc
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectFiles;
 import org.finos.legend.sdlc.server.project.ProjectPaths;
-import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.tools.IOTools;
 import org.finos.legend.sdlc.tools.StringTools;

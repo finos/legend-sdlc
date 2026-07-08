@@ -14,10 +14,10 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
-import org.finos.legend.sdlc.structure.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 
-import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
 
 import java.util.Objects;
 

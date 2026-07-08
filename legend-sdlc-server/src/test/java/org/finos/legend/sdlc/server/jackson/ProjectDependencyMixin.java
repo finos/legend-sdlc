@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import org.finos.legend.sdlc.structure.SimpleProjectDependency;
+import org.finos.legend.sdlc.project.structure.SimpleProjectDependency;
 
 @JsonTypeInfo(
         use = JsonTypeInfo.Id.NAME,

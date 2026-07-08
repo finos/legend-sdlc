@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
-import org.finos.legend.sdlc.structure.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.structure.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -30,7 +30,7 @@ import org.eclipse.collections.api.map.primitive.IntObjectMap;
 import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
 import org.eclipse.collections.impl.utility.ListIterate;
-import org.finos.legend.sdlc.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.server.project.config.ProjectFileConfiguration;
 
 import java.io.InputStream;

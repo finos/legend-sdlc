@@ -10,10 +10,10 @@ directly.
 
 | Before | After |
 |---|---|
-| `org.finos.legend.sdlc.server.project.ProjectStructure` (and `EntitySourceDirectory`, `ProjectStructureFactory`, `ProjectStructureVersionFactory`, `ProjectStructureV*Factory`, `ProjectStructurePlatformExtensions`, `Simple*`) in `legend-sdlc-server` | `org.finos.legend.sdlc.structure.*` in **`legend-sdlc-project-structure`** |
-| `org.finos.legend.sdlc.server.project.maven.*` | `org.finos.legend.sdlc.structure.maven.*` |
-| `org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension` / `…Provider` / `UpdateProjectStructureExtension` (interfaces) | `org.finos.legend.sdlc.structure.extension.*`; deprecated bridge interfaces remain at the old FQNs |
-| `EntitySourceDirectory` nested in `ProjectStructure` | top-level `org.finos.legend.sdlc.structure.EntitySourceDirectory` |
+| `org.finos.legend.sdlc.server.project.ProjectStructure` (and `EntitySourceDirectory`, `ProjectStructureFactory`, `ProjectStructureVersionFactory`, `ProjectStructureV*Factory`, `ProjectStructurePlatformExtensions`, `Simple*`) in `legend-sdlc-server` | `org.finos.legend.sdlc.project.structure.*` in **`legend-sdlc-project-structure`** |
+| `org.finos.legend.sdlc.server.project.maven.*` | `org.finos.legend.sdlc.project.structure.maven.*` |
+| `org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension` / `…Provider` / `UpdateProjectStructureExtension` (interfaces) | `org.finos.legend.sdlc.project.structure.extension.*`; deprecated bridge interfaces remain at the old FQNs |
+| `EntitySourceDirectory` nested in `ProjectStructure` | top-level `org.finos.legend.sdlc.project.structure.EntitySourceDirectory` |
 | `ProjectStructure.newUpdateBuilder(…)` / `ProjectStructure.UpdateBuilder` | `ProjectStructureUpdater.newUpdateBuilder(…)` / `ProjectStructureUpdater.UpdateBuilder` (still `org.finos.legend.sdlc.server.project`, in `legend-sdlc-server`; moves to the core module in Phase 3) |
 | Structure code throws `LegendSDLCServerException` (JAX-RS `Status`) | throws `org.finos.legend.sdlc.error.LegendSDLCException` (int status code, same values); `LegendSDLCServerException` is its deprecated subclass |
 
@@ -26,7 +26,7 @@ wherever the new interfaces are expected. When convenient:
 1. Depend on `legend-sdlc-project-structure` instead of (or in addition to)
    `legend-sdlc-server`.
 2. Change `implements org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension`
-   (and `…Provider`) to the `org.finos.legend.sdlc.structure.extension` equivalents.
+   (and `…Provider`) to the `org.finos.legend.sdlc.project.structure.extension` equivalents.
 
 **Exception:** implementations of `UpdateProjectStructureExtension` are discovered via
 `ServiceLoader` keyed on the interface FQN. Re-key your
@@ -48,7 +48,7 @@ The port is mechanical:
    public so that the updater can dispatch to it from outside the package).
 4. **Service registration**: re-key
    `META-INF/services/org.finos.legend.sdlc.server.project.ProjectStructureVersionFactory`
-   to `META-INF/services/org.finos.legend.sdlc.structure.ProjectStructureVersionFactory`
+   to `META-INF/services/org.finos.legend.sdlc.project.structure.ProjectStructureVersionFactory`
    (contents: your factory class names, at their new packages if you moved them).
    *Release-timing slack*: the bridge release also loads factories registered under the
    **old** key (instantiated against the relocated base class), so a jar that has
