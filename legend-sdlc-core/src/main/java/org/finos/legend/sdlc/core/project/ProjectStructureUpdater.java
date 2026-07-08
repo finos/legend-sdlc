@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.project;
+package org.finos.legend.sdlc.core.project;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
@@ -35,7 +35,6 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructure
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.error.LegendSDLCException;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationConsumer;
@@ -66,7 +65,7 @@ import java.util.function.Consumer;
 /**
  * The imperative write-side of project structure: computes and submits the file operations that realize a project
  * configuration update. Extracted from {@code ProjectStructure} (re-architecture Phase 2) so that the read-side
- * (layout knowledge) can be used without it; this class is destined for the SDLC core module in Phase 3.
+ * (layout knowledge) can be used without it; moved to the SDLC core module in Phase 3.
  */
 public class ProjectStructureUpdater
 {

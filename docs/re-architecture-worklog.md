@@ -262,3 +262,31 @@ phase; candidates for post-phase fixes):
    3-arg default and 4-arg `excludeInvalid` form go through the git tree
    walk, `getEntityPaths` through the (broken) standard context; GitLab's
    implementation routes everything through one path.
+
+### Step 2: create `legend-sdlc-core` (L3); move the updaters into it
+
+- **Package decision (user, 2026-07-08)**: the module is `legend-sdlc-core`
+  (per the plan doc), rooted at `org.finos.legend.sdlc.core` — but with **no
+  classes at the bare root**. Concern subpackages mirror the domain-API concern
+  names: `core.entity` (model editing), `core.project` (configuration/structure
+  write-side), `core.dependency`, `core.comparison`. Rationale: L3 spans model
+  editing *and* project maintenance, so `…sdlc.project.core` was rejected as
+  structure-slanted, and bare `…sdlc.core` as too general for classes to live
+  in directly; the umbrella marks the module and keeps one JPMS-friendly root.
+- **Moved (git mv)**: `ProjectStructureUpdater`
+  (`server.project` → `org.finos.legend.sdlc.core.project`; **no bridge** — the
+  class was created in Phase 2 on this branch and no release ever shipped it at
+  the server FQN) and `ProjectConfigurationUpdater`
+  (`server.domain.api.project` → `core.project`; `@Deprecated` bridge subclass
+  left in `legend-sdlc-server`, with the caveat that the fluent `with*` methods
+  return the relocated type). `TestProjectConfigurationUpdater` moved along.
+- **Carry-in resolved — `ProjectConfigurationUpdater` placement (L3, not L4)**:
+  it is a pure configuration-delta value object over L0 types, consumed by the
+  L3 updater and needed by local tooling (adding a dependency to a checkout);
+  the plan's §3.3 listing under L4 reflects the domain-API *interfaces*
+  consuming it, which Phase 4 will re-export — the type itself belongs at L3.
+- `ProjectConfigurationApi` (same package as the bridge) now single-type-imports
+  the relocated type so its signatures bind to the L3 class, not the bridge
+  (same JLS 7.5.1 shadowing pattern as the Phase 2 extension impls).
+- Seam R1 unaffected: the updater's single write-side dispatch method moved
+  verbatim, javadoc intact.
