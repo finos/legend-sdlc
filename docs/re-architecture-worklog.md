@@ -190,3 +190,75 @@ still pre-release:
   `ProjectConfigurationStatusReport`, `config/`, and the concrete extension
   impls. The updater and same-package tests gained explicit imports of the
   relocated L1/L2 types.
+
+## Phase 3 — SDLC core (L3)
+
+**Status: in progress.**
+
+### Step 1: characterization tests (before any move)
+
+Two suites pin the duplicated entity access/modification behavior of
+`GitLabEntityApi` and `FileSystemEntityApi` as it stands, so the Phase 3
+factoring has a net. Both stay put (they pin the api classes, which do not
+move):
+
+- `TestGitLabEntityApiCharacterization` (server module, `gitlab.api` package):
+  drives the real `GitLabEntityApi` over the test `InMemoryProjectFileAccessProvider`
+  via a subclass overriding `getProjectFileAccessProvider()` (constructed with
+  null GitLab config/user context/task processor — none is touched on non-GitLab
+  paths; `buildException` passes `LegendSDLCServerException` through). Covers
+  `getEntity`/`getEntities`/`getEntityPaths` (predicates, `excludeInvalid`),
+  `updateEntities` (replace semantics, validation), `performChanges` (all four
+  change types, validation, error statuses/messages). GitLab-native paths
+  (review from/to contexts, GitLab error translation) are out of reach and out
+  of scope.
+- `TestFileSystemEntityApiCharacterization` (new test tree in
+  `legend-sdlc-server-fs`, which previously had none; pom gains `junit` usage
+  and the `legend-sdlc-model` test-jar): end-to-end over a real git repo in a
+  temp directory via `FileSystemProjectApi.createProject` +
+  `FileSystemWorkspaceApi.newWorkspace`.
+
+Behavior observed and pinned (bugs preserved, not fixed — behavior-preserving
+phase; candidates for post-phase fixes):
+
+1. **Entity content does not round-trip identically** (both backends): the
+   serializer normalizes content (a class gains `superTypes`, `stereotypes`,
+   `constraints`, expanded `genericType`, …). What `getEntity` returns is the
+   normalized form, not what was submitted.
+2. **No-op suppression is byte-level, not content-level**: `updateEntities`
+   with semantically identical entities still generates MODIFY changes, but
+   `entityChangeToFileOperation` drops them when the re-serialized bytes equal
+   the current file bytes → null revision (pinned: null revision on no-op
+   updates and on empty change lists).
+3. **RENAME moves the entity file without rewriting its content** (GitLab
+   path): after a rename, the file at the new location still declares the old
+   package/name, so reading the renamed entity fails with a path-mismatch
+   deserialization error, while `getEntityPaths` happily lists the new path.
+4. **`getEntityPaths` lists entity files it cannot parse** (it never
+   deserializes); `getEntities(…, excludeInvalid=true)` silently drops them;
+   `getEntities(…, excludeInvalid=false)` fails wholesale with 500.
+5. **Non-validation failures are 500s** ("entity already exists",
+   "could not find entity"), only argument validation is 400; unknown entity
+   on `getEntity` is 404.
+6. **FS: enumeration through the standard `FileAccessContext` is broken** —
+   `FileSystemFileAccessContext.getFilesInCanonicalDirectories` compares
+   canonical directory names (leading `/`) against git tree paths (no leading
+   `/`), so it never matches; additionally it does `ObjectId.fromString(revisionId)`
+   with the null revision id the entity access context is always created with.
+   Consequences pinned: `getEntityPaths` **always throws** ("Error getting
+   files in directories …"); `updateEntities` never sees existing entities —
+   modifying an existing entity fails with "already exists" (500), and
+   `replace=true` deletes nothing.
+7. **FS: `getEntities` enumeration is platform-dependent** — the git-tree-walk
+   variant relativizes canonical file paths with `java.nio.Path` + string
+   concatenation, producing `\`-separated paths on Windows that match no
+   source directory: `getEntities` returns entities on POSIX, empty on
+   Windows (assertions conditional on `File.separatorChar`; POSIX branch
+   verified by CI).
+8. **FS: stale reference revision loses its 409**: the modification context
+   correctly detects the conflict, but `FSException.getLegendSDLCServerException`
+   re-wraps it into a 500 with a concatenated message.
+9. **FS: `getEntities`' two overloads take different code paths** — the
+   3-arg default and 4-arg `excludeInvalid` form go through the git tree
+   walk, `getEntityPaths` through the (broken) standard context; GitLab's
+   implementation routes everything through one path.
