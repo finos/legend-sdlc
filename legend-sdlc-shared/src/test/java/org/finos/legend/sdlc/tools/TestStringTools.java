@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.tools;
+package org.finos.legend.sdlc.tools;
 
 import org.junit.Assert;
 import org.junit.Test;

@@ -38,7 +38,7 @@ import org.finos.legend.sdlc.server.project.ProjectFiles;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

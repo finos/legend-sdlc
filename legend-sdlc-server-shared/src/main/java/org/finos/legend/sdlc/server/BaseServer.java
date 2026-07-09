@@ -36,7 +36,7 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.server.pac4j.LegendPac4jBundle;
 import org.finos.legend.server.shared.bundles.ChainFixingFilterHandler;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;

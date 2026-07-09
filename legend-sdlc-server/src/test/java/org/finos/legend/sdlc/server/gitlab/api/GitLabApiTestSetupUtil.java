@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabToken;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;

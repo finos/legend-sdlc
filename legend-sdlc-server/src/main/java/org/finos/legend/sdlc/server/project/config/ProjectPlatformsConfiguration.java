@@ -18,7 +18,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 
 import java.io.InputStream;
 import java.net.URL;

@@ -34,7 +34,7 @@ import org.apache.http.util.EntityUtils;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.tools.AuthenticationTools;
-import org.finos.legend.sdlc.server.tools.StringTools;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;

@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.project;
 
-import org.finos.legend.sdlc.server.tools.IOTools;
+import org.finos.legend.sdlc.tools.IOTools;
 import org.junit.Assert;
 import org.junit.Test;
 

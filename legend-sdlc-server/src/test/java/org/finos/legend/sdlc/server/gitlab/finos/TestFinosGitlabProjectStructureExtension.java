@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.server.project.EmptyFileAccessContext;
 import org.finos.legend.sdlc.server.project.ProjectFileOperation;
 import org.finos.legend.sdlc.server.project.ProjectStructure;
 import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.tools.IOTools;
+import org.finos.legend.sdlc.tools.IOTools;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

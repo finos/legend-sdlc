@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.project;
 
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.tools.IOTools;
+import org.finos.legend.sdlc.tools.IOTools;
 
 import java.io.IOException;
 import java.io.InputStream;
