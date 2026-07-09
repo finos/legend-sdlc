@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
 

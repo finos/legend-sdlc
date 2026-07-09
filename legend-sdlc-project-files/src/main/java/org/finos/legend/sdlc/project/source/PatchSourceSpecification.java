@@ -12,55 +12,48 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.project.source;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 
 import java.util.Objects;
 
-public class PatchWorkspaceSource extends WorkspaceSource
+public class PatchSourceSpecification extends SourceSpecification
 {
-    private final VersionId patchVersion;
+    private final VersionId versionId;
 
-    PatchWorkspaceSource(VersionId patchVersion)
+    PatchSourceSpecification(VersionId versionId)
     {
-        this.patchVersion = Objects.requireNonNull(patchVersion, "patch version may not be null");
-    }
-
-    public VersionId getPatchVersionId()
-    {
-        return this.patchVersion;
+        this.versionId = Objects.requireNonNull(versionId, "patch version id is required");
     }
 
     @Override
-    public SourceSpecification getSourceSpecification()
-    {
-        return SourceSpecification.patchSourceSpecification(this.patchVersion);
-    }
-
-    @Override
-    public <T> T visit(WorkspaceSourceVisitor<T> visitor)
+    public <T> T visit(SourceSpecificationVisitor<T> visitor)
     {
         return visitor.visit(this);
+    }
+
+    public VersionId getVersionId()
+    {
+        return this.versionId;
     }
 
     @Override
     public boolean equals(Object other)
     {
         return (this == other) ||
-                ((other instanceof PatchWorkspaceSource) && this.patchVersion.equals(((PatchWorkspaceSource) other).patchVersion));
+                ((other instanceof PatchSourceSpecification) && this.versionId.equals(((PatchSourceSpecification) other).versionId));
     }
 
     @Override
     public int hashCode()
     {
-        return this.patchVersion.hashCode();
+        return this.versionId.hashCode();
     }
 
     @Override
     protected StringBuilder appendAdditionalInfo(StringBuilder builder)
     {
-        return this.patchVersion.appendVersionIdString(builder.append(" patchVersion="));
+        return this.versionId.appendVersionIdString(builder.append(" patch="));
     }
 }

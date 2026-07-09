@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.project.workspace;
 
 import java.util.function.Function;
 

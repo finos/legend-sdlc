@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProject
 import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 

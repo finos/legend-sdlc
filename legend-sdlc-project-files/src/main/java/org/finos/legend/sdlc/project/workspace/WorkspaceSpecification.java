@@ -12,11 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.workspace;
+package org.finos.legend.sdlc.project.workspace;
 
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
 
 import java.util.Objects;

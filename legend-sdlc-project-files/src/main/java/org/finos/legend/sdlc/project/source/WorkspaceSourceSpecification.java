@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.project.source;
+package org.finos.legend.sdlc.project.source;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
 import java.util.Objects;
 
-public class PatchSourceSpecification extends SourceSpecification
+public class WorkspaceSourceSpecification extends SourceSpecification
 {
-    private final VersionId versionId;
+    private final WorkspaceSpecification workspaceSpec;
 
-    PatchSourceSpecification(VersionId versionId)
+    WorkspaceSourceSpecification(WorkspaceSpecification workspaceSpec)
     {
-        this.versionId = Objects.requireNonNull(versionId, "patch version id is required");
+        this.workspaceSpec = Objects.requireNonNull(workspaceSpec, "workspace specification is required");
     }
 
     @Override
@@ -33,27 +33,27 @@ public class PatchSourceSpecification extends SourceSpecification
         return visitor.visit(this);
     }
 
-    public VersionId getVersionId()
+    public WorkspaceSpecification getWorkspaceSpecification()
     {
-        return this.versionId;
+        return this.workspaceSpec;
     }
 
     @Override
     public boolean equals(Object other)
     {
         return (this == other) ||
-                ((other instanceof PatchSourceSpecification) && this.versionId.equals(((PatchSourceSpecification) other).versionId));
+                ((other instanceof WorkspaceSourceSpecification) && this.workspaceSpec.equals(((WorkspaceSourceSpecification) other).workspaceSpec));
     }
 
     @Override
     public int hashCode()
     {
-        return this.versionId.hashCode();
+        return this.workspaceSpec.hashCode();
     }
 
     @Override
     protected StringBuilder appendAdditionalInfo(StringBuilder builder)
     {
-        return this.versionId.appendVersionIdString(builder.append(" patch="));
+        return builder.append(" workspace=").append(this.workspaceSpec);
     }
 }
