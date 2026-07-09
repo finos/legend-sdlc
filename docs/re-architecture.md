@@ -508,8 +508,9 @@ versions.** The origin project's versions 1–10 are grandfathered, not a patter
 **Stable interfaces — evolve additively, deprecation cycles only:**
 
 - **`legend-sdlc-model`** and **`legend-sdlc-entity-serialization`** (L0). Already in
-  non-server packages; they do not move. New configuration accessors (config-options
-  seam S1) arrive as `default` methods.
+  non-server packages; they do not move, and `legend-sdlc-model` takes on no new
+  dependencies. New configuration accessors (config-options seam S1) arrive as `default`
+  methods, together with their persistence.
 - **The Maven plugins** — `legend-sdlc-entity-maven-plugin`, the
   `legend-sdlc-generation-*-maven-plugin` family,
   `legend-sdlc-test-generation-maven-plugin`, `legend-sdlc-version-package-maven-plugin`
@@ -597,10 +598,14 @@ the highest regression risk and the highest payoff; it is pure refactoring with 
 existing test suites as the net, and it is where the TCK should begin to grow
 (initially run against GitLab-mocked and FS backends in-repo).
 *Reserved seam S1 (config-options plan):* while the L0 config model and the updater are
-open here, introduce the namespaced `getStructureConfiguration()` /
-`getExtensionConfiguration()` bags (the two existing flat booleans can live there behind
-their now-deprecated getters) and do **not** add further top-level config booleans — this
-avoids re-migrating `project.json` later.
+open here, do **not** add further top-level config booleans or design new updater API
+around the two existing flat ones — new version-/extension-scoped options wait for the
+namespaced `getStructureConfiguration()` / `getExtensionConfiguration()` bags. The bags
+themselves are introduced by the config-options plan *together with their persistence*
+(its §4.2/§4.7), not here: landing them ahead of persistence would require suppressing
+their serialization at L0, and `legend-sdlc-model` takes no dependencies (decided
+2026-07-09, after a first implementation added `jackson-annotations` for exactly that
+suppression and was reverted).
 *Reserved seams R1 (part 2) and R2 (layout-reconciliation plan):* as the updater lands in
 L3, preserve the single write-side dispatch point so a declarative build-and-reconcile
 path can sit beside the imperative one without touching callers; and as the TCK begins to

@@ -469,3 +469,27 @@ phase; candidates for post-phase fixes):
 
 **Status: complete** pending the full-reactor verification build recorded in
 the closing commit.
+
+### Correction (2026-07-09, user review): seam S1 implementation reverted
+
+Step 5's implementation is reverted on two user rulings:
+
+1. **`legend-sdlc-model` takes no dependencies.** The `jackson-annotations`
+   dependency (added to `@JsonIgnore` the new bag accessors) is removed; the
+   constraint is now stated in re-architecture §5.
+2. **The bags do not belong at this stage.** They had no consumer in Phase 3,
+   and the entire `@JsonIgnore` apparatus existed only because they arrived
+   *ahead of* their persistence: when the config-options plan introduces them
+   together with §4.2/§4.7 (values persisted from day one), no serialization
+   suppression is needed at all. Landing them early created an artificial
+   interim state and an L0 dependency to hold it up.
+
+What Phase 3 now does for S1 — the seam's actual substance, re-worded in both
+plan docs: the **negative obligation**. No new top-level config booleans; no
+new updater API designed around the existing two flat ones (both were already
+true); a pointed javadoc on the two boolean getters directing new options to
+the future bags. `SimpleProjectConfiguration` and `ProjectConfiguration`
+restored to their pre-Step-5 shape. The L2 wire-format pin
+(`TestProjectConfigurationSerialization`) is kept in slimmed form — the flags
+serialize top-level, present only when set — as the baseline the config-options
+plan deliberately replaces.
