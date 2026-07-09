@@ -28,7 +28,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +60,7 @@ public class EntityModificationOperations
      * {@code referenceInfo} is a human-readable description of the workspace used in error messages. Returns the
      * revision created, or null if the update requires no changes.
      */
-    public static Revision updateEntities(ProjectFileAccessProvider fileProvider, String projectId, WorkspaceSourceSpecification sourceSpecification, Iterable<? extends Entity> newEntities, boolean replace, String message, String referenceInfo)
+    public static Revision updateEntities(ProjectFileAccessProvider fileProvider, String projectId, SourceSpecification sourceSpecification, Iterable<? extends Entity> newEntities, boolean replace, String message, String referenceInfo)
     {
         MutableMap<String, Entity> newEntityDefinitions = indexAndValidateEntitiesForUpdate(newEntities);
 
@@ -115,7 +115,7 @@ public class EntityModificationOperations
      * created, or null if the changes require no file operations. Callers should validate the changes first with
      * {@link #validateEntityChanges}.
      */
-    public static Revision performChanges(ProjectFileAccessProvider fileProvider, String projectId, WorkspaceSourceSpecification sourceSpecification, String referenceRevisionId, String message, List<? extends EntityChange> changes)
+    public static Revision performChanges(ProjectFileAccessProvider fileProvider, String projectId, SourceSpecification sourceSpecification, String referenceRevisionId, String message, List<? extends EntityChange> changes)
     {
         int changeCount = changes.size();
         if (changeCount == 0)

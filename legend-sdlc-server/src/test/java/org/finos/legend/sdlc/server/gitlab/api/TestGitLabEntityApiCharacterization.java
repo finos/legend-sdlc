@@ -33,7 +33,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.project.InMemoryProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider;
 import org.finos.legend.sdlc.core.project.ProjectStructureUpdater;
 import org.junit.Assert;
 import org.junit.Before;

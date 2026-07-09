@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;

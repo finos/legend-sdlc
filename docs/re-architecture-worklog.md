@@ -395,3 +395,41 @@ phase; candidates for post-phase fixes):
   serialization of arbitrary impls, and is easy to get wrong for the next
   implementation. `jackson-annotations` is a small, dependency-free jar and
   the annotation is additive; noted here because L0 is the stable tier.
+
+### Step 6: seam R2 — TCK seed with the layout invariants
+
+- **`LayoutInvariantsTestSuite`** (abstract, in `legend-sdlc-core`'s test tree,
+  published as a test-jar; package `org.finos.legend.sdlc.core.tck`) expresses
+  the layout-reconciliation plan's invariants as executable contract,
+  parameterized over a `ProjectFileAccessProvider`: **update ≡ create**
+  (updating from an older structure version — V11/V12 seeds — yields
+  byte-identical layouts to a fresh build at the target version, entity
+  migration included) and **reconciling an already-correct project is a
+  no-op** (re-applying the current configuration produces no revision and no
+  file changes). All three invariants **hold today** for the imperative
+  write-side over the in-memory provider (`TestInMemoryLayoutInvariants`).
+  This grows into `legend-sdlc-backend-test-suite` in Phase 4; reconciling
+  structure versions must be certified by the same suite.
+- **`InMemoryProjectFileAccessProvider` + `SimpleInMemoryVCS` moved to the L1
+  module's test-jar** (`org.finos.legend.sdlc.project.files`, git mv from the
+  server test tree): they are the L1 SPI's test double and the TCK's default
+  harness, and Phase 5's in-memory backend builds on them. The server module
+  consumes the test-jar; its tests' imports updated.
+- **Phase 2 leftover found by the TCK**: the V11–V13 structure factories load
+  test-template resources (`project/tests/v4/*.java`) from the classpath, but
+  the resources had stayed in `legend-sdlc-server`'s jar when the factories
+  moved to L2 — invisible until something exercised the factories without the
+  server jar present. Resources moved (git mv) to
+  `legend-sdlc-project-structure`. Related audit note:
+  `MavenProjectStructure.loadTestResourceCode` resolves via the **thread
+  context classloader** — fine under Maven/server, fragile in an embedded/IDE
+  host; added to the §4.5 audit list alongside `PROJECT_STRUCTURE_FACTORY`.
+- **The FS provider does not run the suite yet**: its standard-context
+  enumeration is broken (Step 1 quirks 6–7 — `getFiles` throws on the null
+  revision id, canonical-directory matching never succeeds), so the invariants
+  cannot even be evaluated over it. Certifying the FS backend against the TCK
+  is part of its Phase 5 refit, after those defects are fixed deliberately.
+- `EntityModificationOperations.updateEntities`/`performChanges` signatures
+  widened from `WorkspaceSourceSpecification` to `SourceSpecification` (the L1
+  type): the L1 provider is source-agnostic, the TCK and local tooling edit at
+  project level, and the api delegates pass workspace specs unchanged.
