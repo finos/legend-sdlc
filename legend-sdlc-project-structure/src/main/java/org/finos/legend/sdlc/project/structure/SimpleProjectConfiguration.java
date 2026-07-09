@@ -26,7 +26,9 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependenc
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class SimpleProjectConfiguration implements ProjectConfiguration
 {
@@ -80,6 +82,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     }
 
     @Override
+    @Deprecated
     public Boolean getRunDependencyTests()
     {
         return this.runDependencyTests;
@@ -91,6 +94,7 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     }
 
     @Override
+    @Deprecated
     public Boolean getProduceShadedServiceJar()
     {
         return this.produceShadedServiceJar;
@@ -99,6 +103,31 @@ public class SimpleProjectConfiguration implements ProjectConfiguration
     public void setProduceShadedServiceJar(Boolean produceShadedServiceJar)
     {
         this.produceShadedServiceJar = produceShadedServiceJar;
+    }
+
+    /**
+     * View of the structure-version-scoped option values (re-architecture seam S1). The two legacy flat booleans
+     * are the only options so far; they are still stored in (and serialized as) their top-level project.json fields,
+     * so this is a read-only view derived from them. The project-structure-configuration-options plan migrates
+     * storage to the namespaced form.
+     */
+    @Override
+    public Map<String, Object> getStructureConfiguration()
+    {
+        if ((this.runDependencyTests == null) && (this.produceShadedServiceJar == null))
+        {
+            return Collections.emptyMap();
+        }
+        Map<String, Object> map = new LinkedHashMap<>(2);
+        if (this.runDependencyTests != null)
+        {
+            map.put("runDependencyTests", this.runDependencyTests);
+        }
+        if (this.produceShadedServiceJar != null)
+        {
+            map.put("produceShadedServiceJar", this.produceShadedServiceJar);
+        }
+        return Collections.unmodifiableMap(map);
     }
 
 

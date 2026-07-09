@@ -366,3 +366,32 @@ phase; candidates for post-phase fixes):
   The generic `compare` has no production caller yet (FS/in-memory comparison
   apis are stubs); it is exercised by the seam-R2 TCK seed and becomes the L3
   default behind the Phase 4 `AbstractBackend`.
+
+### Step 5: seam S1 — namespaced configuration bags on the L0 model
+
+- `ProjectConfiguration` (L0) gains `getStructureConfiguration()` /
+  `getExtensionConfiguration()` (default empty maps) — the namespaced,
+  version-/extension-scoped option bags of the config-options plan (§4.1–4.2).
+  The two legacy flat booleans are now *defined* as structure-configuration
+  options: `getRunDependencyTests()` / `getProduceShadedServiceJar()` are
+  `@Deprecated` and their interface defaults read the bag, and
+  `SimpleProjectConfiguration` exposes its (still field-stored) booleans
+  through a read-only bag view. **No new top-level config booleans may be
+  added** — new options go in the bags.
+- **Wire format deliberately unchanged**: the bags are `@JsonIgnore`d at the
+  interface, so neither `project.json` (written via L2's mapper over any
+  `ProjectConfiguration` impl) nor REST payloads (Dropwizard bean
+  serialization) gain keys; the flat booleans still serialize top-level from
+  `SimpleProjectConfiguration`'s overriding getters. Migrating storage to the
+  namespaced form (read-fold + write-normalization, §4.7) belongs to the
+  config-options plan. `TestProjectConfigurationSerialization` (first test in
+  the L2 module's new test tree) pins all of this; it is the pin that plan
+  replaces when it lands.
+- **`legend-sdlc-model` gains a `jackson-annotations` dependency** (its first
+  compile dependency) to carry the `@JsonIgnore`. Alternative considered and
+  rejected: keeping L0 annotation-free by scattering `@JsonIgnore` overrides
+  across every implementation (`Simple*`, FS, in-memory, anonymous updater
+  output) plus a mapper mix-in in L2 — covers the file format but not REST
+  serialization of arbitrary impls, and is easy to get wrong for the next
+  implementation. `jackson-annotations` is a small, dependency-free jar and
+  the annotation is additive; noted here because L0 is the stable tier.
