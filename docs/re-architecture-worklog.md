@@ -493,3 +493,288 @@ restored to their pre-Step-5 shape. The L2 wire-format pin
 (`TestProjectConfigurationSerialization`) is kept in slimmed form — the flags
 serialize top-level, present only when set — as the baseline the config-options
 plan deliberately replaces.
+
+## Phase 4 — Backend SPI (L4)
+
+**Status: design review complete (2026-07-09); implementation not started.**
+
+### Design review (2026-07-09): the six SPI decisions, on the record
+
+Plan §6 gates Phase 4 on a design review of the SPI details before code. Held
+against the plan (§3.2–3.5, §4.5–4.6, §6, §7), the Phase 1–3 record above, and
+the code on `reorg`. Six decisions; plan-doc amendments they force are listed at
+the end.
+
+#### 1. Session/auth contract: `Backend` vs. per-user `BackendSession`
+
+Two-object contract. **`Backend`** is deployment-scoped, built once by the
+factory: `getType()`, `getCapabilities()`, `newSession(BackendSessionContext)`,
+`close()` (AutoCloseable; L6 ties it to the Dropwizard lifecycle).
+**`BackendSession`** is the per-user view, and **the domain APIs hang off the
+session, not the backend**: GitLab's api objects are meaningless without a user,
+and putting them on `Backend` would re-introduce ambient per-request state — the
+Guice request-scope coupling being removed. Sessions are cheap, created per
+request by an L6 provider, never cached across requests by the server; a backend
+may return a shared stateless instance (the contract promises nothing about
+object identity).
+
+What crosses the SPI, derived from `GitLabUserContext` (the only nontrivial
+session today — it lazily builds a `GitLabApi`, refreshes OAuth tokens,
+*writes back* session cookies, and *initiates* 302 redirects):
+
+- **Identity as data**: `BackendSessionContext.getUserId()`. The Guice/servlet
+  `UserContext` stays at L6; the L4 context is new and framework-free (pac4j
+  appears only in the L6 adapter that builds the context from the pac4j
+  `Session`).
+- **Per-user persistent state as a port**: `BackendSessionContext` exposes a
+  minimal string-keyed state store, implemented at L6 over the pac4j session +
+  `LegendSDLCWebFilter` cookie write-back. `GitLabSession`'s token fields become
+  GitLab-backend-owned state serialized into that store; pac4j types never
+  cross the SPI.
+- **Interactive re-auth as a typed exception**: L4 defines
+  `AuthorizationRequiredException(URI authorizationUri)`; L6 maps it to 302
+  (redirect allowed) or 403 with the `auth_uri` body — exactly today's two
+  branches in `GitLabUserContext.setGitlabTokenForSession`.
+- **The auth-flow surface goes generic**: GitLab and FS already ship
+  route-identical `/auth` resources (`authorize`, `callback`,
+  `termsOfServiceAcceptance`) — de-facto proof of a generic contract.
+  `BackendSession` gains `isAuthorized()`, authorize/callback handling, and
+  terms-of-service messages; one L6 `AuthResource` delegates to it, and the two
+  per-backend resources are deleted in Phase 5.
+
+Litmus test (plan §7) verified: the FS session is `{userId}` +
+`isAuthorized() → true`, never touches the state store, returns the backend's
+stateless api objects — trivial. Server-level authentication (pac4j filters,
+who may reach the server at all) remains L6 policy independent of the backend.
+
+Two contract notes to pin in javadoc: `WorkspaceSpecification`'s null `userId`
+("assumed to be the current user") resolves against the session's user — the
+semantics exist today but are implicit; and L6 keeps per-API `@Provides`
+bindings (`EntityApi ← session.getEntityApi()`), so resources keep their
+current injected types and "rewritten only in their injection" (§3.3) shrinks
+to an import rename.
+
+#### 2. Capability enumeration and HTTP mapping
+
+`BackendCapability` enum in L4, additive, serialized as strings (clients must
+tolerate unknown values): `REVIEWS`, `WORKFLOWS`, `VERSIONS`, `PATCHES`,
+`BUILDS`, `BACKUP`, `ISSUES`, `CONFLICT_RESOLUTION`, `USER_WORKSPACES`,
+`GROUP_WORKSPACES`.
+
+- **Core, never capabilities**: projects, workspaces (a backend declares at
+  least one of USER/GROUP), revisions, entities, project configuration,
+  dependencies, comparison — L3-defaulted or provider-derived per §3.2.
+- `CONFLICT_RESOLUTION` and `BACKUP` are capabilities keyed on the provider
+  supporting the corresponding `WorkspaceAccessType`s; their mechanics are
+  L3-generic, so declaring them is nearly free where the access types work.
+- Capabilities are **deployment-static** (`Backend.getCapabilities()`).
+  Per-user permission failures remain 403s from the APIs — capabilities
+  describe the deployment, not the caller.
+- Enforcement sits in two places, both TCK-certified: `BackendSession`
+  accessors for whole-concept APIs throw `UnsupportedCapabilityException`
+  (L4, carries the capability) for undeclared ones; and the L3-default
+  implementations throw it from *cross-API* scope methods (e.g.
+  `EntityApi.getVersionEntityAccessContext` under absent `VERSIONS`).
+
+HTTP mapping: one JAX-RS mapper, `UnsupportedCapabilityException` → **501**
+with body `{"capability", "backendType", "message"}`. 501 over 404 because 404
+already means "no such project/workspace/entity/review" on virtually every
+route — overloading it would make feature-absence indistinguishable from an id
+typo. Route → capability is by resource concern (reviews ← REVIEWS, workflows ←
+WORKFLOWS, version-scoped entity/config/pmcd routes ← VERSIONS, …);
+patch-scoped review/workflow routes require the conjunction. Behavior change is
+confined to endpoints that today throw raw `UnsupportedOperationException`
+(500) — with one flagged exception: FS's two `getReviews` overloads return
+empty lists today and would 501 under the model. Consistency wins on the
+record, but the Phase 5 FS refit must verify Studio/omnibus tolerance before
+flipping them (Phase 4 itself changes no FS behavior; GitLab declares
+everything).
+
+#### 3. `Backend`/`BackendFactory`/`BackendEnvironment` shapes; `backend:` config
+
+`BackendFactory` as sketched in §3.5 (`getType()`, `getConfigurationClass()`,
+`build(config, environment)`), registered via `META-INF/services`; lookup and
+selection stay at L6 (the backend `ServiceLoader` is expressly an L6 concern
+per §4.5). `BaseLegendSDLCServer`'s `mode` string and GitLab hard-wiring die;
+`GITLAB_MODE` is deprecated.
+
+`BackendConfiguration` is an abstract Jackson-polymorphic base in L4,
+discriminator `type`, **subtype fields inline** — amending §3.5's sketch, which
+nested a second `gitlab:` block under `backend:`. One wrapper less, standard
+subtype resolution; subtypes are registered at bootstrap from the
+ServiceLoader'd factories (`getType()` is the type name):
+
+```yaml
+backend:
+  type: gitlab
+  server: { ... }   # gitlab fields inline
+  app: { ... }
+```
+
+Legacy-config adapter for one transition release: top-level `gitLab:` present
+and `backend:` absent ⇒ synthesized `backend: {type: gitlab, …}`.
+
+`BackendEnvironment` (deployment-scoped host services; L4 interface, grows by
+`default` methods): the object mapper; the task processor
+(`BackgroundTaskProcessor` relocates out of `server.tools` to a framework-free
+home so L4 can name it — Phase 1 flagged it as Phase 4/5 material); and the
+deployment's structure context — `ProjectStructureExtensionProvider` and
+`ProjectStructurePlatformExtensions` (L2 types). The structure context passes
+*through* the environment to `AbstractBackend`'s L3-default wiring: the backend
+jar still bundles no extensions (§6 seam-S3 obligation) — the deployment
+supplies them, the generic code consumes them. Explicitly **not** in the
+environment: anything per-user (that is `BackendSessionContext`), and metrics
+(deferred; additive later). The server config class
+(`ProjectStructureConfiguration`) itself stays at L6; whatever else generic
+code needs from it crosses as data via environment accessors.
+
+`AbstractBackend` (L4): constructor takes the environment; a backend supplies
+its `ProjectFileAccessProvider`, ProjectApi, WorkspaceApi, and any natively
+implemented optional APIs; it inherits the L3-default
+entity/configuration/dependencies/comparison implementations and the
+capability plumbing.
+
+#### 4. Discovery surface (seam S3) and the §4.6 provider-acquisition question
+
+One read-only surface under the existing `/configuration` root (already the
+deployment-describing resource):
+
+- `GET /configuration/capabilities` → `{backendType, capabilities[]}` — Studio
+  adapts its UI instead of harvesting 501s.
+- `GET /configuration/projectStructureVersions` → per structure version:
+  version, extension versions, and `configurationProperties[]`; per extension
+  version likewise. This is the "describe what this structure/extension
+  supports" call; `ConfigurationProperty`/`ConfigurationPropertyType` (seam S2,
+  already at L0) are its schema vocabulary, and the config-options plan's
+  discovery phase extends **this same call** (S3 satisfied: no parallel
+  endpoint later; response shape evolves additively).
+
+§4.6 answered on the record, from one governing fact: **discovery serves schema
+and identity, never behavior.** A `ProjectStructureExtension` is executable
+Java that computes files; no endpoint ships that. Therefore:
+
+- Option (b) holds for everything fetchable: option schemas, extension
+  names/versions, the capability set — enough for an IDE to render forms,
+  validate values, and know the deployment's extension lineup. Fetched from the
+  owning server and cached.
+- Executable extension behavior reaches local tooling only as jars — bundled
+  (a) or user-configured (c); choosing between those is plugin packaging, not
+  an SDLC-server contract.
+- Degraded mode (provider absent), picked explicitly from §4.6's menu: entity
+  editing is always permitted; structure/configuration edits are permitted but
+  **leave extension-managed files untouched**, reconciled when the change
+  returns through the server — the reconciliation-friendly branch, which the
+  layout-reconciliation plan later makes automatic. Blocking those edits
+  instead would strand IDE users on trivial dependency bumps.
+- Deployment identity: explicit tool configuration (the SDLC server URL, a
+  per-checkout/workspace setting). No inference from Git remotes (hosting ≠
+  deployment, §3.3) and no `project.json` change (wire format is a non-goal).
+- Corollary confirmed for Phase 6: `legend-sdlc-local`'s structure-aware
+  operations take an explicit `ProjectStructureExtensionProvider` and behave
+  per the degraded mode when it is absent.
+
+#### 5. The deferred `SourceSpecification` L1/L4 split: **rescinded**
+
+The taxonomy is finalized at L1; §3.3's end state (opaque L1 handle, taxonomy
+at L4) is amended. Grounds:
+
+1. The feared dependency does not exist. The whole hierarchy
+   (`SourceSpecification` + four subclasses + visitors,
+   `WorkspaceSpecification`, `WorkspaceSource`) compiles against L0 only
+   (`VersionId`, `WorkspaceType`) plus L1's own `WorkspaceAccessType` — which
+   was always a `ProjectFileAccessProvider` nested enum. The "conceptual server
+   dependency" was the package name, removed by rename.
+2. Generic code genuinely consumes the taxonomy: L3's `ProjectStructureUpdater`
+   visits `WorkspaceSourceSpecification` and unwraps the workspace spec
+   (`core.project.ProjectStructureUpdater`, workspace-branch validation), and
+   the TCK addresses providers at project and workspace level. An opaque L1
+   handle would not remove the taxonomy — it would push L3 and every provider
+   to downcast, trading type safety for nothing.
+3. There is no L1-only implementor to protect: §3.2's minimal backend contract
+   already includes `WorkspaceApi`, and the one true L1-only provider —
+   `legend-sdlc-local`'s directory context — ignores source specifications
+   entirely.
+4. Sealedness (package-private constructors, total visitors) is a feature for
+   generic code and the TCK; splitting subclasses across layers would break it.
+
+Consequence: Phase 4 renames the packages **once**, to their final home in the
+L1 module: `org.finos.legend.sdlc.project.source` (source specifications +
+visitors) and `org.finos.legend.sdlc.project.workspace`
+(`WorkspaceSpecification`, `WorkspaceSource*`) — following the 2026-07-08
+`project.*` convention (flagged: `project.files.source` is the alternative if
+the user prefers module-aligned naming). No bridges — same ruling and same
+population as the Phase 2 L1 rename (§5's promises cover extension
+implementors, not storage-SPI consumers); the migration recipe documents the
+import rename. The L4 domain interfaces keep trafficking in these L1 types
+directly; no re-export layer.
+
+#### 6. Delegating api classes to L4 alongside their interfaces
+
+- **Interfaces**: `server/domain/api/**` →
+  `org.finos.legend.sdlc.backend.api.<concern>` (concern subpackages preserved;
+  no classes at the bare root, per the L3 precedent). Old FQNs remain as
+  `@Deprecated` bridge **interfaces** extending the relocated ones — the
+  Phase 2 extension-SPI interface-bridge pattern — because external server
+  assemblies (the origin project's among them) reference these types in Guice
+  modules and resource code, and interfaces bridge cleanly.
+- **`DependenciesApiImpl`** — the Phase 3 Step 4 deviation closes as recorded:
+  it moves to L4 as the default implementation,
+  `…backend.api.dependency.DefaultDependenciesApi`, wired by `AbstractBackend`
+  over ProjectApi + ProjectConfigurationApi + RevisionApi and L3
+  `DependencyOperations`. `@Deprecated` constructor-forwarding bridge subclass
+  stays at the old FQN in the server (both Guice modules bind it by FQN today;
+  external assemblies may too).
+- **Comparison**: there is no backend-neutral impl class to move — GitLab's is
+  native (gitlab4j, stays put and moves to L5 in Phase 5), FS's is a stub that
+  dies in the Phase 5 refit. Phase 4 instead *creates*
+  `…backend.api.comparison.DefaultComparisonApi` over L3
+  `ComparisonOperations.compare`, which finally gains its production caller
+  (anticipated by Phase 3 Step 4): workspace comparisons (creation/source)
+  fully generic via provider contexts + RevisionApi; review comparisons
+  defaulted only when `REVIEWS` is declared (review → workspaces/revisions →
+  compare), with native override expected (GitLab keeps its compare API).
+  `AbstractBackend` wires it; the TCK certifies it.
+- `ProjectConfigurationApi` continues to consume L3's
+  `ProjectConfigurationUpdater` (settled in Phase 3 Step 2); an L4 interface
+  importing an L3 type is the correct dependency direction — no action.
+- Inventory note: `TestModelBuilder` (`domain/api/test`) is classified during
+  the move by dependency audit; not part of this decision.
+
+#### Deliberately not decided
+
+Metrics on `BackendEnvironment` (additive later); `IssueApi`'s long-term fate
+(the `ISSUES` capability suffices); the backend-neutral contract documentation
+for each API (§7) — Phase 4 implementation work, not review scope; the §4.5
+process-global-state audit items (`PROJECT_STRUCTURE_FACTORY`, TCCL resource
+loading) remain open and gate Phase 6, not Phase 4.
+
+#### Plan-doc amendments these decisions force — applied 2026-07-09
+
+User ratified decisions 5 (split rescinded) and 2 (501 over 404) explicitly and
+directed the amendments be made; applied to `re-architecture.md` the same day:
+
+- §3.3 L1 bullet: the `SourceSpecification` split rescinded (decision 5);
+  taxonomy final at L1 with renamed packages. §3.3 L6 bullet: `404`/`501`-style
+  → decided `501` with structured body (decision 2).
+- §3.4 (consistency pass, beyond the original list): decided capability starter
+  set replaces the example enum; `Backend.getReviewApi()` →
+  `BackendSession.getReviewApi()` + L3 cross-API enforcement; capabilities
+  endpoint now definite; "minimal backend" wording adjusted (empty capability
+  set is no longer literal — at least one workspace flavor is declared).
+- §3.5: config sketch now inline-fields polymorphic form with the legacy-config
+  adapter noted; the `Backend.forUser(UserContext)` sketch replaced by the
+  decided `Backend`/`BackendSession`/`BackendSessionContext` contract;
+  `BackendEnvironment` bullet rewritten to the decision-3 shape.
+- §6 Phase 4 bullet: review-held banner, L4 package root + bridge interfaces,
+  `DefaultDependenciesApi`/`DefaultComparisonApi`, source/workspace package
+  rename, per-API session providers, discovery endpoints; sequencing note marks
+  the review held with this section as the authoritative record.
+- §7 rows: "SourceSpecification split" → resolved-rescinded; "session/auth
+  contract" → contract decided, residual risk = implementation faithfulness on
+  real GitLab auth flows; "managed projects edited locally" → decided
+  (schema-not-behavior, degraded mode, explicit server URL), confirm in
+  Phase 6.
+
+Deliberately untouched: §4.6's body still narrates the question and its menu —
+it defers to this review for the answer, which the §7 row now carries; stamping
+§4.6 itself is cosmetic and can ride along with any future §4 edit.
