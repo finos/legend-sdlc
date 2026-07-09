@@ -15,8 +15,8 @@
 package org.finos.legend.sdlc.server.domain.api.entity;
 
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
 
 public interface EntityApi
 {

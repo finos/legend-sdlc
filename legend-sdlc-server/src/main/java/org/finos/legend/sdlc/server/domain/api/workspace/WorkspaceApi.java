@@ -17,8 +17,10 @@ package org.finos.legend.sdlc.server.domain.api.workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
 
 import java.util.Collections;

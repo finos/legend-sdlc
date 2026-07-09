@@ -496,7 +496,8 @@ plan deliberately replaces.
 
 ## Phase 4 — Backend SPI (L4)
 
-**Status: design review complete (2026-07-09); implementation not started.**
+**Status: in progress** (design review complete 2026-07-09; implementation
+running, steps below after the review record).
 
 ### Design review (2026-07-09): the six SPI decisions, on the record
 
@@ -778,3 +779,26 @@ directed the amendments be made; applied to `re-architecture.md` the same day:
 Deliberately untouched: §4.6's body still narrates the question and its menu —
 it defers to this review for the answer, which the §7 row now carries; stamping
 §4.6 itself is cosmetic and can ride along with any future §4 edit.
+
+### Step 1: source taxonomy to its final L1 packages (decision 5)
+
+- **Moved (git mv, no bridges)**, within `legend-sdlc-project-files`:
+  `server.domain.api.project.source.*` (7 classes) →
+  `org.finos.legend.sdlc.project.source`; the six workspace-spec classes
+  (`WorkspaceSpecification`, `WorkspaceSource`, `Project`/`PatchWorkspaceSource`,
+  `WorkspaceSourceVisitor`/`Consumer`) from `server.domain.api.workspace` →
+  `org.finos.legend.sdlc.project.workspace`. The L1 module now contains no
+  `server.*` packages at all.
+- **Split package resolved**: `server.domain.api.workspace` had been split
+  across the L1 module (the specs) and the server (`WorkspaceApi`); the server
+  file gained explicit imports of the two relocated types it had been using
+  same-package. `WorkspaceApi` is now the old package's only resident, pending
+  its own Step 2 move.
+- References updated repo-wide by scripted rewrite (~200 files); checkstyle's
+  `CustomImportOrder` does not enforce intra-group alphabetical order (verified
+  against existing files), so in-place import rewrites are order-safe.
+- `project-structure-migration.md` gains two rows for the renames (external
+  storage-SPI consumers: update imports and recompile; the domain API
+  interfaces themselves are untouched by this step and relocate with bridges in
+  Step 2).
+- Verified: full-reactor `mvn install javadoc:javadoc` green (tests included).

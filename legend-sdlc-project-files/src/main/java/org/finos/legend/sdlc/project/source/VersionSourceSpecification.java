@@ -12,19 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.project.source;
+package org.finos.legend.sdlc.project.source;
 
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
 
 import java.util.Objects;
 
-public class WorkspaceSourceSpecification extends SourceSpecification
+public class VersionSourceSpecification extends SourceSpecification
 {
-    private final WorkspaceSpecification workspaceSpec;
+    private final VersionId versionId;
 
-    WorkspaceSourceSpecification(WorkspaceSpecification workspaceSpec)
+    VersionSourceSpecification(VersionId versionId)
     {
-        this.workspaceSpec = Objects.requireNonNull(workspaceSpec, "workspace specification is required");
+        this.versionId = Objects.requireNonNull(versionId, "version id is required");
     }
 
     @Override
@@ -33,27 +33,27 @@ public class WorkspaceSourceSpecification extends SourceSpecification
         return visitor.visit(this);
     }
 
-    public WorkspaceSpecification getWorkspaceSpecification()
+    public VersionId getVersionId()
     {
-        return this.workspaceSpec;
+        return this.versionId;
     }
 
     @Override
     public boolean equals(Object other)
     {
         return (this == other) ||
-                ((other instanceof WorkspaceSourceSpecification) && this.workspaceSpec.equals(((WorkspaceSourceSpecification) other).workspaceSpec));
+                ((other instanceof VersionSourceSpecification) && this.versionId.equals(((VersionSourceSpecification) other).versionId));
     }
 
     @Override
     public int hashCode()
     {
-        return this.workspaceSpec.hashCode();
+        return this.versionId.hashCode();
     }
 
     @Override
     protected StringBuilder appendAdditionalInfo(StringBuilder builder)
     {
-        return builder.append(" workspace=").append(this.workspaceSpec);
+        return this.versionId.appendVersionIdString(builder.append(" version="));
     }
 }

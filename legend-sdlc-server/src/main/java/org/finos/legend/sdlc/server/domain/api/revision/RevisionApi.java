@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.revision;
 
 import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
 
 /**
  * Note that all of these APIs support revision ID alias as they all essentially calls getRevision() from RevisionAccessContext

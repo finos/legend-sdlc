@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.junit.Assert;
 import org.junit.Test;
 
