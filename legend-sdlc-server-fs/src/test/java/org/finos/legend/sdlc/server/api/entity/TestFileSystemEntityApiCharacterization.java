@@ -28,7 +28,7 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.junit.Assert;
@@ -114,7 +114,7 @@ public class TestFileSystemEntityApiCharacterization
     @Test
     public void testGetUnknownEntity()
     {
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::Missing"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::Missing"));
         Assert.assertEquals("Unknown entity model::Missing", e.getMessage());
         Assert.assertEquals(404, e.getStatusCode());
     }
@@ -148,7 +148,7 @@ public class TestFileSystemEntityApiCharacterization
 
         // getEntityPaths enumerates through the standard file access context, which cannot handle the null revision
         // id that the entity access context is created with
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntityPaths(null, null, null));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntityPaths(null, null, null));
         Assert.assertTrue(e.getMessage(), e.getMessage().startsWith("Error getting files in directories for " + PROJECT_ID));
         Assert.assertEquals(500, e.getStatusCode());
     }
@@ -163,7 +163,7 @@ public class TestFileSystemEntityApiCharacterization
         // modifying an existing entity through updateEntities fails: enumeration through the standard file access
         // context returns nothing, so the update is treated as a create, which then finds the existing file
         Entity modified = TestTools.newClassEntity("TestClass", "model", TestTools.newProperty("prop", "String", 0, 1));
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Collections.singletonList(modified), false, "modify entity"));
         Assert.assertTrue(e.getMessage(), e.getMessage().endsWith(": entity \"model::TestClass\" already exists"));
         Assert.assertEquals(500, e.getStatusCode());
@@ -195,7 +195,7 @@ public class TestFileSystemEntityApiCharacterization
         Revision deleteRevision = modificationContext().performChanges(
                 Collections.singletonList(EntityChange.newDeleteEntity("model::TestClass")), null, "delete entity");
         Assert.assertNotNull(deleteRevision);
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::TestClass"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::TestClass"));
         Assert.assertEquals(404, e.getStatusCode());
     }
 
@@ -211,7 +211,7 @@ public class TestFileSystemEntityApiCharacterization
 
         // submitting against a stale reference revision is a conflict, but FSException re-wraps it as a 500
         Entity third = TestTools.newClassEntity("Third", "model");
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(
                         Collections.singletonList(EntityChange.newCreateEntity(third.getPath(), third.getClassifierPath(), third.getContent())), r1.getId(), "stale revision"));
         Assert.assertEquals(500, e.getStatusCode());
@@ -227,7 +227,7 @@ public class TestFileSystemEntityApiCharacterization
                 Collections.singletonList(EntityChange.newCreateEntity(entity.getPath(), entity.getClassifierPath(), entity.getContent())), null, "create entity");
 
         EntityAccessContext projectContext = this.entityApi.getEntityAccessContext(PROJECT_ID, SourceSpecification.projectSourceSpecification(), null);
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> projectContext.getEntity("model::WorkspaceOnly"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> projectContext.getEntity("model::WorkspaceOnly"));
         Assert.assertEquals("Unknown entity model::WorkspaceOnly", e.getMessage());
         Assert.assertEquals(404, e.getStatusCode());
     }

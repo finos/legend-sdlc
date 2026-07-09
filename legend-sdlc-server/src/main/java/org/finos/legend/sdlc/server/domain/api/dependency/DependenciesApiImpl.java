@@ -15,8 +15,8 @@
 package org.finos.legend.sdlc.server.domain.api.dependency;
 
 import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
+import org.finos.legend.sdlc.core.dependency.DependencyOperations;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
@@ -28,8 +28,6 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
 
 import javax.inject.Inject;
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.List;
 import java.util.Set;
 
@@ -96,22 +94,7 @@ public class DependenciesApiImpl implements DependenciesApi
 
     private Set<ProjectDependency> searchUpstream(ProjectConfiguration rootProjectConfiguration, boolean transitive)
     {
-        if (!transitive)
-        {
-            return Sets.mutable.withAll(rootProjectConfiguration.getProjectDependencies());
-        }
-
-        Deque<ProjectDependency> deque = new ArrayDeque<>(rootProjectConfiguration.getProjectDependencies());
-        MutableSet<ProjectDependency> results = Sets.mutable.ofInitialCapacity(deque.size());
-        while (!deque.isEmpty())
-        {
-            ProjectDependency dependency = deque.pollFirst();
-            if (results.add(dependency))
-            {
-                ProjectConfiguration dependencyProjectConfig = this.projectConfigurationApi.getProjectConfiguration(dependency.getProjectId(), SourceSpecification.versionSourceSpecification(dependency.getVersionId()));
-                deque.addAll(dependencyProjectConfig.getProjectDependencies());
-            }
-        }
-        return results;
+        return DependencyOperations.getUpstreamDependencies(rootProjectConfiguration, transitive,
+                dependency -> this.projectConfigurationApi.getProjectConfiguration(dependency.getProjectId(), SourceSpecification.versionSourceSpecification(dependency.getVersionId())));
     }
 }

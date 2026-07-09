@@ -28,7 +28,7 @@ import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
@@ -103,11 +103,11 @@ public class TestGitLabEntityApiCharacterization
     @Test
     public void testGetEntityAccessContextNullValidation()
     {
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> this.entityApi.getEntityAccessContext(null, this.workspaceSourceSpec, null));
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class, () -> this.entityApi.getEntityAccessContext(null, this.workspaceSourceSpec, null));
         Assert.assertEquals("projectId may not be null", e1.getMessage());
         Assert.assertEquals(400, e1.getStatusCode());
 
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class, () -> this.entityApi.getEntityAccessContext(PROJECT_ID, null, null));
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class, () -> this.entityApi.getEntityAccessContext(PROJECT_ID, null, null));
         Assert.assertEquals("sourceSpecification may not be null", e2.getMessage());
         Assert.assertEquals(400, e2.getStatusCode());
     }
@@ -136,7 +136,7 @@ public class TestGitLabEntityApiCharacterization
     @Test
     public void testGetUnknownEntity()
     {
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::Missing"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::Missing"));
         Assert.assertEquals("Unknown entity model::Missing for user workspace " + WORKSPACE_ID + " of project " + PROJECT_ID, e.getMessage());
         Assert.assertEquals(404, e.getStatusCode());
     }
@@ -175,13 +175,16 @@ public class TestGitLabEntityApiCharacterization
         String invalidFilePath = plantFile("model::Bad", "this is not json".getBytes(StandardCharsets.UTF_8));
 
         // getEntity on the invalid entity reports a deserialization error
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::Bad"));
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::Bad"));
         Assert.assertTrue(e1.getMessage(), e1.getMessage().startsWith("Error deserializing entity \"model::Bad\" from file \"" + invalidFilePath + "\""));
         Assert.assertEquals(500, e1.getStatusCode());
 
-        // getEntities without excludeInvalid fails wholesale
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntities(null, null, null, false));
-        Assert.assertTrue(e2.getMessage(), e2.getMessage().startsWith("Failed to get entities for user workspace " + WORKSPACE_ID + " of project " + PROJECT_ID));
+        // getEntities without excludeInvalid fails wholesale. (Deliberate Phase 3 drift: before the factoring,
+        // the underlying deserialization failure was re-wrapped as "Failed to get entities for <context>: ...";
+        // the widened base-exception pass-through now surfaces it directly - same status, more precise message.
+        // See the worklog.)
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntities(null, null, null, false));
+        Assert.assertTrue(e2.getMessage(), e2.getMessage().startsWith("Error deserializing entity from file "));
         Assert.assertEquals(500, e2.getStatusCode());
 
         // getEntities with excludeInvalid silently drops the invalid entity
@@ -201,7 +204,7 @@ public class TestGitLabEntityApiCharacterization
         Entity elsewhere = TestTools.newClassEntity("Thing", "other");
         String plantedPath = plantFile("model::Mismatch", serialize(elsewhere));
 
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::Mismatch"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::Mismatch"));
         Assert.assertEquals("Error deserializing entity \"model::Mismatch\" from file \"" + plantedPath + "\": Expected entity path model::Mismatch, found other::Thing", e.getMessage());
         Assert.assertEquals(500, e.getStatusCode());
 
@@ -223,10 +226,10 @@ public class TestGitLabEntityApiCharacterization
     @Test
     public void testUpdateEntitiesNullValidation()
     {
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> modificationContext().updateEntities(null, false, "message"));
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class, () -> modificationContext().updateEntities(null, false, "message"));
         Assert.assertEquals("entities may not be null", e1.getMessage());
 
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class, () -> modificationContext().updateEntities(Collections.emptyList(), false, null));
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class, () -> modificationContext().updateEntities(Collections.emptyList(), false, null));
         Assert.assertEquals("message may not be null", e2.getMessage());
     }
 
@@ -270,13 +273,13 @@ public class TestGitLabEntityApiCharacterization
     public void testUpdateEntitiesValidation()
     {
         // single error: the message is the bare error
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Collections.singletonList(TestTools.newClassEntity("Bad Name", "model")), false, "message"));
         Assert.assertEquals("Invalid entity path: \"model::Bad Name\"", e1.getMessage());
         Assert.assertEquals(400, e1.getStatusCode());
 
         // null entity
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Collections.singletonList(null), false, "message"));
         Assert.assertEquals("Invalid entity: null", e2.getMessage());
         Assert.assertEquals(400, e2.getStatusCode());
@@ -284,18 +287,18 @@ public class TestGitLabEntityApiCharacterization
         // path/package+name mismatch
         Entity mismatch = Entity.newEntity("model::Mismatch", TestTools.newClassEntity("X", "model").getClassifierPath(),
                 TestTools.newClassEntity("Other", "pkg").getContent());
-        LegendSDLCServerException e3 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e3 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Collections.singletonList(mismatch), false, "message"));
         Assert.assertEquals("Entity: model::Mismatch; mismatch between entity path and package (\"pkg\") and name (\"Other\") properties", e3.getMessage());
 
         // duplicate definitions
         Entity dup = TestTools.newClassEntity("Dup", "model");
-        LegendSDLCServerException e4 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e4 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Lists.mutable.with(dup, dup), false, "message"));
         Assert.assertEquals("Entity: model::Dup; error: multiple definitions", e4.getMessage());
 
         // multiple errors are aggregated
-        LegendSDLCServerException e5 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e5 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().updateEntities(Lists.mutable.with(null, TestTools.newClassEntity("Bad Name", "model")), false, "message"));
         Assert.assertEquals("There are errors with entity definitions:\n\tInvalid entity: null\n\tInvalid entity path: \"model::Bad Name\"", e5.getMessage());
     }
@@ -305,10 +308,10 @@ public class TestGitLabEntityApiCharacterization
     @Test
     public void testPerformChangesNullValidation()
     {
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class, () -> modificationContext().performChanges(null, null, "message"));
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class, () -> modificationContext().performChanges(null, null, "message"));
         Assert.assertEquals("changes may not be null", e1.getMessage());
 
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class, () -> modificationContext().performChanges(Collections.emptyList(), null, null));
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class, () -> modificationContext().performChanges(Collections.emptyList(), null, null));
         Assert.assertEquals("message may not be null", e2.getMessage());
     }
 
@@ -328,7 +331,7 @@ public class TestGitLabEntityApiCharacterization
         TestTools.assertEntitiesEquivalent(Collections.singletonList(normalize(entity)), accessContext().getEntities(null, null, null));
 
         // creating an entity that already exists fails
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(
                         Collections.singletonList(EntityChange.newCreateEntity(entity.getPath(), entity.getClassifierPath(), entity.getContent())), null, "create again"));
         Assert.assertTrue(e.getMessage(), e.getMessage().endsWith(": entity \"model::Created\" already exists"));
@@ -354,7 +357,7 @@ public class TestGitLabEntityApiCharacterization
 
         // modifying a nonexistent entity fails
         Entity missing = TestTools.newClassEntity("Missing", "model");
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(
                         Collections.singletonList(EntityChange.newModifyEntity(missing.getPath(), missing.getClassifierPath(), missing.getContent())), null, "modify missing"));
         Assert.assertTrue(e.getMessage(), e.getMessage().endsWith(": could not find entity \"model::Missing\""));
@@ -371,7 +374,7 @@ public class TestGitLabEntityApiCharacterization
         Assert.assertNotNull(revision);
         Assert.assertEquals(Collections.emptyList(), sortedEntityPaths());
 
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(Collections.singletonList(EntityChange.newDeleteEntity("model::ToDelete")), null, "delete again"));
         Assert.assertTrue(e.getMessage(), e.getMessage().endsWith(": could not find entity \"model::ToDelete\""));
         Assert.assertEquals(500, e.getStatusCode());
@@ -395,11 +398,11 @@ public class TestGitLabEntityApiCharacterization
 
         // ... but its content still declares the old package, so the entity file is now internally inconsistent:
         // reading the renamed entity fails with a path mismatch (RENAME does not rewrite file content)
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> accessContext().getEntity("model::renamed::Original"));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> accessContext().getEntity("model::renamed::Original"));
         Assert.assertEquals("Error deserializing entity \"model::renamed::Original\" from file \"" + newFilePath + "\": Expected entity path model::renamed::Original, found model::Original", e.getMessage());
 
         // renaming a nonexistent entity fails
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(
                         Collections.singletonList(EntityChange.newRenameEntity("model::Missing", "model::StillMissing")), null, "rename missing"));
         Assert.assertTrue(e2.getMessage(), e2.getMessage().endsWith(": could not find entity \"model::Missing\""));
@@ -411,30 +414,30 @@ public class TestGitLabEntityApiCharacterization
         Entity entity = TestTools.newClassEntity("Subject", "model");
 
         // CREATE without content
-        LegendSDLCServerException e1 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e1 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(Collections.singletonList(EntityChange.newCreateEntity("model::Subject", entity.getClassifierPath(), null)), null, "message"));
         Assert.assertTrue(e1.getMessage(), e1.getMessage().startsWith("There are entity change errors:\n\tEntity change #1 (")
                 && e1.getMessage().endsWith("):\n\t\tMissing content"));
         Assert.assertEquals(400, e1.getStatusCode());
 
         // DELETE with unexpected classifier and content
-        LegendSDLCServerException e2 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e2 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(Collections.singletonList(EntityChange.newModifyEntity("model::Subject", null, null)), null, "message"));
         Assert.assertTrue(e2.getMessage(), e2.getMessage().contains("Missing classifier path") && e2.getMessage().contains("Missing content"));
 
         // RENAME with invalid new path
-        LegendSDLCServerException e3 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e3 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(Collections.singletonList(EntityChange.newRenameEntity("model::Subject", "not a path")), null, "message"));
         Assert.assertTrue(e3.getMessage(), e3.getMessage().contains("Invalid new entity path: not a path"));
 
         // path/package+name mismatch on CREATE
-        LegendSDLCServerException e4 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e4 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(
                         Collections.singletonList(EntityChange.newCreateEntity("model::Subject", entity.getClassifierPath(), TestTools.newClassEntity("Other", "pkg").getContent())), null, "message"));
         Assert.assertTrue(e4.getMessage(), e4.getMessage().contains("Mismatch between entity path (\"model::Subject\") and package (\"pkg\") and name (\"Other\") properties"));
 
         // errors across multiple changes are numbered
-        LegendSDLCServerException e5 = Assert.assertThrows(LegendSDLCServerException.class,
+        LegendSDLCException e5 = Assert.assertThrows(LegendSDLCException.class,
                 () -> modificationContext().performChanges(Lists.mutable.with(
                         EntityChange.newCreateEntity("model::Subject", entity.getClassifierPath(), null),
                         EntityChange.newDeleteEntity(null)), null, "message"));

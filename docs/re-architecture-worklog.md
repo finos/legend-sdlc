@@ -290,3 +290,79 @@ phase; candidates for post-phase fixes):
   (same JLS 7.5.1 shadowing pattern as the Phase 2 extension impls).
 - Seam R1 unaffected: the updater's single write-side dispatch method moved
   verbatim, javadoc intact.
+
+### Step 3: factor the duplicated entity logic into `core.entity`
+
+- **New in `org.finos.legend.sdlc.core.entity`**: `EntityAccessOperations`
+  (getEntity / getEntities / getEntityPaths / entity-project-file streaming with
+  predicate filtering), `EntityModificationOperations` (updateEntities diffing,
+  entity-change validation, change→file-operation translation, performChanges),
+  and `EntityProjectFile` — a verbatim transplant of the GitLab implementation
+  (which was identical to the FS one on these paths). Exception-context strings
+  are parameterized: operations take a nullable `referenceInfo` description, so
+  GitLab passes `getReferenceInfo(…)` and FS passes null /
+  `String.valueOf(sourceSpecification)` — pinned messages preserved exactly.
+- **`GitLabEntityApi` and `FileSystemEntityApi` delegate; they do not move.**
+  GitLab keeps: review from/to access contexts (GitLab-native), its
+  `buildException` error translation around every core call, null-validations.
+  FS keeps: its git-tree-walk enumeration variant and its own
+  `EntityProjectFile` with root-directory relativization (including the
+  platform-dependent behavior pinned in Step 1), review contexts unsupported.
+  FS's standard-variant enumeration and all duplicated write logic deleted in
+  favor of core (observable behavior identical — the FS access context, where
+  the Step 1 bugs live, is unchanged).
+- **Core throws `LegendSDLCException`** (base type, framework-free), statuses
+  and messages unchanged. `BaseGitLabApi.processException`'s pass-through
+  branch (and `buildException`'s return type) widened from
+  `LegendSDLCServerException` to the base `LegendSDLCException` so core-thrown
+  exceptions keep their status/message through GitLab's error translation —
+  first instalment of the Phase 2 catch-site audit carry-in. The
+  characterization tests' `assertThrows` were deliberately widened to the base
+  type in the same commit (Phase 2 precedent: thrown *type* may change to the
+  base for relocated code; codes/messages stay pinned; HTTP behavior unchanged
+  since the server maps both types identically).
+- **Documented wrapping-boundary drift** (error-path edges, not pinned
+  behavior): (a) GitLab's `updateEntities` now wraps the whole flow in
+  `buildException` (previously only the inner performChanges compute+submit
+  was wrapped), so a raw non-`LegendSDLCException` failure during the diffing
+  phase — e.g. an unparseable entity file — now surfaces as "Failed to perform
+  changes on …" (500) instead of a raw exception (still 500 via the generic
+  mapper); (b) GitLab's unknown-entity 404 now passes through the identity
+  branch of `buildException` instead of being thrown after the try block —
+  same observable exception; (c) the debug-log lines moved with the logic, so
+  their logger names are now `org.finos.legend.sdlc.core.entity.*`; (d) — the
+  one the characterization net caught — `getEntities` over an unparseable
+  entity file (`excludeInvalid=false`): the L2 deserialization
+  `LegendSDLCException` used to be re-wrapped by `buildException` as "Failed
+  to get entities for <context>: …", and now passes through directly ("Error
+  deserializing entity from file …"; same 500, more precise message, request
+  context lost). Accepted deliberately: the alternative — distinguishing
+  "core-thrown" from "L2-thrown" base exceptions at the GitLab boundary — has
+  no type-level expression, and re-narrowing the pass-through would break the
+  404/400 preservation for core-thrown exceptions. Pin updated in the same
+  commit.
+
+### Step 4: dependency resolution and comparison logic into core
+
+- **`core.dependency.DependencyOperations`**: the transitive upstream walk from
+  `DependenciesApiImpl.searchUpstream`, parameterized over a
+  dependency→configuration resolver. `DependenciesApiImpl` delegates, passing a
+  resolver over its `ProjectConfigurationApi`. **Plan deviation, resolved on
+  the record**: §3.3/§6 say `DependenciesApiImpl` "moves" to L3, but the
+  domain-API interfaces it implements and consumes (`DependenciesApi`,
+  `ProjectApi`, `ProjectConfigurationApi`, `RevisionApi`) are L4 material that
+  stays in the server until Phase 4 — so in Phase 3 the backend-neutral *logic*
+  moves and the api impl shrinks to wiring; the class itself moves in Phase 4
+  with its interfaces. `getDownstreamProjects` stays as-is: its substance is
+  project enumeration + a one-line dependency test; there is no L3-sized logic
+  to extract.
+- **`core.comparison`**: `FileDiff` (backend-neutral file-change description)
+  and `ComparisonOperations` — `newComparison` (the entity-diff assembly
+  factored verbatim from `GitLabComparisonApi`, consuming `FileDiff`s instead
+  of gitlab4j `Diff`s) plus `compare`, the generic two-`FileAccessContext`
+  walking comparison from plan §3.3 (byte-level; no rename detection — a move
+  surfaces as delete+create). `GitLabComparisonApi` keeps its native GitLab
+  compare call and delegates the assembly, translating `Diff` → `FileDiff`.
+  The generic `compare` has no production caller yet (FS/in-memory comparison
+  apis are stubs); it is exercised by the seam-R2 TCK seed and becomes the L3
+  default behind the Phase 4 `AbstractBackend`.
