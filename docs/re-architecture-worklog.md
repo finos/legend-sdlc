@@ -433,3 +433,39 @@ phase; candidates for post-phase fixes):
   widened from `WorkspaceSourceSpecification` to `SourceSpecification` (the L1
   type): the L1 provider is source-agnostic, the TCK and local tooling edit at
   project level, and the api delegates pass workspace specs unchanged.
+
+### Phase 3 wrap-up: carry-ins and audit items
+
+- **`ProjectConfigurationUpdater` placement (Phase 2 carry-in)**: resolved — L3
+  (`core.project`), see Step 2. The class moves *again* only in the sense that
+  Phase 4's domain-API interfaces will keep referring to it; the type itself is
+  settled at L3.
+- **`catch (LegendSDLCServerException)` audit (Phase 1/2 carry-in)**: the paths
+  that newly call L3-thrown code are the GitLab entity/comparison delegates —
+  covered by widening `BaseGitLabApi.processException`/`buildException` to the
+  base type (Step 3). A repo-wide sweep finds the only remaining
+  subclass-typed catches are the 8 revision-api sites (GitLab + FS), which
+  Phase 2 already ruled on: they feed subclass-typed exception processors and
+  guard backend-native code that never calls L3. No change.
+- **§4.5 process-global state audit list** (unchanged status, restated):
+  `ProjectStructure.PROJECT_STRUCTURE_FACTORY` (classloader-captured factory
+  at class-init, now in L2) and — added this phase —
+  `MavenProjectStructure.loadTestResourceCode`'s use of the thread context
+  classloader. Both are pre-existing behavior, preserved; they must be
+  addressed before Phase 6 declares L0–L3 embeddable.
+- **Module inventory after Phase 3**: `legend-sdlc-core` (L3) holds
+  `core.entity` (entity read/write over L1+L2), `core.project` (the
+  configuration/structure write-side: `ProjectStructureUpdater` with seam R1's
+  single dispatch point, `ProjectConfigurationUpdater`), `core.dependency`
+  (upstream dependency walking), `core.comparison` (entity-diff assembly +
+  generic walking comparison), and the TCK seed (`core.tck`, test-jar). The
+  GitLab/FS api classes remain in their modules as delegating shells, to move
+  (GitLab) or be refit (FS) in Phases 4–5.
+- **Not done, deliberately**: no Phase 4 API shapes (no `Backend` aggregate,
+  no capability model, no domain-API interface moves — all pending the Phase 4
+  design review); the FS provider's characterized defects are documented, not
+  fixed; the `SourceSpecification` L1/L4 split remains deferred (Phase 4
+  design-review decision, per the Phase 2 record).
+
+**Status: complete** pending the full-reactor verification build recorded in
+the closing commit.
