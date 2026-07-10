@@ -16,13 +16,24 @@ package org.finos.legend.sdlc.server.resources.project;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.backend.api.spi.BackendCapability;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
+import org.finos.legend.sdlc.domain.model.project.configuration.ConfigurationProperty;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.ProjectStructureFactory;
+import org.finos.legend.sdlc.project.structure.ProjectStructureVersionFactory;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.inject.Inject;
+import javax.inject.Provider;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -36,11 +47,15 @@ import javax.ws.rs.core.MediaType;
 public class ConfigurationResource extends BaseResource
 {
     private final ProjectConfigurationApi projectConfigurationApi;
+    private final Provider<Backend> backend;
+    private final ProjectStructureExtensionProvider extensionProvider;
 
     @Inject
-    public ConfigurationResource(ProjectConfigurationApi projectConfigurationApi)
+    public ConfigurationResource(ProjectConfigurationApi projectConfigurationApi, Provider<Backend> backend, ProjectStructureExtensionProvider extensionProvider)
     {
         this.projectConfigurationApi = projectConfigurationApi;
+        this.backend = backend;
+        this.extensionProvider = extensionProvider;
     }
 
     @GET
@@ -58,5 +73,117 @@ public class ConfigurationResource extends BaseResource
     public List<ArtifactTypeGenerationConfiguration> getLatestAvailableGenerations()
     {
         return this.projectConfigurationApi.getLatestAvailableArtifactGenerations();
+    }
+
+    @GET
+    @Path("/capabilities")
+    @ApiOperation("Get the backend type and the capabilities this deployment supports")
+    public CapabilitiesInfo getCapabilities()
+    {
+        return executeWithLogging("getting backend capabilities", () -> new CapabilitiesInfo(this.backend.get().getType(), this.backend.get().getCapabilities()));
+    }
+
+    @GET
+    @Path("/projectStructureVersions")
+    @ApiOperation("Describe the available project structure versions, their extension versions, and the configuration properties each declares")
+    public List<ProjectStructureVersionInfo> getProjectStructureVersions()
+    {
+        return executeWithLogging("describing project structure versions", () ->
+        {
+            ProjectStructureFactory factory = ProjectStructure.getDefaultProjectStructureFactory();
+            List<ProjectStructureVersionInfo> result = new ArrayList<>();
+            for (int version = 0; version <= factory.getLatestVersion(); version++)
+            {
+                ProjectStructureVersionFactory versionFactory = factory.getVersionFactory(version);
+                if (versionFactory != null)
+                {
+                    List<ExtensionVersionInfo> extensionVersions = new ArrayList<>();
+                    Integer latestExtensionVersion = this.extensionProvider.getLatestVersionForProjectStructureVersion(version);
+                    if (latestExtensionVersion != null)
+                    {
+                        for (int extensionVersion = 1; extensionVersion <= latestExtensionVersion; extensionVersion++)
+                        {
+                            ProjectStructureExtension extension = this.extensionProvider.getProjectStructureExtension(version, extensionVersion);
+                            extensionVersions.add(new ExtensionVersionInfo(extensionVersion, extension.getConfigurationProperties()));
+                        }
+                    }
+                    result.add(new ProjectStructureVersionInfo(version, versionFactory.getConfigurationProperties(), extensionVersions));
+                }
+            }
+            return result;
+        });
+    }
+
+    public static class CapabilitiesInfo
+    {
+        private final String backendType;
+        private final Set<BackendCapability> capabilities;
+
+        CapabilitiesInfo(String backendType, Set<BackendCapability> capabilities)
+        {
+            this.backendType = backendType;
+            this.capabilities = capabilities;
+        }
+
+        public String getBackendType()
+        {
+            return this.backendType;
+        }
+
+        public Set<BackendCapability> getCapabilities()
+        {
+            return this.capabilities;
+        }
+    }
+
+    public static class ProjectStructureVersionInfo
+    {
+        private final int version;
+        private final List<ConfigurationProperty> configurationProperties;
+        private final List<ExtensionVersionInfo> extensionVersions;
+
+        ProjectStructureVersionInfo(int version, List<ConfigurationProperty> configurationProperties, List<ExtensionVersionInfo> extensionVersions)
+        {
+            this.version = version;
+            this.configurationProperties = configurationProperties;
+            this.extensionVersions = extensionVersions;
+        }
+
+        public int getVersion()
+        {
+            return this.version;
+        }
+
+        public List<ConfigurationProperty> getConfigurationProperties()
+        {
+            return this.configurationProperties;
+        }
+
+        public List<ExtensionVersionInfo> getExtensionVersions()
+        {
+            return this.extensionVersions;
+        }
+    }
+
+    public static class ExtensionVersionInfo
+    {
+        private final int version;
+        private final List<ConfigurationProperty> configurationProperties;
+
+        ExtensionVersionInfo(int version, List<ConfigurationProperty> configurationProperties)
+        {
+            this.version = version;
+            this.configurationProperties = configurationProperties;
+        }
+
+        public int getVersion()
+        {
+            return this.version;
+        }
+
+        public List<ConfigurationProperty> getConfigurationProperties()
+        {
+            return this.configurationProperties;
+        }
     }
 }

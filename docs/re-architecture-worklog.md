@@ -991,3 +991,23 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   for all modules — identical composition to the session default; switching it
   to the session is deferred to the Phase 5 module refits to keep
   `InMemoryModule` untouched.
+
+### Step 7: discovery endpoints under `/configuration` (seam S3)
+
+- **`GET /configuration/capabilities`** → `{backendType, capabilities[]}` from
+  the injected `Backend`; **`GET /configuration/projectStructureVersions`** →
+  per supported structure version: its `ConfigurationProperty` schema (seam S2
+  surface) and its extension versions with theirs — the "describe what this
+  structure/extension supports" call the config-options plan extends (S3
+  discharged: no parallel endpoint later). Both live on the existing
+  `ConfigurationResource`.
+- Additive L2 surface to enumerate: `ProjectStructureFactory.getVersionFactory(int)`
+  and `ProjectStructure.getDefaultProjectStructureFactory()` (a read-only
+  accessor for the §4.5-audited process-global; the audit item stands).
+- The resource injects `Provider<Backend>` (deref only in the capability call),
+  and the backend/environment `@Provides` moved from `BaseModule` up to
+  `AbstractBaseModule`, so `InMemoryModule`-based tests keep a valid injector
+  graph; `FSModule` gets an interim throwing `Backend` provider (the FS server
+  predates the SPI until its Phase 5 refit). Hitting `/configuration/capabilities`
+  on the FS or in-memory servers errors until then — the endpoints are new, so
+  nothing regresses.
