@@ -37,7 +37,7 @@ import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.GitLabApi;

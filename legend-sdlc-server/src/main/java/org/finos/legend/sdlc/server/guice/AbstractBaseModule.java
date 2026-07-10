@@ -224,7 +224,7 @@ import org.finos.legend.sdlc.server.resources.revision.project.user.WorkspaceRev
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;

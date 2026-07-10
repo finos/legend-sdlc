@@ -37,7 +37,7 @@ import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.core.project.ProjectStructureUpdater;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.models.DiffRef;
 import org.gitlab4j.api.models.MergeRequest;
 import org.gitlab4j.api.models.MergeRequestFilter;

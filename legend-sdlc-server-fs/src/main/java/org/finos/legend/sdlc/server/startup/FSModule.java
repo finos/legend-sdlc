@@ -185,7 +185,7 @@ import org.finos.legend.sdlc.server.resources.workspace.patch.group.PatchesGroup
 import org.finos.legend.sdlc.server.resources.workspace.patch.user.PatchesWorkspacesResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.group.GroupWorkspacesResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 
 import java.io.File;
 import java.util.Collections;

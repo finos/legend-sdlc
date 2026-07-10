@@ -51,7 +51,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.files.ProjectFiles;
 import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.tools.IOTools;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
