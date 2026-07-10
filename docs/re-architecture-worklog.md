@@ -1109,3 +1109,69 @@ introduced by Steps 6–7 and verified pre-existing by stash + re-run at HEAD).
   test servers from "backend-less by laziness" to a real in-memory `backend:`
   configuration, at which point the discovery endpoints work on test servers
   too.
+
+## Phase 5 — Backend extraction (L5)
+
+**Status: in progress.**
+
+Sequencing note (user-directed, on the record): plan §6 lists the GitLab
+extraction first; this phase runs the **in-memory backend first** — the first
+real TCK runner proves the L4 defaults and the suite itself before the two
+riskier refits (FS, GitLab) lean on them. The Phase 4 hand-off's
+"`DefaultEntityApi` as the first task of the FS refit" is pulled forward for
+the same reason: the in-memory backend needs a working entity api anyway, so
+the remaining L4 defaults land as their own step and the FS refit consumes
+them ready-made.
+
+### Step 1: the remaining L4 defaults (entity, configuration, revision)
+
+- **`DefaultEntityApi`** (`backend.api.entity`): the generic `EntityApi` over a
+  `ProjectFileAccessProvider` — reads via `core.entity.EntityAccessOperations`,
+  writes via `EntityModificationOperations`, with the null-validations of the
+  delegating shells it generalizes. Review access contexts resolve the review
+  through a supplied `ReviewApi` (the supplier is wired to the session's
+  REVIEWS-gated accessor, the `DefaultComparisonApi` pattern) and mirror the
+  default comparison semantics — from = the review workspace's source at its
+  current revision, to = the workspace at its current revision; backends whose
+  reviews carry native refs (GitLab MR diff refs) override.
+- **`DefaultProjectConfigurationApi`** (`backend.api.project`): read = the L2
+  `ProjectStructure.getProjectConfiguration` with the default-configuration
+  fallback both backends use today; update = the L3 `ProjectStructureUpdater`
+  at the source's current revision, applied with the deployment's extension
+  provider and platform extensions from `BackendEnvironment` (decision 3's
+  pass-through made concrete); artifact generations and latest structure
+  version exactly as in the (previously duplicated) GitLab/FS code. The
+  configuration status report carries no review ids — surfacing config-setup
+  reviews is backend-native (GitLab's MR search); documented override point.
+- **`DefaultRevisionApi`** (`backend.api.revision`): project/package/entity
+  revision contexts over the provider's revision access contexts, with the
+  packageable-path message rewriting factored from `GitLabRevisionApi`
+  (exception handling widened to base `LegendSDLCException`).
+  **`getRevisionStatus` is deliberately not defaulted**: which
+  workspaces/versions/patches contain a revision is an enumeration only the
+  backend can answer natively; the default throws 501 (a strict improvement on
+  FS's raw-`UnsupportedOperationException` 500, consistent with decision 2),
+  GitLab keeps its native implementation.
+- **Cross-API scope gate — decision 2's second enforcement point, now real**:
+  `BackendCapability.checkSourceScope(backend, sourceSpec)` — version sources
+  require `VERSIONS`; patch sources (including patch-sourced workspaces)
+  `PATCHES`; workspace sources their flavor (`USER_/GROUP_WORKSPACES`) and,
+  for backup/conflict-resolution access types, that capability. All three new
+  defaults apply it before touching storage. It lives on `BackendCapability`,
+  which already carries the scope→capability documentation.
+- `AbstractBackend.Session` wires the three defaults; together with Phase 4's
+  dependencies/comparison defaults, §3.2's minimal contract is now literal:
+  a backend supplies its storage provider, `ProjectApi`, `WorkspaceApi`, its
+  user directory (`UserApi`), and a factory — everything else defaults.
+- TCK: `BackendContractTestSuite` gains `testCrossApiSourceScopeGates`
+  (version-/patch-scoped entity access on a backend without the capability ⇒
+  `UnsupportedCapabilityException` carrying that capability and 501).
+  `TestMinimalBackendContract` drops its entity/configuration/revision
+  throwing stubs — the defaults now cover them over the fixture's provider,
+  which is itself the certification that the base class satisfies the grown
+  contract.
+- **Verification note (2026-07-10)**: this step's full-reactor verification
+  surfaced that `reorg` HEAD was red — a Phase 4 server startup regression,
+  diagnosed and fixed as the Phase 4 correction above (its own commit,
+  preceding this step's). With the correction in place the full reactor is
+  green including this step.
