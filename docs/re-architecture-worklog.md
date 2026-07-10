@@ -496,8 +496,9 @@ plan deliberately replaces.
 
 ## Phase 4 — Backend SPI (L4)
 
-**Status: in progress** (design review complete 2026-07-09; implementation
-running, steps below after the review record).
+**Status: complete** (design review 2026-07-09; implementation landed
+2026-07-09/10 as Steps 1–8 below, one commit per step, each on a green
+full-reactor `mvn install javadoc:javadoc`).
 
 ### Design review (2026-07-09): the six SPI decisions, on the record
 
@@ -1034,3 +1035,28 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   class's gating. The first real runner is Phase 5's in-memory backend; the
   GitLab backend cannot run it in unit tests (servlet-bound session context
   until its extraction).
+
+### Phase 4 wrap-up: module inventory and the Phase 5 hand-off
+
+- **Module inventory after Phase 4**: `legend-sdlc-backend-api` (L4 — the
+  domain API interfaces under `backend.api.<concern>`, the SPI under
+  `backend.api.spi`, `BackgroundTaskProcessor` under `backend.api.tools`, the
+  two default implementations) and `legend-sdlc-backend-test-suite` (L4 TCK).
+  The server consumes `Backend`/`BackendSession` through Guice providers;
+  backend selection is by the polymorphic `backend:` config (legacy `gitLab:`
+  adapter); discovery serves capabilities and structure/extension schemas.
+- **Deliberate interim states, all Phase 5 work** (each recorded in its step):
+  the GitLab backend lives in the server and unwraps
+  `ServletBackendSessionContext` (the state-store re-plumb of `GitLabSession`'s
+  tokens and the `AuthorizationRequiredException` conversion happen at
+  extraction); the session context's state store is request-transient; the
+  per-backend `/auth` resources stand until the generic resource consumes the
+  session's auth surface; `FSModule`'s `Backend` provider throws pending the FS
+  refit (which starts with a `DefaultEntityApi` over `core.entity`);
+  `DependenciesApi` stays commonly bound to the deprecated bridge;
+  `BackendEnvironment`'s object mapper is a plain `Jackson.newObjectMapper()`
+  until a backend actually consumes it; the FS/getReviews empty-list→501
+  compatibility check (decision 2) belongs to the FS refit.
+- **§4.5 audit list unchanged**: `PROJECT_STRUCTURE_FACTORY` (now with a
+  read-only accessor for discovery) and the TCCL test-resource lookup — both
+  still gate Phase 6, not Phase 5.
