@@ -253,6 +253,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
     private AuthClientInjector authClientInjector;
+    private volatile Backend backend;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
@@ -519,9 +520,35 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         };
     }
 
+    /**
+     * The deployment's backend: built once, on first use — deliberately not an eager {@code @Singleton}. The
+     * injector is created with eager singleton instantiation in the bundle run phase, and a configuration
+     * without a backend (e.g. the in-memory test servers, pending their own backend module) must still yield a
+     * valid injector; resources inject {@code Provider<Backend>} and only a request that actually exercises the
+     * backend may fail.
+     *
+     * @param environment backend environment
+     * @return backend
+     */
     @Provides
-    @Singleton
     public Backend provideBackend(BackendEnvironment environment)
+    {
+        Backend localBackend = this.backend;
+        if (localBackend == null)
+        {
+            synchronized (this)
+            {
+                localBackend = this.backend;
+                if (localBackend == null)
+                {
+                    this.backend = localBackend = buildBackend(environment);
+                }
+            }
+        }
+        return localBackend;
+    }
+
+    private Backend buildBackend(BackendEnvironment environment)
     {
         BackendConfiguration backendConfiguration = getConfiguration().getBackendConfiguration();
         if (backendConfiguration == null)

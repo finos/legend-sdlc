@@ -1060,3 +1060,52 @@ it defers to this review for the answer, which the §7 row now carries; stamping
 - **§4.5 audit list unchanged**: `PROJECT_STRUCTURE_FACTORY` (now with a
   read-only accessor for discovery) and the TCCL test-resource lookup — both
   still gate Phase 6, not Phase 5.
+
+### Correction (2026-07-10, found in Phase 5 verification): eager injector vs. run()-time state — server startup regression
+
+Phase 5 Step 1's full-reactor verification found `reorg` HEAD red: all 9
+`server.resources` test classes (33 surefire errors, one root cause,
+introduced by Steps 6–7 and verified pre-existing by stash + re-run at HEAD).
+
+- **Root cause**: guicier's `GuiceBundle` builds the injector with eager
+  singleton instantiation (`Stage.PRODUCTION`), in the bundle run phase —
+  before `Application.run`. Step 7 moved the `@Singleton @Provides`
+  `BackendEnvironment`/`Backend` methods into `AbstractBaseModule`, so every
+  server variant instantiated them at injector creation;
+  `provideBackendEnvironment` injects `BackgroundTaskProcessor`, whose binding
+  (`server::getBackgroundTaskProcessor`) was null until `run()` created the
+  processor → `Guice/NullInjectedIntoNonNullable` `CreationException` at
+  startup. Not test-only: `BaseModule` (production) failed identically, and
+  `FSModule`'s interim throwing `Backend` provider was itself `@Singleton` —
+  the FS server would have thrown at startup (unobserved:
+  `legend-sdlc-server-fs` has no app-startup test).
+- **Why Phase 4 shipped it**: the per-API session providers and the discovery
+  resource were deliberately lazy (`Provider<Backend>`), and Step 7 recorded
+  "InMemoryModule-based tests keep a valid injector graph" — the graph *was*
+  valid, but eager singleton instantiation evaluates it at creation anyway.
+  The failure is deterministic, so the Step 6–8 "green full-reactor" claims
+  did not in fact hold for the server module's resource tests; the record
+  stands corrected by this entry.
+- **Fix (this commit)**, three parts:
+  1. `BaseLegendSDLCServer.getBackgroundTaskProcessor()` creates the processor
+     lazily (synchronized, on first use); `run()` now only registers its
+     lifecycle shutdown. The binding may safely be pulled at injector
+     creation; the underlying `ThreadPoolExecutor` starts no threads until a
+     task is submitted (and core threads time out), so early creation cannot
+     pin the JVM of a command that never runs the server.
+  2. `AbstractBaseModule.provideBackend` is no longer `@Singleton`: it
+     memoizes (double-checked) so the backend is still built once per
+     deployment, but only on first actual use — restoring Step 7's intended
+     semantics: a backend-less configuration (the in-memory test servers; FS
+     pending its refit) yields a working server in which only requests that
+     actually exercise the backend fail. `provideBackendEnvironment` remains
+     an eager singleton — with (1), all of its inputs exist at creation time.
+  3. `FSModule.provideBackend` (the interim throwing binding) likewise drops
+     `@Singleton`, so the FS server starts again and the throw moves back to
+     dereference time, as its javadoc always claimed.
+- Verified: the 9 resource test classes run 40/40 green; full-reactor
+  `mvn install javadoc:javadoc` green.
+- Phase 5 forward note: the in-memory backend module upgrades the in-memory
+  test servers from "backend-less by laziness" to a real in-memory `backend:`
+  configuration, at which point the discovery endpoints work on test servers
+  too.
