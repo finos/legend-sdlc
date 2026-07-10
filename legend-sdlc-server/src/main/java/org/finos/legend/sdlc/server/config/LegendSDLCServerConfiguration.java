@@ -15,7 +15,9 @@
 package org.finos.legend.sdlc.server.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
+import org.finos.legend.sdlc.server.gitlab.GitLabBackendConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 
@@ -23,6 +25,9 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
 {
     @JsonProperty("gitLab")
     private GitLabConfiguration gitLabConfig;
+
+    @JsonProperty("backend")
+    private BackendConfiguration backendConfiguration;
 
     @JsonProperty("projectStructure")
     private ProjectStructureConfiguration projectStructureConfiguration;
@@ -33,9 +38,36 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     @JsonProperty("features")
     private LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
+    /**
+     * The GitLab configuration: the legacy top-level {@code gitLab:} section if present, otherwise the one
+     * embedded in a {@code backend: {type: gitlab, ...}} section. The fallback keeps the GitLab bundle, app
+     * info, and auth machinery working for deployments that have migrated to the {@code backend:} form.
+     *
+     * @return GitLab configuration or null
+     */
     public GitLabConfiguration getGitLabConfiguration()
     {
-        return this.gitLabConfig;
+        if (this.gitLabConfig != null)
+        {
+            return this.gitLabConfig;
+        }
+        return (this.backendConfiguration instanceof GitLabBackendConfiguration) ? ((GitLabBackendConfiguration) this.backendConfiguration).getGitLabConfiguration() : null;
+    }
+
+    /**
+     * The backend configuration: the {@code backend:} section if present; otherwise, synthesized from a legacy
+     * top-level {@code gitLab:} section (the transition adapter — a legacy GitLab deployment needs no config
+     * change to select the GitLab backend).
+     *
+     * @return backend configuration or null
+     */
+    public BackendConfiguration getBackendConfiguration()
+    {
+        if (this.backendConfiguration != null)
+        {
+            return this.backendConfiguration;
+        }
+        return (this.gitLabConfig == null) ? null : new GitLabBackendConfiguration(this.gitLabConfig);
     }
 
     public ProjectStructureConfiguration getProjectStructureConfiguration()
