@@ -20,9 +20,9 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
@@ -156,7 +156,7 @@ public class ConflictResolutionPatchesWorkspaceResource extends BaseResource
         }
         executeWithLogging(
                 "accept conflict resolution for user workspace " + workspaceId + " in project " + projectId + " for patch release version " + patchReleaseVersionId,
-                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, SourceSpecification.workspaceSourceSpecification(WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId))), command)
+                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER, WorkspaceAccessType.CONFLICT_RESOLUTION, WorkspaceSource.patchWorkspaceSource(versionId)), command.getMessage(), command.getEntityChanges(), command.getRevisionId())
         );
     }
 }

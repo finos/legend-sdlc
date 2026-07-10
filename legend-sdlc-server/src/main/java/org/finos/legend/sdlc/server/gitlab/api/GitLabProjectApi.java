@@ -29,7 +29,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
 import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;

@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructureVersion;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
@@ -31,7 +31,7 @@ import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
-import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.core.project.ProjectStructureUpdater;

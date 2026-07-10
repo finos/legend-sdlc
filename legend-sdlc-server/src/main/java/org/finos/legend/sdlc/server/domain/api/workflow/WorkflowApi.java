@@ -1,4 +1,4 @@
-// Copyright 2021 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,64 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.workflow;
 
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
-
-public interface WorkflowApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.workflow.WorkflowApi} instead.
+ */
+@Deprecated
+public interface WorkflowApi extends org.finos.legend.sdlc.backend.api.workflow.WorkflowApi
 {
-    WorkflowAccessContext getWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification);
-
-    WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId);
-
-    // Deprecated APIs
-
-    @Deprecated
-    default WorkflowAccessContext getProjectWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId)
-    {
-        return getWorkflowAccessContext(projectId, SourceSpecification.patchSourceSpecification(patchReleaseVersionId));
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getProjectWorkflowAccessContext(String projectId)
-    {
-        return getWorkflowAccessContext(projectId, SourceSpecification.projectSourceSpecification());
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        if (!(sourceSpecification instanceof WorkspaceSourceSpecification))
-        {
-            throw new IllegalArgumentException("Not a workspace source specification: " + sourceSpecification);
-        }
-        return getWorkflowAccessContext(projectId, sourceSpecification);
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getWorkspaceWorkflowAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
-    {
-        return getWorkflowAccessContext(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, workspaceType, workspaceAccessType).getSourceSpecification());
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, String versionIdString)
-    {
-        return getWorkflowAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionIdString));
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getVersionWorkflowAccessContext(String projectId, VersionId versionId)
-    {
-        return getWorkflowAccessContext(projectId, SourceSpecification.versionSourceSpecification(versionId));
-    }
-
-    @Deprecated
-    default WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
-    {
-        return getReviewWorkflowAccessContext(projectId, reviewId);
-    }
 }

@@ -19,10 +19,10 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
@@ -420,7 +420,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         String projectTag = this.getGitLabConfiguration().getProjectTag();
         if (tags.contains(projectTag + "_sandbox") && tags.contains(projectTag))
         {
-            this.projectApi.configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
+            ((GitLabProjectApi) this.projectApi).configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
         }
         return fromWorkspaceBranchName(projectId, branch.getName());
     }

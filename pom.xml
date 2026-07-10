@@ -41,6 +41,7 @@
         <module>legend-sdlc-project-files</module>
         <module>legend-sdlc-project-structure</module>
         <module>legend-sdlc-core</module>
+        <module>legend-sdlc-backend-api</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-server-fs</module>
         <module>legend-sdlc-generation-shared</module>
@@ -508,6 +509,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-core</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-backend-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

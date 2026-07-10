@@ -26,7 +26,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
 import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;

@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
+import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;

@@ -16,8 +16,8 @@ package org.finos.legend.sdlc.server.api.workflow;
 
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobAccessContext;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobAccessContext;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 
 import javax.inject.Inject;
 

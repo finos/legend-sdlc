@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.resources.comparison.project.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;

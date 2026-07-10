@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;

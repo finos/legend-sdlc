@@ -18,7 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

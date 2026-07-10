@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;

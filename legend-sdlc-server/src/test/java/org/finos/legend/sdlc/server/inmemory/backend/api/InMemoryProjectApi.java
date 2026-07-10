@@ -22,10 +22,7 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProjectAction;
 import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 
 import javax.inject.Inject;
@@ -88,12 +85,6 @@ public class InMemoryProjectApi implements ProjectApi
 
     @Override
     public void deleteProject(String id)
-    {
-        throw new UnsupportedOperationException("Not implemented");
-    }
-
-    @Override
-    public Revision configureProjectInWorkspace(GitLabProjectId projectId, ProjectType type, String groupId, String artifactId, WorkspaceSpecification workspaceSpec)
     {
         throw new UnsupportedOperationException("Not implemented");
     }

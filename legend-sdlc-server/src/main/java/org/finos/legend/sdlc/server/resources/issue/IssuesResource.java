@@ -18,7 +18,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.issue.Issue;
 import org.finos.legend.sdlc.server.application.issue.CreateIssueCommand;
-import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

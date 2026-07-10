@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.api.patch;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;

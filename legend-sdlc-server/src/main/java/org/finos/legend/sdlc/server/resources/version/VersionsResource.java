@@ -21,9 +21,9 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
+import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

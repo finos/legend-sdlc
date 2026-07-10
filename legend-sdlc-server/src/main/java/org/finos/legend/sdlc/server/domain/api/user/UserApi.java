@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.user;
 
-import org.finos.legend.sdlc.domain.model.user.User;
-
-import java.util.List;
-
-public interface UserApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.user.UserApi} instead.
+ */
+@Deprecated
+public interface UserApi extends org.finos.legend.sdlc.backend.api.user.UserApi
 {
-    List<User> getUsers();
-
-    User getUserById(String userId);
-
-    List<User> findUsers(String searchString);
-
-    User getCurrentUserInfo();
 }

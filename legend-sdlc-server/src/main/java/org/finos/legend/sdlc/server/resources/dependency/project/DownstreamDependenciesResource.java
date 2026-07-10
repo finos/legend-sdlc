@@ -16,8 +16,8 @@ package org.finos.legend.sdlc.server.resources.dependency.project;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
-import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;

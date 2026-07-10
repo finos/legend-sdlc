@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectStructure
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.project.source.PatchSourceSpecification;
 import org.finos.legend.sdlc.project.source.ProjectSourceSpecification;
@@ -37,7 +37,7 @@ import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryPatch;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryRevision;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryWorkspace;
-import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
 import java.util.List;

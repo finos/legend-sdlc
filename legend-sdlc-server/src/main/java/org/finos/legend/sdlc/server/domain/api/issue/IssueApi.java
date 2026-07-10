@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,17 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.issue;
 
-import org.finos.legend.sdlc.domain.model.issue.Issue;
-
-import java.util.List;
-
-public interface IssueApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.issue.IssueApi} instead.
+ */
+@Deprecated
+public interface IssueApi extends org.finos.legend.sdlc.backend.api.issue.IssueApi
 {
-    Issue getIssue(String projectId, String issueId);
-
-    List<Issue> getIssues(String projectId);
-
-    Issue createIssue(String projectId, String title, String description);
-
-    void deleteIssue(String projectId, String issueId);
 }

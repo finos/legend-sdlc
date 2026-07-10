@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.resources;
 
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
+import org.finos.legend.sdlc.backend.api.entity.EntityAccessContext;
 
 import java.util.Collection;
 import java.util.List;

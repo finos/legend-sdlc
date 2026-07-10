@@ -18,9 +18,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusReport;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;

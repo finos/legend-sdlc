@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.api.backup;
 
-import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
+import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
 

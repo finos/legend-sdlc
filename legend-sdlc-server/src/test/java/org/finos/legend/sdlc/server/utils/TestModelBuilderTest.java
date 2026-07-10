@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectVersion;
-import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.project.source.SourceSpecification;

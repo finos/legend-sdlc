@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
 import javax.inject.Inject;

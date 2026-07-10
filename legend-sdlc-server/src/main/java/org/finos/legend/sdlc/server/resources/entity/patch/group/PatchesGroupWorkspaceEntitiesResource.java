@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.server.application.entity.CreateOrUpdateEntityComma
 import org.finos.legend.sdlc.server.application.entity.DeleteEntitiesCommand;
 import org.finos.legend.sdlc.server.application.entity.DeleteEntityCommand;
 import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;

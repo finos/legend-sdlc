@@ -22,7 +22,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
