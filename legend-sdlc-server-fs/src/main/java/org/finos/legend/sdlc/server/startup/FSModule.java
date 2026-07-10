@@ -15,7 +15,10 @@
 package org.finos.legend.sdlc.server.startup;
 
 import com.google.inject.Binder;
+import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.server.BaseServer;
 import org.finos.legend.sdlc.server.api.backup.FileSystemBackupApi;
 import org.finos.legend.sdlc.server.api.build.FileSystemBuildApi;
@@ -417,6 +420,18 @@ public class FSModule extends DropwizardAwareModule<LegendSDLCServerFSConfigurat
         binder.bind(PatchesGroupWorkspaceRevisionProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceRevisionProjectConfigurationResource.class);
+    }
+
+    /**
+     * Interim: the FS server has not yet been refit onto the backend SPI (that is the next phase); this
+     * binding exists so resources that inject {@code Provider<Backend>} (the discovery endpoints) resolve. Exercising
+     * it fails until the refit.
+     */
+    @Provides
+    @Singleton
+    public Backend provideBackend()
+    {
+        throw new UnsupportedOperationException("The filesystem server does not yet implement the backend SPI");
     }
 
     public void initRootDirectory(FSConfiguration fsConfiguration)

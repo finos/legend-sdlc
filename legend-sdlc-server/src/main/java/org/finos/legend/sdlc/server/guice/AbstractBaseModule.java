@@ -14,9 +14,12 @@
 
 package org.finos.legend.sdlc.server.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import io.dropwizard.jackson.Jackson;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
@@ -25,6 +28,11 @@ import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
 import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
+import org.finos.legend.sdlc.backend.api.spi.BackendEnvironment;
+import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
@@ -236,6 +244,7 @@ import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Optional;
 import javax.inject.Named;
 
@@ -469,6 +478,64 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     private void configureCommonApis(Binder binder)
     {
         binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);
+    }
+
+    @Provides
+    @Singleton
+    public BackendEnvironment provideBackendEnvironment(ProjectStructureExtensionProvider extensionProvider, ProjectStructurePlatformExtensions platformExtensions, BackgroundTaskProcessor taskProcessor, ProjectStructureConfiguration projectStructureConfiguration)
+    {
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        return new BackendEnvironment()
+        {
+            @Override
+            public ObjectMapper getObjectMapper()
+            {
+                return objectMapper;
+            }
+
+            @Override
+            public BackgroundTaskProcessor getTaskProcessor()
+            {
+                return taskProcessor;
+            }
+
+            @Override
+            public ProjectStructureExtensionProvider getProjectStructureExtensionProvider()
+            {
+                return extensionProvider;
+            }
+
+            @Override
+            public ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions()
+            {
+                return platformExtensions;
+            }
+
+            @Override
+            public <T> T getService(Class<T> serviceType)
+            {
+                return (serviceType == ProjectStructureConfiguration.class) ? serviceType.cast(projectStructureConfiguration) : null;
+            }
+        };
+    }
+
+    @Provides
+    @Singleton
+    public Backend provideBackend(BackendEnvironment environment)
+    {
+        BackendConfiguration backendConfiguration = getConfiguration().getBackendConfiguration();
+        if (backendConfiguration == null)
+        {
+            throw new LegendSDLCServerException("No backend configured: expected a \"backend\" configuration section (or a legacy \"gitLab\" section)");
+        }
+        for (BackendFactory factory : ServiceLoader.load(BackendFactory.class))
+        {
+            if (factory.getConfigurationClass().isInstance(backendConfiguration))
+            {
+                return factory.build(backendConfiguration, environment);
+            }
+        }
+        throw new LegendSDLCServerException("No backend factory found for configuration of type " + backendConfiguration.getClass().getName());
     }
 
     protected void bindUserContext(Binder binder)
