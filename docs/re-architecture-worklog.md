@@ -1011,3 +1011,26 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   predates the SPI until its Phase 5 refit). Hitting `/configuration/capabilities`
   on the FS or in-memory servers errors until then — the endpoints are new, so
   nothing regresses.
+
+### Step 8: `legend-sdlc-backend-test-suite` (L4 TCK)
+
+- **New module** (published jar of abstract JUnit suites, junit at compile
+  scope per the test-utils precedent), package
+  `org.finos.legend.sdlc.backend.tck`. The Phase 3 seam-R2 seed moves in:
+  `LayoutInvariantsTestSuite` from `legend-sdlc-core`'s test-jar into the
+  module's main tree (`core.tck` → `backend.tck`), and
+  `TestInMemoryLayoutInvariants` (its in-memory-provider runner) into the
+  module's own test tree — it could not stay in core's tests without a module
+  cycle. Core's test-jar remains published (the server still consumes it).
+- **`BackendContractTestSuite`** (new): the capability model as executable
+  contract — backend identity (type non-null; at least one workspace flavor
+  declared), session user-id passthrough, and for each optional capability:
+  declared ⇒ the accessor yields an api; undeclared ⇒
+  `UnsupportedCapabilityException` carrying that capability and 501 (never
+  `UnsupportedOperationException`, never null). Ships a default in-memory
+  `BackendSessionContext` fixture.
+- **`TestMinimalBackendContract`** runs the contract over a minimal
+  `AbstractBackend` fixture (USER_WORKSPACES only) — certifying the base
+  class's gating. The first real runner is Phase 5's in-memory backend; the
+  GitLab backend cannot run it in unit tests (servlet-bound session context
+  until its extraction).
