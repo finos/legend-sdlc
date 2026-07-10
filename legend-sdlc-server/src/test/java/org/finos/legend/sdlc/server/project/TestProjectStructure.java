@@ -805,6 +805,7 @@ public abstract class TestProjectStructure<T extends ProjectStructure>
                             .withProjectStructureVersion(this.projectStructureVersion)
                             .withProjectStructureExtensionVersion(this.projectStructureExtensionVersion)
                             .withGroupId(GROUP_ID_2)
+                            .withProduceShadedServiceJar(true)
                             .withArtifactId(ARTIFACT_ID_2))
                     .withWorkspace(workspaceSpec)
                     .withRevisionId(revision.getId())
