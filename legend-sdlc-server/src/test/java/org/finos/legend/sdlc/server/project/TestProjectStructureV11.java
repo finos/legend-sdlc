@@ -14,18 +14,20 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.structure.ProjectStructureV11Factory;
+
 import org.apache.maven.model.Dependency;
 import org.apache.maven.model.Plugin;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactType;
-import org.finos.legend.sdlc.server.project.ProjectStructureV11Factory.ProjectStructureV11;
-import org.finos.legend.sdlc.server.project.maven.LegendEntityPluginMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.LegendFileGenerationPluginMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.LegendModelGenerationPluginMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.LegendServiceExecutionGenerationPluginMavenHelper;
-import org.finos.legend.sdlc.server.project.maven.MavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure;
-import org.finos.legend.sdlc.server.project.maven.MultiModuleMavenProjectStructure.ModuleConfig;
+import org.finos.legend.sdlc.project.structure.ProjectStructureV11Factory.ProjectStructureV11;
+import org.finos.legend.sdlc.project.structure.maven.LegendEntityPluginMavenHelper;
+import org.finos.legend.sdlc.project.structure.maven.LegendFileGenerationPluginMavenHelper;
+import org.finos.legend.sdlc.project.structure.maven.LegendModelGenerationPluginMavenHelper;
+import org.finos.legend.sdlc.project.structure.maven.LegendServiceExecutionGenerationPluginMavenHelper;
+import org.finos.legend.sdlc.project.structure.maven.MavenProjectStructure;
+import org.finos.legend.sdlc.project.structure.maven.MultiModuleMavenProjectStructure;
+import org.finos.legend.sdlc.project.structure.maven.MultiModuleMavenProjectStructure.ModuleConfig;
 
 import java.util.Collections;
 import java.util.EnumMap;

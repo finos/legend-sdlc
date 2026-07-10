@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.server.domain.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
 import javax.inject.Inject;
 

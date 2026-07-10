@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.gitlab.resources;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.server.auth.Token;
 import org.finos.legend.sdlc.server.auth.Token.TokenReader;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
@@ -137,7 +138,7 @@ public class GitLabAuthResource extends BaseResource
         {
             this.userContext.gitLabAuthCallback(code);
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             throw e;
         }

@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,24 +14,13 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
-public interface ProjectStructureExtensionProvider
+/**
+ * @deprecated Use {@link org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider}, which this
+ * interface merely extends. Existing implementations of this interface remain valid — they are implementations of
+ * the relocated interface — but should re-implement the relocated interface directly. This bridge is retained
+ * temporarily for compatibility and will then be removed.
+ */
+@Deprecated
+public interface ProjectStructureExtensionProvider extends org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider
 {
-    /**
-     * Return the latest project structure extension version for the given project structure version.
-     * Returns null if there is no such project structure extension version.
-     *
-     * @param projectStructureVersion project structure version
-     * @return latest project structure extension version or null
-     */
-    Integer getLatestVersionForProjectStructureVersion(int projectStructureVersion);
-
-    /**
-     * Return the project structure extension for the given structure and extension version. Throws
-     * an IllegalArgumentException if there is no such project structure extension.
-     *
-     * @param projectStructureVersion          project structure version
-     * @param projectStructureExtensionVersion project extension version
-     * @return project structure extension
-     */
-    ProjectStructureExtension getProjectStructureExtension(int projectStructureVersion, int projectStructureExtensionVersion);
 }

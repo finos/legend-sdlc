@@ -14,15 +14,18 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
+
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.project.InMemoryProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.junit.Assert;
 import org.junit.Test;
 

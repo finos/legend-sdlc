@@ -32,6 +32,7 @@ import org.finos.legend.sdlc.server.config.ErrorHandlingConfiguration;
 import org.finos.legend.sdlc.server.config.ServerConfiguration;
 import org.finos.legend.sdlc.server.error.CatchAllExceptionMapper;
 import org.finos.legend.sdlc.server.error.JsonProcessingExceptionMapper;
+import org.finos.legend.sdlc.server.error.LegendSDLCExceptionMapper;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
@@ -132,6 +133,7 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         boolean includeStackTraces = Optional.ofNullable(configuration.getErrorHandlingConfiguration()).map(ErrorHandlingConfiguration::getIncludeStackTrace).orElse(false);
         environment.jersey().register(new JsonProcessingExceptionMapper(includeStackTraces));
         environment.jersey().register(new LegendSDLCServerExceptionMapper(includeStackTraces));
+        environment.jersey().register(new LegendSDLCExceptionMapper(includeStackTraces));
         environment.jersey().register(new CatchAllExceptionMapper(includeStackTraces));
     }
 

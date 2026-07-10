@@ -14,10 +14,13 @@
 
 package org.finos.legend.sdlc.server.project.extension;
 
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
+
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.map.primitive.MutableIntObjectMap;
 import org.eclipse.collections.impl.factory.primitive.IntObjectMaps;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

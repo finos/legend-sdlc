@@ -14,12 +14,14 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
+
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ImmutableList;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
 import org.finos.legend.sdlc.serialization.EntityTextSerializer;
-import org.finos.legend.sdlc.server.project.ProjectStructure.EntitySourceDirectory;
 import org.junit.Assert;
 import org.junit.Test;
 

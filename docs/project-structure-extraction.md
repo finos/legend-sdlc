@@ -214,33 +214,39 @@ The extraction can be done incrementally to reduce risk:
 1. ✅ Create the `legend-sdlc-shared` module with no SDLC dependencies.
 2. ✅ Move `StringTools` from `legend-sdlc-server-shared` to `legend-sdlc-shared`.
 3. ✅ Move `IOTools` from `legend-sdlc-project-files` to `legend-sdlc-shared`.
-4. Refactor `LegendSDLCServerException` to use `int statusCode` instead of
-   `javax.ws.rs.core.Response.Status`. Move it to `legend-sdlc-shared`.
+4. ✅ Refactor `LegendSDLCServerException` to use `int statusCode` instead of
+   `javax.ws.rs.core.Response.Status`. Move it to `legend-sdlc-shared`. *(Done as the
+   re-architecture's rename to `org.finos.legend.sdlc.error.LegendSDLCException`, with
+   `LegendSDLCServerException` left as a deprecated subclass.)*
 5. ✅ Add `legend-sdlc-shared` as a dependency of `legend-sdlc-project-files` and
    `legend-sdlc-server-shared`. Update imports in both modules.
 6. ✅ Build and verify all tests pass.
 
 ### Phase 2: Prepare the `ProjectStructure` split
 
-7. Promote `EntitySourceDirectory` from an inner class to a top-level class (still in
+7. ✅ Promote `EntitySourceDirectory` from an inner class to a top-level class (still in
    `legend-sdlc-server`). This is a refactoring-only change.
-8. Extract `UpdateBuilder` and `updateProjectConfiguration()` into a standalone
+8. ✅ Extract `UpdateBuilder` and `updateProjectConfiguration()` into a standalone
    `ProjectStructureUpdater` class (still in `legend-sdlc-server`). Have `ProjectStructure`
-   delegate to it. Add deprecated forwarding methods.
+   delegate to it. Add deprecated forwarding methods. *(Done without forwarding methods:
+   `ProjectStructure` left the server module in the same release, so the rename is covered
+   by the migration recipe instead.)*
 
 ### Phase 3: Create `legend-sdlc-project-structure`
 
-9. Create `legend-sdlc-project-structure` module with dependencies on `legend-sdlc-shared`,
+9. ✅ Create `legend-sdlc-project-structure` module with dependencies on `legend-sdlc-shared`,
     `legend-sdlc-model`, `legend-sdlc-project-files`, `legend-sdlc-entity-serialization`,
     Eclipse Collections, Jackson, `maven-model`, and `plexus-utils`.
-10. Move the read-side classes into the new module. Keep the same Java package
-    (`org.finos.legend.sdlc.server.project`) to minimize source-level breakage.
-11. Add `legend-sdlc-project-structure` as a dependency of `legend-sdlc-server`.
-12. Update `ProjectStructureUpdater`, config, and extension classes in `legend-sdlc-server`
+10. ✅ Move the read-side classes into the new module. ~~Keep the same Java package
+    (`org.finos.legend.sdlc.server.project`) to minimize source-level breakage.~~ *(Superseded,
+    per the banner above: moved to the re-architecture's `org.finos.legend.sdlc.project.structure`
+    packages; see `project-structure-migration.md`.)*
+11. ✅ Add `legend-sdlc-project-structure` as a dependency of `legend-sdlc-server`.
+12. ✅ Update `ProjectStructureUpdater`, config, and extension classes in `legend-sdlc-server`
     to import from the new module.
 
 ### Phase 4: Validate
 
-13. Build the full `legend-sdlc` project and verify that all existing tests pass.
-14. Verify that `legend-sdlc-project-structure` can be depended on without pulling in
+13. ✅ Build the full `legend-sdlc` project and verify that all existing tests pass.
+14. ✅ Verify that `legend-sdlc-project-structure` can be depended on without pulling in
     `legend-sdlc-server` or `legend-sdlc-server-shared`.

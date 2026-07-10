@@ -33,19 +33,21 @@ import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider.WorkspaceAccessType;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
-import org.finos.legend.sdlc.server.project.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
+import org.finos.legend.sdlc.server.project.ProjectStructureUpdater;
+import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.GitLabApi;
@@ -296,7 +298,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             {
                 configUpdater.setProjectStructureExtensionVersion(this.projectStructureExtensionProvider.getLatestVersionForProjectStructureVersion(projectStructureVersion));
             }
-            ProjectStructure.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
+            ProjectStructureUpdater.newUpdateBuilder(getProjectFileAccessProvider(), project.getProjectId(), configUpdater)
                     .withMessage("Build project structure")
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions)
@@ -517,7 +519,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
                     .withProjectType(type)
                     .withGroupId(groupId)
                     .withArtifactId(artifactId);
-            ProjectStructure.UpdateBuilder builder = ProjectStructure.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
+            ProjectStructureUpdater.UpdateBuilder builder = ProjectStructureUpdater.newUpdateBuilder(projectFileAccessProvider, projectId.toString(), configUpdater)
                     .withWorkspace(workspaceSpec)
                     .withProjectStructureExtensionProvider(this.projectStructureExtensionProvider)
                     .withProjectStructurePlatformExtensions(this.projectStructurePlatformExtensions);
@@ -630,7 +632,7 @@ public class GitLabProjectApi extends GitLabApiWithFileAccess implements Project
             org.gitlab4j.api.models.Project updatedProject = new org.gitlab4j.api.models.Project().withId(currentProject.getId()).withDescription(newDescription);
             withRetries(() -> getGitLabApi().getProjectApi().updateProject(updatedProject));
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             throw e;
         }

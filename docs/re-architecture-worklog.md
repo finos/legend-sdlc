@@ -86,7 +86,107 @@ Explicitly *not* done (deferred to their phases):
 
 ## Phase 2 — Project structure extraction
 
-Not started. Inputs to carry in: seams S2 and R1 (re-architecture §6), the §5
-migration recipe + dual-keyed `ServiceLoader` lookup, the extension-SPI interface
-bridge, and the two Phase-1 notes above (mapper for `LegendSDLCException`; catch-site
-audit).
+**Status: complete.** Landed as four commits: EntitySourceDirectory promotion;
+server pass-through handling for `LegendSDLCException`; write-side extraction
+(`ProjectStructureUpdater`, seam R1); module creation and read-side move. External
+impact is documented in [`project-structure-migration.md`](project-structure-migration.md).
+
+What moved:
+
+- **`legend-sdlc-project-structure` (L2)** now holds the read-side:
+  `ProjectStructure` (write-side stripped), top-level `EntitySourceDirectory`,
+  factories (`ProjectStructureFactory`, `ProjectStructureVersionFactory`,
+  V0/V11/V12/V13), `ProjectStructurePlatformExtensions`, the `Simple*` config
+  classes (`org.finos.legend.sdlc.project.structure`), the whole maven family
+  (`…structure.maven`), and the extension SPI **interfaces**
+  (`…structure.extension`) including `UpdateProjectStructureExtension` — an
+  addition to the plan's list, forced because V11+ factories consume it; it is
+  `ServiceLoader`-discovered, so external impls must re-key (bridge javadoc +
+  recipe call this out; **no** dual-key lookup for it, unlike version factories —
+  judged authoring-framework surface with likely no external registrants).
+- **`ProjectStructureUpdater`** (server module, `server.project`): the write-side —
+  `updateProjectConfiguration`, validators, legacy-dependency upgrading,
+  `UpdateBuilder`. No server-infrastructure imports (destined for L3). **Seam R1**:
+  the structure/extension/legacy-collect calls are folded into one private dispatch
+  method with a do-not-extend javadoc.
+- **Seam S2**: `ConfigurationProperty` + `ConfigurationPropertyType` in
+  `legend-sdlc-model` (verbatim from the config-options plan §4.1; the enum's value
+  set is a starter owned by that plan) and `getConfigurationProperties()` (default
+  empty) on `ProjectStructureVersionFactory` and `ProjectStructureExtension`.
+- **Dual-keyed factory lookup**: `ProjectStructureFactory.newFactory(ClassLoader)`
+  also reads the *legacy* services resource manually and instantiates entries
+  against the relocated base class (so re-keying can lag recompilation), deduped by
+  class name. Beware stale `target/classes`: a non-clean build leaves the old
+  services file behind and the legacy loader trips on it (`ClassNotFoundException`
+  → `ExceptionInInitializerError`); `mvn clean` fixes it.
+- **Exception migration**: relocated code throws `LegendSDLCException` (400/500 as
+  before). Server-side: new `LegendSDLCExceptionMapper` (+ `ExtendedErrorMessage`
+  routing, `BaseExceptionMapper.buildResponse(int, …)`), `BaseResource` and the pure
+  rethrow guards widened to the base type. The 8 revision-api catch sites
+  (`GitLabRevisionApi`, `FileSystemRevisionApi`) deliberately stay subclass-typed:
+  they feed subclass-typed exception processors and guard backend-native code only.
+
+Decisions / deviations:
+
+- **Deliberate L2 API widenings** (all forced by the updater living outside L2's
+  package — which is also Phase 3's geometry, so this was decided now, not deferred):
+  `getProjectConfigurationFile` / `readProjectConfiguration` /
+  `serializeProjectConfiguration` public (L2 owns the `project.json` format);
+  comparators, `validateDependencyConflicts`, `isLegacyProjectDependency`,
+  `newEntitySourceDirectory`, `SimpleProjectConfiguration.newConfiguration`/copy-ctor
+  public; and the legacy 3-arg `collectUpdateProjectConfigurationOperations` hook
+  protected→public (its deprecated 4-arg sibling was already public). Overriders
+  updated in-repo; external overriders need `protected`→`public` (recipe step 3).
+  Static-method widenings can break external code that *hides* those statics with
+  `protected` re-declarations — accepted under the may-break framework contract.
+- **No deprecated `newUpdateBuilder` forwarders on `ProjectStructure`**: the class
+  left the server module in the same phase, so forwarders would only have lived for
+  intermediate commits; the recipe documents the rename instead (deviation from
+  extraction-doc step 8, which re-architecture §5 supersedes in spirit).
+- **Extension impls** (`Default*`/`Base*`/`Simple*`/`Void*`) stay in the server and
+  now implement the *relocated* interfaces via single-type imports that shadow the
+  same-package bridge interfaces (JLS 7.5.1/6.4.1 — legal, slightly subtle; noted
+  here so nobody "fixes" the imports away).
+- **Tests stay in the server module** this phase (they exercise relocated classes
+  through new imports; the characterization net is intact). Moving the pure
+  read-side tests to L2 is deferred — natural to do in Phase 3 when the TCK starts.
+- **`TestProjectStructure`'s five `assertThrows` now expect `LegendSDLCException`**:
+  the thrown *type* from update flows changed by design; codes/messages asserted
+  unchanged.
+
+For Phase 3 (carry-ins):
+
+- `ProjectConfigurationUpdater` is consumed by the updater but slated for L4 in the
+  plan (§3.3 vs §6 tension). Resolve when the updater moves to L3 — likely the
+  config-delta value object belongs at L3, not L4.
+- `ProjectStructure.PROJECT_STRUCTURE_FACTORY` is a process-global static (loads
+  factories from `ProjectStructure`'s classloader at class-init). Preserved as-is;
+  it is on the §4.5 "no process-global mutable state below L4" audit list.
+- ~~L1 package rename~~ *(done post-phase, see below)*; the `SourceSpecification`
+  L1/L4 split was *not* done (plan permits deferral).
+
+## Post-phase package renames (2026-07-08)
+
+Two renames landed after the Phase 2 commits, both while the `reorg` branch is
+still pre-release:
+
+- **L2**: `org.finos.legend.sdlc.structure[.maven|.extension]` →
+  `org.finos.legend.sdlc.project.structure[.maven|.extension]` (user decision on
+  the package convention). Service key re-keyed to match; the dual-key legacy
+  lookup still reads the historical `server.project` key.
+- **L1 storage SPI**: `org.finos.legend.sdlc.server.project` →
+  `org.finos.legend.sdlc.project.files` for `ProjectFileAccessProvider`,
+  `ProjectFileOperation`, `ProjectFiles`, `ProjectPaths`, and the three
+  `FileAccessContext` helpers (+ tests). **No deprecation bridges**: an interface
+  with nested types cannot be aliased in a way that keeps consumer code
+  compiling, and external L1 consumers are speculative (§5's promises cover
+  extension implementors, not storage providers); the migration recipe documents
+  the import rename instead. The `SourceSpecification`/`WorkspaceSpecification`
+  taxonomy deliberately **keeps** its `server.domain.api.*` packages: §3.3
+  earmarks it for the L1/L4 split, so its final package is a Phase 4
+  design-review decision — renaming it now would mean renaming it twice.
+- The old `org.finos.legend.sdlc.server.project` package now contains only
+  server-side residents: `ProjectStructureUpdater` (L3-bound),
+  `ProjectConfigurationStatusReport`, `config/`, and the concrete extension
+  impls. The updater and same-package tests gained explicit imports of the
+  relocated L1/L2 types.

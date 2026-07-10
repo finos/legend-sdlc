@@ -22,9 +22,9 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGenerati
 import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.project.SimpleArtifactGeneration;
-import org.finos.legend.sdlc.server.project.SimpleProjectConfiguration;
-import org.finos.legend.sdlc.server.project.SimpleProjectDependency;
+import org.finos.legend.sdlc.project.structure.SimpleArtifactGeneration;
+import org.finos.legend.sdlc.project.structure.SimpleProjectConfiguration;
+import org.finos.legend.sdlc.project.structure.SimpleProjectDependency;
 
 import java.util.List;
 

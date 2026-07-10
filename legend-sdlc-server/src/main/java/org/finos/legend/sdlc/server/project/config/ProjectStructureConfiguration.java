@@ -18,8 +18,8 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtensionProvider;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 
 import java.util.Collections;
 import java.util.List;

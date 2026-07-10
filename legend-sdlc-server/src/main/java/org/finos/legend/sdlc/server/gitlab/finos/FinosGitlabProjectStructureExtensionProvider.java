@@ -20,7 +20,7 @@ import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.impl.utility.MapIterate;
 import org.finos.legend.sdlc.server.project.config.ProjectFileConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
-import org.finos.legend.sdlc.server.project.extension.ProjectStructureExtension;
+import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.SimpleProjectStructureExtensionProvider;
 
 import java.util.Map;

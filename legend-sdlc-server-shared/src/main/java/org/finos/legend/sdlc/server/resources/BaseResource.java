@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources;
 
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.slf4j.Logger;
@@ -56,10 +56,10 @@ public abstract class BaseResource
             }
             return result;
         }
-        catch (LegendSDLCServerException e)
+        catch (LegendSDLCException e)
         {
             long endTime = System.nanoTime();
-            Status status = e.getStatus();
+            Status status = Status.fromStatusCode(e.getStatusCode());
             if ((status != null) && (status.getFamily() == Family.REDIRECTION))
             {
                 SDLCMetricsHandler.operationRedirect(startTime, endTime, metricName);

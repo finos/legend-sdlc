@@ -17,6 +17,7 @@ package org.finos.legend.sdlc.server.error;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.dropwizard.jersey.errors.ErrorMessage;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -60,9 +61,9 @@ class ExtendedErrorMessage extends ErrorMessage
 
     static ExtendedErrorMessage fromThrowable(Throwable t, boolean includeStackTrace)
     {
-        if (t instanceof LegendSDLCServerException)
+        if (t instanceof LegendSDLCException)
         {
-            return fromLegendSDLCServerException((LegendSDLCServerException) t, includeStackTrace);
+            return fromLegendSDLCException((LegendSDLCException) t, includeStackTrace);
         }
         if (t instanceof WebApplicationException)
         {
@@ -74,6 +75,11 @@ class ExtendedErrorMessage extends ErrorMessage
     static ExtendedErrorMessage fromLegendSDLCServerException(LegendSDLCServerException e, boolean includeStackTrace)
     {
         return fromThrowable(e, e.getStatus().getStatusCode(), null, null, includeStackTrace);
+    }
+
+    static ExtendedErrorMessage fromLegendSDLCException(LegendSDLCException e, boolean includeStackTrace)
+    {
+        return fromThrowable(e, e.getStatusCode(), null, null, includeStackTrace);
     }
 
     static ExtendedErrorMessage fromWebApplicationException(WebApplicationException e, boolean includeStackTrace)

@@ -14,6 +14,9 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.structure.SimpleProjectConfiguration;
+
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.set.primitive.ImmutableIntSet;
 import org.eclipse.collections.impl.factory.primitive.IntSets;

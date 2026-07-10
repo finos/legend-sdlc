@@ -32,11 +32,12 @@ import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificatio
 import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
-import org.finos.legend.sdlc.server.project.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.project.ProjectFileOperation;
-import org.finos.legend.sdlc.server.project.ProjectFiles;
-import org.finos.legend.sdlc.server.project.ProjectStructure;
-import org.finos.legend.sdlc.server.project.CachingFileAccessContext;
+import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFiles;
+import org.finos.legend.sdlc.project.structure.ProjectStructure;
+import org.finos.legend.sdlc.project.files.CachingFileAccessContext;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
@@ -114,7 +115,7 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
         {
             ProjectFileAccessProvider.FileAccessContext fileAccessContext = getFileAccessContext(getProjectFileAccessProvider());
             ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-            for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+            for (EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
             {
                 String filePath = sourceDirectory.entityPathToFilePath(path);
                 ProjectFileAccessProvider.ProjectFile file = fileAccessContext.getFile(filePath);
@@ -522,11 +523,11 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
     private Stream<EntityProjectFile> getEntityProjectFiles(String branchName, Repository repo, ProjectFileAccessProvider.FileAccessContext fileAccessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
-        List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
+        List<EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
         return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(sd, branchName, repo, projectStructure.getProjectConfiguration().getProjectId()));
     }
 
-    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectStructure.EntitySourceDirectory sourceDirectory, String workspaceId, Repository repo, String projectID)
+    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(EntitySourceDirectory sourceDirectory, String workspaceId, Repository repo, String projectID)
     {
         List<EntityProjectFile> files = new ArrayList<>();
         try
@@ -572,12 +573,12 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
     private Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
     {
         ProjectStructure projectStructure = ProjectStructure.getProjectStructure(accessContext);
-        List<ProjectStructure.EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
+        List<EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
         ProjectFileAccessProvider.FileAccessContext cachingAccessContext = (sourceDirectories.size() > 1) ? CachingFileAccessContext.wrap(accessContext) : accessContext;
         return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(cachingAccessContext, sd, projectStructure.getProjectConfiguration().getProjectId()));
     }
 
-    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, ProjectStructure.EntitySourceDirectory sourceDirectory, String projectID)
+    private Stream<EntityProjectFile> getSourceDirectoryProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext, EntitySourceDirectory sourceDirectory, String projectID)
     {
         return accessContext.getFilesInDirectory(sourceDirectory.getDirectory())
                 .filter(f -> sourceDirectory.isPossiblyEntityFilePath(f.getPath()))
@@ -620,7 +621,7 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
                 }
 
                 Entity entity = Entity.newEntity(entityPath, change.getClassifierPath(), change.getContent());
-                ProjectStructure.EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+                EntitySourceDirectory sourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
                 if (sourceDirectory == null)
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
@@ -649,7 +650,7 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": could not find entity \"" + entityPath + "\"");
                 }
 
-                ProjectStructure.EntitySourceDirectory newSourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
+                EntitySourceDirectory newSourceDirectory = projectStructure.findSourceDirectoryForEntity(entity);
                 if (newSourceDirectory == null)
                 {
                     throw new LegendSDLCServerException("Unable to handle operation " + change + ": cannot serialize entity \"" + entityPath + "\"");
@@ -671,7 +672,7 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
             case RENAME:
             {
                 String currentEntityPath = change.getEntityPath();
-                for (ProjectStructure.EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
+                for (EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
                 {
                     String filePath = sourceDirectory.entityPathToFilePath(currentEntityPath);
                     if (fileAccessContext.fileExists(filePath))
@@ -691,14 +692,14 @@ public class FileSystemEntityApi extends FileSystemApiWithFileAccess implements 
 
     static class EntityProjectFile
     {
-        private final ProjectStructure.EntitySourceDirectory sourceDirectory;
+        private final EntitySourceDirectory sourceDirectory;
         private final ProjectFileAccessProvider.ProjectFile file;
         private String path;
         private Entity entity;
         private String projectID;
         private String rootDirectory;
 
-        private EntityProjectFile(ProjectStructure.EntitySourceDirectory sourceDirectory, ProjectFileAccessProvider.ProjectFile file, String projectID, String rootDirectory)
+        private EntityProjectFile(EntitySourceDirectory sourceDirectory, ProjectFileAccessProvider.ProjectFile file, String projectID, String rootDirectory)
         {
             this.sourceDirectory = sourceDirectory;
             this.file = file;

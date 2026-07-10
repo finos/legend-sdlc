@@ -14,12 +14,18 @@
 
 package org.finos.legend.sdlc.server.project;
 
+import org.finos.legend.sdlc.project.files.ProjectPaths;
+
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.project.files.AbstractFileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectFiles;
 import org.finos.legend.sdlc.server.SimpleInMemoryVCS;
 import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;

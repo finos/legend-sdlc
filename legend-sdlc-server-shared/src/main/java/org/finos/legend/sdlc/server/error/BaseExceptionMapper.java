@@ -46,6 +46,18 @@ abstract class BaseExceptionMapper<T extends Throwable> implements ExceptionMapp
                 .build();
     }
 
+    protected Response buildResponse(int statusCode, ExtendedErrorMessage errorMessage)
+    {
+        if (statusCode != errorMessage.getCode())
+        {
+            LOGGER.warn("Building response with status code ({}) that does not match error message status code ({})", statusCode, errorMessage.getCode());
+        }
+        return Response.status(statusCode)
+                .entity(errorMessage)
+                .type(MediaType.APPLICATION_JSON)
+                .build();
+    }
+
     protected Response buildDefaultResponse(Throwable t)
     {
         Status status = Status.INTERNAL_SERVER_ERROR;
