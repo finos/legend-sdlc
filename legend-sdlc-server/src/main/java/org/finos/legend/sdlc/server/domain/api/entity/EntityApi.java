@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,40 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.entity;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
-
-public interface EntityApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.entity.EntityApi} instead.
+ */
+@Deprecated
+public interface EntityApi extends org.finos.legend.sdlc.backend.api.entity.EntityApi
 {
-    // Entity access
-
-    EntityAccessContext getEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId);
-
-    default EntityAccessContext getEntityAccessContext(String projectId, SourceSpecification sourceSpecification)
-    {
-        return getEntityAccessContext(projectId, sourceSpecification, null);
-    }
-
-    EntityAccessContext getReviewFromEntityAccessContext(String projectId, String reviewId);
-
-    EntityAccessContext getReviewToEntityAccessContext(String projectId, String reviewId);
-
-    // Entity modification
-
-    EntityModificationContext getEntityModificationContext(String projectId, WorkspaceSourceSpecification sourceSpecification);
-
-    // Deprecated APIs
-
-    @Deprecated
-    default EntityAccessContext getReviewFromEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
-    {
-        return getReviewFromEntityAccessContext(projectId, reviewId);
-    }
-
-    @Deprecated
-    default EntityAccessContext getReviewToEntityAccessContext(String projectId, VersionId patchReleaseVersionId, String reviewId)
-    {
-        return getReviewToEntityAccessContext(projectId, reviewId);
-    }
 }

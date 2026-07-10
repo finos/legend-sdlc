@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,54 +14,15 @@
 
 package org.finos.legend.sdlc.server.domain.api.dependency;
 
-import java.util.Objects;
-
-public class ProjectRevision
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.dependency.ProjectRevision} instead.
+ */
+@Deprecated
+public class ProjectRevision extends org.finos.legend.sdlc.backend.api.dependency.ProjectRevision
 {
-    private final String projectId;
-    private final String revisionId;
-
     public ProjectRevision(String projectId, String revisionId)
     {
-        this.projectId = projectId;
-        this.revisionId = revisionId;
-    }
-
-    public String getProjectId()
-    {
-        return this.projectId;
-    }
-
-    public String getRevisionId()
-    {
-        return this.revisionId;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-
-        if (!(other instanceof ProjectRevision))
-        {
-            return false;
-        }
-
-        ProjectRevision that = (ProjectRevision) other;
-        return Objects.equals(this.getProjectId(), that.getProjectId()) && Objects.equals(this.getRevisionId(), that.getRevisionId());
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return Objects.hashCode(getProjectId()) + (53 * Objects.hashCode(getRevisionId()));
-    }
-
-    public String toProjectRevisionString()
-    {
-        return this.projectId + ":" + this.revisionId;
+        super(projectId, revisionId);
     }
 }

@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.api.issue;
 
 import org.finos.legend.sdlc.domain.model.issue.Issue;
-import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.server.exception.FSException;
 
 import javax.inject.Inject;

@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.domain.api.dependency;
 
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.impl.utility.Iterate;
+import org.finos.legend.sdlc.backend.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.junit.Assert;
 import org.junit.Before;

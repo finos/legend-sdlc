@@ -802,3 +802,48 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   interfaces themselves are untouched by this step and relocate with bridges in
   Step 2).
 - Verified: full-reactor `mvn install javadoc:javadoc` green (tests included).
+
+### Step 2: `legend-sdlc-backend-api` (L4); domain API interfaces move
+
+- **New module `legend-sdlc-backend-api`** (L4): depends on model, shared,
+  project-files, core. All `server/domain/api/**` interfaces moved (git mv) to
+  `org.finos.legend.sdlc.backend.api.<concern>` — concern subpackages preserved,
+  except `conflictResolution` normalized to `conflictresolution` (house
+  lowercase style, matching the FS module's precedent).
+  `ProjectConfigurationStatusReport` moved in from `server.project`. Left
+  behind in the server: `DependenciesApiImpl` (relocates in Step 4),
+  `TestModelBuilder` (server utility — consumes the depot `MetadataApi`, so it
+  is L6-bound and only its imports changed), and the `ProjectConfigurationUpdater`
+  bridge.
+- **Bridges**: `@Deprecated` bridge interfaces at every old FQN
+  (Phase 2 extension-SPI pattern — old extends relocated; nested member types
+  are inherited, so `WorkspaceApi.WorkspaceUpdateReport` etc. still resolve
+  through the bridges). **`NewVersionType` is an enum and cannot be bridged** —
+  documented in the migration recipe. `ProjectRevision` (class) bridged as a
+  constructor-forwarding subclass.
+- **De-servered on the way (the review's L4-cleanliness obligation)** — the
+  relocated interfaces now have zero `org.finos.legend.sdlc.server.*` imports:
+  - `ProjectApi.configureProjectInWorkspace(GitLabProjectId, …)` **dropped from
+    L4**: it has no resource callers — it is GitLab-internal (called by
+    `GitLabProjectApi`/`GitLabWorkspaceApi`; FS and in-memory only stubbed it).
+    Kept abstract on the deprecated bridge for external implementors; the
+    GitLab-internal call now goes through the concrete class (cast at the one
+    `GitLabWorkspaceApi` site); the FS/in-memory stubs are deleted.
+  - `ConflictResolutionApi.acceptConflictResolution` now takes
+    `(message, List<? extends EntityChange>, revisionId)` instead of the
+    Jackson application bean `PerformChangesCommand` (which stays at L6). The
+    command-taking overloads (including the deprecated user/group-workspace
+    forms) live on the bridge as delegating defaults; the four resources unwrap
+    the command themselves and call the neutral method (two of them had been
+    calling deprecated overloads).
+  - `VersionApi`/`BuildApi` default methods throw `LegendSDLCException(…, 400)`
+    instead of JAX-RS-typed `LegendSDLCServerException` (Phase 1/2 pattern;
+    wire behavior unchanged).
+- Same-package shadowing imports added where server classes remained in bridge
+  packages (`DependenciesApiImpl`, `TestDownstreamProjectSearch`) — the JLS
+  7.5.1 pattern already on record from Phases 2–3.
+- Build note: **PMD is active in the build** alongside checkstyle
+  (`UnnecessaryImport` caught a same-package import the scripted rewrite
+  produced).
+- Migration doc: one new row covering the interface relocation, the unbridged
+  enum, and the three relocated-shape changes.

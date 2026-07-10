@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,32 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.build;
 
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
-
-import javax.ws.rs.core.Response.Status;
-
-public interface BuildApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.build.BuildApi} instead.
+ */
+@Deprecated
+public interface BuildApi extends org.finos.legend.sdlc.backend.api.build.BuildApi
 {
-    BuildAccessContext getProjectBuildAccessContext(String projectId);
-
-    BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType);
-
-    default BuildAccessContext getVersionBuildAccessContext(String projectId, String versionIdString)
-    {
-        VersionId versionId;
-        try
-        {
-            versionId = VersionId.parseVersionId(versionIdString);
-        }
-        catch (IllegalArgumentException e)
-        {
-            throw new LegendSDLCServerException(e.getMessage(), Status.BAD_REQUEST, e);
-        }
-        return getVersionBuildAccessContext(projectId, versionId);
-    }
-
-    BuildAccessContext getVersionBuildAccessContext(String projectId, VersionId versionId);
 }

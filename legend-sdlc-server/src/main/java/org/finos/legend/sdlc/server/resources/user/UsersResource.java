@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.resources.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.user.User;
-import org.finos.legend.sdlc.server.domain.api.user.UserApi;
+import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;

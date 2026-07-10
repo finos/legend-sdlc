@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.ProjectWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSourceVisitor;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;

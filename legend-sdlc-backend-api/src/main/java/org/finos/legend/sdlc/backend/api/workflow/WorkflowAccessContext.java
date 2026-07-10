@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2021 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,17 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.domain.api.version;
+package org.finos.legend.sdlc.backend.api.workflow;
 
-public enum NewVersionType
+import org.finos.legend.sdlc.domain.model.workflow.Workflow;
+import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
+
+import java.util.List;
+
+public interface WorkflowAccessContext
 {
-    MAJOR, MINOR, PATCH
+    Workflow getWorkflow(String workflowId);
+
+    // TODO add temporal constraints
+    List<Workflow> getWorkflows(Iterable<String> revisionIds, Iterable<WorkflowStatus> statuses, Integer limit);
 }

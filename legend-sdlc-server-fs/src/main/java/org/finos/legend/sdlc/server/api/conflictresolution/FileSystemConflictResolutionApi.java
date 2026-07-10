@@ -14,11 +14,12 @@
 
 package org.finos.legend.sdlc.server.api.conflictresolution;
 
-import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
 
+import java.util.List;
 import javax.inject.Inject;
 
 public class FileSystemConflictResolutionApi implements ConflictResolutionApi
@@ -41,7 +42,7 @@ public class FileSystemConflictResolutionApi implements ConflictResolutionApi
     }
 
     @Override
-    public void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, PerformChangesCommand command)
+    public void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, String message, List<? extends EntityChange> entityChanges, String revisionId)
     {
         throw FSException.unavailableFeature();
     }

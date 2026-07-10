@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.application.version;
 
-import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
+import org.finos.legend.sdlc.backend.api.version.NewVersionType;
 
 public class CreateVersionCommand
 {

@@ -15,8 +15,8 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowAccessContext;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowAccessContext;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 
 import javax.inject.Inject;
 

@@ -29,7 +29,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
-import org.finos.legend.sdlc.server.domain.api.dependency.ProjectRevision;
+import org.finos.legend.sdlc.backend.api.dependency.ProjectRevision;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.InMemoryModule;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;

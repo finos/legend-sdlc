@@ -18,7 +18,7 @@ import org.eclipse.collections.impl.utility.ListIterate;
 import org.finos.legend.sdlc.core.comparison.ComparisonOperations;
 import org.finos.legend.sdlc.core.comparison.FileDiff;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
