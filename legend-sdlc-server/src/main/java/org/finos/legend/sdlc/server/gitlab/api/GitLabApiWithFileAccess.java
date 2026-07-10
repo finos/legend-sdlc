@@ -142,7 +142,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return ProjectStructure.getProjectStructure(projectId, sourceSpecification, revisionId, getProjectFileAccessProvider());
     }
 
-    protected ProjectFileAccessProvider getProjectFileAccessProvider()
+    public ProjectFileAccessProvider getProjectFileAccessProvider()
     {
         return new ProjectFileAccessProvider()
         {

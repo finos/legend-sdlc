@@ -907,3 +907,45 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   (both current backends have delegating shells already; nothing in Phase 4
   needs the api-level default).
 - backend-api pom gains eclipse-collections (api + impl).
+
+### Step 5: the GitLab `Backend` (in the server module, pending Phase 5)
+
+- **Auth-flow surface lands on `BackendSession`** (closing the Step 3
+  deferral), shaped from the two backends' route-identical `/auth` resources:
+  `isAuthorized()`, `authorize()` (throws `AuthorizationRequiredException`
+  when interaction is needed), `handleAuthorizationCallback(code, state)`,
+  `getUnacceptedTermsOfService()` — all with `default` implementations that
+  make a no-auth backend's session trivially correct (the litmus test,
+  literally).
+- **`GitLabBackend extends AbstractBackend`** (`server.gitlab`; declares all
+  ten capabilities): per-request `Session` constructs the existing GitLab api
+  classes exactly as Guice does today (deployment inputs from the backend +
+  environment; `GitLabUserContext` from the session context), inherits the
+  `DefaultDependenciesApi` wiring (which matches today's `DependenciesApiImpl`
+  composition exactly), overrides comparison natively, and implements the auth
+  surface by delegation (`isUserAuthorized`, `getGitLabAPI(true)`,
+  `gitLabAuthCallback`; terms-of-service logic replicated from the resource,
+  which keeps its copy until Phase 5 rewires it onto the session).
+- **Staging decision, on the record**: in Phase 4 the GitLab backend reaches
+  its servlet-bound machinery by unwrapping the server's
+  `ServletBackendSessionContext` (which wraps `UserContext`); pac4j/servlet
+  types are legal here because GitLab code *is* at L6 until Phase 5. The
+  context's state store is request-transient for now — persistent write-back
+  (session store + cookie refresh) lands when the first backend actually
+  consumes the store, i.e. when GitLab leaves the server and its
+  `GitLabSession` token fields are re-plumbed through it. The existing GitLab
+  auth resources are untouched; the generic `/auth` resource that consumes the
+  session surface is Phase 5 work.
+- **`BackendEnvironment.getService(Class)`** added (default null): a typed
+  escape hatch for backend-specific needs outside the SPI proper —
+  `GitLabBackendFactory` uses it to obtain the server's
+  `ProjectStructureConfiguration` (which `GitLabProjectApi` consumes but the
+  environment deliberately does not name; empty-config fallback preserved).
+- **`GitLabBackendConfiguration`** (`backend: {type: gitlab, …}`, fields
+  inline, built on `GitLabConfiguration`'s creator; the legacy `uat`/`prod`
+  mode sections are not carried into the new form) and
+  **`GitLabBackendFactory`** registered under
+  `META-INF/services/…spi.BackendFactory`.
+- `GitLabApiWithFileAccess.getProjectFileAccessProvider()` widened
+  protected→public so the session can supply the L1 provider (feeds the
+  inherited comparison default; GitLab itself overrides comparison natively).
