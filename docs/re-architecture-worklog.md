@@ -878,3 +878,32 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   zero compile dependencies (L0 tier) and the class needs slf4j.
 - backend-api pom gains project-structure, jackson-annotations,
   jackson-databind, slf4j-api.
+
+### Step 4: `AbstractBackend` and the L4 default implementations
+
+- **`DefaultDependenciesApi`** (`backend.api.dependency`): `DependenciesApiImpl`
+  relocated and renamed (git mv), `@Inject` stripped — L4 takes no
+  `javax.inject`; the old FQN remains in the server as a `@Deprecated`
+  constructor-forwarding bridge *with* the `@Inject`, and both Guice modules
+  keep binding it until Step 6 switches to session providers.
+- **`DefaultComparisonApi`** (`backend.api.comparison`, new): the generic
+  `ComparisonApi` over a `ProjectFileAccessProvider` + L3
+  `ComparisonOperations.compare` — which thereby gains its production caller,
+  as anticipated in Phase 3 Step 4. Revision semantics preserved from the
+  GitLab native implementation: workspace-creation = base → current of the
+  workspace source; workspace-source = source HEAD → workspace HEAD (from/to
+  order preserved). Review comparisons resolve the review via a supplied
+  `ReviewApi` supplier and assume a project-source workspace (the `Review`
+  model carries no workspace source) — backends with patch-scoped reviews
+  override; the supplier is wired to the session's `getReviewApi()`, so the
+  REVIEWS capability gate lives in exactly one place.
+- **`AbstractBackend`** (`backend.api.spi`): ctor takes
+  (type, capabilities, environment); inner abstract `Session` implements
+  `BackendSession` with the two defaults above wired in, capability-gated
+  throwing accessors for the eight optional APIs, and an abstract
+  `getProjectFileAccessProvider()` — the §3.2 minimal-contract shape.
+  **`getEntityApi()` stays abstract for now**: a `DefaultEntityApi` over
+  `core.entity` operations is the natural first task of the Phase 5 FS refit
+  (both current backends have delegating shells already; nothing in Phase 4
+  needs the api-level default).
+- backend-api pom gains eclipse-collections (api + impl).
