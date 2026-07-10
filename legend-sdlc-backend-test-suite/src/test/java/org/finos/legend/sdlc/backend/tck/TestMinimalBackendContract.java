@@ -15,10 +15,7 @@
 package org.finos.legend.sdlc.backend.tck;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.backend.api.project.ProjectApi;
-import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 import org.finos.legend.sdlc.backend.api.spi.AbstractBackend;
 import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendCapability;
@@ -122,25 +119,7 @@ public class TestMinimalBackendContract extends BackendContractTestSuite
             }
 
             @Override
-            public ProjectConfigurationApi getProjectConfigurationApi()
-            {
-                throw new UnsupportedOperationException("not exercised by the capability contract");
-            }
-
-            @Override
             public WorkspaceApi getWorkspaceApi()
-            {
-                throw new UnsupportedOperationException("not exercised by the capability contract");
-            }
-
-            @Override
-            public RevisionApi getRevisionApi()
-            {
-                throw new UnsupportedOperationException("not exercised by the capability contract");
-            }
-
-            @Override
-            public EntityApi getEntityApi()
             {
                 throw new UnsupportedOperationException("not exercised by the capability contract");
             }
