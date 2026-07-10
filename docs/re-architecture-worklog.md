@@ -847,3 +847,34 @@ it defers to this review for the answer, which the §7 row now carries; stamping
   produced).
 - Migration doc: one new row covering the interface relocation, the unbridged
   enum, and the three relocated-shape changes.
+
+### Step 3: the SPI and capability model (`backend.api.spi`)
+
+- **New package `org.finos.legend.sdlc.backend.api.spi`** (SPI machinery vs the
+  `backend.api.<concern>` domain interfaces): `Backend` (type / capabilities /
+  `newSession` / `close`, `AutoCloseable`), `BackendSession` (the 17 domain-API
+  accessors + `getUserId()`; contract javadoc pins the review's rulings — cheap
+  per-request creation, no identity guarantees, capability-gated accessors,
+  null-userId workspace specs resolve to the session user),
+  `BackendSessionContext` (user id as data + `BackendSessionStateStore`, the
+  host-implemented per-user string store for e.g. OAuth tokens),
+  `BackendFactory`, `BackendConfiguration` (Jackson-polymorphic base,
+  `@JsonTypeInfo` by `type`, inline subtype fields), `BackendEnvironment`
+  (object mapper, task processor, the deployment's extension provider +
+  platform extensions — pass-through, never backend-bundled),
+  `BackendCapability` (the decided starter enum, javadoc per constant),
+  `UnsupportedCapabilityException` (extends `LegendSDLCException` with 501
+  baked in, so the existing exception mapper already produces the right status;
+  carries capability + backend type for the structured body later), and
+  `AuthorizationRequiredException` (URI as data; 403 default, the auth
+  resource turns it into 302 where redirects are allowed).
+- **The auth-flow surface (authorize/callback/terms-of-service) is deliberately
+  NOT on `BackendSession` yet**: it lands in Step 5 shaped against GitLab's
+  real flows rather than designed blind — same phase, no SPI break.
+- **`BackgroundTaskProcessor` relocated** `server.tools` →
+  `org.finos.legend.sdlc.backend.api.tools` with a constructor-forwarding
+  deprecated bridge at the old FQN (nested `Task`/`RetryableTask` resolve
+  through the bridge). It could not go to `legend-sdlc-shared`: shared has
+  zero compile dependencies (L0 tier) and the class needs slf4j.
+- backend-api pom gains project-structure, jackson-annotations,
+  jackson-databind, slf4j-api.
