@@ -43,6 +43,14 @@ public class GitLabBackendConfiguration extends BackendConfiguration
         this.gitLabConfiguration = GitLabConfiguration.newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, serverConfig, appConfig, newProjectVisibility, gitLabAuthorizers);
     }
 
+    /**
+     * Adapter constructor for the legacy top-level {@code gitLab:} configuration section.
+     */
+    public GitLabBackendConfiguration(GitLabConfiguration gitLabConfiguration)
+    {
+        this.gitLabConfiguration = gitLabConfiguration;
+    }
+
     public GitLabConfiguration getGitLabConfiguration()
     {
         return this.gitLabConfiguration;

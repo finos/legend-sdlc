@@ -19,6 +19,8 @@ import io.dropwizard.ConfiguredBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabWebFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
 import javax.servlet.Filter;
@@ -29,6 +31,8 @@ import java.util.function.Function;
 
 public class GitLabBundle<C extends Configuration> implements ConfiguredBundle<C>
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabBundle.class);
+
     private final Function<? super C, ? extends GitLabConfiguration> configSupplier;
 
     public GitLabBundle(Function<? super C, ? extends GitLabConfiguration> configSupplier)
@@ -47,7 +51,8 @@ public class GitLabBundle<C extends Configuration> implements ConfiguredBundle<C
         GitLabConfiguration gitLabConfig = this.configSupplier.apply(configuration);
         if (gitLabConfig == null)
         {
-            throw new RuntimeException("Could not find GitLabConfiguration");
+            LOGGER.info("No GitLab configuration present; GitLab filter and health check not installed");
+            return;
         }
 
         Filter filter = GitLabWebFilter.fromConfig(gitLabConfig);

@@ -256,7 +256,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         configureCommonApis(binder);
         configureApis(binder);
 
-        binder.bind(UserContext.class);
+        bindUserContext(binder);
         binder.bind(TestModelBuilder.class);
         binder.bind(ProjectStructureConfiguration.class).toProvider(this::getProjectStructureConfiguration);
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
@@ -469,6 +469,11 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     private void configureCommonApis(Binder binder)
     {
         binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);
+    }
+
+    protected void bindUserContext(Binder binder)
+    {
+        binder.bind(UserContext.class);
     }
 
     protected abstract void configureApis(Binder binder);

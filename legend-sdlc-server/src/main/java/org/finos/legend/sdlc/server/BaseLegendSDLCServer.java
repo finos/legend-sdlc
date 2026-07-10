@@ -14,12 +14,15 @@
 
 package org.finos.legend.sdlc.server;
 
+import com.fasterxml.jackson.databind.jsontype.NamedType;
 import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
+import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
+import org.finos.legend.sdlc.server.backend.UnsupportedCapabilityExceptionMapper;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
@@ -31,10 +34,16 @@ import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
 
 public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfiguration> extends BaseServer<T>
 {
+    /**
+     * @deprecated Backend selection is by the polymorphic {@code backend:} configuration section (with a legacy
+     * adapter for the top-level {@code gitLab:} section); the mode string no longer decides anything.
+     */
+    @Deprecated
     public static final String GITLAB_MODE = "gitlab";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLegendSDLCServer.class);
@@ -69,11 +78,13 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
 
     protected void configureApis(Bootstrap<T> bootstrap)
     {
-        if (GITLAB_MODE.equals(this.mode))
-        {
-            // Add GitLab bundle
-            bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
-        }
+        // Register each discovered backend factory's configuration class as a subtype of the polymorphic
+        // "backend" configuration section, keyed by the factory's type
+        ServiceLoader.load(BackendFactory.class).forEach(factory -> bootstrap.getObjectMapper().registerSubtypes(new NamedType(factory.getConfigurationClass(), factory.getType())));
+
+        // GitLab bundle: activates only when a GitLab configuration is present (legacy gitLab: section or
+        // backend: {type: gitlab}); backend selection is by configuration, not by server mode
+        bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
 
         // Guice bootstrapping..
         bootstrap.addBundle(buildGuiceBundle());
@@ -95,6 +106,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public void run(T configuration, Environment environment)
     {
         super.run(configuration, environment);
+        environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
         LifecycleEnvironment lifecycleEnvironment = environment.lifecycle();
         LOGGER.debug("Creating background task processor");
         BackgroundTaskProcessor taskProcessor = new BackgroundTaskProcessor(1);

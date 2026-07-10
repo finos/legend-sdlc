@@ -949,3 +949,45 @@ it defers to this review for the answer, which the §7 row now carries; stamping
 - `GitLabApiWithFileAccess.getProjectFileAccessProvider()` widened
   protected→public so the session can supply the L1 provider (feeds the
   inherited comparison default; GitLab itself overrides comparison natively).
+
+### Step 6: the server consumes the `Backend`; polymorphic `backend:` config
+
+- **Configuration**: `LegendSDLCServerConfiguration` gains the polymorphic
+  `backend:` section; `BaseLegendSDLCServer` registers each ServiceLoader'd
+  factory's configuration class as a Jackson subtype at bootstrap. The
+  **legacy adapter runs in both directions**: `getBackendConfiguration()`
+  synthesizes a GitLab backend config from a legacy top-level `gitLab:`
+  section (a legacy deployment needs no config change), and
+  `getGitLabConfiguration()` falls back to the one embedded in
+  `backend: {type: gitlab}` (so the GitLab bundle, app info, and auth
+  machinery work under the new form).
+- **`GITLAB_MODE` deprecated and no longer consulted**: the GitLab bundle is
+  added unconditionally and now no-ops (log + return, previously threw) when
+  no GitLab configuration is present; all GitLab Guice bindings are gated on
+  configuration presence, not the mode string.
+- **`BaseModule` rewired**: the sixteen per-interface GitLab api bindings are
+  replaced by a `@Singleton Backend` provider (resolves the configured
+  `BackendConfiguration` to its factory by configuration class and builds it
+  with the environment), a `@Singleton BackendEnvironment` (assembled from the
+  already-bound extension provider / platform extensions / task processor;
+  `getService` publishes `ProjectStructureConfiguration`; the object mapper is
+  a plain `Jackson.newObjectMapper()` for now — revisit whose mapper the
+  environment should carry when a backend actually consumes it), a
+  `@RequestScoped BackendSession` provider
+  (`backend.newSession(new ServletBackendSessionContext(userContext))`), and
+  sixteen one-line per-API `@Provides` methods reading from the session — so
+  the ~200 resources keep their injected types untouched, as decided.
+  `UserContext` binding became an overridable hook: `BaseModule` binds it to
+  `GitLabUserContext` when GitLab is configured (the session context must wrap
+  the GitLab-typed context until the Phase 5 re-plumb); `InMemoryModule` and
+  the FS module are untouched (they bind api interfaces directly and keep
+  doing so until their Phase 5 refit).
+- **`UnsupportedCapabilityExceptionMapper`** registered in
+  `BaseLegendSDLCServer.run`: 501 with `{capability, backendType, message}` —
+  more specific than the `LegendSDLCException` mapper, so Jersey selects it
+  automatically. It sits in `server.backend` (not `server.error`, which would
+  split server-shared's package).
+- `DependenciesApi` stays commonly bound to the bridge (`DependenciesApiImpl`)
+  for all modules — identical composition to the session default; switching it
+  to the session is deferred to the Phase 5 module refits to keep
+  `InMemoryModule` untouched.
