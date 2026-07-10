@@ -108,8 +108,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         super.run(configuration, environment);
         environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
         LifecycleEnvironment lifecycleEnvironment = environment.lifecycle();
-        LOGGER.debug("Creating background task processor");
-        BackgroundTaskProcessor taskProcessor = new BackgroundTaskProcessor(1);
+        BackgroundTaskProcessor taskProcessor = getBackgroundTaskProcessor();
         lifecycleEnvironment.manage(new Managed()
         {
             @Override
@@ -133,7 +132,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
                 }
             }
         });
-        this.backgroundTaskProcessor = taskProcessor;
     }
 
     public String getMode()
@@ -141,8 +139,22 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         return this.mode;
     }
 
-    public BackgroundTaskProcessor getBackgroundTaskProcessor()
+    /**
+     * The server's background task processor, created on first use. Guice bindings may pull this during injector
+     * creation, which happens in the bundle run phase, before {@link #run}; the processor must therefore not
+     * depend on {@link #run} having executed ({@link #run} registers its lifecycle shutdown). The underlying
+     * executor starts no threads until a task is submitted, and idle threads time out, so early creation is
+     * harmless for commands that never use it.
+     *
+     * @return background task processor
+     */
+    public synchronized BackgroundTaskProcessor getBackgroundTaskProcessor()
     {
+        if (this.backgroundTaskProcessor == null)
+        {
+            LOGGER.debug("Creating background task processor");
+            this.backgroundTaskProcessor = new BackgroundTaskProcessor(1);
+        }
         return this.backgroundTaskProcessor;
     }
 }
