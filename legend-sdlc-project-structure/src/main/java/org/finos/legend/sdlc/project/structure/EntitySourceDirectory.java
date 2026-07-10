@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.project.structure;
 
 import org.finos.legend.sdlc.domain.model.entity.Entity;
-import org.finos.legend.sdlc.serialization.EntitySerializer;
-import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.error.LegendSDLCException;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
@@ -103,7 +103,6 @@ public class EntitySourceDirectory
      *
      * @param filePath file path
      * @return corresponding entity path
-     * @throws IllegalArgumentException if filePath is not a valid file path
      */
     public String filePathToEntityPath(String filePath)
     {
@@ -117,7 +116,7 @@ public class EntitySourceDirectory
 
     /**
      * Return the file path corresponding to the given package path. The slash character ('/') is used to separate
-     * directories within the path. Paths will always begin with /, and will never be empty. Note the the file path
+     * directories within the path. Paths will always begin with /, and will never be empty. Note that the file path
      * will refer to a directory and will be returned regardless of whether the directory actually exists.
      *
      * @param packagePath package path
