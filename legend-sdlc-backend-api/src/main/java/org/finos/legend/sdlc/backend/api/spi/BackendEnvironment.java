@@ -36,4 +36,18 @@ public interface BackendEnvironment
     ProjectStructureExtensionProvider getProjectStructureExtensionProvider();
 
     ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions();
+
+    /**
+     * A deployment service published by the host under the given type, or null if the host publishes none. An
+     * escape hatch for backend-specific needs that are not part of the SPI contract proper (a backend that is
+     * co-deployed with a particular host may look up that host's services); generic code must not rely on it.
+     *
+     * @param serviceType service type
+     * @param <T>         service type
+     * @return service or null
+     */
+    default <T> T getService(Class<T> serviceType)
+    {
+        return null;
+    }
 }

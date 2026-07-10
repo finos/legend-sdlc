@@ -31,6 +31,10 @@ import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.error.LegendSDLCException;
+
+import java.util.Collections;
+import java.util.Set;
 
 /**
  * A backend's per-user view: the domain APIs, bound to the user of the {@link BackendSessionContext} the
@@ -56,6 +60,49 @@ public interface BackendSession
      * @return user id or null
      */
     String getUserId();
+
+    /**
+     * Whether this session is authorized against the backend — its credentials are present or obtainable
+     * without user interaction. Trivially true for backends without interactive authorization.
+     *
+     * @return whether the session is authorized
+     */
+    default boolean isAuthorized()
+    {
+        return true;
+    }
+
+    /**
+     * Ensure this session is authorized, acquiring credentials where possible. If user interaction is required,
+     * throws {@link AuthorizationRequiredException} carrying the authorization URI. A no-op for backends without
+     * interactive authorization.
+     */
+    default void authorize()
+    {
+    }
+
+    /**
+     * Complete an interactive authorization flow with the parameters the authorization server sent to the
+     * host's callback endpoint.
+     *
+     * @param code  authorization code
+     * @param state flow state (may be null)
+     */
+    default void handleAuthorizationCallback(String code, String state)
+    {
+        throw new LegendSDLCException("Authorization callbacks are not supported by this backend", 400);
+    }
+
+    /**
+     * Terms-of-service the backend requires the user to accept before it can be used, as URLs where acceptance
+     * can be given; empty if none are pending.
+     *
+     * @return pending terms-of-service URLs
+     */
+    default Set<String> getUnacceptedTermsOfService()
+    {
+        return Collections.emptySet();
+    }
 
     ProjectApi getProjectApi();
 

@@ -75,7 +75,7 @@ public class TestGitLabEntityApiCharacterization
         }
 
         @Override
-        protected ProjectFileAccessProvider getProjectFileAccessProvider()
+        public ProjectFileAccessProvider getProjectFileAccessProvider()
         {
             return this.fileAccessProvider;
         }
