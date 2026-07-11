@@ -25,8 +25,8 @@ import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensionProvider;
 
@@ -99,7 +99,27 @@ public class TestMinimalBackendContract extends BackendContractTestSuite
 
         private class MinimalSession extends AbstractBackend.Session
         {
-            private final ProjectFileAccessProvider provider = new InMemoryProjectFileAccessProvider("tck-user", "TCK User");
+            // the capability contract never reaches storage: every scoped call is gated before the provider is touched
+            private final ProjectFileAccessProvider provider = new ProjectFileAccessProvider()
+            {
+                @Override
+                public FileAccessContext getFileAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+                {
+                    throw new UnsupportedOperationException("not exercised by the capability contract");
+                }
+
+                @Override
+                public RevisionAccessContext getRevisionAccessContext(String projectId, SourceSpecification sourceSpecification, Iterable<? extends String> paths)
+                {
+                    throw new UnsupportedOperationException("not exercised by the capability contract");
+                }
+
+                @Override
+                public FileModificationContext getFileModificationContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
+                {
+                    throw new UnsupportedOperationException("not exercised by the capability contract");
+                }
+            };
 
             MinimalSession(BackendSessionContext context)
             {

@@ -12,14 +12,20 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.project.files;
+package org.finos.legend.sdlc.backend.inmemory;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.MutableMap;
+import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.project.files.AbstractFileAccessContext;
+import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
+import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.project.source.ProjectSourceSpecification;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.source.SourceSpecificationVisitor;
@@ -170,6 +176,11 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
                 return new InMemoryFileModificationContext(projectId, workspaceSpec.getId(), revisionId);
             }
         });
+    }
+
+    public void deleteProject(String projectId)
+    {
+        this.projects.remove(projectId);
     }
 
     public void createWorkspace(String projectId, String workspaceId)
@@ -458,14 +469,18 @@ public class InMemoryProjectFileAccessProvider implements ProjectFileAccessProvi
 
         protected AbstractRevisionAccessContext(Iterable<? extends String> paths)
         {
-            this.paths = (paths == null) ? null : ProjectPaths.canonicalizeAndReduceDirectories(paths);
+            // a path is a directory scope if it ends with the separator, otherwise a file scope (the convention
+            // of ProjectPaths canonical forms; files match revisions exactly, directories by prefix)
+            this.paths = (paths == null) ? null : Iterate.collect(paths,
+                    path -> path.endsWith(ProjectPaths.PATH_SEPARATOR) ? ProjectPaths.canonicalizeDirectory(path) : ProjectPaths.canonicalizeFile(path),
+                    Lists.mutable.empty());
         }
 
         @Override
         public Revision getBaseRevision()
         {
-            // TODO: when we need to test this then we will need to implement this
-            throw new UnsupportedOperationException("Getting base revision is not supported");
+            SimpleInMemoryVCS.Revision revision = getContextVCS().getBaseRevision();
+            return (revision == null) ? null : new VCSRevisionWrapper(revision);
         }
 
         @Override

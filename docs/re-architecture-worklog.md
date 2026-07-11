@@ -1175,3 +1175,64 @@ them ready-made.
   diagnosed and fixed as the Phase 4 correction above (its own commit,
   preceding this step's). With the correction in place the full reactor is
   green including this step.
+
+### Step 2: `legend-sdlc-backend-inmemory` (L5) — the first real TCK runner
+
+- **New module `legend-sdlc-backend-inmemory`**, package
+  `org.finos.legend.sdlc.backend.inmemory`. `SimpleInMemoryVCS` and
+  `InMemoryProjectFileAccessProvider` move (git mv) from the
+  `legend-sdlc-project-files` **test-jar into this module's main tree** — they
+  are now regular published classes, the storage provider behind the backend
+  (no bridges: test-utility population, the Phase 2/3 ruling; migration-doc
+  row added). Two provider upgrades on the way, both formerly stubbed because
+  no test needed them: `getBaseRevision` is implemented (a branch records the
+  parent tip it was created from), and the revision-context scope paths are
+  canonicalized file-vs-directory aware (trailing-separator convention; the
+  old code canonicalized everything as directories, so a file-scoped context
+  matched nothing — the entity revision context scenario caught it).
+- **`InMemoryBackend extends AbstractBackend`** (`type: "inMemory"`), the
+  §3.2 minimal contract made literal: it supplies the storage provider and
+  native `InMemoryProjectApi` (registry + structure build via the L3 updater
+  with the environment's extensions), `InMemoryWorkspaceApi` (registry +
+  provider branches; workspace flavor/scope gating via `checkSourceScope`;
+  `updateWorkspace` is NO_OP-or-501 — the VCS has no source-into-branch
+  merge), and `InMemoryUserApi` (no directory: the session user is the only
+  known user); everything else — entities, configuration, revisions,
+  dependencies, comparison — is the inherited L4 defaults. Declares
+  `USER_WORKSPACES` only, deliberately: the first runner exercises both the
+  declared-capability branch and all the undeclared-capability gates.
+  `InMemoryBackendFactory`/`InMemoryBackendConfiguration` registered under
+  `META-INF/services`; project ids are project names; all state is
+  process-local.
+- **TCK grows `BackendScenarioTestSuite`** (extends the contract suite, so
+  one runner class certifies both): end-to-end over a real session — project
+  creation (configured, right coordinates, no entities), workspace lifecycle
+  (create/list/get/delete/outdated), entity round-trip (create/read/delete in
+  a workspace; project source unaffected), configuration update in a
+  workspace, workspace source+creation comparisons (one entity diff), and
+  revision contexts (project current revision; entity-scoped revision
+  history). This is the certification of the Step 1 defaults over real
+  storage. TCK pom gains `legend-sdlc-shared`, drops the project-files
+  test-jar; `TestMinimalBackendContract`'s fixture now uses an inline
+  throwing provider (the capability contract never reaches storage).
+- **Runners**: `TestInMemoryBackendContract` (contract + scenarios, 10 tests)
+  and `TestInMemoryLayoutInvariants` (moved from the TCK's own test tree —
+  it could not stay there once the provider lives in a module that depends on
+  the TCK) run in this module's test tree, i.e. in CI on every build — the
+  first real `BackendContractTestSuite` runner, per the phase's sequencing
+  note.
+- **The test server now declares the in-memory backend**: `config-test.yaml`
+  replaces its dummy `gitLab:` section (values "na") with
+  `backend: {type: inMemory}`, so the resource tests boot with the GitLab
+  bundle inactive and the real factory/config chain in place, and the new
+  `TestBackendDiscovery` hits `GET /configuration/capabilities` end to end
+  (200, `backendType: inMemory`, `USER_WORKSPACES`) — discharging the Phase 4
+  correction's forward note; the interim "backend-less by laziness" state is
+  gone from the in-memory test server. (`InMemoryModule` still binds the
+  fixture apis the resource tests seed — replacing that fixture with the real
+  in-memory backend is possible follow-up work, not Phase 5 scope.)
+- Consumer updates: `legend-sdlc-server` swaps the project-files test-jar for
+  a test dependency on this module (3 test classes re-import);
+  `legend-sdlc-core` drops its project-files test-jar dependency (stale since
+  the Phase 4 TCK-seed move). The project-files test-jar remains published
+  (its two remaining classes are its own tests).

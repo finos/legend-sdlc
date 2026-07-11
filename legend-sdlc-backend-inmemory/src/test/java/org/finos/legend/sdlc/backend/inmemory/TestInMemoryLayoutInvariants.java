@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.backend.tck;
+package org.finos.legend.sdlc.backend.inmemory;
 
-import org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider;
+import org.finos.legend.sdlc.backend.tck.LayoutInvariantsTestSuite;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
 public class TestInMemoryLayoutInvariants extends LayoutInvariantsTestSuite
