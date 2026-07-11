@@ -369,8 +369,7 @@
         </dependency>
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
-            <artifactId>legend-sdlc-project-files</artifactId>
-            <type>test-jar</type>
+            <artifactId>legend-sdlc-backend-inmemory</artifactId>
             <scope>test</scope>
         </dependency>
         <!-- TEST -->
