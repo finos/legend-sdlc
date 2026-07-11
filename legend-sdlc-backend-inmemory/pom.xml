@@ -23,8 +23,8 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>legend-sdlc-backend-test-suite</artifactId>
-    <name>Legend SDLC Backend Test Suite</name>
+    <artifactId>legend-sdlc-backend-inmemory</artifactId>
+    <name>Legend SDLC Backend - In-Memory</name>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -57,20 +57,27 @@
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections-api</artifactId>
         </dependency>
-
-        <!-- JUNIT -->
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <scope>compile</scope> <!-- DO NOT CHANGE SCOPE: the suites are shipped abstract JUnit classes -->
+            <groupId>org.eclipse.collections</groupId>
+            <artifactId>eclipse-collections</artifactId>
         </dependency>
-        <!-- JUNIT -->
 
         <!-- TEST -->
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-backend-test-suite</artifactId>
+            <scope>test</scope>
+        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- TEST -->
     </dependencies>
 </project>

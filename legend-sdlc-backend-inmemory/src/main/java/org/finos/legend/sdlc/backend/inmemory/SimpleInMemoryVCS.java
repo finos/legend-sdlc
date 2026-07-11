@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.project.files;
+package org.finos.legend.sdlc.backend.inmemory;
 
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
@@ -43,15 +43,29 @@ public class SimpleInMemoryVCS
     private final MutableList<Revision> revisions;
     private final MutableMap<String, SimpleInMemoryVCS> branches = Maps.mutable.empty();
     private final MutableMap<VersionId, ImmutableSimpleInMemoryVCS> versionTags = Maps.mutable.empty();
+    private final Revision baseRevision;
 
     public SimpleInMemoryVCS()
     {
         this.revisions = Lists.mutable.empty();
+        this.baseRevision = null;
     }
 
     protected SimpleInMemoryVCS(List<Revision> revisions)
     {
         this.revisions = Lists.mutable.withAll(revisions);
+        this.baseRevision = this.revisions.isEmpty() ? null : this.revisions.get(this.revisions.size() - 1);
+    }
+
+    /**
+     * The revision this VCS was branched from (the tip of the parent at branch/tag time); null for a root VCS or
+     * a branch created off an empty parent.
+     *
+     * @return base revision or null
+     */
+    public Revision getBaseRevision()
+    {
+        return this.baseRevision;
     }
 
     public File getFile(String path)
@@ -586,12 +600,12 @@ public class SimpleInMemoryVCS
                     this.movedTo.keySet().stream().anyMatch(pred);
         }
 
-        private File getFile(String path)
+        File getFile(String path)
         {
             return this.files.get(path);
         }
 
-        private Stream<File> getFiles()
+        Stream<File> getFiles()
         {
             return this.files.values().stream();
         }
