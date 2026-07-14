@@ -1236,3 +1236,112 @@ them ready-made.
   `legend-sdlc-core` drops its project-files test-jar dependency (stale since
   the Phase 4 TCK-seed move). The project-files test-jar remains published
   (its two remaining classes are its own tests).
+
+### The decision-2 compatibility check: Studio/omnibus tolerance of FS `getReviews` → 501 (2026-07-14)
+
+Decision 2 flagged one behavior change requiring verification before the FS
+refit lands it: FS's two `getReviews` overloads return empty lists today and
+would 501 under an undeclared `REVIEWS` capability; "consistency wins on the
+record, but the Phase 5 FS refit must verify Studio/omnibus tolerance before
+flipping them." legend-studio is not in this workspace; the check was run
+against `finos/legend-studio` master and the `finos/legend` omnibus sources
+(2026-07-14). Findings, verified verbatim from source:
+
+1. **The pairing is real.** The omnibus `example-esg-2023`/`example-ghc-2023`
+   variants ship Studio against the FS server (`run-sdlc.file-system.sh` runs
+   `org.finos.legend.sdlc.server.startup.LegendSDLCServerFS` with
+   `config.file-system.yml` and preloaded FS project data;
+   `finos/legend`, `installers/omnibus/**`). Consequence for the refit noted
+   below: omnibus also depends on the parallel-server main class the refit
+   deletes — the migration recipe must cover it.
+2. **Studio is NOT tolerant of `getReviews` → 501.** In standard mode the
+   editor's initialization awaits `fetchCurrentWorkspaceReview()`
+   (`WorkspaceReviewState`), which calls
+   `GET /projects/{id}/reviews?state=OPEN&…`; its catch block calls
+   `EditorSDLCState.handleChangeDetectionRefreshIssue(error)`, which raises a
+   **blocking modal alert for any error** (404 gets a "project or workspace no
+   longer exists" flavor; everything else — a 501 included —
+   `setBlockingAlert({message: error.message})`). Flipping the list routes to
+   501 puts a blocking modal on every workspace open of an FS-backed
+   deployment.
+3. **The intolerance is specific to the review-list route.** The other
+   awaited init fetches degrade gracefully: `fetchLatestCommittedReviews`
+   (the second `getReviews` overload's consumer) and
+   `checkIfWorkspaceIsOutdated` notify-and-continue; `fetchProjectVersions`
+   (FS `getVersions` also returns an empty list today, unflagged by
+   decision 2) and `fetchAuthorizedActions` log-and-continue. So `VERSIONS` and the
+   rest can go undeclared with 501s per decision 2 without breaking Studio;
+   only review *enumeration* under an absent `REVIEWS` capability cannot 501
+   until Studio adapts.
+
+Tolerance is thereby established **in the negative**, so decision 2's default
+(consistency wins) does not apply — it was expressly conditioned on verified
+tolerance. Options put on the record for the user:
+
+- **(a) Flip anyway** — rejected by the findings above.
+- **(b) Undeclared-capability enumeration affordance at L6** (recommended):
+  FS declares no `REVIEWS`; discovery stays honest; the server's per-API
+  `ReviewApi` provider, on `UnsupportedCapabilityException`, supplies a
+  no-reviews implementation whose *list* methods return empty lists and whose
+  every other method rethrows — review enumeration degrades to "none", all
+  other review routes 501 per decision 2. Applies to any reviews-less backend
+  (in-memory included), is one provider method, and is retained temporarily
+  until Studio consumes `GET /configuration/capabilities`, at which point it
+  is removed and decision 2 applies in full.
+- **(c) FS declares `REVIEWS` with a null implementation** (empty lists, 404
+  unknown review, 501 mutations) — preserves today's wire behavior but makes
+  the discovery surface lie (Studio's capability-adaptive UI would offer
+  reviews a backend can never create); rejected as poisoning the seam the
+  capability model exists to provide.
+
+**Decision: pending user ruling** — the refit's review-route behavior is not
+landed until it is recorded here.
+
+### Step 3: FS refit, part 1 — the characterized provider defects fixed deliberately
+
+Phase 3 Step 1's FS quirks 6–9 are fixed in place in `legend-sdlc-server-fs`
+(the module refit onto the SPI follows as part 2), and the characterization
+pins updated in the same commit to assert the fixed behavior — the suite's
+javadoc now marks it as pinning post-fix behavior rather than preserved bugs.
+
+- **Quirk 6 (standard-context enumeration broken)**:
+  `FileSystemFileAccessContext.getFilesInCanonicalDirectories` now walks the
+  tree of the context's resolved commit, mapping git tree paths (no leading
+  separator) to canonical paths (leading `/`) before matching against the
+  canonical directory list (root short-circuits), and reads blobs from that
+  same tree; `ObjectId.fromString(null)` is gone — a null revision id
+  resolves to the tip of the branch the source specification designates.
+- **The context now honors its revision id** (latent, unpinned defect fixed
+  with quirk 6, same root): `getFile` and `fileExists` previously read the
+  branch tip regardless of the context's revision id; all three accessors now
+  resolve one commit — pinned revision or branch tip — and read its tree.
+  `FileSystemEntityApi.getEntityAccessContext` previously dropped its
+  `revisionId` argument on the floor (passed null to the provider); it now
+  passes it through. New pin: `testRevisionPinnedAccessContext`.
+- **Quirks 7 and 9 (platform-dependent enumeration; two code paths)**: fixed
+  by unification — `FileSystemEntityApi`'s git-tree-walk enumeration variant,
+  its private `EntityProjectFile`, and the `java.nio.Path` relativization
+  that produced `\`-separated paths on Windows are deleted; `getEntities`
+  joins `getEntity`/`getEntityPaths` on `core.entity.EntityAccessOperations`
+  over the (now working) standard context. The entity api is a pure
+  delegating shell, and the FS enumeration pins are no longer conditional on
+  `File.separatorChar`.
+- **Quirk 8 (stale reference revision loses its 409)**:
+  `FSException.getLegendSDLCServerException` passes a `LegendSDLCException`
+  through unchanged instead of re-wrapping it into a message-concatenated
+  500 (return type widened to the base `LegendSDLCException`; every call
+  site is a `throw`). The modification context's conflict now surfaces as
+  409 with its original message, pinned exactly.
+- **New defect found by the re-pinned tests, fixed**: `submit()` built its
+  returned revision from the branch `Ref` looked up *before* committing — a
+  stale snapshot, so every write reported its *parent* revision (invisible
+  until the revision-pinned pin above compared trees). It now builds the
+  revision from the `RevCommit` that `git.commit().call()` returns.
+- **Deliberately not fixed here** (they belong to part 2, where the TCK
+  certifies them): `getAllRevisions` still throws; the revision access
+  context still ignores its `paths` scoping; `getBaseRevision` is not a true
+  merge base; the workspace api's defects (`deleteWorkspace` unimplemented,
+  `getWorkspaces` swaps the USER/GROUP flavors, `updateWorkspace`
+  unsupported).
+- Verified: FS characterization 9/9 green; full-reactor
+  `mvn install javadoc:javadoc` green.
