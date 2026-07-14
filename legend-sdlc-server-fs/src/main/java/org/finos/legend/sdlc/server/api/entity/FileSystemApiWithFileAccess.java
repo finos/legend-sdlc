@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.api.entity;
 
+import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.*;
@@ -31,6 +32,7 @@ import org.finos.legend.sdlc.project.files.AbstractFileAccessContext;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.files.ProjectFiles;
+import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.server.startup.FSConfiguration;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,7 +42,6 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -71,23 +72,25 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
         @Override
         protected Stream<ProjectFileAccessProvider.ProjectFile> getFilesInCanonicalDirectories(MutableList<String> directories)
         {
-            List<ProjectFileAccessProvider.ProjectFile> files = new ArrayList<>();
-            Repository repo = retrieveRepo(this.projectId);
+            MutableList<ProjectFileAccessProvider.ProjectFile> files = Lists.mutable.empty();
             try
             {
-                ObjectId commitId = ObjectId.fromString(revisionId);
-                RevCommit commit = repo.parseCommit(commitId);
-                RevTree tree = commit.getTree();
-                TreeWalk treeWalk = new TreeWalk(repo);
-                treeWalk.addTree(tree);
-                treeWalk.setRecursive(true);
-
-                while (treeWalk.next())
+                Repository repo = retrieveRepo(this.projectId);
+                RevTree tree = resolveContextCommit(repo).getTree();
+                boolean allFiles = directories.contains(ProjectPaths.ROOT_DIRECTORY);
+                try (TreeWalk treeWalk = new TreeWalk(repo))
                 {
-                    String path = treeWalk.getPathString();
-                    if (directories.anySatisfy(d -> path.startsWith(d)))
+                    treeWalk.addTree(tree);
+                    treeWalk.setRecursive(true);
+                    while (treeWalk.next())
                     {
-                        files.add(getFile(path));
+                        // git tree paths have no leading separator; canonical paths do
+                        String canonicalPath = ProjectPaths.PATH_SEPARATOR + treeWalk.getPathString();
+                        if (allFiles || directories.anySatisfy(canonicalPath::startsWith))
+                        {
+                            byte[] fileBytes = repo.open(treeWalk.getObjectId(0)).getBytes();
+                            files.add(ProjectFiles.newByteArrayProjectFile(canonicalPath, fileBytes));
+                        }
                     }
                 }
             }
@@ -101,21 +104,16 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
         @Override
         public ProjectFileAccessProvider.ProjectFile getFile(String path)
         {
-            String branchName = getRefBranchName(sourceSpecification);
             try
             {
                 Repository repo = retrieveRepo(this.projectId);
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit branchCommit = revWalk.parseCommit(repo.resolve(branchName));
-                RevTree branchTree = branchCommit.getTree();
-                path = path.startsWith("/") ? path.substring(1) : path;
-                try (TreeWalk treeWalk = TreeWalk.forPath(repo, path, branchTree))
+                RevTree tree = resolveContextCommit(repo).getTree();
+                String treePath = path.startsWith(ProjectPaths.PATH_SEPARATOR) ? path.substring(1) : path;
+                try (TreeWalk treeWalk = TreeWalk.forPath(repo, treePath, tree))
                 {
                     if (treeWalk != null)
                     {
-                        ObjectId objectId = treeWalk.getObjectId(0);
-                        ObjectReader objectReader = repo.newObjectReader();
-                        byte[] fileBytes = objectReader.open(objectId).getBytes();
+                        byte[] fileBytes = repo.open(treeWalk.getObjectId(0)).getBytes();
                         return ProjectFiles.newByteArrayProjectFile(path, fileBytes);
                     }
                 }
@@ -130,23 +128,30 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
         @Override
         public boolean fileExists(String path)
         {
-            String workspaceId = getRefBranchName(sourceSpecification);
             try
             {
                 Repository repo = retrieveRepo(this.projectId);
-                RevWalk revWalk = new RevWalk(repo);
-                RevCommit branchCommit = revWalk.parseCommit(repo.resolve(workspaceId));
-                RevTree branchTree = branchCommit.getTree();
-                path = path.startsWith("/") ? path.substring(1) : path;
-                try (TreeWalk treeWalk = TreeWalk.forPath(repo, path, branchTree))
+                RevTree tree = resolveContextCommit(repo).getTree();
+                String treePath = path.startsWith(ProjectPaths.PATH_SEPARATOR) ? path.substring(1) : path;
+                try (TreeWalk treeWalk = TreeWalk.forPath(repo, treePath, tree))
                 {
                     return treeWalk != null;
                 }
             }
             catch (Exception e)
             {
-                throw FSException.getLegendSDLCServerException("Error occurred while parsing Git commit for workspace " + workspaceId, e);
+                throw FSException.getLegendSDLCServerException("Error checking existence of file " + path, e);
             }
+        }
+
+        /**
+         * The commit this context reads from: the context's revision id if it has one, otherwise the current
+         * tip of the branch its source specification designates.
+         */
+        private RevCommit resolveContextCommit(Repository repo) throws Exception
+        {
+            ObjectId commitId = (this.revisionId == null) ? repo.resolve(getRefBranchName(this.sourceSpecification)) : ObjectId.fromString(this.revisionId);
+            return repo.parseCommit(commitId);
         }
     }
 
@@ -327,9 +332,13 @@ public abstract class FileSystemApiWithFileAccess extends BaseFSApi
                         throw new LegendSDLCServerException(fileOperation + "operation is not yet supported");
                     }
                 }
-                git.commit().setMessage(message).call();
+                // return the commit just made, not the branch Ref from before the commit (a stale snapshot)
+                RevCommit newCommit = git.commit().setMessage(message).call();
                 repo.close();
-                return FileSystemRevision.getFileSystemRevision(projectId, branchName, repo, branch);
+                return new FileSystemRevision(newCommit.getId().getName(),
+                        newCommit.getAuthorIdent().getName(), newCommit.getAuthorIdent().getWhenAsInstant(),
+                        newCommit.getCommitterIdent().getName(), newCommit.getCommitterIdent().getWhenAsInstant(),
+                        newCommit.getFullMessage());
             }
             catch (Exception e)
             {
