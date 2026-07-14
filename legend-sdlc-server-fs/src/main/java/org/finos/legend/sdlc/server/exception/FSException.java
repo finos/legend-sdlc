@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.exception;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 
 public class FSException
@@ -23,8 +24,13 @@ public class FSException
         return new UnsupportedOperationException("Feature unavailable");
     }
 
-    public static LegendSDLCServerException getLegendSDLCServerException(String errorMessage, Exception e)
+    public static LegendSDLCException getLegendSDLCServerException(String errorMessage, Exception e)
     {
+        if (e instanceof LegendSDLCException)
+        {
+            // a deliberately-statused exception (e.g. a 404 or a 409) passes through unchanged
+            return (LegendSDLCException) e;
+        }
         String exceptionMessage = e.getMessage();
         return new LegendSDLCServerException(exceptionMessage != null ? errorMessage + " : " + exceptionMessage : errorMessage, e);
     }
