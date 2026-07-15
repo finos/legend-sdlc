@@ -22,6 +22,40 @@ directly.
 | `org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification` / `WorkspaceSource` / `ProjectWorkspaceSource` / `PatchWorkspaceSource` / `WorkspaceSourceVisitor` / `WorkspaceSourceConsumer` in `legend-sdlc-project-files` | `org.finos.legend.sdlc.project.workspace.*` (same module; **no deprecated bridges**). `WorkspaceApi` and the other domain API interfaces are unaffected by this row (see the next row). |
 | The domain API interfaces `org.finos.legend.sdlc.server.domain.api.<concern>.*` (`EntityApi`, `ProjectApi`, `WorkspaceApi`, `ReviewApi`, …, including the access contexts and `ProjectRevision`), and `org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport`, in `legend-sdlc-server` | `org.finos.legend.sdlc.backend.api.<concern>.*` in **`legend-sdlc-backend-api`** (note `conflictResolution` → `conflictresolution`); deprecated bridge interfaces remain at the old FQNs in `legend-sdlc-server`, so implementations and injection points keep compiling. **Not bridged**: `NewVersionType` (an enum cannot be bridged — update imports). **Changed on the relocated types** (old shapes remain on the bridges): `ProjectApi` no longer declares the GitLab-specific `configureProjectInWorkspace`; `ConflictResolutionApi.acceptConflictResolution` takes the message/entity-changes/revision-id directly instead of a `PerformChangesCommand`; `VersionApi`/`BuildApi` default methods throw `LegendSDLCException` (same 400 status) instead of `LegendSDLCServerException`. |
 | `org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider` / `SimpleInMemoryVCS` in the `legend-sdlc-project-files` **test-jar** | `org.finos.legend.sdlc.backend.inmemory.*` in the main jar of **`legend-sdlc-backend-inmemory`** (no deprecated bridges — test utilities; update the dependency from the test-jar to the new module and fix imports). They are now regular published classes: the storage provider behind the in-memory backend. |
+| **`legend-sdlc-server-fs`** (the standalone file-system SDLC server: `LegendSDLCServerFS`, `FSModule`, the `FileSystem*Api` classes, `FSException`) | **`legend-sdlc-backend-fs`**, package `org.finos.legend.sdlc.backend.fs` — a backend for the standard server, not a server (a relocation POM points the old Maven coordinates at the new ones; **no deprecated bridges** — the old classes were a self-contained runnable, not an API surface, and most have no equivalent in the refit: the stub api classes are replaced by the capability model and the generic L4 defaults). See "If you deploy the file-system SDLC server" below. |
+
+## If you deploy the file-system SDLC server
+
+The standalone file-system server — the `legend-sdlc-server-fs` shaded jar, its
+`org.finos.legend.sdlc.server.startup.LegendSDLCServerFS` main class, and the
+`finos/legend-sdlc-server-fs` Docker image — no longer exists. A file-system deployment
+now runs the **standard** server:
+
+1. Run `org.finos.legend.sdlc.server.LegendSDLCServer` (the standard `legend-sdlc-server`
+   distribution) with `legend-sdlc-backend-fs` and its dependencies on the classpath.
+2. Replace the old top-level `fileSystem:` configuration section with the polymorphic
+   backend selection:
+
+   ```yaml
+   backend:
+     type: fileSystem
+     rootDirectory: /path/under/which/project/repositories/live
+   ```
+
+   Everything else in the configuration (server connectors, filters, `projectStructure:`,
+   …) is standard-server configuration and keeps its shape.
+3. An existing root directory keeps working: projects are discovered by scanning it, and
+   workspace branches created by the old server (`workspace/local_user/…`) remain
+   addressable — sessions without an authenticated user id map to the old server's fixed
+   `local_user`.
+
+Behavior differences to be aware of: routes for features the file-system backend does not
+declare (reviews other than listing, versions, workflows, patches, builds, backup,
+conflict resolution, issues) now return **501 with a structured body** naming the missing
+capability, instead of the old stubs' empty responses and 500s; review **listing** reports
+an empty list (a compatibility affordance for Legend Studio, retained temporarily until
+Studio consumes `GET /configuration/capabilities`). The capability set is discoverable at
+`GET /configuration/capabilities`.
 
 ## If you implement project structure extensions (the expected case)
 

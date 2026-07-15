@@ -31,12 +31,14 @@ import org.finos.legend.sdlc.backend.api.review.ReviewApi;
 import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendSession;
+import org.finos.legend.sdlc.backend.api.spi.UnsupportedCapabilityException;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
+import org.finos.legend.sdlc.server.backend.NoReviewsReviewApi;
 import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.api.DepotMetadataApi;
@@ -146,7 +148,16 @@ public class BaseModule extends AbstractBaseModule
     @Provides
     public ReviewApi provideReviewApi(BackendSession session)
     {
-        return session.getReviewApi();
+        try
+        {
+            return session.getReviewApi();
+        }
+        catch (UnsupportedCapabilityException e)
+        {
+            // review enumeration degrades to "no reviews" for backends without the capability; every other
+            // review route keeps its 501 (see NoReviewsReviewApi)
+            return new NoReviewsReviewApi(e);
+        }
     }
 
     @Provides
