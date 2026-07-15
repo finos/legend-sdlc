@@ -44,6 +44,7 @@
         <module>legend-sdlc-backend-api</module>
         <module>legend-sdlc-backend-test-suite</module>
         <module>legend-sdlc-backend-inmemory</module>
+        <module>legend-sdlc-backend-fs</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-server-fs</module>
         <module>legend-sdlc-generation-shared</module>
@@ -557,6 +558,11 @@
             </dependency>
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-backend-fs</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server</artifactId>
                 <version>${project.version}</version>
             </dependency>
@@ -622,12 +628,6 @@
                 <type>test-jar</type>
                 <scope>test</scope>
             </dependency>
-            <dependency>
-                <groupId>org.finos.legend.sdlc</groupId>
-                <artifactId>legend-sdlc-server-fs</artifactId>
-                <version>${project.version}</version>
-            </dependency>
-
             <!-- External Legend dependencies -->
             <dependency>
                 <groupId>org.finos.legend.shared</groupId>

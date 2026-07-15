@@ -1294,8 +1294,13 @@ tolerance. Options put on the record for the user:
   reviews a backend can never create); rejected as poisoning the seam the
   capability model exists to provide.
 
-**Decision: pending user ruling** — the refit's review-route behavior is not
-landed until it is recorded here.
+**Decision (user, 2026-07-14): option (b)** — the undeclared-capability
+enumeration affordance at L6. Recorded as a compatibility amendment to
+decision 2's HTTP mapping: review *enumeration* under an absent `REVIEWS`
+capability reports no reviews (200, empty list) instead of 501; every other
+review route 501s as decided. The affordance is L6-only (capabilities and
+discovery are untouched — FS does not declare `REVIEWS`), and is removed once
+Studio consumes `GET /configuration/capabilities` for its review UI.
 
 ### Step 3: FS refit, part 1 — the characterized provider defects fixed deliberately
 
@@ -1344,4 +1349,97 @@ javadoc now marks it as pinning post-fix behavior rather than preserved bugs.
   `getWorkspaces` swaps the USER/GROUP flavors, `updateWorkspace`
   unsupported).
 - Verified: FS characterization 9/9 green; full-reactor
+  `mvn install javadoc:javadoc` green.
+
+### Step 4: FS refit, part 2 — `legend-sdlc-backend-fs` (L5); the parallel server deleted
+
+The file-system implementation is refit from a standalone server onto the
+backend SPI: a new module `legend-sdlc-backend-fs` (package
+`org.finos.legend.sdlc.backend.fs`), and `legend-sdlc-server-fs` reduced to a
+relocation POM. One commit, not the two remaining pieces of the natural split
+(part 1 took the defect fixes separately): the review-enumeration affordance
+is the module's Studio-safety prerequisite, and the deletion's relocation POM
+points at the module — landing them together keeps the commit-on-green
+convention intact without verifying an intermediate tree no one will check
+out.
+
+**The decision-(b) affordance, implemented at L6.** New
+`org.finos.legend.sdlc.server.backend.NoReviewsReviewApi`: both `getReviews`
+overloads return empty lists; every other method rethrows the stored
+`UnsupportedCapabilityException`. `BaseModule.provideReviewApi` supplies it
+when `session.getReviewApi()` throws for the undeclared capability, so it
+applies to any reviews-less backend (in-memory included), not just FS.
+Capabilities and discovery are untouched; the javadoc records the amendment
+and the removal condition (Studio consuming
+`GET /configuration/capabilities`). Pinned by `TestNoReviewsReviewApi`.
+
+**The module.** `FileSystemBackendFactory` (ServiceLoader-registered) builds
+`FileSystemBackend` from `backend: {type: fileSystem, rootDirectory: …}`.
+The backend extends `AbstractBackend`, declares **only `USER_WORKSPACES`**,
+and creates the root directory if missing. Its session owns a session-scoped
+`FileSystemProjectFileAccessProvider` (jgit over one repository per project
+under the root; project source = `master`, workspace = branch
+`workspace/{user}/{id}`) and supplies three native apis —
+`FileSystemProjectApi` (repository scan/init, git-config metadata,
+structure built at the latest version through `ProjectStructureUpdater` with
+the environment's extensions), `FileSystemWorkspaceApi` (branch lifecycle;
+`updateWorkspace` reports `NO_OP` when current, 501 when outdated — the
+provider has no merge), `FileSystemUserApi` (session user only). Everything
+else — entity, configuration, revision, dependencies, comparison — is the
+inherited L4 defaults over the provider; the old module's fourteen stub api
+classes have no successors at all, the capability gates replace them.
+
+**The provider completes what part 1 deferred**, and the TCK certifies it:
+`getAllRevisions` implemented (alias resolution for BASE/HEAD/CURRENT/LATEST,
+since/until/limit); the revision access context honors its `paths` scoping
+(scoped `log`, membership-checked `getRevision`); `getBaseRevision` is a true
+merge base (`RevFilter.MERGE_BASE`; first commit on `master` itself);
+`deleteWorkspace` works; the USER/GROUP listing swap is gone.
+
+**Decisions taken in the refit** (checked against the worklog; none had a
+prior ruling):
+
+- **`USER_WORKSPACES` only.** The old server's group-workspace support was
+  characterized broken (quirk: flavors swapped), so it is not carried:
+  group creation fails on the `checkSourceScope` gate (501), group-filtered
+  listings return empty lists. Studio-safe — its group-workspace fetches
+  tolerate both.
+- **`deleteProject` stays 501** (`PROJECT_DELETION` undeclared). The old
+  implementation existed but deleting a git repository out from under
+  concurrent sessions was never safe; a deliberate implementation can declare
+  the capability later.
+- **Projects are created at the latest structure version.** The old server
+  consulted `ProjectCreationConfiguration` for a default version; that type
+  is server configuration (L6) and would drag a server dependency into L5.
+  If a configured default is wanted, it belongs in the config-options plan
+  (seam S2).
+- **Null session user maps to `local_user`**, the old server's fixed user id,
+  so existing root directories — and their `workspace/local_user/…` branches
+  — keep working unchanged.
+- **`submit` refuses empty commits**: jgit commits unconditionally by
+  default; a no-op change set now returns null (no revision) instead of
+  minting an empty commit. Found by the reconcile-no-op layout invariant.
+- **The server does not gain a `legend-sdlc-backend-fs` dependency.** The
+  standard server distribution currently bundles no L5 backend; whether it
+  should ship with backends on the classpath or leave that to deployments is
+  the same question the GitLab extraction must answer (the GitLab backend
+  starts *inside* the server), so it is deferred to that step rather than
+  answered piecemeal here.
+
+**The deletion.** `legend-sdlc-server-fs` loses `src/**`, its Dockerfile,
+and its shaded-jar build; the POM becomes a relocation POM
+(`distributionManagement/relocation` → `legend-sdlc-backend-fs`), so
+dependents get the pointer at resolution time. No deprecated bridges: the old
+classes were a self-contained runnable, not an API surface. The migration
+recipe gains the table row and an "If you deploy the file-system SDLC server"
+section (standard server + `backend:` config + classpath; the omnibus
+`run-sdlc.file-system.sh` dependency found in the tolerance check is covered
+by it).
+
+- Verified: `legend-sdlc-backend-fs` 22/22 — scenario+contract TCK 10/10 on
+  the first substantive run, characterization 9/9 (moved into the module,
+  now driving the session's L4 `DefaultEntityApi`), layout invariants 3/3
+  (after two test-harness/product fixes: a fresh root per invariant case —
+  the suite reuses project ids — and the empty-commit guard above);
+  `legend-sdlc-server` 269 green with the affordance; full-reactor
   `mvn install javadoc:javadoc` green.
