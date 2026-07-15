@@ -38,6 +38,17 @@ public interface BackendEnvironment
     ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions();
 
     /**
+     * The deployment's project-creation policy, as data (default structure version, coordinate patterns). Null
+     * means no policy — backends use their own defaults.
+     *
+     * @return project creation configuration or null
+     */
+    default ProjectCreationConfiguration getProjectCreationConfiguration()
+    {
+        return null;
+    }
+
+    /**
      * A deployment service published by the host under the given type, or null if the host publishes none. An
      * escape hatch for backend-specific needs that are not part of the SPI contract proper (a backend that is
      * co-deployed with a particular host may look up that host's services); generic code must not rely on it.
