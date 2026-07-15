@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.backend.api.spi;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * How a backend is bootstrapped. Implementations are registered via
  * {@code META-INF/services/org.finos.legend.sdlc.backend.api.spi.BackendFactory}; the host discovers them,
@@ -47,4 +49,16 @@ public interface BackendFactory
      * @return backend
      */
     Backend build(BackendConfiguration configuration, BackendEnvironment environment);
+
+    /**
+     * Configure the object mapper the host parses its configuration with, for whatever the backend's
+     * configuration class needs beyond plain bean deserialization (mix-ins, subtype registrations, ...). Called
+     * by the host at bootstrap for every discovered factory, alongside registering
+     * {@link #getConfigurationClass()} as a subtype. Default: nothing.
+     *
+     * @param objectMapper host configuration object mapper
+     */
+    default void configureObjectMapper(ObjectMapper objectMapper)
+    {
+    }
 }

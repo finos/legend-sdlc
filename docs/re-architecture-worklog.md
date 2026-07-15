@@ -1443,3 +1443,51 @@ by it).
   the suite reuses project ids — and the empty-commit guard above);
   `legend-sdlc-server` 269 green with the affordance; full-reactor
   `mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 1 — the SPI crossings (L4, additive)
+
+The GitLab extraction needs four things to cross the SPI that Phase 4's
+staging deferred (per decision 1 and the Step 5 staging record). All are
+additive to `legend-sdlc-backend-api`; no consumer changes in this commit.
+
+- **`BackendSessionContext.getService(Class)`** (default null): the per-user
+  counterpart of `BackendEnvironment.getService` — typed lookup for auth
+  material the host can offer beyond identity + state store. Everything
+  published through it is data or a JDK type; pac4j never crosses. The server
+  will publish `javax.security.auth.Subject` (Kerberos), plus two new L4
+  value types: **`OidcAuthMaterial`** (issuer, access token, scopes, refresh
+  token, expiration) and **`PersonalAccessTokenAuthMaterial`** (host, token).
+  These replace the token harvesting that today lives *inside* the GitLab
+  session classes (`GitLabOidcSession`/`GitLabPersonalAccessTokenSession`
+  constructors): the host describes how the user authenticated, as data; the
+  backend decides whether that material is usable against its upstream
+  (issuer/host match) — that logic is backend knowledge and moves to L5.
+- **`StaleAuthorizationException`** (503 default): decision 1 enumerated two
+  redirect flows (302 to the authorization URI; 403 with `auth_uri`), both
+  covered by `AuthorizationRequiredException(URI)`. The GitLab code has a
+  *third* — `BaseGitLabApi.buildException`'s 401 branch clears the stale
+  token and redirects the client back to *the original request* (GET; 503
+  "please retry" otherwise). Its redirect target is the request itself, which
+  only the host knows, so it crosses as a type: the backend throws after
+  discarding stale material; the server's mapper reproduces today's
+  302-to-self / 503 pair exactly.
+- **`BackendFactory.configureObjectMapper(ObjectMapper)`** (default no-op):
+  the GitLab configuration needs a Jackson mix-in for its polymorphic
+  `gitlabAuthorizers` list, registered today by a hard-wired
+  `GitLabConfiguration.configureObjectMapper` call in
+  `BaseLegendSDLCServer.initialize`. The factory hook lets any backend
+  configure the host's configuration mapper at bootstrap, alongside subtype
+  registration; the hard-wired call dies in part 2.
+- **`BackendEnvironment.getProjectCreationConfiguration()`** (default null) +
+  L4 value type **`ProjectCreationConfiguration`** (default structure
+  version, groupId/artifactId patterns): `GitLabProjectApi`'s only real use
+  of the server's `ProjectStructureConfiguration` — reached today through the
+  `getService` escape hatch — is its project-creation section. Decision 3
+  said such needs cross "as data via environment accessors"; this is that
+  accessor. The server's configuration class stays at L6; the environment
+  publishes the data view. (The FS refit's "projects are created at the
+  latest structure version" ruling stands — whether FS *adopts* the policy
+  remains config-options work; the accessor exists because GitLab's current
+  behavior must be preserved through the extraction.)
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.
