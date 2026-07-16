@@ -15,14 +15,14 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.eclipse.collections.api.factory.Lists;
-import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabToken;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.auth.TestGitLabSession;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.gitlab4j.api.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
@@ -34,7 +34,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class GitLabApiTestSetupUtil
@@ -51,11 +53,8 @@ public class GitLabApiTestSetupUtil
      * @param hostHost   the test host.
      * @param hostPort   the port (if necessary) of the test host.
      */
-    public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort) throws LegendSDLCServerException
+    public static GitLabUserContext prepareGitLabUserContextHelper(String username, String password, String hostUrl, String hostScheme, String hostHost, Integer hostPort) throws LegendSDLCException
     {
-        TestHttpServletRequest httpServletRequest = new TestHttpServletRequest();
-
-        TestGitLabSession session = new TestGitLabSession(username);
         GitLabApi oauthGitLabApi;
         Version version;
 
@@ -73,7 +72,7 @@ public class GitLabApiTestSetupUtil
             {
                 builder.append("; validation error(s): ").append(e.getValidationErrors());
             }
-            throw new LegendSDLCServerException(builder.toString(), e);
+            throw new LegendSDLCException(builder.toString(), e);
         }
 
         String oauthToken = oauthGitLabApi.getAuthToken();
@@ -83,13 +82,50 @@ public class GitLabApiTestSetupUtil
         GitLabServerInfo gitLabServerInfo = GitLabServerInfo.newServerInfo(hostScheme, hostHost, hostPort);
         GitLabAppInfo gitLabAppInfo = GitLabAppInfo.newAppInfo(gitLabServerInfo, null, null, null);
 
-        session.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oauthToken));
-        session.setRefreshToken(null);
-        session.setTokenExpiry(0L);
-        LegendSDLCWebFilter.setSessionAttributeOnServletRequest(httpServletRequest, session);
-
         GitLabAuthorizerManager authorizerManager = GitLabAuthorizerManager.newManager(Collections.emptyList());
-        return new GitLabUserContext(httpServletRequest, null, authorizerManager, gitLabAppInfo);
+        GitLabUserContext userContext = new GitLabUserContext(newSessionContext(username), authorizerManager, gitLabAppInfo);
+        userContext.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, oauthToken));
+        return userContext;
+    }
+
+    private static BackendSessionContext newSessionContext(String userId)
+    {
+        Map<String, String> state = new HashMap<>();
+        BackendSessionStateStore stateStore = new BackendSessionStateStore()
+        {
+            @Override
+            public String get(String key)
+            {
+                return state.get(key);
+            }
+
+            @Override
+            public void put(String key, String value)
+            {
+                if (value == null)
+                {
+                    state.remove(key);
+                }
+                else
+                {
+                    state.put(key, value);
+                }
+            }
+        };
+        return new BackendSessionContext()
+        {
+            @Override
+            public String getUserId()
+            {
+                return userId;
+            }
+
+            @Override
+            public BackendSessionStateStore getStateStore()
+            {
+                return stateStore;
+            }
+        };
     }
 
     protected static boolean hasOnlyBranchesWithNames(List<Branch> branchList, List<String> expectedNames)

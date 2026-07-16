@@ -1491,3 +1491,157 @@ additive to `legend-sdlc-backend-api`; no consumer changes in this commit.
   behavior must be preserved through the extraction.)
 
 Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 2 — the re-plumb, in place
+
+The GitLab code is re-plumbed onto the SPI *inside* the server module, so the
+relocation (part 3) is purely mechanical. Everything decision 1 staged for the
+extraction lands here: no GitLab code touches servlet, pac4j, Guice, or JAX-RS
+types any more.
+
+**The server side (backend-independent):**
+
+- **Generic state sessions** (`legend-sdlc-server-shared`, replacing the GitLab
+  session family): `StateSession` — identity plus a mutable string-keyed state
+  bag — with `CommonProfileStateSession`/`KerberosStateSession` over the pac4j
+  profiles and a `StateSessionBuilder`. The bag is what backends see through
+  the session state store port; the cookie encodes it generically (format
+  marker + sorted key/value pairs, `SessionStateCodec`). Cookies from before
+  the format change decode to an *empty* bag — the marker distinguishes them —
+  so existing sessions re-acquire their state once after upgrade: OIDC-, PAT-,
+  and Kerberos-authenticated users silently (the harvest/authorizer chain
+  re-runs), interactive-OAuth users through one extra authorize redirect.
+  `TestStateSession` pins the round-trip and the legacy-cookie tolerance.
+- **`StateSessionWebFilter`** (server) replaces `GitLabWebFilter` and is
+  registered *unconditionally* in `BaseLegendSDLCServer.run` under the name
+  `LegendSDLCSession` (same supported profile types as before). Deployments
+  order the filter via `filterPriorities` under its historical name "GitLab";
+  `LegendSDLCServerConfiguration.getFilterPriorities()` aliases that name to
+  the new one so existing configuration keeps working (migration row).
+  `GitLabBundle` and `GitLabServerHealthCheck` are deleted: the bundle's only
+  remaining job was the filter, and the health check only validated config
+  shape (its own TODO said as much). A backend health surface on the SPI is
+  deferred (additive later, like metrics); the `gitLabServer` health-check
+  entry disappears from deployments (migration row).
+- **`ServletBackendSessionContext` completes** (closing the Phase 4 interim):
+  the state store is real — reads and writes go to the `StateSession` bag,
+  every write triggers the session-cookie write-back — and `getService`
+  publishes the per-user auth material as data: `javax.security.auth.Subject`
+  for Kerberos sessions, `OidcAuthMaterial` / `PersonalAccessTokenAuthMaterial`
+  harvested from the pac4j profile types. This is decision 1's "L6 adapter"
+  made literal: the only place pac4j appears on the backend session path. A
+  request-transient store remains as fallback for non-state sessions (test
+  fixtures).
+- **The generic `/auth` surface** (`server.resources.auth`, bound for every
+  server variant in `AbstractBaseModule`): `AuthResource`
+  (authorize/callback/termsOfServiceAcceptance) over `BackendSession`'s auth
+  contract, and `AuthCheckResource` (authorized) with the session-bootstrap
+  machinery (PAT header, session store) from the former GitLab check resource.
+  The OAuth `state` round-trip is owned here: the resource encodes the current
+  request into `state` and appends it to the backend's authorization URI —
+  parameter order (and hence the URI) identical to the old GitLab-built one.
+  The former GitLab auth resources are deleted; routes and wire behavior are
+  unchanged. `TestAuthResources` pins the surface on the in-memory test server.
+- **Two new exception mappers**: `AuthorizationRequiredException` → 403 with
+  the historical `{"message":"Authorization required","auth_uri":"/auth/authorize"}`
+  body (byte-identical, by delegating to the server exception mapper), except
+  on the authorize route, where `AuthResource` catches it and issues the 302.
+  `StaleAuthorizationException` → 302-back-to-the-same-request for GET, 503
+  "please retry" otherwise — exactly the former 401-stale-token pair.
+  Implementation note, learned the hard way: the stale mapper needs the
+  request, and `@Context` *field* injection of request-scoped types into a
+  Jersey-registered provider instance fails at servlet initialization under
+  the Guice–HK2 bridge (the bridge provisions eagerly instead of proxying);
+  the mapper is therefore Guice-bound (lazy `Provider<HttpServletRequest>`)
+  and reaches Jersey through the Guice bundle's binding scan, like the
+  resources do.
+- **Module rewiring**: `BaseModule` loses all GitLab bindings and its
+  `UserContext` override (plain `UserContext` everywhere); the request-scoped
+  `BackendSession` provider moves up to `AbstractBaseModule` (the auth
+  resources need it under `InMemoryModule` too). The environment no longer
+  publishes `ProjectStructureConfiguration` through `getService` — its one
+  consumer now gets data (below); it implements
+  `getProjectCreationConfiguration()` instead, built from the server config.
+- **The legacy-config adapter is re-based on raw JSON**: the server no longer
+  compiles against the GitLab configuration classes, so
+  `LegendSDLCServerConfiguration` holds the legacy `gitLab:` section as a
+  `JsonNode` and `AbstractBaseModule.buildBackend` synthesizes
+  `backend: {type: gitlab, ...}` from it through the bootstrap object mapper
+  (which carries the ServiceLoader-registered subtypes and the factories'
+  mapper hooks). The legacy `uat:`/`prod:` mode sections are accepted and
+  flattened by `GitLabBackendConfiguration`'s creator (GitLab owns its legacy
+  configuration shapes; the host adapter only stamps the type), so the
+  raw-JSON path handles everything the old typed parse did. Validation timing
+  changes: a
+  structurally invalid legacy section now fails at first backend use rather
+  than at config parse (the backend was already built lazily).
+  `GitLabConfiguration.configureObjectMapper` at bootstrap is replaced by the
+  part-1 `BackendFactory.configureObjectMapper` hook, which the GitLab factory
+  implements.
+
+**The GitLab side (framework-free):**
+
+- **`GitLabTokenManager` persists through the session state store** (keys
+  `gitlab.appId`/`gitlab.token.type`/`gitlab.token`/`gitlab.refreshToken`/
+  `gitlab.tokenExpiry`, write-through): state is keyed to the GitLab
+  application id, as the old cookie encoding was. `PRIVATE`-typed tokens are
+  never OAuth-refreshed — replicating the former PAT session's
+  `shouldRefreshToken() == false` override in the one manager that now serves
+  all auth flavors. `GitLabTokenResponse` gains a typed-token constructor (the
+  PAT harvest yields a `PRIVATE` token) and an optional exact expiry (the OIDC
+  harvest carries the profile's expiration; a response without any expiry gets
+  the default-derived one — the former OIDC-without-expiration edge, which
+  left the expiry null and forced an immediate refresh attempt, now trusts the
+  token for the default window; judged the saner reading of an
+  unreachable-in-practice edge). `TestGitLabTokenManager` re-pins all of this
+  over an in-memory store (the old test pinned the dead cookie encoding).
+- **`GitLabUserContext` is rebuilt framework-free** (name kept — it is still
+  the per-user view; 17 api classes construct against it unchanged): identity
+  and state from `BackendSessionContext`, the `GitLabApi`/token life cycle
+  logic otherwise verbatim. The OIDC/PAT token harvests that lived in the
+  session-class constructors run at user-context construction when the
+  persisted state has no token — preserving `/auth/authorized` semantics for
+  OIDC/PAT users (authorized on first request, before any interactive flow).
+  One deliberate micro-fix: `isUserAuthorized` returns false when the
+  authorizer chain yields nothing (previously an NPE → 500 on a
+  cleared-token-with-future-expiry session).
+- **The authorizer chain crosses the SPI**: `GitLabAuthorizer.authorize` takes
+  `BackendSessionContext` instead of the server `Session` — a breaking change
+  for externally configured authorizers (Jackson-polymorphic `gitlabAuthorizers`
+  list; class names in YAML keep resolving, implementations re-target the new
+  signature — migration recipe in part 3). `KerberosGitLabAuthorizer` reads
+  the `Subject` from `getService`; two new harvest authorizers
+  (`OidcGitLabAuthorizer`, `PersonalAccessTokenGitLabAuthorizer`) head every
+  chain, then the configured authorizers or the historical Kerberos default.
+- **The redirect flows convert** per decision 1: interactive authorization is
+  `AuthorizationRequiredException(buildAppAuthorizationURI(appInfo))` (no
+  state — the host appends it); auth failure 403 / auth error 500 as before
+  (base exception type); `BaseGitLabApi.buildException`'s 401 branch clears
+  the token and throws `StaleAuthorizationException`.
+- **The `LegendSDLCServerException` sweep**: ~330 throw/validate/catch sites
+  across the GitLab tree converted to the base `LegendSDLCException` with int
+  status codes (identical mapper output; the Phase 2/3 precedent applied
+  wholesale), `javax.ws.rs` gone from the tree (`Status.Family` classification
+  replaced by an int range check; two `Status.fromStatusCode` coercions became
+  int passthrough — unknown codes no longer collapse to 500 on those two
+  paths, unreachable with our own thrown codes). `@Inject` stripped from all
+  api classes (L5 takes no `javax.inject`).
+- **`GitLabBackend`** builds its own `GitLabAppInfo` and authorizer manager
+  from `GitLabConfiguration`, constructs the user context from the session
+  context (the `ServletBackendSessionContext` unwrapping and its
+  `IllegalArgumentException`s are gone), and now implements the auth surface
+  fully: `isAuthorized` absorbs the check resource's
+  `GitLabAuthAccessException` → false handling;
+  `getUnacceptedTermsOfService` is aligned to the deleted resource's exact
+  wire behavior (401/403 → 403 with the "Error checking acceptance of terms
+  of service" message — the Phase 4 replication had dropped that mapping, a
+  latent drift caught at this rewiring). `GitLabProjectApi` consumes the L4
+  `ProjectCreationConfiguration` from the environment (decision 3's
+  data-crossing made concrete); the factory's `getService` escape hatch use is
+  gone.
+
+Verified: `legend-sdlc-server` 261 green (258 + the new `TestAuthResources` 3,
+including all resource tests — the server boots with the unconditional session
+filter and the generic auth surface under the in-memory backend);
+`legend-sdlc-server-shared` green with the new session pins; full-reactor
+`mvn install javadoc:javadoc` green.

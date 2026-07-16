@@ -17,21 +17,33 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.list.ListIterable;
 import org.eclipse.collections.api.list.MutableList;
-import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
 import java.util.Arrays;
 
+/**
+ * The chain of {@link GitLabAuthorizer}s tried, in order, when a session has no GitLab token. The harvest
+ * authorizers ({@link OidcGitLabAuthorizer}, {@link PersonalAccessTokenGitLabAuthorizer}) always head the chain
+ * — they read auth material the host already holds, which the former session classes harvested at session
+ * construction; then the configured authorizers, or {@link KerberosGitLabAuthorizer} when none are configured
+ * (the historical default).
+ */
 public class GitLabAuthorizerManager
 {
     private final ListIterable<? extends GitLabAuthorizer> gitLabAuthorizers;
 
     private GitLabAuthorizerManager(Iterable<? extends GitLabAuthorizer> gitLabAuthorizers)
     {
-        MutableList<GitLabAuthorizer> authorizers = Lists.mutable.ofAll(gitLabAuthorizers);
-        if (authorizers.isEmpty())
+        MutableList<GitLabAuthorizer> authorizers = Lists.mutable.<GitLabAuthorizer>with(new OidcGitLabAuthorizer(), new PersonalAccessTokenGitLabAuthorizer());
+        MutableList<GitLabAuthorizer> configured = Lists.mutable.ofAll(gitLabAuthorizers);
+        if (configured.isEmpty())
         {
             authorizers.add(new KerberosGitLabAuthorizer());
+        }
+        else
+        {
+            authorizers.addAll(configured);
         }
         this.gitLabAuthorizers = authorizers.toImmutable();
     }
@@ -46,11 +58,11 @@ public class GitLabAuthorizerManager
         return new GitLabAuthorizerManager(gitLabAuthorizers);
     }
 
-    public GitLabTokenResponse authorize(Session session, GitLabAppInfo appInfo)
+    public GitLabTokenResponse authorize(BackendSessionContext sessionContext, GitLabAppInfo appInfo)
     {
         for (GitLabAuthorizer gitLabAuthorizer : this.gitLabAuthorizers)
         {
-            GitLabTokenResponse token = gitLabAuthorizer.authorize(session, appInfo);
+            GitLabTokenResponse token = gitLabAuthorizer.authorize(sessionContext, appInfo);
             if (token != null)
             {
                 return token;

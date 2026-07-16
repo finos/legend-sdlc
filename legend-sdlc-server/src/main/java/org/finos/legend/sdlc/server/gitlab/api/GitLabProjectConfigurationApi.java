@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.MetamodelDependency;
@@ -26,7 +27,6 @@ import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -45,14 +45,12 @@ import org.gitlab4j.api.models.MergeRequestFilter;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
-import javax.inject.Inject;
 
 public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess implements ProjectConfigurationApi
 {
     private final ProjectStructureExtensionProvider projectStructureExtensionProvider;
     private final ProjectStructurePlatformExtensions projectStructurePlatformExtensions;
 
-    @Inject
     public GitLabProjectConfigurationApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectStructureExtensionProvider projectStructureExtensionProvider, BackgroundTaskProcessor backgroundTaskProcessor, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -63,8 +61,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getProjectConfiguration(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification, "sourceSpecification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpecification, "sourceSpecification may not be null");
 
         String resolvedRevisionId = resolveRevisionId(projectId, sourceSpecification, revisionId);
         try
@@ -89,8 +87,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getReviewFromProjectConfiguration(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -98,7 +96,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         DiffRef diffRef = mergeRequest.getDiffRefs();
         if ((diffRef == null) || (diffRef.getStartSha() == null))
         {
-            throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
         WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
@@ -108,8 +106,8 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
     @Override
     public ProjectConfiguration getReviewToProjectConfiguration(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -117,7 +115,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         DiffRef diffRef = mergeRequest.getDiffRefs();
         if ((diffRef == null) || (diffRef.getHeadSha() == null))
         {
-            throw new LegendSDLCServerException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCException("Unable to get [to] revision info in project " + projectId + " for review " + reviewId);
         }
 
         WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
@@ -129,16 +127,16 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
         // We only allow review in OPEN and COMMITTED state. Note that this is the only control point for this restriction
         if (!isOpen(mergeRequest) && !isCommitted(mergeRequest))
         {
-            throw new LegendSDLCServerException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
+            throw new LegendSDLCException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
         }
     }
 
     @Override
     public Revision updateProjectConfiguration(String projectId, WorkspaceSourceSpecification sourceSpec, String message, ProjectConfigurationUpdater updater)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpec, "sourceSpec may not be null");
-        LegendSDLCServerException.validateNonNull(message, "message may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpec, "sourceSpec may not be null");
+        LegendSDLCException.validateNonNull(message, "message may not be null");
 
         try
         {
@@ -146,7 +144,7 @@ public class GitLabProjectConfigurationApi extends GitLabApiWithFileAccess imple
             Revision currentRevision = fileAccessProvider.getRevisionAccessContext(projectId, sourceSpec, null).getCurrentRevision();
             if (currentRevision == null)
             {
-                throw new LegendSDLCServerException("Could not find current revision for " + getReferenceInfo(projectId, sourceSpec) + ": it may be corrupt");
+                throw new LegendSDLCException("Could not find current revision for " + getReferenceInfo(projectId, sourceSpec) + ": it may be corrupt");
             }
             return ProjectStructureUpdater.newUpdateBuilder(fileAccessProvider, projectId)
                     .withProjectConfigurationUpdater(updater)

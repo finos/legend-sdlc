@@ -15,16 +15,19 @@
 package org.finos.legend.sdlc.server.config;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
+import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabBackendConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class LegendSDLCServerConfiguration extends ServerConfiguration
 {
     @JsonProperty("gitLab")
-    private GitLabConfiguration gitLabConfig;
+    private JsonNode legacyGitLabConfig;
 
     @JsonProperty("backend")
     private BackendConfiguration backendConfiguration;
@@ -39,35 +42,47 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
     private LegendSDLCServerFeaturesConfiguration featuresConfiguration;
 
     /**
-     * The GitLab configuration: the legacy top-level {@code gitLab:} section if present, otherwise the one
-     * embedded in a {@code backend: {type: gitlab, ...}} section. The fallback keeps the GitLab bundle, app
-     * info, and auth machinery working for deployments that have migrated to the {@code backend:} form.
-     *
-     * @return GitLab configuration or null
-     */
-    public GitLabConfiguration getGitLabConfiguration()
-    {
-        if (this.gitLabConfig != null)
-        {
-            return this.gitLabConfig;
-        }
-        return (this.backendConfiguration instanceof GitLabBackendConfiguration) ? ((GitLabBackendConfiguration) this.backendConfiguration).getGitLabConfiguration() : null;
-    }
-
-    /**
-     * The backend configuration: the {@code backend:} section if present; otherwise, synthesized from a legacy
-     * top-level {@code gitLab:} section (the transition adapter — a legacy GitLab deployment needs no config
-     * change to select the GitLab backend).
+     * The backend configuration: the {@code backend:} section, or null if there is none (see
+     * {@link #getLegacyGitLabConfig()} for the legacy adapter's raw section).
      *
      * @return backend configuration or null
      */
     public BackendConfiguration getBackendConfiguration()
     {
-        if (this.backendConfiguration != null)
+        return this.backendConfiguration;
+    }
+
+    /**
+     * The legacy top-level {@code gitLab:} section, held as raw JSON: the server no longer compiles against the
+     * GitLab backend's configuration class, so the transition adapter (a legacy GitLab deployment needs no
+     * config change to select the GitLab backend) synthesizes {@code backend: {type: gitlab, ...}} from this
+     * node through the configuration object mapper when no {@code backend:} section is present.
+     *
+     * @return legacy GitLab configuration section or null
+     */
+    public JsonNode getLegacyGitLabConfig()
+    {
+        return this.legacyGitLabConfig;
+    }
+
+    /**
+     * Filter priorities, with an alias for the session filter's historical registered name: the filter that
+     * creates the server session was named "GitLab" before the backend extraction, and deployments order it via
+     * this map, so a "GitLab" entry applies to the session filter unless the new name is configured explicitly.
+     *
+     * @return filter priorities
+     */
+    @Override
+    public Map<String, Integer> getFilterPriorities()
+    {
+        Map<String, Integer> priorities = super.getFilterPriorities();
+        if ((priorities != null) && priorities.containsKey("GitLab") && !priorities.containsKey(BaseLegendSDLCServer.SESSION_FILTER_NAME))
         {
-            return this.backendConfiguration;
+            Map<String, Integer> aliased = new HashMap<>(priorities);
+            aliased.put(BaseLegendSDLCServer.SESSION_FILTER_NAME, priorities.get("GitLab"));
+            return aliased;
         }
-        return (this.gitLabConfig == null) ? null : new GitLabBackendConfiguration(this.gitLabConfig);
+        return priorities;
     }
 
     public ProjectStructureConfiguration getProjectStructureConfiguration()

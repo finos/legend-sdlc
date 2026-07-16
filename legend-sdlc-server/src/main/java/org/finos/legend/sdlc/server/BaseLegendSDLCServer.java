@@ -25,8 +25,8 @@ import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
 import org.finos.legend.sdlc.server.backend.UnsupportedCapabilityExceptionMapper;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
-import org.finos.legend.sdlc.server.gitlab.GitLabBundle;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.backend.AuthorizationRequiredExceptionMapper;
+import org.finos.legend.sdlc.server.backend.StateSessionWebFilter;
 import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
@@ -34,8 +34,11 @@ import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.EnumSet;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
+import javax.servlet.DispatcherType;
+import javax.servlet.FilterRegistration;
 
 public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfiguration> extends BaseServer<T>
 {
@@ -45,6 +48,13 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
      */
     @Deprecated
     public static final String GITLAB_MODE = "gitlab";
+
+    /**
+     * The registered name of the session filter. Historically "GitLab" (the filter was GitLab-specific);
+     * deployments reference it in {@code filterPriorities}, so the configuration aliases the old name to this
+     * one (see {@code LegendSDLCServerConfiguration#getFilterPriorities()}).
+     */
+    public static final String SESSION_FILTER_NAME = "LegendSDLCSession";
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLegendSDLCServer.class);
 
@@ -71,7 +81,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
 
         // SDLC specific initialization
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
-        GitLabConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         DepotConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         PureProtocolObjectMapperFactory.withPureProtocolExtensions(bootstrap.getObjectMapper());
     }
@@ -79,12 +88,13 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     protected void configureApis(Bootstrap<T> bootstrap)
     {
         // Register each discovered backend factory's configuration class as a subtype of the polymorphic
-        // "backend" configuration section, keyed by the factory's type
-        ServiceLoader.load(BackendFactory.class).forEach(factory -> bootstrap.getObjectMapper().registerSubtypes(new NamedType(factory.getConfigurationClass(), factory.getType())));
-
-        // GitLab bundle: activates only when a GitLab configuration is present (legacy gitLab: section or
-        // backend: {type: gitlab}); backend selection is by configuration, not by server mode
-        bootstrap.addBundle(new GitLabBundle<>(LegendSDLCServerConfiguration::getGitLabConfiguration));
+        // "backend" configuration section, keyed by the factory's type, and let the factory configure the
+        // configuration mapper (e.g. mix-ins its configuration class needs)
+        ServiceLoader.load(BackendFactory.class).forEach(factory ->
+        {
+            bootstrap.getObjectMapper().registerSubtypes(new NamedType(factory.getConfigurationClass(), factory.getType()));
+            factory.configureObjectMapper(bootstrap.getObjectMapper());
+        });
 
         // Guice bootstrapping..
         bootstrap.addBundle(buildGuiceBundle());
@@ -107,6 +117,14 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     {
         super.run(configuration, environment);
         environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
+        environment.jersey().register(new AuthorizationRequiredExceptionMapper());
+        // StaleAuthorizationExceptionMapper is Guice-bound (it needs the request through a lazy provider) and
+        // registered with Jersey by the Guice bundle's binding scan
+
+        // The session filter: builds the backend-independent state session from the pac4j profiles and the
+        // session cookie. Registered for every deployment; with no authentication profiles it passes through.
+        FilterRegistration.Dynamic sessionFilter = environment.servlets().addFilter(SESSION_FILTER_NAME, new StateSessionWebFilter());
+        sessionFilter.addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), false, "*");
         LifecycleEnvironment lifecycleEnvironment = environment.lifecycle();
         BackgroundTaskProcessor taskProcessor = getBackgroundTaskProcessor();
         lifecycleEnvironment.manage(new Managed()

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.domain.model.build.Build;
 import org.finos.legend.sdlc.domain.model.build.BuildStatus;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -23,7 +24,6 @@ import org.finos.legend.sdlc.backend.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -35,8 +35,6 @@ import org.gitlab4j.api.PipelineApi;
 import org.gitlab4j.api.models.Pipeline;
 import org.gitlab4j.api.models.PipelineStatus;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.EnumSet;
@@ -49,7 +47,6 @@ import java.util.stream.StreamSupport;
 
 public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
 {
-    @Inject
     public GitLabBuildApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -58,7 +55,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getProjectBuildAccessContext(String projectId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new GitLabBuildAccessContext(projectId)
         {
@@ -85,8 +82,8 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getWorkspaceBuildAccessContext(String projectId, String workspaceId, WorkspaceType workspaceType, ProjectFileAccessProvider.WorkspaceAccessType workspaceAccessType)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspaceId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceId, "workspaceId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new GitLabBuildAccessContext(projectId)
         {
@@ -113,8 +110,8 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
     @Override
     public BuildAccessContext getVersionBuildAccessContext(String projectId, VersionId versionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(versionId, "versionId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(versionId, "versionId may not be null");
         return new GitLabBuildAccessContext(projectId)
         {
             @Override
@@ -170,7 +167,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
 
             if (!getRef().equals(pipeline.getRef()))
             {
-                throw new LegendSDLCServerException("Unknown build in " + getRefInfoForException() + ": " + buildId, Status.NOT_FOUND);
+                throw new LegendSDLCException("Unknown build in " + getRefInfoForException() + ": " + buildId, 404);
             }
 
             return fromGitLabPipeline(this.projectId, pipeline);
@@ -190,7 +187,7 @@ public class GitLabBuildApi extends GitLabApiWithFileAccess implements BuildApi
                     }
                     if (limit < 0)
                     {
-                        throw new LegendSDLCServerException("Invalid limit: " + limit, Status.BAD_REQUEST);
+                        throw new LegendSDLCException("Invalid limit: " + limit, 400);
                     }
                     limited = true;
                 }

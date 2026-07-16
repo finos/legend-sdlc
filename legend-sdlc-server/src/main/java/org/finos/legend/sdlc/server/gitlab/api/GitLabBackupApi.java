@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -28,14 +28,11 @@ import org.gitlab4j.api.models.Branch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabBackupApi.class);
 
-    @Inject
     public GitLabBackupApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -44,8 +41,8 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     @Override
     public void discardBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         WorkspaceSpecification backupWorkspaceSpec = (workspaceSpecification.getAccessType() == WorkspaceAccessType.BACKUP) ?
@@ -57,7 +54,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
             boolean success = GitLabApiTools.deleteBranchAndVerify(repositoryApi, gitLabProjectId.getGitLabId(), getWorkspaceBranchName(backupWorkspaceSpec), 20, 1_000);
             if (!success)
             {
-                throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(projectId, backupWorkspaceSpec));
+                throw new LegendSDLCException("Failed to delete " + getReferenceInfo(projectId, backupWorkspaceSpec));
             }
         }
         catch (Exception e)
@@ -78,8 +75,8 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
     @Override
     public void recoverBackupWorkspace(String projectId, WorkspaceSpecification workspaceSpecification, boolean forceRecovery)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
@@ -128,7 +125,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         {
             if (!forceRecovery)
             {
-                throw new LegendSDLCServerException(getReferenceInfo(projectId, mainWorkspaceSpec) + " already exists and the recovery is not forced, so recovery from backup is not possible", Response.Status.CONFLICT);
+                throw new LegendSDLCException(getReferenceInfo(projectId, mainWorkspaceSpec) + " already exists and the recovery is not forced, so recovery from backup is not possible", 409);
             }
             // Delete the existing branch
             boolean workspaceDeleted;
@@ -145,7 +142,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
             }
             if (!workspaceDeleted)
             {
-                throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(projectId, mainWorkspaceSpec));
+                throw new LegendSDLCException("Failed to delete " + getReferenceInfo(projectId, mainWorkspaceSpec));
             }
         }
         // Create new workspace branch off the backup branch head
@@ -163,7 +160,7 @@ public class GitLabBackupApi extends GitLabApiWithFileAccess implements BackupAp
         }
         if (workspaceBranch == null)
         {
-            throw new LegendSDLCServerException("Error while attempting to recover backup for " + getReferenceInfo(projectId, mainWorkspaceSpec) + ": failed to create workspace");
+            throw new LegendSDLCException("Error while attempting to recover backup for " + getReferenceInfo(projectId, mainWorkspaceSpec) + ": failed to create workspace");
         }
 
         // Delete backup branch

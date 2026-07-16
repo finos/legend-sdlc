@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.gitlab4j.api.Constants.TokenType;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 public class GitLabTokenResponse
@@ -23,12 +24,19 @@ public class GitLabTokenResponse
     private final GitLabToken accessToken;
     private final String refreshToken;
     private final long expiresInSecs;
+    private final LocalDateTime tokenExpiry;
 
     protected GitLabTokenResponse(String accessToken, String refreshToken, Integer expiresInSecs)
     {
-        this.accessToken = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken);
+        this(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, accessToken), refreshToken, expiresInSecs, null);
+    }
+
+    protected GitLabTokenResponse(GitLabToken accessToken, String refreshToken, Integer expiresInSecs, LocalDateTime tokenExpiry)
+    {
+        this.accessToken = Objects.requireNonNull(accessToken, "accessToken may not be null");
         this.refreshToken = refreshToken;
         this.expiresInSecs = expiresInSecs != null ? expiresInSecs.longValue() : 0L;
+        this.tokenExpiry = tokenExpiry;
     }
 
     @Override
@@ -69,5 +77,16 @@ public class GitLabTokenResponse
     public long getExpiresInSecs()
     {
         return this.expiresInSecs;
+    }
+
+    /**
+     * The exact token expiry, when the token's source supplied one (e.g. an OIDC profile); null when only an
+     * expires-in duration is known.
+     *
+     * @return token expiry or null
+     */
+    public LocalDateTime getTokenExpiry()
+    {
+        return this.tokenExpiry;
     }
 }

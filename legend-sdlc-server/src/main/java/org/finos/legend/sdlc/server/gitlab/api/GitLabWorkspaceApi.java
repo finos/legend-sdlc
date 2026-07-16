@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
@@ -26,7 +27,6 @@ import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -63,9 +63,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements WorkspaceApi
 {
@@ -77,7 +74,6 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     private final String sandboxGroupId = "com.gs.alloy.sandbox";
 
 
-    @Inject
     public GitLabWorkspaceApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, ProjectApi projectApi, RevisionApi revisionApi, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -88,8 +84,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public Workspace getWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         try
         {
@@ -122,7 +118,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
 
     private List<Workspace> getWorkspaces(String projectId, Set<WorkspaceType> types, Set<WorkspaceAccessType> accessTypes, Set<WorkspaceSource> sources, String userId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
         Set<WorkspaceType> resolvedTypes = (types == null) ? EnumSet.allOf(WorkspaceType.class) : types;
@@ -223,8 +219,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public boolean isWorkspaceOutdated(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         String workspaceBranchName = getWorkspaceBranchName(workspaceSpecification);
@@ -288,8 +284,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public boolean isWorkspaceInConflictResolutionMode(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
@@ -330,16 +326,16 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public Workspace newWorkspace(String projectId, String workspaceId, WorkspaceType type, WorkspaceSource source)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceId, "workspace id may not be null");
-        LegendSDLCServerException.validateNonNull(type, "workspace type may not be null");
-        LegendSDLCServerException.validateNonNull(source, "workspace source may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceId, "workspace id may not be null");
+        LegendSDLCException.validateNonNull(type, "workspace type may not be null");
+        LegendSDLCException.validateNonNull(source, "workspace source may not be null");
 
         validateWorkspaceId(workspaceId);
         WorkspaceSpecification workspaceSpecification = WorkspaceSpecification.newWorkspaceSpecification(workspaceId, type, WorkspaceAccessType.WORKSPACE, source);
         if (getProjectConfiguration(projectId, workspaceSpecification.getSourceSpecification()) == null)
         {
-            throw new LegendSDLCServerException("Project structure has not been set up", Status.CONFLICT);
+            throw new LegendSDLCException("Project structure has not been set up", 409);
         }
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -353,7 +349,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
             {
                 if (!isPatchReleaseBranchPresent(gitLabProjectId, source.getPatchVersionId()))
                 {
-                    throw new LegendSDLCServerException("Patch release branch for " + source.getPatchVersionId() + " doesn't exist", Response.Status.BAD_REQUEST);
+                    throw new LegendSDLCException("Patch release branch for " + source.getPatchVersionId() + " doesn't exist", 400);
                 }
             }
         });
@@ -415,7 +411,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (branch == null)
         {
-            throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification));
+            throw new LegendSDLCException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification));
         }
         String projectTag = this.getGitLabConfiguration().getProjectTag();
         if (tags.contains(projectTag + "_sandbox") && tags.contains(projectTag))
@@ -431,8 +427,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public void deleteWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
@@ -453,7 +449,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (!workspaceDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(projectId, workspaceSpecification));
+            throw new LegendSDLCException("Failed to delete " + getReferenceInfo(projectId, workspaceSpecification));
         }
 
         // Delete conflict resolution workspace
@@ -510,8 +506,8 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
     @Override
     public WorkspaceUpdateReport updateWorkspace(String projectId, WorkspaceSpecification workspaceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
 
         LOGGER.debug("Updating workspace {} in project {} to latest revision", workspaceSpecification, projectId);
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -598,7 +594,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (tempBranch == null)
         {
-            throw new LegendSDLCServerException("Failed to create temporary workspace " + tempBranchName + " in project " + projectId + " from revision " + currentWorkspaceRevisionId);
+            throw new LegendSDLCException("Failed to create temporary workspace " + tempBranchName + " in project " + projectId + " from revision " + currentWorkspaceRevisionId);
         }
 
         // Attempt to rebase the temporary branch on top of master
@@ -683,7 +679,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (tempBranch == null)
         {
-            throw new LegendSDLCServerException("Failed to create temporary workspace " + tempBranchName + " in project " + projectId + " from revision " + workspaceCreationRevisionId);
+            throw new LegendSDLCException("Failed to create temporary workspace " + tempBranchName + " in project " + projectId + " from revision " + workspaceCreationRevisionId);
         }
         CompareResults comparisonResult;
         try
@@ -859,7 +855,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (backupBranch == null)
                 {
-                    throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, backupWorkspaceSpec) + " from " + getReferenceInfo(projectId, workspaceSpecification));
+                    throw new LegendSDLCException("Failed to create " + getReferenceInfo(projectId, backupWorkspaceSpec) + " from " + getReferenceInfo(projectId, workspaceSpecification));
                 }
                 // Delete original branch
                 boolean originalBranchDeleted;
@@ -876,7 +872,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (!originalBranchDeleted)
                 {
-                    throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(projectId, workspaceSpecification));
+                    throw new LegendSDLCException("Failed to delete " + getReferenceInfo(projectId, workspaceSpecification));
                 }
                 // Create new workspace branch off the temp branch head
                 Branch newWorkspaceBranch;
@@ -896,7 +892,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (newWorkspaceBranch == null)
                 {
-                    throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification) + " from temporary workspace " + tempBranchName);
+                    throw new LegendSDLCException("Failed to create " + getReferenceInfo(projectId, workspaceSpecification) + " from temporary workspace " + tempBranchName);
                 }
                 // Delete backup branch
                 try
@@ -972,7 +968,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
                 }
                 if (!conflictResolutionBranchDeleted)
                 {
-                    throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(projectId, conflictResolutionWorkspaceSpec));
+                    throw new LegendSDLCException("Failed to delete " + getReferenceInfo(projectId, conflictResolutionWorkspaceSpec));
                 }
             }
         }
@@ -997,7 +993,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         }
         if (conflictResolutionBranch == null)
         {
-            throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(projectId, conflictResolutionWorkspaceSpec));
+            throw new LegendSDLCException("Failed to create " + getReferenceInfo(projectId, conflictResolutionWorkspaceSpec));
         }
         // Get the changes of the current workspace
         String currentWorkspaceRevisionId = this.revisionApi.getRevisionContext(projectId, workspaceSpec.getSourceSpecification()).getCurrentRevision().getId();
@@ -1142,11 +1138,11 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         validateWorkspaceId(idString, null);
     }
 
-    private static void validateWorkspaceId(String idString, Status errorStatus)
+    private static void validateWorkspaceId(String idString, Integer errorStatus)
     {
         if (!isValidWorkspaceId(idString))
         {
-            throw new LegendSDLCServerException("Invalid workspace id: \"" + idString + "\". A workspace id must be a non-empty string consisting of characters from the following set: {a-z, A-Z, 0-9, _, ., -}. The id may not contain \"..\" and may not start or end with '.' or '-'.", (errorStatus == null) ? Status.BAD_REQUEST : errorStatus);
+            throw new LegendSDLCException("Invalid workspace id: \"" + idString + "\". A workspace id must be a non-empty string consisting of characters from the following set: {a-z, A-Z, 0-9, _, ., -}. The id may not contain \"..\" and may not start or end with '.' or '-'.", (errorStatus == null) ? 400 : errorStatus);
         }
     }
 

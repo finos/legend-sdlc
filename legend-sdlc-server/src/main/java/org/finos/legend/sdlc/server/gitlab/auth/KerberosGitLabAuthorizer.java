@@ -15,25 +15,28 @@
 package org.finos.legend.sdlc.server.gitlab.auth;
 
 import org.apache.http.cookie.Cookie;
-import org.finos.legend.sdlc.server.auth.KerberosSession;
-import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
+import javax.security.auth.Subject;
+
+/**
+ * Authorizes a Kerberos-authenticated user by running the SAML/SPNEGO dance against the GitLab server with the
+ * user's {@link Subject} (published by the host through the session context) and exchanging the resulting
+ * session cookie for an OAuth token.
+ */
 public class KerberosGitLabAuthorizer implements GitLabAuthorizer
 {
     @Override
-    public GitLabTokenResponse authorize(Session session, GitLabAppInfo appInfo)
+    public GitLabTokenResponse authorize(BackendSessionContext sessionContext, GitLabAppInfo appInfo)
     {
-        if (session instanceof KerberosSession)
-        {
-            KerberosSession kerberosSession = (KerberosSession) session;
-            KerberosGitLabSAMLAuthenticator kerberosGitLabSAMLAuthenticator = new KerberosGitLabSAMLAuthenticator(appInfo, kerberosSession.getSubject());
-            Cookie sessionCookie = kerberosGitLabSAMLAuthenticator.authenticateAndGetSessionCookie();
-            return GitLabOAuthAuthenticator.newAuthenticator(appInfo).getOAuthTokenResponseFromSessionCookie(sessionCookie);
-        }
-        else
+        Subject subject = sessionContext.getService(Subject.class);
+        if (subject == null)
         {
             return null;
         }
+        KerberosGitLabSAMLAuthenticator kerberosGitLabSAMLAuthenticator = new KerberosGitLabSAMLAuthenticator(appInfo, subject);
+        Cookie sessionCookie = kerberosGitLabSAMLAuthenticator.authenticateAndGetSessionCookie();
+        return GitLabOAuthAuthenticator.newAuthenticator(appInfo).getOAuthTokenResponseFromSessionCookie(sessionCookie);
     }
 }
