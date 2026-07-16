@@ -14,13 +14,12 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.server;
 
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtension;
 import org.finos.legend.sdlc.server.project.extension.DefaultProjectStructureExtensionProvider;
 import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtension;
@@ -37,14 +36,14 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     private static GitLabProjectApiTestResource gitLabProjectApiTestResource;
 
     @BeforeClass
-    public static void setup() throws LegendSDLCServerException
+    public static void setup() throws LegendSDLCException
     {
         setUpProjectApi();
         cleanUpTestProjects(gitLabProjectApiTestResource.getGitLabProjectApi());
     }
 
     @AfterClass
-    public static void teardown() throws LegendSDLCServerException
+    public static void teardown() throws LegendSDLCException
     {
         if (gitLabProjectApiTestResource != null)
         {
@@ -53,31 +52,31 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
     }
 
     @Test
-    public void testCreateProject() throws LegendSDLCServerException
+    public void testCreateProject() throws LegendSDLCException
     {
         gitLabProjectApiTestResource.runCreateProjectTest();
     }
 
     @Test
-    public void testCreateManagedProject() throws LegendSDLCServerException
+    public void testCreateManagedProject() throws LegendSDLCException
     {
         gitLabProjectApiTestResource.runCreateManagedProjectTest();
     }
 
     @Test
-    public void testCreateEmbeddedProject() throws LegendSDLCServerException
+    public void testCreateEmbeddedProject() throws LegendSDLCException
     {
         gitLabProjectApiTestResource.runCreateEmbeddedProjectTest();
     }
 
     @Test
-    public void testCreateProductionProject() throws LegendSDLCServerException
+    public void testCreateProductionProject() throws LegendSDLCException
     {
         gitLabProjectApiTestResource.runCreateProductionProjectTest();
     }
 
     @Test
-    public void testGetProject() throws LegendSDLCServerException
+    public void testGetProject() throws LegendSDLCException
     {
         gitLabProjectApiTestResource.runGetProjectTest();
     }
@@ -97,9 +96,9 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
         /**
          * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
          *
-         * @throws LegendSDLCServerException if cannot authenticate to GitLab.
+         * @throws LegendSDLCException if cannot authenticate to GitLab.
          */
-    private static void setUpProjectApi() throws LegendSDLCServerException
+    private static void setUpProjectApi() throws LegendSDLCException
     {
         int projectStructureVersion = ProjectStructure.getLatestProjectStructureVersion();
         int projectStructureExtensionVersion = 1;
@@ -108,10 +107,9 @@ public class TestGitLabServerProjectApis extends AbstractGitLabServerApiTest
         ProjectStructureExtensionProvider extensionProvider = DefaultProjectStructureExtensionProvider.fromExtensions(extensions);
 
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null, GitLabConfiguration.NewProjectVisibility.PRIVATE);
-        ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.newConfiguration(null, extensionProvider, null,null, null,null);
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, extensionProvider, backgroundTaskProcessor, null);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, null, extensionProvider, backgroundTaskProcessor, null);
         gitLabProjectApiTestResource = new GitLabProjectApiTestResource(gitLabProjectApi);
     }
 }

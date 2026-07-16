@@ -41,8 +41,6 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.eclipse.collections.impl.utility.StringIterate;
-import org.finos.legend.sdlc.server.auth.Token;
-import org.finos.legend.sdlc.server.auth.Token.TokenBuilder;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.jsoup.Jsoup;
@@ -51,7 +49,6 @@ import org.jsoup.nodes.Element;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -427,25 +424,17 @@ public class GitLabOAuthAuthenticator
         return new GitLabOAuthAuthenticator(appInfo);
     }
 
-    static URI buildAppAuthorizationURI(GitLabAppInfo appInfo, HttpServletRequest httpRequest)
+    /**
+     * The application authorization URI a user is sent to for the interactive OAuth flow: client id, redirect
+     * URI, and response type — without a {@code state} parameter, which is the host's to append (it encodes the
+     * original request so the callback can redirect back to it).
+     *
+     * @param appInfo GitLab application info
+     * @return app authorization URI
+     */
+    public static URI buildAppAuthorizationURI(GitLabAppInfo appInfo)
     {
-        // Build state
-        TokenBuilder stateBuilder = Token.newBuilder();
-
-        // Request Method
-        stateBuilder.putString(httpRequest.getMethod());
-
-        // Request URL
-        StringBuffer urlBuilder = httpRequest.getRequestURL();
-        String requestQueryString = httpRequest.getQueryString();
-        if (requestQueryString != null)
-        {
-            urlBuilder.append('?').append(requestQueryString);
-        }
-        stateBuilder.putString(urlBuilder.toString());
-
-        // Build URI
-        return buildAuthURI(appInfo, stateBuilder.toTokenString(), CODE_RESPONSE_TYPE);
+        return buildAuthURI(appInfo, null, CODE_RESPONSE_TYPE);
     }
 
     private static URI buildAuthURI(GitLabAppInfo appInfo, String state, String responseType)

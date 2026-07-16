@@ -22,9 +22,10 @@ import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
 import java.util.List;
 
 /**
- * The {@code backend: {type: gitlab, ...}} configuration: the GitLab configuration's fields, inline. The legacy
- * {@code uat}/{@code prod} mode sections are not supported in this form — deployments migrating to the
- * {@code backend:} section use the flat server/app layout.
+ * The {@code backend: {type: gitlab, ...}} configuration: the GitLab configuration's fields, inline. The
+ * deprecated {@code uat}/{@code prod} mode sections are accepted and flattened exactly as the legacy
+ * {@code gitLab:} section's parse always did — the server's legacy-configuration adapter feeds that section
+ * through this creator (stamped with the type), so GitLab owns all of its configuration shapes.
  */
 public class GitLabBackendConfiguration extends BackendConfiguration
 {
@@ -35,20 +36,14 @@ public class GitLabBackendConfiguration extends BackendConfiguration
             @JsonProperty("projectTag") String projectTag,
             @JsonProperty("projectIdPrefix") String projectIdPrefix,
             @JsonProperty("auth") GitLabConfiguration.AuthConfiguration authConfig,
+            @JsonProperty("uat") GitLabConfiguration.ModeConfiguration uatConfig,
+            @JsonProperty("prod") GitLabConfiguration.ModeConfiguration prodConfig,
             @JsonProperty("server") GitLabConfiguration.ServerConfiguration serverConfig,
             @JsonProperty("app") GitLabConfiguration.AppConfiguration appConfig,
             @JsonProperty("newProjectVisibility") GitLabConfiguration.NewProjectVisibility newProjectVisibility,
             @JsonProperty("gitlabAuthorizers") List<GitLabAuthorizer> gitLabAuthorizers)
     {
-        this.gitLabConfiguration = GitLabConfiguration.newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, serverConfig, appConfig, newProjectVisibility, gitLabAuthorizers);
-    }
-
-    /**
-     * Adapter constructor for the legacy top-level {@code gitLab:} configuration section.
-     */
-    public GitLabBackendConfiguration(GitLabConfiguration gitLabConfiguration)
-    {
-        this.gitLabConfiguration = gitLabConfiguration;
+        this.gitLabConfiguration = GitLabConfiguration.newGitLabConfiguration(projectTag, projectIdPrefix, authConfig, uatConfig, prodConfig, serverConfig, appConfig, newProjectVisibility, gitLabAuthorizers);
     }
 
     public GitLabConfiguration getGitLabConfiguration()

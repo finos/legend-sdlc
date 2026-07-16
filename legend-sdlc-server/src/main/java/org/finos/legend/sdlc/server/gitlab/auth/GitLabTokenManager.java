@@ -14,50 +14,41 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.auth.Token;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.gitlab4j.api.Constants;
 
-import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
-class GitLabTokenManager implements Serializable
+/**
+ * The GitLab backend's per-user token state, persisted through the host's
+ * {@link BackendSessionStateStore session state store} (which the server backs with the session cookie): the
+ * access token (type and value), the refresh token, and the token expiry. The stored state is keyed to the
+ * GitLab application id — state written for one application is invisible to another, as with the former
+ * cookie-embedded encoding. Mutations write through to the store immediately.
+ */
+class GitLabTokenManager
 {
-    private static final long serialVersionUID = 4579663645788521787L;
     private static final long DEFAULT_EXPIRY_SECS = 7200;
 
+    private static final String APP_ID_KEY = "gitlab.appId";
+    private static final String TOKEN_TYPE_KEY = "gitlab.token.type";
+    private static final String TOKEN_KEY = "gitlab.token";
+    private static final String REFRESH_TOKEN_KEY = "gitlab.refreshToken";
+    private static final String TOKEN_EXPIRY_KEY = "gitlab.tokenExpiry";
+
     private final GitLabAppInfo appInfo;
+    private final BackendSessionStateStore stateStore;
     private GitLabToken token;
     private String refreshToken;
     private LocalDateTime tokenExpiry;
 
-    private GitLabTokenManager(GitLabAppInfo appInfo)
+    private GitLabTokenManager(GitLabAppInfo appInfo, BackendSessionStateStore stateStore)
     {
         this.appInfo = appInfo;
-    }
-
-    @Override
-    public boolean equals(Object other)
-    {
-        if (this == other)
-        {
-            return true;
-        }
-
-        if (!(other instanceof GitLabTokenManager))
-        {
-            return false;
-        }
-
-        GitLabTokenManager that = (GitLabTokenManager) other;
-        return this.appInfo.equals(that.appInfo) && Objects.equals(this.token, that.token);
-    }
-
-    @Override
-    public int hashCode()
-    {
-        return this.appInfo.hashCode() ^ Objects.hashCode(this.token);
+        this.stateStore = stateStore;
+        readState();
     }
 
     @Override
@@ -79,6 +70,9 @@ class GitLabTokenManager implements Serializable
     void clearGitLabToken()
     {
         this.token = null;
+        this.refreshToken = null;
+        this.tokenExpiry = null;
+        writeState();
     }
 
     void setGitLabToken(GitLabToken token)
@@ -92,105 +86,141 @@ class GitLabTokenManager implements Serializable
             throw new IllegalArgumentException("token type may not be null");
         }
         this.token = token;
+        writeState();
     }
 
-    public void setRefreshToken(String refreshToken)
+    void setRefreshToken(String refreshToken)
     {
         if (refreshToken == null)
         {
             throw new IllegalArgumentException("token may not be null");
         }
         this.refreshToken = refreshToken;
+        writeState();
     }
 
-    public void setTokenExpiry(long expiresInSecs)
+    void setTokenExpiry(long expiresInSecs)
     {
         if (expiresInSecs <= 0L)
         {
             expiresInSecs = DEFAULT_EXPIRY_SECS;
         }
-        this.tokenExpiry = LocalDateTime.now().plusSeconds(expiresInSecs * 3 / 4);
+        setTokenExpiry(LocalDateTime.now().plusSeconds(expiresInSecs * 3 / 4));
     }
 
-    public void setTokenExpiry(LocalDateTime expiry)
+    void setTokenExpiry(LocalDateTime expiry)
     {
         this.tokenExpiry = expiry;
+        writeState();
     }
 
-    public String getRefreshToken()
+    String getRefreshToken()
     {
         return this.refreshToken;
     }
 
-    public boolean shouldRefreshToken()
+    boolean shouldRefreshToken()
     {
-        return this.tokenExpiry == null || LocalDateTime.now().isAfter(this.tokenExpiry);
+        if ((this.token != null) && (this.token.getTokenType() == Constants.TokenType.PRIVATE))
+        {
+            // a personal access token is not refreshed through the OAuth flow
+            return false;
+        }
+        return (this.tokenExpiry == null) || LocalDateTime.now().isAfter(this.tokenExpiry);
+    }
+
+    /**
+     * Apply a token response: access token, refresh token, and expiry (the exact expiry when the response
+     * carries one, otherwise derived from the expires-in duration).
+     *
+     * @param tokenResponse token response
+     */
+    void setTokenResponse(GitLabTokenResponse tokenResponse)
+    {
+        this.token = tokenResponse.getAccessToken();
+        this.refreshToken = tokenResponse.getRefreshToken();
+        this.tokenExpiry = (tokenResponse.getTokenExpiry() != null) ? tokenResponse.getTokenExpiry() : expiryFromNow(tokenResponse.getExpiresInSecs());
+        writeState();
     }
 
     boolean gitLabOAuthCallback(String code)
     {
         GitLabTokenResponse tokenResponse = GitLabOAuthAuthenticator.newAuthenticator(this.appInfo).getOAuthTokenResponseFromAuthCode(code);
         GitLabToken oldToken = this.token;
-        this.token = tokenResponse.getAccessToken();
-        this.refreshToken = tokenResponse.getRefreshToken();
-        this.setTokenExpiry(tokenResponse.getExpiresInSecs());
-        return !token.equals(oldToken);
+        setTokenResponse(tokenResponse);
+        return !this.token.equals(oldToken);
     }
 
     StringBuilder appendGitLabTokenInfo(StringBuilder builder)
     {
-        return builder.append("token=").append(this.token != null ? ("'" + this.token.toString() + "'") : "null");
+        return builder.append("token=").append(this.token != null ? ("'" + this.token + "'") : "null");
     }
 
-    Token.TokenBuilder encode(Token.TokenBuilder builder)
+    private static LocalDateTime expiryFromNow(long expiresInSecs)
     {
-        GitLabToken token = this.token;
-        builder.putInt(token != null ? 1 : 0);
-        if (token != null)
+        if (expiresInSecs <= 0L)
         {
-            builder.putString(this.appInfo.getAppId());
-            builder.putString(token.getTokenType().toString());
-            builder.putString(token.getToken());
-            builder.putString(this.refreshToken);
-            builder.putString(this.tokenExpiry != null ? this.tokenExpiry.toString() : null);
+            expiresInSecs = DEFAULT_EXPIRY_SECS;
         }
-        return builder;
+        return LocalDateTime.now().plusSeconds(expiresInSecs * 3 / 4);
     }
 
-    void decodeAndSetToken(Token.TokenReader reader)
+    private void readState()
     {
-        // even if token size is just 0 or 1, it's important to read through all tokens from the reader,
-        // so that it's in an appropriate state for whatever reads from it next.
-        for (int size = reader.getInt(); size > 0; size--)
+        if (this.stateStore == null)
         {
-            String appId = reader.getString();
-            String typeName = reader.getString();
-            String token = reader.getString();
-            String refreshToken = reader.getString();
-            String tokenExpiry = reader.getString();
-            LocalDateTime tokenExpiryDateTime = tokenExpiry != null ? LocalDateTime.parse(tokenExpiry) : null;
-
-            if ((appId != null) && (typeName != null) && (token != null) && appId.equals(this.appInfo.getAppId()))
+            return;
+        }
+        if (!Objects.equals(this.stateStore.get(APP_ID_KEY), this.appInfo.getAppId()))
+        {
+            // state stored for a different GitLab application (or none): start clean
+            return;
+        }
+        String typeName = this.stateStore.get(TOKEN_TYPE_KEY);
+        String tokenValue = this.stateStore.get(TOKEN_KEY);
+        if ((typeName != null) && (tokenValue != null))
+        {
+            Constants.TokenType type;
+            try
             {
-                Constants.TokenType type;
-                try
-                {
-                    type = Constants.TokenType.valueOf(typeName);
-                }
-                catch (IllegalArgumentException e)
-                {
-                    // unknown token type - token will be ignored
-                    continue;
-                }
-                this.token = GitLabToken.newGitLabToken(type, token);
-                this.refreshToken = refreshToken;
-                this.setTokenExpiry(tokenExpiryDateTime);
+                type = Constants.TokenType.valueOf(typeName);
             }
+            catch (IllegalArgumentException e)
+            {
+                // unknown token type - token will be ignored
+                return;
+            }
+            this.token = GitLabToken.newGitLabToken(type, tokenValue);
+            this.refreshToken = this.stateStore.get(REFRESH_TOKEN_KEY);
+            String expiry = this.stateStore.get(TOKEN_EXPIRY_KEY);
+            this.tokenExpiry = (expiry == null) ? null : LocalDateTime.parse(expiry);
         }
     }
 
-    static GitLabTokenManager newTokenManager(GitLabAppInfo appInfo)
+    private void writeState()
     {
-        return new GitLabTokenManager(appInfo);
+        if (this.stateStore == null)
+        {
+            return;
+        }
+        if (this.token == null)
+        {
+            this.stateStore.put(APP_ID_KEY, null);
+            this.stateStore.put(TOKEN_TYPE_KEY, null);
+            this.stateStore.put(TOKEN_KEY, null);
+            this.stateStore.put(REFRESH_TOKEN_KEY, null);
+            this.stateStore.put(TOKEN_EXPIRY_KEY, null);
+            return;
+        }
+        this.stateStore.put(APP_ID_KEY, this.appInfo.getAppId());
+        this.stateStore.put(TOKEN_TYPE_KEY, this.token.getTokenType().name());
+        this.stateStore.put(TOKEN_KEY, this.token.getToken());
+        this.stateStore.put(REFRESH_TOKEN_KEY, this.refreshToken);
+        this.stateStore.put(TOKEN_EXPIRY_KEY, (this.tokenExpiry == null) ? null : this.tokenExpiry.toString());
+    }
+
+    static GitLabTokenManager newTokenManager(GitLabAppInfo appInfo, BackendSessionStateStore stateStore)
+    {
+        return new GitLabTokenManager(appInfo, stateStore);
     }
 }

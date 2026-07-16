@@ -37,7 +37,6 @@ import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSourceConsumer;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -75,8 +74,6 @@ import org.gitlab4j.api.models.TreeItem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.core.Response.Status.Family;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -187,7 +184,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         }
         if (resolvedRevisionId == null)
         {
-            throw new LegendSDLCServerException("Failed to resolve  " + getReferenceInfo(projectId, sourceSpecification, revisionId), Status.NOT_FOUND);
+            throw new LegendSDLCException("Failed to resolve  " + getReferenceInfo(projectId, sourceSpecification, revisionId), 404);
         }
         return resolvedRevisionId;
     }
@@ -227,12 +224,12 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             if (exception instanceof GitLabApiException)
             {
                 int statusCode = ((GitLabApiException) exception).getHttpStatus();
-                if ((statusCode == Status.NOT_FOUND.getStatusCode()) && "404 File Not Found".equals(exception.getMessage()))
+                if ((statusCode == 404) && "404 File Not Found".equals(exception.getMessage()))
                 {
                     // This means the repository is empty
                     return Stream.empty();
                 }
-                if ((statusCode == Status.TOO_MANY_REQUESTS.getStatusCode()) || (statusCode == Status.NOT_ACCEPTABLE.getStatusCode()))
+                if ((statusCode == 429) || (statusCode == 406))
                 {
                     LOGGER.warn("Failed to get files for {} from repository archive (http status: {}), will try to get them from tree(s)", getReference(), statusCode, exception);
                     try
@@ -503,7 +500,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 // Check if reference exists
                 if (!referenceExists())
                 {
-                    throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    throw new LegendSDLCException("Unknown: " + getDescriptionForExceptionMessage(), 404);
                 }
 
                 // Reference exists, but cannot get commits - check if we can get a base revision
@@ -520,7 +517,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 {
                     // We got a base revision but no commit - perhaps the reference is corrupt?
                     LOGGER.debug("Can't get current revision for {} even when the project has more than one revision (workspace or project may be corrupt)", getDescriptionForExceptionMessage());
-                    throw new LegendSDLCServerException("Can't get current revision for " + getDescriptionForExceptionMessage() + " (workspace or project may be corrupt)", Status.INTERNAL_SERVER_ERROR);
+                    throw new LegendSDLCException("Can't get current revision for " + getDescriptionForExceptionMessage() + " (workspace or project may be corrupt)", 500);
                 }
                 // This happens when project is created but has no revision
                 LOGGER.debug("Can't get current revision for {} because the project is created but has no revision", getDescriptionForExceptionMessage());
@@ -584,7 +581,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 // Check if the reference exists
                 if (!referenceExists())
                 {
-                    throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    throw new LegendSDLCException("Unknown: " + getDescriptionForExceptionMessage(), 404);
                 }
 
                 // This happens when project is created but has no revision
@@ -649,7 +646,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         @Override
         public Revision getRevision(String revisionId)
         {
-            LegendSDLCServerException.validateNonNull(revisionId, "revisionId may not be null");
+            LegendSDLCException.validateNonNull(revisionId, "revisionId may not be null");
             CommitsApi commitsApi = getGitLabApi().getCommitsApi();
             String resolvedRevisionId;
             try
@@ -665,7 +662,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
             if (resolvedRevisionId == null)
             {
-                throw new LegendSDLCServerException("Failed to resolve revision " + revisionId + " of project " + this.projectId, Status.NOT_FOUND);
+                throw new LegendSDLCException("Failed to resolve revision " + revisionId + " of project " + this.projectId, 404);
             }
             // Get the commit
             Commit commit;
@@ -688,7 +685,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 Pager<CommitRef> commitRefPager = withRetries(() -> commitsApi.getCommitRefs(this.projectId.getGitLabId(), resolvedRevisionId, RefType.BRANCH, ITEMS_PER_PAGE));
                 if (PagerTools.stream(commitRefPager).map(CommitRef::getName).noneMatch(referenceId::equals))
                 {
-                    throw new LegendSDLCServerException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                    throw new LegendSDLCException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), 404);
                 }
             }
             catch (Exception e)
@@ -707,7 +704,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     Stream<Commit> commitStream = getAllCommits(commitsApi, referenceId, commit.getCommittedDate(), commit.getCommittedDate(), ITEMS_PER_PAGE);
                     if ((commitStream == null) || commitStream.map(Commit::getId).noneMatch(resolvedRevisionId::equals))
                     {
-                        throw new LegendSDLCServerException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                        throw new LegendSDLCException("Revision " + resolvedRevisionId + " is unknown for " + getDescriptionForExceptionMessage(), 404);
                     }
                 }
                 catch (Exception e)
@@ -734,7 +731,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 if (limit < 0)
                 {
-                    throw new LegendSDLCServerException("Invalid limit: " + limit, Status.BAD_REQUEST);
+                    throw new LegendSDLCException("Invalid limit: " + limit, 400);
                 }
                 limited = true;
             }
@@ -747,7 +744,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 {
                     if (!referenceExists())
                     {
-                        throw new LegendSDLCServerException("Unknown: " + getDescriptionForExceptionMessage(), Status.NOT_FOUND);
+                        throw new LegendSDLCException("Unknown: " + getDescriptionForExceptionMessage(), 404);
                     }
                     return Stream.empty();
                 }
@@ -918,7 +915,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                         {
                             String msg = "Expected " + getDescription() + " to be at revision " + referenceRevisionId + "; instead it was at revision " + targetBranchRevision;
                             LOGGER.info(msg);
-                            throw new LegendSDLCServerException(msg, Status.CONFLICT);
+                            throw new LegendSDLCException(msg, 409);
                         }
                     }
                     String branchName = getBranchName(this.projectId, this.sourceSpecification);
@@ -1057,12 +1054,12 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
             catch (LegendSDLCException e)
             {
-                throw new LegendSDLCServerException("Error committing to " + getDescription() + " with a temporary branch", Status.fromStatusCode(e.getStatusCode()), e);
+                throw new LegendSDLCException("Error committing to " + getDescription() + " with a temporary branch", e.getStatusCode(), e);
             }
             catch (Exception e)
             {
                 // TODO improve exception handling
-                throw new LegendSDLCServerException("Error committing to " + getDescription() + " with a temporary branch", e);
+                throw new LegendSDLCException("Error committing to " + getDescription() + " with a temporary branch", e);
             }
         }
 
@@ -1126,7 +1123,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         }
 
         GitLabApiException glae = (GitLabApiException) e;
-        return GitLabApiTools.isRetryableGitLabApiException(glae) || (glae.getHttpStatus() == Status.INTERNAL_SERVER_ERROR.getStatusCode());
+        return GitLabApiTools.isRetryableGitLabApiException(glae) || (glae.getHttpStatus() == 500);
     }
 
     protected static boolean waitForPipelinesDeleteBranchAndVerify(GitLabApi gitLabApi, GitLabProjectId projectId, String branchName)
@@ -1200,7 +1197,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             StringTools.appendThrowableMessageIfPresent(builder, e);
             String message = builder.toString();
             LOGGER.error(message, e);
-            throw new LegendSDLCServerException(message, e);
+            throw new LegendSDLCException(message, e);
         }
     }
 
@@ -1254,7 +1251,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                     {
                         // a client error should be considered a fatal error that stops retries
                         int statusCode = glae.getHttpStatus();
-                        if (Family.familyOf(statusCode) == Family.CLIENT_ERROR)
+                        if ((statusCode >= 400) && (statusCode < 500))
                         {
                             String msg = StringTools.appendThrowableMessageIfPresent(appendReferenceInfo(new StringBuilder("Error committing to temporary branch ").append(this.tempBranchName).append(" for "), this.projectId.toString(), this.sourceSpec), e).toString();
                             LOGGER.error(msg, e);
@@ -1273,7 +1270,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                                 }
                                 LOGGER.debug(debugMessage.toString());
                             }
-                            throw new LegendSDLCServerException(msg, Status.fromStatusCode(statusCode), e);
+                            throw new LegendSDLCException(msg, statusCode, e);
                         }
                     }
                     LOGGER.error("Commit failed on try {}", i, e);
@@ -1285,7 +1282,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             StringBuilder builder = appendReferenceInfo(new StringBuilder("Failed to commit to temporary branch for "), this.projectId.toString(), this.sourceSpec).append(" after ").append(MAX_COMMIT_RETRIES).append(" tries");
             String msg = StringTools.appendThrowableMessageIfPresent(builder, lastException).toString();
             LOGGER.error(msg, lastException);
-            throw new LegendSDLCServerException(msg, lastException);
+            throw new LegendSDLCException(msg, lastException);
         }
 
         synchronized Branch replaceTargetAndDelete()
@@ -1325,7 +1322,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 String targetBranchCommitId = (targetBranchCommit == null) ? null : targetBranchCommit.getId();
                 if (!this.referenceCommitId.equals(targetBranchCommitId))
                 {
-                    throw new LegendSDLCServerException("Expected " + getReferenceInfo(this.projectId, this.sourceSpec) + " to be at revision " + this.referenceCommitId + ", found " + targetBranchCommitId);
+                    throw new LegendSDLCException("Expected " + getReferenceInfo(this.projectId, this.sourceSpec) + " to be at revision " + this.referenceCommitId + ", found " + targetBranchCommitId);
                 }
 
                 boolean oldDeleted;
@@ -1342,7 +1339,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
                 }
                 if (!oldDeleted)
                 {
-                    throw new LegendSDLCServerException("Failed to delete " + getReferenceInfo(this.projectId, this.sourceSpec));
+                    throw new LegendSDLCException("Failed to delete " + getReferenceInfo(this.projectId, this.sourceSpec));
                 }
             }
 
@@ -1360,7 +1357,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
             if (newBranch == null)
             {
-                throw new LegendSDLCServerException("Failed to create " + getReferenceInfo(this.projectId, this.sourceSpec) + " from revision " + this.lastSuccessfulCommitId);
+                throw new LegendSDLCException("Failed to create " + getReferenceInfo(this.projectId, this.sourceSpec) + " from revision " + this.lastSuccessfulCommitId);
             }
 
             deleteTempBranch(this.tempBranchName);
@@ -1414,7 +1411,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
             }
             if (tempBranch == null)
             {
-                throw new LegendSDLCServerException("Failed to create temporary branch " + newTempBranchName + " in project " + this.projectId + " from revision " + branchCreationRef);
+                throw new LegendSDLCException("Failed to create temporary branch " + newTempBranchName + " in project " + this.projectId + " from revision " + branchCreationRef);
             }
             // Delete old one, if it exists
             if (this.tempBranchName != null)
