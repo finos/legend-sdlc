@@ -14,11 +14,11 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.backend.api.version.NewVersionType;
 import org.finos.legend.sdlc.backend.api.version.VersionApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -30,14 +30,11 @@ import java.util.List;
 import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabVersionApi extends GitLabApiWithFileAccess implements VersionApi
 {
     private static final VersionId NULL_VERSION = VersionId.newVersionId(0, 0, 0);
 
-    @Inject
     public GitLabVersionApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -46,7 +43,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public List<Version> getVersions(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         List<Version> versions = getVersions(gitLabProjectId, minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion).collect(Collectors.toList());
         versions.sort(Comparator.comparing(Version::getId).reversed());
@@ -56,7 +53,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version getLatestVersion(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
         return getLatestVersion(parseProjectId(projectId), minMajorVersion, maxMajorVersion, minMinorVersion, maxMinorVersion, minPatchVersion, maxPatchVersion);
     }
 
@@ -69,8 +66,8 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
     @Override
     public Version newVersion(String projectId, NewVersionType type, String revisionId, String notes)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(type, "type may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(type, "type may not be null");
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         Version latestVersion = getLatestVersion(gitLabProjectId);
         VersionId latestVersionId = (latestVersion == null) ? NULL_VERSION : latestVersion.getId();
@@ -94,7 +91,7 @@ public class GitLabVersionApi extends GitLabApiWithFileAccess implements Version
             }
             default:
             {
-                throw new LegendSDLCServerException("Unknown new version type: " + type, Status.BAD_REQUEST);
+                throw new LegendSDLCException("Unknown new version type: " + type, 400);
             }
         }
         return newVersion(gitLabProjectId, null, revisionId, nextVersionId, notes);

@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.list.MutableList;
 import org.eclipse.collections.api.map.primitive.LongObjectMap;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -23,7 +24,6 @@ import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -39,12 +39,9 @@ import java.time.Instant;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 
 public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements WorkflowJobApi
 {
-    @Inject
     public GitlabWorkflowJobApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -53,8 +50,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     @Override
     public WorkflowJobAccessContext getWorkflowJobAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpecification, "source specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new RefWorkflowJobAccessContext(gitLabProjectId, getBranchName(gitLabProjectId, sourceSpecification))
@@ -70,8 +67,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
     @Override
     public WorkflowJobAccessContext getReviewWorkflowJobAccessContext(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
@@ -127,8 +124,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public WorkflowJob getWorkflowJob(String workflowId, String workflowJobId)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowJobId, "workflowJobId may not be null");
             Job job = getJob(workflowId, workflowJobId);
             return fromGitLabJob(job);
         }
@@ -136,7 +133,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public List<WorkflowJob> getWorkflowJobs(String workflowId, Iterable<WorkflowJobStatus> statuses)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
 
             long pipelineId = getWorkflowPipelineId(workflowId);
 
@@ -168,8 +165,8 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public String getWorkflowJobLog(String workflowId, String workflowJobId)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowJobId, "workflowJobId may not be null");
 
             Job job = getJob(workflowId, workflowJobId);
             JobApi jobApi = getGitLabApi().getJobApi();
@@ -189,14 +186,14 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public WorkflowJob runWorkflowJob(String workflowId, String workflowJobId)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowJobId, "workflowJobId may not be null");
 
             Job job = getJob(workflowId, workflowJobId);
             WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
             if (status != WorkflowJobStatus.WAITING_MANUAL)
             {
-                throw new LegendSDLCServerException("Cannot run job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only waiting manual jobs can be run, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+                throw new LegendSDLCException("Cannot run job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only waiting manual jobs can be run, found status " + ((status == null) ? "null" : status.name().toLowerCase()), 409);
             }
 
             JobApi jobApi = getGitLabApi().getJobApi();
@@ -218,14 +215,14 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public WorkflowJob retryWorkflowJob(String workflowId, String workflowJobId)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowJobId, "workflowJobId may not be null");
 
             Job job = getJob(workflowId, workflowJobId);
             WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
             if ((status != WorkflowJobStatus.FAILED) && (status != WorkflowJobStatus.CANCELED) && (status != WorkflowJobStatus.SUCCEEDED))
             {
-                throw new LegendSDLCServerException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only succeeded, failed, or canceled jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+                throw new LegendSDLCException("Cannot retry job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only succeeded, failed, or canceled jobs can be retried, found status " + ((status == null) ? "null" : status.name().toLowerCase()), 409);
             }
             JobApi jobApi = getGitLabApi().getJobApi();
             Job result;
@@ -246,14 +243,14 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
         @Override
         public WorkflowJob cancelWorkflowJob(String workflowId, String workflowJobId)
         {
-            LegendSDLCServerException.validateNonNull(workflowId, "workflowId may not be null");
-            LegendSDLCServerException.validateNonNull(workflowJobId, "workflowJobId may not be null");
+            LegendSDLCException.validateNonNull(workflowId, "workflowId may not be null");
+            LegendSDLCException.validateNonNull(workflowJobId, "workflowJobId may not be null");
 
             Job job = getJob(workflowId, workflowJobId);
             WorkflowJobStatus status = fromGitLabJobStatus(job.getStatus());
             if (status != WorkflowJobStatus.IN_PROGRESS)
             {
-                throw new LegendSDLCServerException("Cannot cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only jobs in progress can be cancelled, found status " + ((status == null) ? "null" : status.name().toLowerCase()), Status.CONFLICT);
+                throw new LegendSDLCException("Cannot cancel job " + workflowJobId + " of workflow " + workflowId + " in " + getInfoForException() + ": only jobs in progress can be cancelled, found status " + ((status == null) ? "null" : status.name().toLowerCase()), 409);
             }
 
             JobApi jobApi = getGitLabApi().getJobApi();
@@ -291,7 +288,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             }
             if (pipeline == null)
             {
-                throw new LegendSDLCServerException("Unknown workflow " + workflowId + " in " + getInfoForException(), Status.NOT_FOUND);
+                throw new LegendSDLCException("Unknown workflow " + workflowId + " in " + getInfoForException(), 404);
             }
             return pipelineId;
         }
@@ -314,7 +311,7 @@ public class GitlabWorkflowJobApi extends AbstractGitlabWorkflowApi implements W
             }
             if (job == null)
             {
-                throw new LegendSDLCServerException("Unknown job in workflow " + workflowId + " of " + getInfoForException() + ": " + workflowJobId, Status.NOT_FOUND);
+                throw new LegendSDLCException("Unknown job in workflow " + workflowId + " of " + getInfoForException() + ": " + workflowJobId, 404);
             }
             return job;
         }

@@ -14,10 +14,17 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.finos.legend.sdlc.server.auth.Session;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 
+/**
+ * A way of acquiring a GitLab token for a user without interactive authorization. Implementations read what they
+ * need — identity, or auth material such as a Kerberos {@link javax.security.auth.Subject} or OIDC tokens — from
+ * the {@link BackendSessionContext}. Additional authorizers can be configured in the GitLab configuration's
+ * {@code gitlabAuthorizers} list (Jackson-polymorphic by class name). Returning null means "this authorizer
+ * cannot authorize this session"; the next one in the chain is tried.
+ */
 public interface GitLabAuthorizer
 {
-    GitLabTokenResponse authorize(Session session, GitLabAppInfo appInfo);
+    GitLabTokenResponse authorize(BackendSessionContext sessionContext, GitLabAppInfo appInfo);
 }

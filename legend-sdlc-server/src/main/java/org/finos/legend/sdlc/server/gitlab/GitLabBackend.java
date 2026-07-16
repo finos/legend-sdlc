@@ -37,7 +37,6 @@ import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
-import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBackupApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabBuildApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabComparisonApi;
@@ -54,12 +53,15 @@ import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthAccessException;
+import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
-import org.finos.legend.sdlc.server.guice.UserContext;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.finos.legend.sdlc.tools.StringTools;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.EnumSet;
@@ -68,22 +70,26 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
- * The GitLab {@code Backend}. In this phase it lives in the server module and reaches its servlet-bound auth
- * machinery by unwrapping the {@link ServletBackendSessionContext}; when it is extracted to its own module, the
- * per-user token state moves onto the SPI's session state store and this unwrapping disappears.
+ * The GitLab {@code Backend}. Per-user state (OAuth tokens) crosses the SPI through the session context's state
+ * store; interactive authorization crosses back as {@code AuthorizationRequiredException}. Nothing here touches
+ * the host's frameworks.
  */
 public class GitLabBackend extends AbstractBackend
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(GitLabBackend.class);
+
     private static final Pattern TERMS_OF_SERVICE_MESSAGE_PATTERN = Pattern.compile("terms\\s++of\\s++service", Pattern.CASE_INSENSITIVE);
 
     private final GitLabConfiguration gitLabConfiguration;
-    private final ProjectStructureConfiguration projectStructureConfiguration;
+    private final GitLabAppInfo appInfo;
+    private final GitLabAuthorizerManager authorizerManager;
 
-    public GitLabBackend(GitLabConfiguration gitLabConfiguration, ProjectStructureConfiguration projectStructureConfiguration, BackendEnvironment environment)
+    public GitLabBackend(GitLabConfiguration gitLabConfiguration, BackendEnvironment environment)
     {
         super(GitLabBackendFactory.TYPE, EnumSet.allOf(BackendCapability.class), environment);
         this.gitLabConfiguration = Objects.requireNonNull(gitLabConfiguration, "gitLabConfiguration may not be null");
-        this.projectStructureConfiguration = (projectStructureConfiguration == null) ? ProjectStructureConfiguration.emptyConfiguration() : projectStructureConfiguration;
+        this.appInfo = GitLabAppInfo.newAppInfo(gitLabConfiguration);
+        this.authorizerManager = GitLabAuthorizerManager.newManager(gitLabConfiguration.getGitLabAuthorizers());
     }
 
     @Override
@@ -99,16 +105,7 @@ public class GitLabBackend extends AbstractBackend
         Session(BackendSessionContext context)
         {
             super(context);
-            if (!(context instanceof ServletBackendSessionContext))
-            {
-                throw new IllegalArgumentException("The GitLab backend currently requires the server's session context; got: " + context.getClass().getName());
-            }
-            UserContext serverUserContext = ((ServletBackendSessionContext) context).getServerUserContext();
-            if (!(serverUserContext instanceof GitLabUserContext))
-            {
-                throw new IllegalArgumentException("The GitLab backend requires a GitLab user context; got: " + serverUserContext.getClass().getName());
-            }
-            this.userContext = (GitLabUserContext) serverUserContext;
+            this.userContext = new GitLabUserContext(context, GitLabBackend.this.authorizerManager, GitLabBackend.this.appInfo);
         }
 
         @Override
@@ -120,7 +117,7 @@ public class GitLabBackend extends AbstractBackend
         @Override
         public ProjectApi getProjectApi()
         {
-            return new GitLabProjectApi(GitLabBackend.this.gitLabConfiguration, this.userContext, GitLabBackend.this.projectStructureConfiguration, getEnvironment().getProjectStructureExtensionProvider(), getEnvironment().getTaskProcessor(), getEnvironment().getProjectStructurePlatformExtensions());
+            return new GitLabProjectApi(GitLabBackend.this.gitLabConfiguration, this.userContext, getEnvironment().getProjectCreationConfiguration(), getEnvironment().getProjectStructureExtensionProvider(), getEnvironment().getTaskProcessor(), getEnvironment().getProjectStructurePlatformExtensions());
         }
 
         @Override
@@ -216,13 +213,22 @@ public class GitLabBackend extends AbstractBackend
         @Override
         public boolean isAuthorized()
         {
-            return this.userContext.isUserAuthorized();
+            try
+            {
+                return this.userContext.isUserAuthorized();
+            }
+            catch (GitLabAuthAccessException e)
+            {
+                // an error accessing the auth server means we cannot establish authorization
+                LOGGER.error("Access exception occurred while checking authorization", e);
+                return false;
+            }
         }
 
         @Override
         public void authorize()
         {
-            this.userContext.getGitLabAPI(true);
+            this.userContext.getGitLabAPI();
         }
 
         @Override
@@ -242,19 +248,38 @@ public class GitLabBackend extends AbstractBackend
             }
             catch (Exception e)
             {
-                if ((e instanceof GitLabApiException) && (((GitLabApiException) e).getHttpStatus() == 403))
+                int errorStatus;
+                if (e instanceof GitLabApiException)
                 {
-                    String message = e.getMessage();
-                    if ((message != null) && TERMS_OF_SERVICE_MESSAGE_PATTERN.matcher(message).find())
+                    switch (((GitLabApiException) e).getHttpStatus())
                     {
-                        return Collections.singleton(api.getGitLabServerUrl());
+                        case 403:
+                        {
+                            String message = e.getMessage();
+                            if ((message != null) && TERMS_OF_SERVICE_MESSAGE_PATTERN.matcher(message).find())
+                            {
+                                // error indicates terms of service need to be accepted
+                                return Collections.singleton(api.getGitLabServerUrl());
+                            }
+                            errorStatus = 403;
+                            break;
+                        }
+                        case 401:
+                        {
+                            errorStatus = 403;
+                            break;
+                        }
+                        default:
+                        {
+                            errorStatus = 500;
+                        }
                     }
                 }
-                if (e instanceof LegendSDLCException)
+                else
                 {
-                    throw (LegendSDLCException) e;
+                    errorStatus = 500;
                 }
-                throw new LegendSDLCException("Failed to check terms of service acceptance", 500, e);
+                throw new LegendSDLCException(StringTools.appendThrowableMessageIfPresent("Error checking acceptance of terms of service", e), errorStatus, e);
             }
         }
 

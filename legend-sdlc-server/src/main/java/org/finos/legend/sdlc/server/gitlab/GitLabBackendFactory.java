@@ -14,11 +14,11 @@
 
 package org.finos.legend.sdlc.server.gitlab;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
 import org.finos.legend.sdlc.backend.api.spi.BackendEnvironment;
 import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 
 public class GitLabBackendFactory implements BackendFactory
 {
@@ -43,6 +43,12 @@ public class GitLabBackendFactory implements BackendFactory
         {
             throw new IllegalArgumentException("Expected GitLab backend configuration; got: " + ((configuration == null) ? null : configuration.getClass().getName()));
         }
-        return new GitLabBackend(((GitLabBackendConfiguration) configuration).getGitLabConfiguration(), environment.getService(ProjectStructureConfiguration.class), environment);
+        return new GitLabBackend(((GitLabBackendConfiguration) configuration).getGitLabConfiguration(), environment);
+    }
+
+    @Override
+    public void configureObjectMapper(ObjectMapper objectMapper)
+    {
+        GitLabConfiguration.configureObjectMapper(objectMapper);
     }
 }

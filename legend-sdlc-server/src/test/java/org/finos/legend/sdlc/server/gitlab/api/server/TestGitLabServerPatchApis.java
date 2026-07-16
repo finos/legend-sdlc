@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.server;
 
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApiTestResource;
@@ -23,7 +23,6 @@ import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApiTestResource;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -33,14 +32,14 @@ public class TestGitLabServerPatchApis extends AbstractGitLabServerApiTest
     private static GitLabPatchApiTestResource gitLabPatchApiTestResource;
 
     @BeforeClass
-    public static void setup() throws LegendSDLCServerException
+    public static void setup() throws LegendSDLCException
     {
         setUpPatchApi();
         cleanUpTestProjects(gitLabPatchApiTestResource.getGitLabProjectApi());
     }
 
     @AfterClass
-    public static void teardown() throws LegendSDLCServerException
+    public static void teardown() throws LegendSDLCException
     {
         if (gitLabPatchApiTestResource != null)
         {
@@ -49,19 +48,19 @@ public class TestGitLabServerPatchApis extends AbstractGitLabServerApiTest
     }
 
     @Test
-    public void testGetPatch() throws LegendSDLCServerException
+    public void testGetPatch() throws LegendSDLCException
     {
         gitLabPatchApiTestResource.runGetPatchTest();
     }
 
     @Test
-    public void testCreatePatch() throws LegendSDLCServerException
+    public void testCreatePatch() throws LegendSDLCException
     {
         gitLabPatchApiTestResource.runCreatePatchTest();
     }
 
     @Test
-    public void testGetPatches() throws LegendSDLCServerException
+    public void testGetPatches() throws LegendSDLCException
     {
         gitLabPatchApiTestResource.runGetPatchesTest();
     }
@@ -69,16 +68,15 @@ public class TestGitLabServerPatchApis extends AbstractGitLabServerApiTest
     /**
      * Authenticates with OAuth2 and instantiate the test SDLC GitLabProjectApi.
      *
-     * @throws LegendSDLCServerException if cannot authenticate to GitLab.
+     * @throws LegendSDLCException if cannot authenticate to GitLab.
      */
-    private static void setUpPatchApi() throws LegendSDLCServerException
+    private static void setUpPatchApi() throws LegendSDLCException
     {
         GitLabUserContext gitLabMemberUserContext = prepareGitLabMemberUserContext();
         GitLabConfiguration gitLabConfig = GitLabConfiguration.newGitLabConfiguration(null, null, null, null, null, null);
-        ProjectStructureConfiguration projectStructureConfig = ProjectStructureConfiguration.emptyConfiguration();
         GitLabUserContext gitLabUserContext = prepareGitLabOwnerUserContext();
 
-        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, projectStructureConfig, null, backgroundTaskProcessor, null);
+        GitLabProjectApi gitLabProjectApi = new GitLabProjectApi(gitLabConfig, gitLabUserContext, null, null, backgroundTaskProcessor, null);
         GitLabPatchApi gitLabPatchApi = new GitLabPatchApi(gitLabConfig, gitLabUserContext, backgroundTaskProcessor);
         GitLabRevisionApi gitLabRevisionApi = new GitLabRevisionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);
         GitLabVersionApi gitLabVersionApi = new GitLabVersionApi(gitLabConfig, gitLabMemberUserContext, backgroundTaskProcessor);

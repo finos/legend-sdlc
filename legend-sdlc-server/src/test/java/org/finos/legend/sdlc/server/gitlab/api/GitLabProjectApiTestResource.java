@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -22,7 +23,6 @@ import org.finos.legend.sdlc.domain.model.project.accessRole.AuthorizableProject
 import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.gitlab4j.api.models.AccessLevel;
@@ -45,7 +45,7 @@ public class GitLabProjectApiTestResource
         this.gitLabProjectApi = gitLabProjectApi;
     }
 
-    public void runCreateProjectTest() throws LegendSDLCServerException
+    public void runCreateProjectTest() throws LegendSDLCException
     {
         String projectName = "TestProjectOne";
         String description = "A test project.";
@@ -79,7 +79,7 @@ public class GitLabProjectApiTestResource
         ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
-    public void runCreateManagedProjectTest() throws LegendSDLCServerException
+    public void runCreateManagedProjectTest() throws LegendSDLCException
     {
         String projectName = "TestManagedProjectOne";
         String description = "A test project.";
@@ -113,7 +113,7 @@ public class GitLabProjectApiTestResource
         ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
-    public void runCreateProductionProjectTest() throws LegendSDLCServerException
+    public void runCreateProductionProjectTest() throws LegendSDLCException
     {
         String projectName = "TestProductionProjectOne";
         String description = "A test project.";
@@ -121,11 +121,11 @@ public class GitLabProjectApiTestResource
         String artifactId = "testprojone";
         List<String> tags = Lists.mutable.with("doe", "moffitt", AbstractGitLabServerApiTest.INTEGRATION_TEST_PROJECT_TAG);
 
-        LegendSDLCServerException e = Assert.assertThrows(LegendSDLCServerException.class, () -> this.gitLabProjectApi.createProject(projectName, description, ProjectType.PRODUCTION, groupId, artifactId, tags));
+        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> this.gitLabProjectApi.createProject(projectName, description, ProjectType.PRODUCTION, groupId, artifactId, tags));
         Assert.assertEquals("Invalid type: PRODUCTION", e.getMessage());
     }
 
-    public void runCreateEmbeddedProjectTest() throws LegendSDLCServerException
+    public void runCreateEmbeddedProjectTest() throws LegendSDLCException
     {
         String projectName = "TestEmbeddedProjectOne";
         String description = "A test project.";
@@ -152,7 +152,7 @@ public class GitLabProjectApiTestResource
         ), this.gitLabProjectApi.getProjectFileAccessProvider().getFileAccessContext(projectId, SourceSpecification.projectSourceSpecification()).getFiles().map(ProjectFileAccessProvider.ProjectFile::getPath).collect(Collectors.toSet()));
     }
 
-    public void runGetProjectTest() throws LegendSDLCServerException
+    public void runGetProjectTest() throws LegendSDLCException
     {
         String projectName = "TestProjectTwo";
         String description = "A test project.";

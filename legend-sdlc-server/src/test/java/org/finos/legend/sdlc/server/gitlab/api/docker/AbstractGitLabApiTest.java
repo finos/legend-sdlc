@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.gitlab.api.docker;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import com.squarespace.jersey2.guice.JerseyGuiceUtils;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.GitLabApiTestSetupUtil;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
@@ -85,7 +85,7 @@ public class AbstractGitLabApiTest
     /**
      * Create the proper users for authenticating the GitLab operations.
      */
-    protected static void prepareGitLabUser() throws LegendSDLCServerException
+    protected static void prepareGitLabUser() throws LegendSDLCException
     {
         try
         {
@@ -127,7 +127,7 @@ public class AbstractGitLabApiTest
             {
                 builder.append("; validation error(s): ").append(e.getValidationErrors());
             }
-            throw new LegendSDLCServerException(builder.toString(), e);
+            throw new LegendSDLCException(builder.toString(), e);
         }
     }
 
@@ -135,9 +135,9 @@ public class AbstractGitLabApiTest
      * Authenticates to GitLab and creates a test GitLabUserContext for a project owner.
      *
      * @return A test GitLabUserContext for a project owner.
-     * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
+     * @throws LegendSDLCException if cannot authenticate to GitLab via OAuth.
      */
-    protected static GitLabUserContext prepareGitLabOwnerUserContext() throws LegendSDLCServerException
+    protected static GitLabUserContext prepareGitLabOwnerUserContext() throws LegendSDLCException
     {
         return prepareGitLabUserContextHelper(TEST_OWNER_USERNAME, TEST_OWNER_PASSWORD);
     }
@@ -146,9 +146,9 @@ public class AbstractGitLabApiTest
      * Authenticates to GitLab and creates a test GitLabUserContext for a project member.
      *
      * @return A test GitLabUserContext for a project member.
-     * @throws LegendSDLCServerException if cannot authenticate to GitLab via OAuth.
+     * @throws LegendSDLCException if cannot authenticate to GitLab via OAuth.
      */
-    protected static GitLabUserContext prepareGitLabMemberUserContext() throws LegendSDLCServerException
+    protected static GitLabUserContext prepareGitLabMemberUserContext() throws LegendSDLCException
     {
         return prepareGitLabUserContextHelper(TEST_MEMBER_USERNAME, TEST_MEMBER_PASSWORD);
     }
@@ -159,7 +159,7 @@ public class AbstractGitLabApiTest
      * @param username the name of user for whom we create this context.
      * @param password the password of user for whom we create this context.
      */
-    private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCServerException
+    private static GitLabUserContext prepareGitLabUserContextHelper(String username, String password) throws LegendSDLCException
     {
         return GitLabApiTestSetupUtil.prepareGitLabUserContextHelper(username, password, TEST_HOST_URL, TEST_HOST_SCHEME, TEST_HOST_HOST, TEST_HOST_PORT);
     }
