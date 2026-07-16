@@ -1740,3 +1740,79 @@ build (the stale-`target/classes` services-file hazard from the Phase 2
 record struck again — the moved `BackendFactory` registration lingered in
 `target/classes` and broke the `ServiceLoader` at app bootstrap until
 `mvn clean`); full-reactor `mvn clean install javadoc:javadoc` green.
+
+### Step 6: close-out — the last bridge binding, the environment mapper decision
+
+- **`DependenciesApi` moves off its bridge binding onto the session** (the
+  last Phase 4 interim): the common `bind(DependenciesApi.class)
+  .to(DependenciesApiImpl.class)` leaves `AbstractBaseModule`; `BaseModule`
+  gains the seventeenth per-API session provider
+  (`session.getDependenciesApi()` — the inherited `DefaultDependenciesApi`,
+  whose composition Phase 4 verified identical to the bridge's).
+  `InMemoryModule` binds the bridge explicitly: its fixture apis predate the
+  SPI and the bridge composes them as before — the fixture's replacement by
+  the real in-memory backend remains possible follow-up work, not Phase 5
+  scope. The `@Deprecated` `DependenciesApiImpl` bridge class stays for
+  external assemblies that bind it by FQN.
+- **The environment `ObjectMapper`, decided**: `BackendEnvironment
+  .getObjectMapper()` stays a dedicated plain `Jackson.newObjectMapper()` —
+  deliberately *not* the server's wire mapper. The wire mapper carries
+  REST-surface concerns (mix-ins, serialization features, engine protocol
+  extensions) that are contract with Studio, not with backends; handing it
+  across the SPI would let backend serialization drift with wire-format
+  tuning and vice versa. Backends get a predictable, unconfigured mapper for
+  their internal serialization needs and configure their own modules on it if
+  they need more (nothing consumes it today; the GitLab backend's config
+  parsing runs on the bootstrap mapper via the part-1 factory hook, which is
+  the one place backend Jackson needs meet host parsing). Recorded on
+  `BackendEnvironment.getObjectMapper()`'s javadoc.
+
+### Phase 5 wrap-up: module inventory and the Phase 6 hand-off
+
+**Status: complete.**
+
+- **Module inventory after Phase 5**: three L5 backends —
+  **`legend-sdlc-backend-gitlab`** (`backend.gitlab[.api|.auth|.tools]`;
+  gitlab4j, the GitLab api classes, OAuth/SAML token machinery over the SPI's
+  session state store), **`legend-sdlc-backend-fs`** (jgit over a root
+  directory), **`legend-sdlc-backend-inmemory`** (process-local; the TCK's
+  first runner) — all ServiceLoader-registered, all shipped by the standard
+  server distribution at runtime scope, selected by the polymorphic
+  `backend:` configuration (legacy `gitLab:` adapter intact, uat/prod forms
+  included). `legend-sdlc-server-fs` is a relocation POM. The server (L6) has
+  no backend-specific compile dependency; its auth surface is generic (state
+  sessions, one `/auth` resource set, the three SPI exception mappings), and
+  `server.gitlab` survives only as `server.gitlab.finos` — deployment
+  configuration. The plan's §8 dependency graph is now literal.
+- **Phase 4 hand-off, fully discharged**: GitLab extracted (state-store
+  re-plumb + `AuthorizationRequiredException` conversion); the state store is
+  persistent (session cookie write-back); the per-backend auth resources are
+  replaced by the generic surface; `FSModule` died with the parallel server;
+  `DependenciesApi` is on the session; the environment mapper is decided (on
+  the record above); the FS `getReviews` tolerance was decided as the L6
+  affordance (option (b), 2026-07-14).
+- **Hand-off to Phase 6** (and adjacent follow-ups, none blocking it):
+  - The **§4.5 audit list** now gates the work:
+    `ProjectStructure.PROJECT_STRUCTURE_FACTORY` (process-global,
+    classloader-captured) and `MavenProjectStructure.loadTestResourceCode`'s
+    TCCL lookup must be resolved before L0–L3 is declared embeddable.
+  - `legend-sdlc-local` per §4 (rooted contexts, `LocalModel`, the §4.5 IDE
+    constraints); the §4.6 degraded-mode/provider-acquisition decisions are
+    already on the record from the Phase 4 review and need confirming in
+    implementation.
+  - **Removal conditions to track** (not Phase 6 work, but recorded here so
+    they are not lost): `NoReviewsReviewApi` goes when Studio consumes
+    `GET /configuration/capabilities` for its review UI; the deprecation
+    bridges (`server.domain.api.*` interfaces, `DependenciesApiImpl`,
+    `BackgroundTaskProcessor`, `CallUntil`/`Throwing*`, `LegendSDLCServerException`,
+    Phase 1/2 tool and extension bridges) are removed together, coordinated
+    with the origin project per §5; `GITLAB_MODE` and the legacy `gitLab:`
+    adapter go after the transition release.
+  - **Known gaps, documented not fixed**: an FS deployment needs a
+    pac4j client that yields profiles for sessions (the old FS server was
+    sessionless; migration doc covers it); the GitLab backend does not yet
+    run the TCK contract suite (possible now that the servlet coupling is
+    gone, but the all-capabilities backend exercises none of the undeclared
+    gates — needs thought about what it would certify); metrics and health
+    surfaces on the SPI remain deferred/additive (the one sub-L6 prometheus
+    counter was dropped at extraction).
