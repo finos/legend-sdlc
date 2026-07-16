@@ -173,7 +173,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
             int oldVersion = oldStructure.getVersion();
             String entityValidationTestCode = getEntityValidationTestCode();
             String entityTestSuiteCode = getEntityTestSuiteCode();
-            MutableList<UpdateProjectStructureExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(UpdateProjectStructureExtension.class));
+            MutableList<UpdateProjectStructureExtension> extensions = Lists.mutable.withAll(ServiceLoader.load(UpdateProjectStructureExtension.class, getClass().getClassLoader()));
             String entityValidationTestPath = extensions.flatCollect(e -> e.getExtraVersionEntityValidationPaths(oldVersion)).getFirstOptional().orElse(null);
             String entityTestSuiteFilePath = extensions.flatCollect(e -> e.getExtraTestSuiteFilePaths(oldVersion)).getFirstOptional().orElse(null);
             switch (oldVersion)
@@ -359,7 +359,7 @@ public class ProjectStructureV11Factory extends ProjectStructureVersionFactory
 
         private static List<EntitySourceDirectory> getEntitySourceDirectories(ProjectConfiguration projectConfiguration)
         {
-            Map<String, EntitySerializer> serializers = EntitySerializers.getAvailableSerializersByName();
+            Map<String, EntitySerializer> serializers = EntitySerializers.getAvailableSerializersByName(ProjectStructureV11.class.getClassLoader());
             return getDefaultEntitySourceDirectoriesForSerializers(projectConfiguration, ENTITIES_MODULE_NAME, ENTITY_SERIALIZERS.collectIf(serializers::containsKey, serializers::get).castToList());
         }
     }

@@ -524,9 +524,33 @@ public abstract class MavenProjectStructure extends ProjectStructure
         return loadTestResourceCode(resourceName, StandardCharsets.ISO_8859_1);
     }
 
+    /**
+     * Load a test code resource, resolving against this class's own classloader first (the resources this module
+     * ships are always found there, regardless of ambient thread state), falling back to the thread context
+     * classloader for subclasses whose resources ride a classloader this one cannot see. Subclasses that know their
+     * classloader should prefer {@link #loadTestResourceCode(String, Charset, ClassLoader)}.
+     */
     protected static String loadTestResourceCode(String resourceName, Charset charset)
     {
-        URL url = Thread.currentThread().getContextClassLoader().getResource(resourceName);
+        URL url = MavenProjectStructure.class.getClassLoader().getResource(resourceName);
+        if (url == null)
+        {
+            ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+            if (contextClassLoader != null)
+            {
+                url = contextClassLoader.getResource(resourceName);
+            }
+        }
+        return loadTestResourceCode(resourceName, charset, url);
+    }
+
+    protected static String loadTestResourceCode(String resourceName, Charset charset, ClassLoader classLoader)
+    {
+        return loadTestResourceCode(resourceName, charset, classLoader.getResource(resourceName));
+    }
+
+    private static String loadTestResourceCode(String resourceName, Charset charset, URL url)
+    {
         if (url == null)
         {
             throw new RuntimeException("Could not find resource: " + resourceName);

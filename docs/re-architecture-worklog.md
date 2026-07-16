@@ -1112,7 +1112,7 @@ introduced by Steps 6–7 and verified pre-existing by stash + re-run at HEAD).
 
 ## Phase 5 — Backend extraction (L5)
 
-**Status: in progress.**
+**Status: complete** (see the phase wrap-up).
 
 Sequencing note (user-directed, on the record): plan §6 lists the GitLab
 extraction first; this phase runs the **in-memory backend first** — the first
@@ -1880,3 +1880,91 @@ for its first request.
   checkstyle, PMD, `dependency:analyze`, enforcer); `legend-sdlc-server`
   enforcer (dependency convergence) green. The run against a real GitLab is
   the workflow's.
+
+## Phase 6 — Local / IDE tooling
+
+### Step 1: the §4.5 audit discharged — ambient state leaves the L0–L3 read/write paths
+
+The audit bar (plan §4.5, restated at each phase wrap-up since Phase 2): L0–L3
+must be **safe to instantiate many times concurrently in a shared JVM** before
+this phase may declare them embeddable. Two items were on the list; a Phase 6
+static-field sweep of the six L0–L3 modules (promised by the §7 "IDE embedding
+exposes hidden global state" row) found two more instances of the same disease.
+All four are resolved in this step.
+
+**The design decision, on the record — how the factory threads through without
+a process-global.** The §4.5 rule ("static caches, singletons, and
+`ServiceLoader` results captured in statics are out") is enforced by its
+rationale: what makes shared-JVM embedding unsafe is (a) *mutable* global
+state, (b) dependence on *ambient* thread state (the context classloader) for
+correctness, and (c) service loading during *class initialization* — a failure
+there is an `ExceptionInInitializerError` that permanently poisons the class
+for the whole JVM, and the capture happens at an uncontrollable moment. A
+`ProjectStructureFactory` instance is none of these: it is an immutable index
+of the version factories, and the version lineup is *code* — it ships in the
+jars on the classpath, identical for every consumer in the process, unlike the
+deployment-scoped `ProjectStructureExtensionProvider`, which is configuration
+and is already threaded explicitly everywhere. So the resolution is **one JVM,
+one lineup, materialized lazily**, not threading a factory parameter through
+every L3 signature:
+
+- `ProjectStructureFactory.getDefaultFactory()` (new) owns the default: built
+  on first call (double-checked on a volatile, so a service-loading failure
+  surfaces to the caller and is retried on the next call rather than poisoning
+  class init), from `ProjectStructureFactory.class.getClassLoader()` — its own
+  loader, deterministic under layered-classloader hosts, never the TCCL. The
+  `ProjectStructure` static conveniences (`getProjectStructure(...)`,
+  `getLatestProjectStructureVersion()`, the discovery accessor
+  `getDefaultProjectStructureFactory()`) all delegate to it; the class-init
+  `PROJECT_STRUCTURE_FACTORY` field is gone.
+- Per-instance factory variance is deliberately **not** offered (no factory
+  parameter on `LocalModel`, no `UpdateBuilder` knob): nothing in the plan
+  wants two version lineups in one JVM, and a knob honored by some L3 paths
+  but not others would be a trap. An embedder composing an exotic lineup
+  (version factories from another classloader) builds its own factory with
+  `newFactory(...)` — public since Phase 2 — and uses the instance API
+  (`newProjectStructure`, `getLatestVersion`, `getVersionFactory`), which is
+  sufficient and was already what discovery consumes.
+- Pinned by `TestDefaultProjectStructureFactory` (L2): shared instance, full
+  lineup (latest = 13; 0/11/12/13 supported), same instance from many
+  threads, and resolution with the TCCL set to null — the ambient-state
+  independence in executable form.
+
+**`MavenProjectStructure.loadTestResourceCode` (audit item 2)**: now resolves
+against `MavenProjectStructure.class.getClassLoader()` first — the resources
+this module ships (`project/tests/v4/*.java`, the only in-repo uses) are
+always found there regardless of ambient thread state — with the TCCL kept as
+a *fallback* for external structure-version subclasses (the origin project's
+v1–10 authoring population, §5) whose resources ride a loader this module
+cannot see; a `loadTestResourceCode(String, Charset, ClassLoader)` overload is
+added for subclasses that know their loader. Behavior on a single classpath
+(every current deployment) is unchanged.
+
+**Swept up, same disease (undocumented ambient-loader dependence on the
+structure-resolution path)** — both were implicit-TCCL `ServiceLoader` calls
+that would have made V11+ structures *silently wrong* (not failing) in an IDE
+host whose TCCL is not the plugin loader:
+
+- V11–V13's `getEntitySourceDirectories` resolved the "pure"/"legend" entity
+  serializers via `EntitySerializers.getAvailableSerializersByName()` —
+  no-arg, therefore TCCL. Under a foreign TCCL the named serializers are not
+  found, the extra source directories are silently dropped, and entity
+  discovery misses every `.pure` file. `EntitySerializers` gains explicit
+  `ClassLoader` overloads for its four lookup methods; the V-factories pass
+  their own class's loader. The no-arg forms keep their TCCL semantics —
+  now documented as such — because Maven plugin executions (`EntityMojo`)
+  rely on the `ServiceLoader` convention and their TCCL (the plugin realm)
+  is the right loader there.
+- V11–V13's `collectUpdateProjectConfigurationOperations` loaded
+  `UpdateProjectStructureExtension` via single-arg `ServiceLoader.load` —
+  same problem on the write side; now `getClass().getClassLoader()` (the
+  concrete structure class's loader, so an external subclass resolves
+  extensions its own jar can see).
+
+Sweep result, for the record: with these four fixed, the remaining statics in
+L0–L3 main sources are immutable constants (configured `JsonMapper`s, regex
+patterns, loggers, immutable collections, and the two sealed source-taxonomy
+singletons) — none mutable, none classloader-capturing, none I/O-bearing at
+class init. The §4.5 gate is discharged; L0–L3 are declared embeddable.
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.

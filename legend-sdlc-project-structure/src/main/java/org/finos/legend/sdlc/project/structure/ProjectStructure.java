@@ -77,17 +77,17 @@ public abstract class ProjectStructure
             .serializationInclusion(JsonInclude.Include.NON_NULL)
             .build();
 
-    private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
-
     /**
-     * The default factory, loaded from this class's classloader at initialization (on the re-architecture
-     * section 4.5 process-global-state audit list).
+     * The default factory: see {@link ProjectStructureFactory#getDefaultFactory()} for its contract (lazy immutable
+     * classpath snapshot; own classloader, never the thread context classloader). The static conveniences on this
+     * class resolve through it; code that composes its own factory uses the {@link ProjectStructureFactory} instance
+     * API instead.
      *
      * @return default project structure factory
      */
     public static ProjectStructureFactory getDefaultProjectStructureFactory()
     {
-        return PROJECT_STRUCTURE_FACTORY;
+        return ProjectStructureFactory.getDefaultFactory();
     }
 
     private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("[a-z][a-z\\d_]*+(-[a-z][a-z\\d_]*+)*+");
@@ -311,7 +311,7 @@ public abstract class ProjectStructure
 
     public static int getLatestProjectStructureVersion()
     {
-        return PROJECT_STRUCTURE_FACTORY.getLatestVersion();
+        return ProjectStructureFactory.getDefaultFactory().getLatestVersion();
     }
 
     public static ProjectStructure getProjectStructure(String projectId, SourceSpecification sourceSpecification, String revisionId, ProjectFileAccessProvider projectFileAccessor)
@@ -332,7 +332,7 @@ public abstract class ProjectStructure
 
     public static ProjectStructure getProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
-        return PROJECT_STRUCTURE_FACTORY.newProjectStructure(projectConfiguration, projectStructurePlatformExtensions);
+        return ProjectStructureFactory.getDefaultFactory().newProjectStructure(projectConfiguration, projectStructurePlatformExtensions);
     }
 
     // for backward compatibility
