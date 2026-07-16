@@ -24,6 +24,7 @@ import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.backend.api.patch.PatchApi;
@@ -76,6 +77,9 @@ public class InMemoryModule extends AbstractBaseModule
         binder.bind(InMemoryBackend.class);
         binder.bind(InMemoryMetadataBackend.class).in(Scopes.SINGLETON);
         binder.bind(MetadataApi.class).to(InMemoryMetadataApi.class);
+        // the fixture apis predate the SPI; the deprecated bridge composes them as it always did (replacing
+        // this fixture with the real in-memory backend is possible follow-up work, not Phase 5 scope)
+        binder.bind(DependenciesApi.class).to(org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl.class);
         binder.bind(ProjectApi.class).to(InMemoryProjectApi.class);
         binder.bind(ProjectConfigurationApi.class).to(InMemoryProjectConfigurationApi.class);
         binder.bind(UserApi.class).to(InMemoryUserApi.class);
