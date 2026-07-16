@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,28 +12,28 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-package org.finos.legend.sdlc.server.gitlab.auth;
+package org.finos.legend.sdlc.server.backend;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
+import org.finos.legend.sdlc.server.auth.StateSession;
+import org.finos.legend.sdlc.server.auth.StateSessionBuilder;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
+import org.finos.legend.server.pac4j.kerberos.KerberosProfile;
 import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.oidc.profile.OidcProfile;
 
-import javax.servlet.Filter;
+import java.util.List;
 import javax.servlet.FilterConfig;
 import javax.servlet.http.Cookie;
-import java.util.List;
 
-public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
+/**
+ * The server's session filter, backend-independent: builds a {@link StateSession} from the pac4j profiles and
+ * the session cookie (which carries the state bag backends persist through their session state store). Replaces
+ * the former GitLab-specific web filter; the supported profile types are unchanged from it.
+ */
+public class StateSessionWebFilter extends LegendSDLCWebFilter<CommonProfile>
 {
-    private final GitLabAppInfo appInfo;
-
-    private GitLabWebFilter(GitLabAppInfo appInfo)
-    {
-        this.appInfo = appInfo;
-    }
-
     @Override
     public void init(FilterConfig filterConfig)
     {
@@ -47,26 +47,24 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
     @Override
     protected Session newSession(List<CommonProfile> profiles, Cookie sessionCookie)
     {
-        GitLabSession session = null;
+        StateSession session = null;
         if (sessionCookie != null)
         {
-            // Try to find a profile that works with the cookie
             session = newSessionFromProfilesAndToken(profiles, sessionCookie.getValue());
         }
         if (session == null)
         {
-            // Try to find a profile that works without a cookie
             session = newSessionFromProfiles(profiles);
         }
         return session;
     }
 
-    private GitLabSession newSessionFromProfilesAndToken(List<CommonProfile> profiles, String sessionToken)
+    private StateSession newSessionFromProfilesAndToken(List<CommonProfile> profiles, String sessionToken)
     {
-        GitLabSessionBuilder builder;
+        StateSessionBuilder builder;
         try
         {
-            builder = GitLabSessionBuilder.newBuilder(this.appInfo).fromToken(sessionToken);
+            builder = StateSessionBuilder.newBuilder().fromToken(sessionToken);
         }
         catch (Exception e)
         {
@@ -81,17 +79,17 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
         }
         for (CommonProfile profile : profiles)
         {
-            if (userId.equals(profile.getId()) && GitLabSessionBuilder.isSupportedProfile(profile))
+            if (userId.equals(profile.getId()) && isSupportedProfile(profile))
             {
                 try
                 {
-                    GitLabSession session = builder.withProfile(profile).build();
+                    StateSession session = builder.withProfile(profile).build();
                     LOGGER.debug("session created from cookie and profile: {} / {}", sessionToken, profile);
                     return session;
                 }
                 catch (Exception e)
                 {
-                    LOGGER.error("error creation session from cookie and profile: {} / {}", sessionToken, profile);
+                    LOGGER.error("error creating session from cookie and profile: {} / {}", sessionToken, profile);
                     builder.reset().fromToken(sessionToken);
                 }
             }
@@ -100,29 +98,29 @@ public class GitLabWebFilter extends LegendSDLCWebFilter<CommonProfile>
         return null;
     }
 
-    private GitLabSession newSessionFromProfiles(List<CommonProfile> profiles)
+    private StateSession newSessionFromProfiles(List<CommonProfile> profiles)
     {
         for (CommonProfile profile : profiles)
         {
-            if (GitLabSessionBuilder.isSupportedProfile(profile))
+            if (isSupportedProfile(profile))
             {
                 try
                 {
-                    GitLabSession session = GitLabSessionBuilder.newBuilder(this.appInfo).withProfile(profile).build();
+                    StateSession session = StateSessionBuilder.newBuilder().withProfile(profile).build();
                     LOGGER.debug("session created from profile: {}", profile);
                     return session;
                 }
                 catch (Exception e)
                 {
-                    LOGGER.error("error creation session from profile: {}", profile);
+                    LOGGER.error("error creating session from profile: {}", profile);
                 }
             }
         }
         return null;
     }
 
-    public static Filter fromConfig(GitLabConfiguration config)
+    static boolean isSupportedProfile(CommonProfile profile)
     {
-        return new GitLabWebFilter(GitLabAppInfo.newAppInfo(config));
+        return (profile instanceof KerberosProfile) || (profile instanceof OidcProfile) || (profile instanceof GitlabPersonalAccessTokenProfile);
     }
 }

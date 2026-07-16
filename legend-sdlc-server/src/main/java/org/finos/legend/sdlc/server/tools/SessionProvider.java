@@ -16,8 +16,7 @@ package org.finos.legend.sdlc.server.tools;
 
 import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabSessionBuilder;
+import org.finos.legend.sdlc.server.auth.StateSessionBuilder;
 import org.finos.legend.server.pac4j.gitlab.GitlabClient;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenAuthenticator;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
@@ -51,7 +50,7 @@ public class SessionProvider
         this.sessionStore = sessionStore;
     }
 
-    public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse, GitLabAppInfo appInfo)
+    public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
     {
         if (sessionStore != null)
         {
@@ -64,7 +63,7 @@ public class SessionProvider
                 CommonProfile profile = profileMap.get(GitlabClient.GITLAB_CLIENT_NAME);
                 if (profile != null)
                 {
-                    return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
+                    return StateSessionBuilder.newBuilder().withProfile(profile).build();
                 }
             }
         }
@@ -125,7 +124,6 @@ public class SessionProvider
 
     public static Session getSessionUsingGitlabPersonalAccessToken(HttpServletRequest httpRequest,
                                                                    HttpServletResponse httpResponse,
-                                                                   GitLabAppInfo appInfo,
                                                                    GitlabPersonalAccessTokenClient client)
     {
         WebContext context = new JEEContext(httpRequest, httpResponse);
@@ -147,6 +145,6 @@ public class SessionProvider
         }
 
         GitlabPersonalAccessTokenProfile profile = (GitlabPersonalAccessTokenProfile) creator.create(credentials, context).get();
-        return GitLabSessionBuilder.newBuilder(appInfo).withProfile(profile).build();
+        return StateSessionBuilder.newBuilder().withProfile(profile).build();
     }
 }

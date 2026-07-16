@@ -14,11 +14,11 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.backend.api.patch.PatchApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -37,14 +37,11 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(GitLabPatchApi.class);
 
-    @Inject
     public GitLabPatchApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -53,8 +50,8 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     @Override
     public Patch newPatch(String projectId, VersionId sourceVersionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceVersionId, "source version may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceVersionId, "source version may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
@@ -65,11 +62,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching version " + sourceVersionId.toVersionIdString() + " for project " + projectId, e);
+            throw new LegendSDLCException("Error in fetching version " + sourceVersionId.toVersionIdString() + " for project " + projectId, e);
         }
         if (!sourceTagExists)
         {
-            throw new LegendSDLCServerException("Source version " + sourceVersionId.toVersionIdString() + " does not exist", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCException("Source version " + sourceVersionId.toVersionIdString() + " does not exist", 400);
         }
 
         VersionId targetVersionId = sourceVersionId.nextPatchVersion();
@@ -80,17 +77,17 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching version " + targetVersionId.toVersionIdString() + " for project " + projectId, e);
+            throw new LegendSDLCException("Error in fetching version " + targetVersionId.toVersionIdString() + " for project " + projectId, e);
         }
         if (targetTagExists)
         {
-            throw new LegendSDLCServerException("Target version " + targetVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCException("Target version " + targetVersionId.toVersionIdString() + " already exists", 400);
         }
 
         // Check if the patch branch they want to create exists or not
         if (isPatchReleaseBranchPresent(gitLabProjectId, targetVersionId))
         {
-            throw new LegendSDLCServerException("Patch " + targetVersionId.toVersionIdString() + " already exists", Response.Status.CONFLICT);
+            throw new LegendSDLCException("Patch " + targetVersionId.toVersionIdString() + " already exists", 409);
         }
 
         // Create new patch release branch
@@ -108,7 +105,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         if (branch == null)
         {
-            throw new LegendSDLCServerException("Failed to create patch " + targetVersionId.toVersionIdString() + " in project " + projectId);
+            throw new LegendSDLCException("Failed to create patch " + targetVersionId.toVersionIdString() + " in project " + projectId);
         }
 
         return fromPatchBranchName(projectId, branch.getName());
@@ -117,8 +114,8 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     @Override
     public Patch getPatch(String projectId, VersionId patchReleaseVersionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
 
         // Get patch branch
         try
@@ -141,7 +138,7 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     @Override
     public List<Patch> getPatches(String projectId, Integer minMajorVersion, Integer maxMajorVersion, Integer minMinorVersion, Integer maxMinorVersion, Integer minPatchVersion, Integer maxPatchVersion)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
         try
         {
             GitLabProjectId gitLabProjectId = parseProjectId(projectId);
@@ -251,8 +248,8 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
     @Override
     public void deletePatch(String projectId, VersionId patchReleaseVersionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         RepositoryApi repositoryApi = getGitLabApi().getRepositoryApi();
@@ -274,15 +271,15 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         if (!patchBranchDeleted)
         {
-            throw new LegendSDLCServerException("Failed to delete patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId);
+            throw new LegendSDLCException("Failed to delete patch " + patchReleaseVersionId.toVersionIdString() + " in project " + projectId);
         }
     }
 
     @Override
     public Version releasePatch(String projectId, VersionId patchReleaseVersionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
 
@@ -294,11 +291,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching version " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
+            throw new LegendSDLCException("Error in fetching version " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, 400, e);
         }
         if (targetTagExists)
         {
-            throw new LegendSDLCServerException("Target version " + patchReleaseVersionId.toVersionIdString() + " already exists", Response.Status.BAD_REQUEST);
+            throw new LegendSDLCException("Target version " + patchReleaseVersionId.toVersionIdString() + " already exists", 400);
         }
 
         // Check if the patch branch we want to release exists or not
@@ -309,11 +306,11 @@ public class GitLabPatchApi extends GitLabApiWithFileAccess implements PatchApi
         }
         catch (Exception e)
         {
-            throw new LegendSDLCServerException("Error in fetching the patch release branch " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, Response.Status.BAD_REQUEST, e);
+            throw new LegendSDLCException("Error in fetching the patch release branch " + patchReleaseVersionId.toVersionIdString() + " for project " + projectId, 400, e);
         }
         if (patchBranch == null)
         {
-            throw new LegendSDLCServerException("Patch " + patchReleaseVersionId.toVersionIdString() + " does not exist in the project " + projectId, Response.Status.BAD_REQUEST);
+            throw new LegendSDLCException("Patch " + patchReleaseVersionId.toVersionIdString() + " does not exist in the project " + projectId, 400);
         }
         Version releaseVersion =  newVersion(gitLabProjectId, patchReleaseVersionId, patchBranch.getCommit().getId(), VersionId.newVersionId(patchReleaseVersionId.getMajorVersion(), patchReleaseVersionId.getMinorVersion(), patchReleaseVersionId.getPatchVersion()), "");
 

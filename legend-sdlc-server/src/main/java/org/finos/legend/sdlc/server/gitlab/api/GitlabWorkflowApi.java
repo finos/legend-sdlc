@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Sets;
 import org.eclipse.collections.api.set.MutableSet;
 import org.eclipse.collections.impl.utility.Iterate;
@@ -25,7 +26,6 @@ import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowAccessContext;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -45,12 +45,9 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.inject.Inject;
-import javax.ws.rs.core.Response;
 
 public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements WorkflowApi
 {
-    @Inject
     public GitlabWorkflowApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -59,8 +56,8 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     @Override
     public WorkflowAccessContext getWorkflowAccessContext(String projectId, SourceSpecification sourceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpecification, "source specification may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         return new RefWorkflowAccessContext(gitLabProjectId, getRef(gitLabProjectId, sourceSpecification))
@@ -82,15 +79,15 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
     @Override
     public WorkflowAccessContext getReviewWorkflowAccessContext(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId, true);
         WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
         if (workspaceSpec == null)
         {
-            throw new LegendSDLCServerException("Unknown review in project " + projectId + ": " + reviewId, Response.Status.NOT_FOUND);
+            throw new LegendSDLCException("Unknown review in project " + projectId + ": " + reviewId, 404);
         }
 
         return new GitLabWorkflowAccessContext(gitLabProjectId)
@@ -149,7 +146,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
 
             if (pipeline == null)
             {
-                throw new LegendSDLCServerException("Unknown workflow in " + getInfoForException() + ": " + workflowId, Response.Status.NOT_FOUND);
+                throw new LegendSDLCException("Unknown workflow in " + getInfoForException() + ": " + workflowId, 404);
             }
 
             return fromGitLabPipeline(this.gitLabProjectId.toString(), pipeline);
@@ -166,7 +163,7 @@ public class GitlabWorkflowApi extends AbstractGitlabWorkflowApi implements Work
                 }
                 if (limit < 0)
                 {
-                    throw new LegendSDLCServerException("Invalid limit: " + limit, Response.Status.BAD_REQUEST);
+                    throw new LegendSDLCException("Invalid limit: " + limit, 400);
                 }
             }
             try

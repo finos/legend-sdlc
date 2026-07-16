@@ -14,8 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.auth;
 
-import org.apache.commons.codec.binary.Base64;
-import org.finos.legend.sdlc.server.auth.Token;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabServerInfo;
 import org.gitlab4j.api.Constants.TokenType;
@@ -23,80 +22,108 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import java.time.LocalDateTime;
-import java.util.regex.Pattern;
+import java.util.HashMap;
+import java.util.Map;
 
 public class TestGitLabTokenManager
 {
-    private static final Pattern TOKEN_PATTERN = Pattern.compile("^[-_a-zA-Z0-9]+$");
     private static final GitLabAppInfo appInfo = GitLabAppInfo.newAppInfo(GitLabServerInfo.newServerInfo("https",
         "prod.host.name",
         null), "7891d9ee73e90ccb004fec490af74c5946cbaa1d73226eca81399546835fe28c", "abcdef", "http://some.url.com/uat");
 
     @Test
-    public void testEncoding_Empty()
+    public void testTokenRoundTripsThroughStateStore()
     {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        assertEncoding(tokenManager);
-    }
-
-    @Test
-    public void testEncoding_OneOAuthToken()
-    {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
+        BackendSessionStateStore store = newStore();
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, store);
         GitLabToken token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,
             "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
         tokenManager.setGitLabToken(token);
-        assertEncoding(tokenManager);
+        tokenManager.setRefreshToken("refresh-1");
+        tokenManager.setTokenExpiry(LocalDateTime.now().plusHours(1));
+
+        GitLabTokenManager reread = GitLabTokenManager.newTokenManager(appInfo, store);
+        Assert.assertEquals(token, reread.getGitLabToken());
+        Assert.assertEquals("refresh-1", reread.getRefreshToken());
+        Assert.assertFalse(reread.shouldRefreshToken());
     }
 
     @Test
-    public void testEncoding_OneOAuthRefreshToken()
+    public void testStateIsKeyedToTheApplication()
     {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        String refreshToken = "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875";
-        tokenManager.setRefreshToken(refreshToken);
-        assertEncoding(tokenManager);
+        BackendSessionStateStore store = newStore();
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, store);
+        tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, "someToken"));
+
+        GitLabAppInfo otherAppInfo = GitLabAppInfo.newAppInfo(appInfo.getServerInfo(), "anotherAppId", "secret", "http://some.url.com/other");
+        GitLabTokenManager otherAppManager = GitLabTokenManager.newTokenManager(otherAppInfo, store);
+        Assert.assertNull(otherAppManager.getGitLabToken());
     }
 
     @Test
-    public void testEncoding_OnePrivateAccessToken()
+    public void testPrivateTokenIsNeverRefreshed()
     {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        GitLabToken token = GitLabToken.newGitLabToken(TokenType.PRIVATE, "qQi7UzyxxxTtQbHhSq9");
-        tokenManager.setGitLabToken(token);
-        assertEncoding(tokenManager);
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, newStore());
+        tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.PRIVATE, "qQi7UzyxxxTtQbHhSq9"));
+        Assert.assertFalse(tokenManager.shouldRefreshToken());
     }
 
     @Test
     public void testClear()
     {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
+        BackendSessionStateStore store = newStore();
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, store);
         GitLabToken token = GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS,
             "6f220d4f523d89d832316b8a7052a57de97d863c2d2a6564694561ba1af88875");
         tokenManager.setGitLabToken(token);
         Assert.assertEquals(token, tokenManager.getGitLabToken());
         tokenManager.clearGitLabToken();
         Assert.assertNull(tokenManager.getGitLabToken());
+        Assert.assertNull(GitLabTokenManager.newTokenManager(appInfo, store).getGitLabToken());
     }
 
     @Test
     public void testExpiry()
     {
-        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo);
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, newStore());
+        tokenManager.setGitLabToken(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, "someToken"));
         tokenManager.setTokenExpiry(LocalDateTime.now().minusSeconds(1));
         Assert.assertTrue(tokenManager.shouldRefreshToken());
     }
 
-    private void assertEncoding(GitLabTokenManager tokenManager)
+    @Test
+    public void testExactExpiryFromTokenResponse()
     {
-        Token.TokenBuilder builder = Token.newBuilder();
-        tokenManager.encode(builder);
-        String token = builder.toTokenString();
-        Assert.assertTrue(TOKEN_PATTERN.matcher(token).matches());
-        Assert.assertTrue(Base64.isBase64(token));
+        GitLabTokenManager tokenManager = GitLabTokenManager.newTokenManager(appInfo, newStore());
+        LocalDateTime expiry = LocalDateTime.now().plusHours(2);
+        tokenManager.setTokenResponse(new GitLabTokenResponse(GitLabToken.newGitLabToken(TokenType.OAUTH2_ACCESS, "someToken"), "refresh", null, expiry));
+        Assert.assertFalse(tokenManager.shouldRefreshToken());
+        Assert.assertEquals("refresh", tokenManager.getRefreshToken());
+    }
 
-        GitLabTokenManager newTokenManager = GitLabTokenManager.newTokenManager(appInfo);
-        newTokenManager.decodeAndSetToken(Token.newReader(token));
-        Assert.assertEquals(tokenManager, newTokenManager);
+    private BackendSessionStateStore newStore()
+    {
+        Map<String, String> state = new HashMap<>();
+        return new BackendSessionStateStore()
+        {
+            @Override
+            public String get(String key)
+            {
+                return state.get(key);
+            }
+
+            @Override
+            public void put(String key, String value)
+            {
+                if (value == null)
+                {
+                    state.remove(key);
+                }
+                else
+                {
+                    state.put(key, value);
+                }
+            }
+        };
     }
 }

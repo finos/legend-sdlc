@@ -14,10 +14,13 @@
 
 package org.finos.legend.sdlc.server.guice;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
+import com.google.inject.servlet.RequestScoped;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import io.dropwizard.jackson.Jackson;
 import org.eclipse.collections.api.factory.Maps;
@@ -32,6 +35,9 @@ import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
 import org.finos.legend.sdlc.backend.api.spi.BackendEnvironment;
 import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
+import org.finos.legend.sdlc.backend.api.spi.BackendSession;
+import org.finos.legend.sdlc.backend.api.spi.ProjectCreationConfiguration;
+import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
@@ -284,6 +290,9 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private void bindResources(Binder binder)
     {
+        binder.bind(org.finos.legend.sdlc.server.backend.StaleAuthorizationExceptionMapper.class);
+        binder.bind(org.finos.legend.sdlc.server.resources.auth.AuthResource.class);
+        binder.bind(org.finos.legend.sdlc.server.resources.auth.AuthCheckResource.class);
         binder.bind(InfoResource.class);
         binder.bind(ServerResource.class);
         binder.bind(ProjectsResource.class);
@@ -486,6 +495,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     public BackendEnvironment provideBackendEnvironment(ProjectStructureExtensionProvider extensionProvider, ProjectStructurePlatformExtensions platformExtensions, BackgroundTaskProcessor taskProcessor, ProjectStructureConfiguration projectStructureConfiguration)
     {
         ObjectMapper objectMapper = Jackson.newObjectMapper();
+        ProjectCreationConfiguration projectCreationConfiguration = buildProjectCreationConfiguration(projectStructureConfiguration);
         return new BackendEnvironment()
         {
             @Override
@@ -513,11 +523,36 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
 
             @Override
-            public <T> T getService(Class<T> serviceType)
+            public ProjectCreationConfiguration getProjectCreationConfiguration()
             {
-                return (serviceType == ProjectStructureConfiguration.class) ? serviceType.cast(projectStructureConfiguration) : null;
+                return projectCreationConfiguration;
             }
         };
+    }
+
+    private static ProjectCreationConfiguration buildProjectCreationConfiguration(ProjectStructureConfiguration projectStructureConfiguration)
+    {
+        org.finos.legend.sdlc.server.project.config.ProjectCreationConfiguration config = (projectStructureConfiguration == null) ? null : projectStructureConfiguration.getProjectCreationConfiguration();
+        if (config == null)
+        {
+            return null;
+        }
+        return ProjectCreationConfiguration.newProjectCreationConfiguration(config.getDefaultProjectStructureVersion(), config.getGroupIdPattern(), config.getArtifactIdPattern());
+    }
+
+    /**
+     * The per-request backend session: the {@link ServletBackendSessionContext} adapts the authenticated
+     * {@link UserContext} to the SPI's session contract.
+     *
+     * @param backend     backend
+     * @param userContext user context
+     * @return backend session
+     */
+    @Provides
+    @RequestScoped
+    public BackendSession provideBackendSession(Backend backend, UserContext userContext)
+    {
+        return backend.newSession(new ServletBackendSessionContext(userContext));
     }
 
     /**
@@ -553,6 +588,10 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         BackendConfiguration backendConfiguration = getConfiguration().getBackendConfiguration();
         if (backendConfiguration == null)
         {
+            backendConfiguration = buildLegacyGitLabBackendConfiguration();
+        }
+        if (backendConfiguration == null)
+        {
             throw new LegendSDLCServerException("No backend configured: expected a \"backend\" configuration section (or a legacy \"gitLab\" section)");
         }
         for (BackendFactory factory : ServiceLoader.load(BackendFactory.class))
@@ -563,6 +602,38 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         throw new LegendSDLCServerException("No backend factory found for configuration of type " + backendConfiguration.getClass().getName());
+    }
+
+    /**
+     * The legacy-configuration adapter: a top-level {@code gitLab:} section with no {@code backend:} section
+     * selects the GitLab backend. The section is held as raw JSON (the server does not compile against any
+     * backend's configuration class); it is converted here through the bootstrap object mapper, which carries
+     * the ServiceLoader-registered configuration subtypes, so this works exactly when the GitLab backend is on
+     * the classpath.
+     *
+     * @return synthesized backend configuration, or null if there is no legacy section
+     */
+    private BackendConfiguration buildLegacyGitLabBackendConfiguration()
+    {
+        JsonNode legacyGitLabConfig = getConfiguration().getLegacyGitLabConfig();
+        if ((legacyGitLabConfig == null) || legacyGitLabConfig.isNull())
+        {
+            return null;
+        }
+        if (!(legacyGitLabConfig instanceof ObjectNode))
+        {
+            throw new LegendSDLCServerException("Invalid legacy \"gitLab\" configuration section: expected an object, got " + legacyGitLabConfig.getNodeType());
+        }
+        ObjectNode backendNode = ((ObjectNode) legacyGitLabConfig).deepCopy();
+        backendNode.put("type", "gitlab");
+        try
+        {
+            return getBootstrap().getObjectMapper().convertValue(backendNode, BackendConfiguration.class);
+        }
+        catch (IllegalArgumentException e)
+        {
+            throw new LegendSDLCServerException("Error processing legacy \"gitLab\" configuration section (is the GitLab backend on the classpath?): " + e.getMessage(), e);
+        }
     }
 
     protected void bindUserContext(Binder binder)

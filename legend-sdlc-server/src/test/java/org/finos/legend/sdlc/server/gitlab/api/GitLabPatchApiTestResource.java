@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Sets;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
@@ -22,7 +23,6 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.backend.api.version.NewVersionType;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.api.server.AbstractGitLabServerApiTest;
 import org.junit.Assert;
 
@@ -46,7 +46,7 @@ public class GitLabPatchApiTestResource
         this.gitLabVersionApi = gitLabVersionApi;
     }
 
-    public void runCreatePatchTest() throws LegendSDLCServerException
+    public void runCreatePatchTest() throws LegendSDLCException
     {
         String projectName = "PatchTestProjectOne";
         String description = "A test project.";
@@ -71,7 +71,7 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals("0.0.2", patch.getPatchReleaseVersionId().toVersionIdString());
     }
 
-    public void runGetPatchTest() throws LegendSDLCServerException
+    public void runGetPatchTest() throws LegendSDLCException
     {
         String projectName = "PatchTestProjectThree";
         String description = "A test project.";
@@ -101,7 +101,7 @@ public class GitLabPatchApiTestResource
         Assert.assertEquals("0.0.2", returnedPatch.getPatchReleaseVersionId().toVersionIdString());
     }
 
-    public void runGetPatchesTest() throws LegendSDLCServerException
+    public void runGetPatchesTest() throws LegendSDLCException
     {
         String projectName = "PatchTestProjectTwo";
         String description = "A test project.";

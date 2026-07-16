@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.core.entity.EntityAccessOperations;
 import org.finos.legend.sdlc.core.entity.EntityModificationOperations;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
@@ -25,7 +26,6 @@ import org.finos.legend.sdlc.backend.api.entity.EntityModificationContext;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -38,11 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Predicate;
-import javax.inject.Inject;
 
 public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityApi
 {
-    @Inject
     public GitLabEntityApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext, BackgroundTaskProcessor backgroundTaskProcessor)
     {
         super(gitLabConfiguration, userContext, backgroundTaskProcessor);
@@ -51,16 +49,16 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getEntityAccessContext(String projectId, SourceSpecification sourceSpecification, String revisionId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification, "sourceSpecification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpecification, "sourceSpecification may not be null");
         return new GitLabEntityAccessContext(projectId, sourceSpecification, revisionId);
     }
 
     @Override
     public EntityAccessContext getReviewFromEntityAccessContext(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -68,7 +66,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         DiffRef diffRef = mergeRequest.getDiffRefs();
         if ((diffRef == null) || (diffRef.getStartSha() == null))
         {
-            throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
         WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
@@ -85,8 +83,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityAccessContext getReviewToEntityAccessContext(String projectId, String reviewId)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(reviewId, "reviewId may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(reviewId, "reviewId may not be null");
 
         GitLabProjectId gitLabProjectId = parseProjectId(projectId);
         MergeRequest mergeRequest = getReviewMergeRequest(getGitLabApi().getMergeRequestApi(), gitLabProjectId, reviewId);
@@ -94,7 +92,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         DiffRef diffRef = mergeRequest.getDiffRefs();
         if ((diffRef == null) || (diffRef.getHeadSha() == null))
         {
-            throw new LegendSDLCServerException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
+            throw new LegendSDLCException("Unable to get [from] revision info in project " + projectId + " for review " + reviewId);
         }
 
         WorkspaceSpecification workspaceSpec = parseWorkspaceBranchName(mergeRequest.getSourceBranch());
@@ -111,8 +109,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
     @Override
     public EntityModificationContext getEntityModificationContext(String projectId, WorkspaceSourceSpecification sourceSpecification)
     {
-        LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
-        LegendSDLCServerException.validateNonNull(sourceSpecification, "source specification may not be null");
+        LegendSDLCException.validateNonNull(projectId, "projectId may not be null");
+        LegendSDLCException.validateNonNull(sourceSpecification, "source specification may not be null");
         return new GitLabEntityModificationContext(projectId, sourceSpecification);
     }
 
@@ -121,7 +119,7 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         // We only allow review in OPEN and COMMITTED state. Note that this is the only control point for this restriction
         if (!isOpen(mergeRequest) && !isCommitted(mergeRequest))
         {
-            throw new LegendSDLCServerException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
+            throw new LegendSDLCException("Current operation not supported for review state " + getReviewState(mergeRequest) + " on review " + mergeRequest.getIid());
         }
     }
 
@@ -211,8 +209,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public Revision updateEntities(Iterable<? extends Entity> entities, boolean replace, String message)
         {
-            LegendSDLCServerException.validateNonNull(entities, "entities may not be null");
-            LegendSDLCServerException.validateNonNull(message, "message may not be null");
+            LegendSDLCException.validateNonNull(entities, "entities may not be null");
+            LegendSDLCException.validateNonNull(message, "message may not be null");
             try
             {
                 return EntityModificationOperations.updateEntities(getProjectFileAccessProvider(), this.projectId, this.sourceSpecification, entities, replace, message, getReferenceInfo(this.projectId, this.sourceSpecification));
@@ -229,8 +227,8 @@ public class GitLabEntityApi extends GitLabApiWithFileAccess implements EntityAp
         @Override
         public Revision performChanges(List<? extends EntityChange> changes, String revisionId, String message)
         {
-            LegendSDLCServerException.validateNonNull(changes, "changes may not be null");
-            LegendSDLCServerException.validateNonNull(message, "message may not be null");
+            LegendSDLCException.validateNonNull(changes, "changes may not be null");
+            LegendSDLCException.validateNonNull(message, "message may not be null");
             EntityModificationOperations.validateEntityChanges(changes);
             try
             {

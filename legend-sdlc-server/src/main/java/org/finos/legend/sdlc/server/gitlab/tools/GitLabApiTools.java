@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.gitlab.tools;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.eclipse.collections.api.factory.Lists;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.monitoring.SDLCMetricsHandler;
 import org.finos.legend.sdlc.server.tools.CallUntil;
@@ -33,8 +33,6 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.LongUnaryOperator;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
 
 public class GitLabApiTools
 {
@@ -141,10 +139,10 @@ public class GitLabApiTools
     public static boolean isRetryableGitLabApiException(GitLabApiException e)
     {
         int status = e.getHttpStatus();
-        return (status == Status.REQUEST_TIMEOUT.getStatusCode()) ||
-                (status == Status.BAD_GATEWAY.getStatusCode()) ||
-                (status == Status.SERVICE_UNAVAILABLE.getStatusCode()) ||
-                (status == Status.GATEWAY_TIMEOUT.getStatusCode());
+        return (status == 408) ||
+                (status == 502) ||
+                (status == 503) ||
+                (status == 504);
     }
 
     public static boolean isNotFoundGitLabApiException(Exception e)
@@ -154,7 +152,7 @@ public class GitLabApiTools
 
     public static boolean isNotFoundGitLabApiException(GitLabApiException e)
     {
-        return e.getHttpStatus() == Status.NOT_FOUND.getStatusCode();
+        return e.getHttpStatus() == 404;
     }
 
     public static GitLabApiException findGitLabApiException(Throwable throwable)
@@ -341,7 +339,7 @@ public class GitLabApiTools
         Tag sourceTag = getTag(api, projectIdOrPath, sourceTagName);
         if (sourceTag == null)
         {
-            throw new LegendSDLCServerException("Source release version " + sourceTagName + " does not exist", Response.Status.CONFLICT);
+            throw new LegendSDLCException("Source release version " + sourceTagName + " does not exist", 409);
         }
         Branch targetBranch = createBranchAndVerify(api.getRepositoryApi(), projectIdOrPath, branchName, sourceTag.getCommit().getId(), maxVerificationTries, verificationWaitMillis);
         api.getProtectedBranchesApi().protectBranch(projectIdOrPath, branchName, AccessLevel.NONE, AccessLevel.MAINTAINER, AccessLevel.MAINTAINER, true);

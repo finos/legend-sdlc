@@ -14,21 +14,18 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
-import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 
-import javax.inject.Inject;
-import javax.ws.rs.core.Response.Status;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class GitLabUserApi extends BaseGitLabApi implements UserApi
 {
-    @Inject
     public GitLabUserApi(GitLabConfiguration gitLabConfiguration, GitLabUserContext userContext)
     {
         super(gitLabConfiguration, userContext);
@@ -54,7 +51,7 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
     @Override
     public User getUserById(String userId)
     {
-        LegendSDLCServerException.validateNonNull(userId, "userId cannot be null");
+        LegendSDLCException.validateNonNull(userId, "userId cannot be null");
         User user;
         try
         {
@@ -71,13 +68,13 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
         {
             return user;
         }
-        throw new LegendSDLCServerException("Unknown user: " + userId, Status.NOT_FOUND);
+        throw new LegendSDLCException("Unknown user: " + userId, 404);
     }
 
     @Override
     public List<User> findUsers(String search)
     {
-        LegendSDLCServerException.validateNonNull(search, "search cannot be null");
+        LegendSDLCException.validateNonNull(search, "search cannot be null");
         try
         {
             return PagerTools.stream(getGitLabApi().getUserApi().findUsers(search, ITEMS_PER_PAGE))
@@ -111,6 +108,6 @@ public class GitLabUserApi extends BaseGitLabApi implements UserApi
         {
             return user;
         }
-        throw new LegendSDLCServerException("Could not get current user information");
+        throw new LegendSDLCException("Could not get current user information");
     }
 }

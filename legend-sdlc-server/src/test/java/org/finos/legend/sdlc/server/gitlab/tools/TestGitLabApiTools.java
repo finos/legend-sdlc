@@ -19,10 +19,8 @@ import org.gitlab4j.api.GitLabApiException;
 import org.junit.Assert;
 import org.junit.Test;
 
-import javax.ws.rs.core.Response.Status;
 import java.util.Arrays;
-import java.util.EnumSet;
-import java.util.Set;
+import java.util.stream.IntStream;
 
 public class TestGitLabApiTools
 {
@@ -34,31 +32,25 @@ public class TestGitLabApiTools
     @Test
     public void testIsNotFoundGitLabApiException()
     {
-        Assert.assertTrue(GitLabApiTools.isNotFoundGitLabApiException(new GitLabApiException("message doesn't matter", Status.NOT_FOUND.getStatusCode())));
-        for (Status status : Status.values())
-        {
-            if (Status.NOT_FOUND != status)
-            {
-                Assert.assertFalse(status.toString(), GitLabApiTools.isNotFoundGitLabApiException(new GitLabApiException("404 File Not Found", status.getStatusCode())));
-            }
-        }
+        Assert.assertTrue(GitLabApiTools.isNotFoundGitLabApiException(new GitLabApiException("message doesn't matter", 404)));
+        IntStream.rangeClosed(100, 599).filter(status -> status != 404).forEach(status ->
+                Assert.assertFalse(String.valueOf(status), GitLabApiTools.isNotFoundGitLabApiException(new GitLabApiException("404 File Not Found", status))));
     }
 
     @Test
     public void testIsRetryableGitLabApiException()
     {
-        Set<Status> retryableStatuses = EnumSet.of(Status.REQUEST_TIMEOUT, Status.BAD_GATEWAY, Status.SERVICE_UNAVAILABLE, Status.GATEWAY_TIMEOUT);
-        for (Status status : Status.values())
+        IntStream.rangeClosed(100, 599).forEach(status ->
         {
-            if (retryableStatuses.contains(status))
+            if ((status == 408) || (status == 502) || (status == 503) || (status == 504))
             {
-                Assert.assertTrue(status.toString(), GitLabApiTools.isRetryableGitLabApiException(new GitLabApiException("some message", status.getStatusCode())));
+                Assert.assertTrue(String.valueOf(status), GitLabApiTools.isRetryableGitLabApiException(new GitLabApiException("some message", status)));
             }
             else
             {
-                Assert.assertFalse(status.toString(), GitLabApiTools.isRetryableGitLabApiException(new GitLabApiException("some other message", status.getStatusCode())));
+                Assert.assertFalse(String.valueOf(status), GitLabApiTools.isRetryableGitLabApiException(new GitLabApiException("some other message", status)));
             }
-        }
+        });
     }
 
     @Test
@@ -107,7 +99,7 @@ public class TestGitLabApiTools
             @Override
             protected String realCall() throws GitLabApiException
             {
-                throw new GitLabApiException(expected, Status.BAD_REQUEST.getStatusCode());
+                throw new GitLabApiException(expected, 400);
             }
         };
 
@@ -146,7 +138,7 @@ public class TestGitLabApiTools
             @Override
             protected String realCall() throws GitLabApiException
             {
-                throw new GitLabApiException(exceptionMessage, Status.SERVICE_UNAVAILABLE.getStatusCode());
+                throw new GitLabApiException(exceptionMessage, 503);
             }
         };
 
@@ -208,7 +200,7 @@ public class TestGitLabApiTools
             {
                 if (getCallCount() < failureCount[0])
                 {
-                    throw new GitLabApiException(exceptionMessage, Status.BAD_GATEWAY.getStatusCode());
+                    throw new GitLabApiException(exceptionMessage, 502);
                 }
                 return expected;
             }
