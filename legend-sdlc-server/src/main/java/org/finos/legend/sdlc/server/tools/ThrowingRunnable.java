@@ -14,7 +14,11 @@
 
 package org.finos.legend.sdlc.server.tools;
 
-public interface ThrowingRunnable<E extends Exception>
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.tools.ThrowingRunnable} instead.
+ */
+@Deprecated
+public interface ThrowingRunnable<E extends Exception> extends org.finos.legend.sdlc.backend.api.tools.ThrowingRunnable<E>
 {
-    void run() throws E;
 }

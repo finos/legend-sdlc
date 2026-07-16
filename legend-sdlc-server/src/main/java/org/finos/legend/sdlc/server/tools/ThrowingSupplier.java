@@ -14,7 +14,11 @@
 
 package org.finos.legend.sdlc.server.tools;
 
-public interface ThrowingSupplier<T, E extends Exception>
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.tools.ThrowingSupplier} instead.
+ */
+@Deprecated
+public interface ThrowingSupplier<T, E extends Exception> extends org.finos.legend.sdlc.backend.api.tools.ThrowingSupplier<T, E>
 {
-    T get() throws E;
 }

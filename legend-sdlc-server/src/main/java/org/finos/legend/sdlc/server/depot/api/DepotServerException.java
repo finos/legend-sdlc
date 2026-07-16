@@ -14,8 +14,6 @@
 
 package org.finos.legend.sdlc.server.depot.api;
 
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthException;
-
 public class DepotServerException extends RuntimeException
 {
     private static final String BASE_MESSAGE = "Depot server error";
@@ -63,16 +61,7 @@ public class DepotServerException extends RuntimeException
 
     public String getDetail()
     {
-        String localDetail = this.detail;
-        if (localDetail == null)
-        {
-            Throwable cause = getCause();
-            if (cause instanceof GitLabAuthException)
-            {
-                localDetail = ((GitLabAuthException)cause).getDetail();
-            }
-        }
-        return localDetail;
+        return this.detail;
     }
 
     @Override
