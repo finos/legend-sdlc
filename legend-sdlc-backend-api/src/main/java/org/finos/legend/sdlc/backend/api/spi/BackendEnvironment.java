@@ -29,6 +29,16 @@ import org.finos.legend.sdlc.project.structure.extension.ProjectStructureExtensi
  */
 public interface BackendEnvironment
 {
+    /**
+     * A general-purpose object mapper for the backend's internal serialization needs. Deliberately not the
+     * host's wire-format mapper: wire concerns (mix-ins, serialization features, protocol extensions) are the
+     * host's contract with its clients, not with backends, and neither side's serialization should drift with
+     * the other's tuning. Backends needing particular modules configure their own mapper. (Backend
+     * configuration parsing does not run on this mapper either — that is the host's configuration mapper,
+     * which {@link BackendFactory#configureObjectMapper} can adjust.)
+     *
+     * @return object mapper
+     */
     ObjectMapper getObjectMapper();
 
     BackgroundTaskProcessor getTaskProcessor();

@@ -30,7 +30,6 @@ import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
-import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
 import org.finos.legend.sdlc.backend.api.spi.BackendEnvironment;
@@ -39,7 +38,6 @@ import org.finos.legend.sdlc.backend.api.spi.BackendSession;
 import org.finos.legend.sdlc.backend.api.spi.ProjectCreationConfiguration;
 import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
-import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration;
@@ -269,7 +267,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     @Override
     public void configure(Binder binder)
     {
-        configureCommonApis(binder);
         configureApis(binder);
 
         bindUserContext(binder);
@@ -483,11 +480,6 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(PatchesGroupWorkspaceRevisionProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceRevisionProjectConfigurationResource.class);
-    }
-
-    private void configureCommonApis(Binder binder)
-    {
-        binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);
     }
 
     @Provides

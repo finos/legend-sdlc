@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.backend.api.patch.PatchApi;
@@ -91,6 +92,12 @@ public class BaseModule extends AbstractBaseModule
     public ComparisonApi provideComparisonApi(BackendSession session)
     {
         return session.getComparisonApi();
+    }
+
+    @Provides
+    public DependenciesApi provideDependenciesApi(BackendSession session)
+    {
+        return session.getDependenciesApi();
     }
 
     @Provides
