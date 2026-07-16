@@ -1645,3 +1645,98 @@ including all resource tests — the server boots with the unconditional session
 filter and the generic auth surface under the in-memory backend);
 `legend-sdlc-server-shared` green with the new session pins; full-reactor
 `mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 3 — `legend-sdlc-backend-gitlab` (L5); the relocation
+
+The mechanical half: the re-plumbed GitLab tree moves (git mv) from
+`legend-sdlc-server` to the new module **`legend-sdlc-backend-gitlab`**,
+packages `org.finos.legend.sdlc.server.gitlab.*` →
+`org.finos.legend.sdlc.backend.gitlab.*` (root, `api`, `auth`, `tools`).
+GitLab4J, jsoup, and commons-compress leave the server's dependency tree; the
+`BackendFactory` services registration travels with the factory. The plan's
+§3.3 expectation ("expected to shrink substantially") was already realized by
+Phases 3–5: what moves is only what genuinely *is* GitLab.
+
+- **The deferred bundling decision (Phase 5 Step 4), resolved**: the standard
+  server distribution ships all three L5 backends — the server pom takes
+  **runtime**-scoped dependencies on `legend-sdlc-backend-gitlab`,
+  `legend-sdlc-backend-fs`, and `legend-sdlc-backend-inmemory` (test →
+  runtime). Grounds: the Phase 4 legacy-config promise ("a legacy deployment
+  needs no config change") requires the GitLab factory on the standard
+  distribution's classpath, which settles the question for gitlab; decided
+  once and applied to all three per the Step 4 hand-off (§3.5's "can bundle
+  any set of backend jars" and §8's "backends arrive on the runtime
+  classpath" made concrete — compile scope would violate the layering,
+  runtime scope expresses exactly "present, not depended on"). The omnibus
+  file-system pairing gets its backend from the standard distribution for
+  free. Assemblies that build their own classpath add the backend jar(s) they
+  deploy (migration row).
+- **No bridges at the old FQNs** — and not by the usual population argument
+  alone: the server module *cannot* alias classes that now live in a module
+  below it (a bridge would need a compile dependency the layering forbids),
+  and bridges inside the L5 jar under `server.gitlab.*` would ship old names
+  in a new artifact to no benefit (any consumer must change its dependency
+  anyway). The gitlab classes were server-internal implementation, never a
+  published API; the migration doc carries the rename rows. One genuinely
+  consumed surface gets a recipe instead of a bridge: **`GitLabAuthorizer`**
+  (externally implemented, configured by class name in YAML) — its part-2
+  signature change is documented with the getService/state-store re-targeting
+  recipe.
+- **Stragglers found by the move**, each with a ruling:
+  - `server.tools.CallUntil`/`ThrowingRunnable`/`ThrowingSupplier` (Phase 1's
+    remaining "Phase 4/5 material") were gitlab-only consumers but generic
+    utilities; `CallUntil` needs slf4j, which rules out zero-dependency
+    `legend-sdlc-shared` — they join `BackgroundTaskProcessor` in
+    **`backend.api.tools`** (the exact Phase 4 precedent), with deprecated
+    bridges at the old server FQNs. `AuthenticationTools` (Kerberos/SPNEGO
+    HTTP plumbing) is consumed only by the GitLab SAML authenticators and
+    moves with them to `backend.gitlab.tools` (no bridge, migration row).
+    `server.tools` now holds only `SessionProvider` and the bridges — the
+    Phase 1 carry-in is discharged.
+  - `GitLabApiTools`' retry counter called the server-shared prometheus
+    handler (`SDLCMetricsHandler`, "gitlab retryable exception"). Metrics on
+    `BackendEnvironment` were expressly deferred in the Phase 4 review, so
+    the counter is **dropped** (debug log in its place), not smuggled through
+    a new port; it returns when the environment grows a metrics surface.
+    Deployment-visible: the counter disappears (migration row).
+  - `DepotServerException.getDetail()` walked a `GitLabAuthException` cause —
+    an incidental coupling from shared authorship; the branch is removed
+    (depot exceptions never carry GitLab causes on any live path).
+  - The deprecated `ProjectApi` bridge's `configureProjectInWorkspace`
+    (GitLab-specific, kept on the bridge in Phase 4 "for external
+    implementors") referenced `GitLabProjectId` and cannot survive on a
+    server-resident bridge; it is removed (migration row). The bridge
+    interface itself stands.
+  - `FinosGitlabProjectStructureExtensionProvider` (+ its yaml/ci resources)
+    stays in the server at its old FQN: deployments reference it by class
+    name in configuration, and concrete extensions are deployment-scoped
+    configuration, not backend code (§3.3) — the gitlab backend jar bundles
+    no extensions (seam-S3 obligation held).
+  - The moved tests: `JerseyGuiceUtils.install` static appeasement dropped
+    (jersey2-guice is not on the module's classpath — and in the server pom
+    that bridge is now runtime-scoped, its only compile references having
+    been these tests); the two project tests' extension fixture
+    (`DefaultProjectStructureExtension`, a server class) replaced by an
+    inline test fixture over the L2 SPI; the characterization's
+    entity-normalization pin follows the FS module's precedent (asserts
+    against the in-use serializer's normal form rather than assuming the
+    engine serializer extensions are present). The `test-gitlab-com`
+    failsafe profile moves to the module pom.
+- The server pom also sheds `metrics-healthchecks`, `commons-codec`,
+  `commons-compress`, and `hk2-api` (all orphaned by the extraction — found
+  by `dependency:analyze`).
+- The GitLab backend can now in principle run the TCK's contract suite (the
+  servlet-bound session context is gone); wiring a
+  `TestGitLabBackendContract` needs thought about which contract tests are
+  meaningful without a reachable GitLab (the fully-declared capability set
+  means the undeclared-gate branches never fire) — left to Phase 6-adjacent
+  test work rather than done thinly here.
+
+Verified: `legend-sdlc-backend-gitlab` 55 green (the moved unit tests: token
+manager over the state store, backend configuration incl. the legacy
+uat/prod flattening, SAML authenticator, project id, api statics,
+characterization 17/17); `legend-sdlc-server` 204 green after a **clean**
+build (the stale-`target/classes` services-file hazard from the Phase 2
+record struck again — the moved `BackendFactory` registration lingered in
+`target/classes` and broke the `ServiceLoader` at app bootstrap until
+`mvn clean`); full-reactor `mvn clean install javadoc:javadoc` green.
