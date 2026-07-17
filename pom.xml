@@ -48,6 +48,7 @@
         <module>legend-sdlc-backend-gitlab</module>
         <module>legend-sdlc-server</module>
         <module>legend-sdlc-server-fs</module>
+        <module>legend-sdlc-local</module>
         <module>legend-sdlc-generation-shared</module>
         <module>legend-sdlc-generation-file</module>
         <module>legend-sdlc-generation-service</module>
@@ -570,6 +571,11 @@
             <dependency>
                 <groupId>org.finos.legend.sdlc</groupId>
                 <artifactId>legend-sdlc-server</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.finos.legend.sdlc</groupId>
+                <artifactId>legend-sdlc-local</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

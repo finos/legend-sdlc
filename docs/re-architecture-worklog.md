@@ -1968,3 +1968,129 @@ singletons) — none mutable, none classloader-capturing, none I/O-bearing at
 class init. The §4.5 gate is discharged; L0–L3 are declared embeddable.
 
 Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Step 2: `legend-sdlc-local` — rooted storage, the two-tier `LocalModel`, diagnostics as data
+
+The module: **`legend-sdlc-local`** (`org.finos.legend.sdlc.local`), consuming
+L0–L3 only per §3.1 — no container, no backend, no server. Its dependency list
+is the five SDLC layer jars plus `eclipse-collections-api`; Jackson arrives
+transitively for `project.json`/entity JSON and nothing else does. The
+`package-info` documents the surface as the IDE-plugin contract (§4.5's
+"stable, lean, published API" deliverable), including the lifecycle/threading
+rules and the footprint statement.
+
+**Rooted storage (§4.2), with one placement decision.** Rooting is implemented
+as the plan's storage-layer decorator — `RootedFileAccessContext` /
+`RootedFileModificationContext`, which prefix operation paths and strip
+returned paths so a subtree presents as a complete project — and the
+decorators live in **L1** (`project.files`, beside `CachingFileAccessContext`),
+not in `legend-sdlc-local`: §4.1 left the placement open ("actually in L1 or
+here"), and the decorator is storage-generic — it is the piece a future
+monorepo-mapping backend reuses (§4.2's "this also benefits backends"), which
+must not require a dependency on the local module. `LocalModel` itself roots
+by opening the subdirectory (`Path.resolve` — same semantics, no decorator
+needed on a real filesystem); the end-to-end test pins the equivalence by
+reading one model both ways.
+
+**`LocalProjectFileAccessProvider`** (in the local module — it drags
+`java.nio` file walking and working-copy failure modes L1's surface does not
+need): the L1 provider over a directory tree. File reads are live views;
+modifications validate all operations against the working tree first (add:
+absent; modify/delete: present; move: source present, target absent), then
+write directly to disk in order, pruning directories the operations emptied —
+no atomicity promised beyond that, since undo on a working copy belongs to
+the IDE/VCS. Only the project source specification is accepted; workspace/
+version/patch sources throw `UnsupportedOperationException` with a message
+saying why.
+
+**Revisions — the deliberate failure mode.** The plan offered "unsupported or
+backed by JGit later"; what shipped is deliberately neither a stub throw nor
+JGit: the provider exposes the working tree as a **single synthetic revision**
+(`working-copy`) — the revision context reports it as base/current/only, and
+access/modification contexts accept it (or null) as a revision id; unknown
+ids are rejected loudly. Grounds: L3's write paths (the updater's reference
+probe, bulk entity update) consult the revision context for a *reference*,
+not for history — a one-state, unstamped, documented-mutable "history" keeps
+the entire generic write-side working unmodified over local storage, where a
+throwing context would have forced local-only forks of L3 code. Time-window
+arguments to revision enumeration are ignored (documented); real history
+remains a possible later JGit upgrade, per the plan.
+
+**`LocalModel` — the two-tier handle (§4.4/§4.5).**
+`LocalModel.open(root) → handle → close`, entities-only (Form 2 / EMBEDDED):
+entity read/list/get plus create/update/delete and bulk `applyEntityChanges`,
+all through the L3 operations; `validate()`; explicit `refresh()`. The caching
+contract is stated exactly: the handle caches only the configuration/structure
+*resolution*; file reads are live. So external entity-file edits are visible
+immediately, external `project.json` changes are visible after `refresh()`
+(edits through the handle refresh automatically), and `close()` makes the
+handle refuse further work. Threading contract on the class javadoc: a handle
+is not thread-safe, callers serialize; handles are mutually independent.
+**`ManagedLocalModel`** (Form 1 / MANAGED) layers configuration updates on
+top via a small single-use builder over the L3
+`ProjectConfigurationUpdater`/`UpdateBuilder`. It takes the deployment's
+`ProjectStructureExtensionProvider` **explicitly at open** (the §4.6
+corollary; null is a supported input) — and the **degraded mode is confirmed
+in implementation** exactly as the Phase 4 review decided: with no provider,
+entity editing is unaffected; configuration/structure updates proceed
+(`project.json`, structure-managed build files) and preserve any recorded
+extension version, but extension-managed files are left untouched for
+server-side reconciliation; setting a *new* extension version without a
+provider fails (nothing can compute what it manages). Notably the degraded
+behavior required **zero new L3 logic** — the updater already collects
+extension operations only when a provider is present; Phase 6's work was to
+not "fix" that, and to document and pin it.
+
+**Diagnostics as data.** `validate()` returns `LocalModelDiagnostic`s
+(severity × category × message × file path) and throws for nothing that is
+*in* the model: unparseable or unsupported-version `project.json` (in which
+case operations refuse with a pointer to `validate()`, but validation itself
+runs), invalid/missing ids (missing ids are legal on EMBEDDED models — flagged
+only on MANAGED, where updates would fail), legacy dependencies, unsupported
+artifact generations, undeserializable entity files, and entity content
+disagreeing with file location. The SDLC/Engine boundary is stated on the
+type: layout and configuration here, model semantics (compilation,
+resolution) never — that is Engine's.
+
+**Discovery.** `LocalModelDiscovery.findModelRoots(tree[, descendInto])`:
+every directory containing `project.json`, stable path order, pruning
+dot-directories, `target`, and `node_modules` by default (predicate
+overridable). Discovery reports and does not judge — nested finds (e.g. test
+resources) are the caller's decision.
+
+**L3 additions in support (additive):** the entity read/write operations
+gained overloads taking an already-resolved `ProjectStructure`
+(`EntityAccessOperations.getEntity/getEntities/getEntityPaths/
+getEntityProjectFiles`, `EntityModificationOperations.performChanges`), so a
+handle that caches its structure uses it consistently instead of re-resolving
+per call — this also completes the Step 1 story for embedders composing their
+own `ProjectStructureFactory`. Context-only forms delegate unchanged.
+
+**A published-API decision worth its own record: no `renameEntity`
+convenience.** The SPI-wide `RENAME` semantics move the entity file without
+rewriting content; serializers derive the entity path *from* content
+(package/name), so a bare rename leaves a file whose location and content
+disagree — unreadable until content is fixed. Rather than ship a trap,
+`LocalModel` offers no rename method; `applyEntityChanges` still accepts
+`RENAME` for callers who know the semantics, and the javadoc spells out that
+a consistent local rename is delete + create with rewritten content
+(reference rewriting being an Engine/IDE refactoring concern). The
+characterized `RENAME` behavior itself is untouched — backends and Studio
+flows depend on it.
+
+**The §6 end-to-end test, green:** a repository with non-Legend content and
+two models at subpaths (EMBEDDED V0 at `analytics/model`; MANAGED V11 with
+extension version 1 at `services/svc-model`): discovery finds exactly the
+two; the embedded model is opened, entities created/read/updated/deleted with
+files verified on disk and the sibling model and non-Legend content verified
+untouched; the managed model takes a dependency-add configuration update both
+with a fixture extension provider (extension-managed file maintained,
+structure files written) and in degraded mode (extension file byte-identical,
+extension version preserved, new-extension-version rejected); and files are
+mutated on disk under an open handle — entity file appears live, external
+`project.json` change appears only after `refresh()`. Plus unit suites for
+the provider (path escapes rejected, validation-before-application, the
+working-copy revision contract), the rooted decorators (L1), discovery
+pruning, and diagnostics. 21 tests in the local module + 3 in L1.
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.

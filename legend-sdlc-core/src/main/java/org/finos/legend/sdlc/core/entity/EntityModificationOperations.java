@@ -117,6 +117,17 @@ public class EntityModificationOperations
      */
     public static Revision performChanges(ProjectFileAccessProvider fileProvider, String projectId, SourceSpecification sourceSpecification, String referenceRevisionId, String message, List<? extends EntityChange> changes)
     {
+        return performChanges(null, fileProvider, projectId, sourceSpecification, referenceRevisionId, message, changes);
+    }
+
+    /**
+     * As {@link #performChanges(ProjectFileAccessProvider, String, SourceSpecification, String, String, List)}, but
+     * against an already-resolved project structure (null to resolve it from the file access context) — for callers
+     * (such as a local model handle) that hold a structure across many operations rather than re-resolving it per
+     * call.
+     */
+    public static Revision performChanges(ProjectStructure structure, ProjectFileAccessProvider fileProvider, String projectId, SourceSpecification sourceSpecification, String referenceRevisionId, String message, List<? extends EntityChange> changes)
+    {
         int changeCount = changes.size();
         if (changeCount == 0)
         {
@@ -125,7 +136,7 @@ public class EntityModificationOperations
         }
         LOGGER.debug("Committing {} changes to {} in project {}: {}", changeCount, sourceSpecification, projectId, message);
         ProjectFileAccessProvider.FileAccessContext fileAccessContext = fileProvider.getFileAccessContext(projectId, sourceSpecification, referenceRevisionId);
-        ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+        ProjectStructure projectStructure = (structure == null) ? ProjectStructure.getProjectStructure(fileAccessContext) : structure;
         MutableList<ProjectFileOperation> fileOperations = ListIterate.collect(changes, c -> entityChangeToFileOperation(c, projectStructure, fileAccessContext));
         fileOperations.removeIf(Objects::isNull);
         if (fileOperations.isEmpty())
