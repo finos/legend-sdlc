@@ -2190,7 +2190,8 @@ allows.
 - **`InMemoryModule`'s fixture apis** replaced by the real in-memory backend,
   upgrading the in-memory test servers to a real `backend:` configuration.
 - **A GitLab TCK contract runner** — possible since the servlet decoupling;
-  needs a decision on what an all-capabilities backend run would certify.
+  needs a decision on what an all-capabilities backend run would certify
+  (elaborated in the 2026-07-17 addendum below).
 - **An FS deployment auth story** — a pac4j client yielding profiles for
   sessions (migration doc covers the gap).
 - **Metrics and health surfaces on the backend SPI** — deferred, additive.
@@ -2204,3 +2205,75 @@ allows.
 
 Nothing else is open: every §6 phase deliverable either shipped or has its
 deviation recorded in this worklog at the step where it was decided.
+
+### Addendum (2026-07-17): the GitLab TCK runner open item, elaborated
+
+The open-list entry above compresses an analysis worth keeping; recorded here
+so the eventual decision starts from it rather than re-deriving it. No
+decision is taken in this addendum.
+
+**Where the TCK stands.** `legend-sdlc-backend-test-suite` has three abstract
+suites a runner subclasses, supplying `newBackend()`:
+`BackendContractTestSuite` (the capability model — declared capabilities
+yield an api, undeclared ones throw `UnsupportedCapabilityException`/501, and
+the cross-API source-scope gates), `BackendScenarioTestSuite` (end-to-end
+project/workspace/entity/config/comparison/revision scenarios over real
+storage — what certifies the L4 defaults), and `LayoutInvariantsTestSuite`
+(seam R2: update ≡ create; reconcile-noop). In-memory and FS run all three in
+CI on every build; their runners are trivial (the FS one points
+`FileSystemBackend` at a temp folder). GitLab runs none; its coverage is the
+seven per-API docker integration suites (`api/docker`, profile-gated
+`test-#version-gitlab`, throwaway GitLab container on `localhost:8090`).
+
+**Why it is now possible (the Phase 5 claim, made concrete).** Pre-extraction,
+the GitLab api classes unwrapped `ServletBackendSessionContext` — no GitLab
+session existed without the servlet/Guice machinery, so a plain-JUnit runner
+was structurally impossible. Post-extraction,
+`GitLabBackend.newSession(BackendSessionContext)` is reachable from any JVM:
+the context is a user id plus a string-keyed state store, and
+`GitLabTokenManager` reads its tokens from that store. The docker suite
+already owns the hard fixtures (container lifecycle, user provisioning,
+`oauth2Login`). A runner is therefore: subclass the suites in the docker
+package, `newBackend()` builds a `GitLabBackend` against the container, and —
+the one genuinely new piece — override the TCK's `newSessionContext()` to
+plant real auth material under the `gitlab.*` state-store keys instead of the
+default empty in-memory store. Incidentally, that override would be the first
+proof of the SPI's claim that a session context is *sufficient* bootstrap:
+GitLab is the only backend whose `newSession` does real work (token
+acquisition), and no servlet would be anywhere in sight.
+
+**What an all-capabilities run would (not) certify.** `GitLabBackend`
+declares `EnumSet.allOf(BackendCapability.class)`. Against that declaration:
+
+- `testCapabilityGatedAccessors` walks the nine gated accessors, but every
+  501 branch — the contract actually being certified — is unreachable; the
+  test degenerates to "every accessor returns non-null".
+- `testCrossApiSourceScopeGates` is two `if (!capabilities.contains(...))`
+  blocks; both guards are false, so the test body executes nothing.
+
+So the *contract* suite is near-vacuous on GitLab. The certification content
+lives in the scenario and layout-invariant suites: the same generic
+assertions all backends satisfy, run over real GitLab branches — including
+exactly the places GitLab overrides L3 defaults natively (comparison via the
+GitLab compare API, revisions as commits), which is the behavioral-drift
+residual §7 row 3 tracks. That value overlaps heavily with the existing
+per-API docker integration suites; the marginal gain is that the TCK is the
+*shared* contract — one suite, same assertions, all backends — i.e. drift
+protection, not new coverage.
+
+**The actual decision to make** is CI cost vs. what the certification says:
+a GitLab runner is forever docker-profile-gated (the scenario suite creates
+projects, fine only on a throwaway instance) and would be the only TCK
+runner not running on every build. Options, for whoever picks this up:
+
+- *(a)* add the runner to the existing docker profile and accept the overlap
+  — cheapest path to "all three backends run the TCK" being literally true;
+- *(b)* declare the per-API integration suites GitLab's equivalent and
+  record the TCK requirement as satisfied in spirit;
+- *(c)* run only the scenario/layout suites in the docker profile (skip the
+  vacuous contract suite) — the part with real certification content.
+
+One forcing condition either way: if capabilities ever become
+deployment-conditional (e.g. a GitLab configuration that drops `PATCHES`),
+the gate tests stop being vacuous and the calculus flips decisively toward
+running the full TCK.
