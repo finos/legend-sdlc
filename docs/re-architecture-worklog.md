@@ -1883,6 +1883,8 @@ for its first request.
 
 ## Phase 6 — Local / IDE tooling
 
+**Status: complete** (see the phase wrap-up, which also closes the plan).
+
 ### Step 1: the §4.5 audit discharged — ambient state leaves the L0–L3 read/write paths
 
 The audit bar (plan §4.5, restated at each phase wrap-up since Phase 2): L0–L3
@@ -2094,3 +2096,111 @@ working-copy revision contract), the rooted decorators (L1), discovery
 pruning, and diagnostics. 21 tests in the local module + 3 in L1.
 
 Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Phase 6 wrap-up: module inventory, plan conformance, and the whole-plan close-out
+
+**Status: complete** — and with it, the plan's phased work (§6 ends at Phase
+6). What follows is the phase wrap-up, a plan-conformance note (§7 and §8
+against what shipped), and the explicit list of what remains open across the
+whole plan.
+
+- **Module inventory after Phase 6**: **`legend-sdlc-local`**
+  (`org.finos.legend.sdlc.local`) — the working-copy provider with the
+  synthetic `working-copy` revision, the two-tier `LocalModel`/
+  `ManagedLocalModel` handle surface, diagnostics as data, and discovery;
+  depends on the five L0–L3 jars plus `eclipse-collections-api` only. L1
+  gained the storage-generic rooting decorators (`RootedFileAccessContext`,
+  `RootedFileModificationContext`); L3's entity operations gained
+  resolved-`ProjectStructure` overloads. The §4.5 audit is discharged (Step
+  1): no process-global mutable state, no ambient-classloader dependence, no
+  class-init service loading anywhere in L0–L3.
+
+**Plan conformance, §7 row by row** (status of each risk/question as the plan
+closes):
+
+1. *`SourceSpecification` L1/L4 split* — resolved 2026-07-09: rescinded;
+   taxonomy final at L1. Closed.
+2. *Session/auth contract* — decided in the Phase 4 review, implemented in
+   Phase 5 (state-store re-plumb, generic auth surface). The named residual —
+   integration tests on real GitLab auth flows — stands as the docker
+   integration suite; no new residual. Closed.
+3. *Behavioral drift GitLab vs. generic (Phase 3)* — characterization tests
+   moved first, the TCK now certifies in-memory and FS; the GitLab TCK runner
+   remains open (below). Substantially closed; residual tracked.
+4. *Git-flavored "generic" semantics* — the L4 interfaces were documented in
+   backend-neutral terms in Phase 4; capabilities let Git-less backends omit
+   concepts. Closed.
+5. *Package renames vs. external code* — the §5 contract held: extension SPI
+   bridges + dual-keyed `ServiceLoader` lookup shipped in Phase 2, migration
+   recipes accompany every authoring-framework break; bridge *removal* is
+   open (below), by design coordinated with the origin project. Closed as a
+   risk; removal tracked.
+6. *Two plans diverging* — the extraction doc carries the banner and its two
+   superseded decisions are annotated. Closed.
+7. *Monorepo scope creep* — held: no backend maps projects to subdirectories;
+   the rooting decorators landed at L1 as exactly the §4.2 seam, unused by
+   any backend. Closed (deferral intact).
+8. *Guice request-scoping subtleties* — survived extraction; the one real
+   incident (eager injector vs. run()-time state) is on the record with its
+   fix (2026-07-10 correction). Closed.
+9. *IDE embedding exposes global state / lifecycle gaps* — the row this phase
+   existed to close: the §4.5 audit is discharged with a recorded design
+   decision (one JVM, one lineup, lazy immutable default; TCCL off the
+   read/write paths), and `LocalModel` shipped with open/close,
+   invalidate/refresh, a stated threading contract, and the
+   files-change-under-an-open-handle test. Closed.
+10. *Managed projects edited locally* — decided in the Phase 4 review
+    (discovery serves schema and identity, never behavior; deployment
+    identity is explicit tool configuration), **confirmed in implementation
+    here**: the provider is an explicit input to the structure-aware tier and
+    the degraded mode (extension-managed files untouched, extension version
+    preserved) is implemented and pinned by test. Closed.
+11. *Companion-plan drift* — the seams all exist in their reserved form (S1
+    negative obligation + javadoc pointers; S2 `getConfigurationProperties()`
+    on the version factory and extension SPI; S3 the `/configuration`
+    discovery surface; R1 the single write-side dispatch point, marked in
+    code; R2 the layout-invariants TCK seed). Both companion plans remain
+    separate and dependent, as decided (see the recorded
+    separate-plan decisions). Open by design — they are plans, not debts.
+
+**Plan conformance, §8**: the shipped graph is the plan's graph, literally —
+three L0 modules; L1 `project-files`; L2 `project-structure`; L3 `core`; L4
+`backend-api` + `backend-test-suite`; L5 `backend-gitlab` (gitlab4j),
+`backend-fs` (jgit), `backend-inmemory`; L6 `server` with backends at runtime
+scope only; and now `legend-sdlc-local` consuming L0–L3 only. Deviations from
+the plan text, all recorded where they happened: `legend-sdlc-server-fs`
+survives as a relocation POM (not in the plan's graph; §5 compatibility);
+`legend-sdlc-server-shared` remains as an L6-adjacent module (Dropwizard/
+pac4j utilities shared by server assemblies — outside the §8 graph, and
+correctly above the §3.1 fence, not below it); the generation modules and
+Maven plugins kept their positions untouched, as the plan's closing note
+allows.
+
+**Open across the whole plan when its phases end** (owners in parentheses):
+
+- **Deprecation-bridge removals, as one coordinated batch** (§5; with the
+  origin project): the `server.domain.api.*` interface bridges,
+  `DependenciesApiImpl`, `BackgroundTaskProcessor`, `CallUntil`/`Throwing*`,
+  `LegendSDLCServerException`, the Phase 1/2 tool and extension bridges, the
+  legacy dual-keyed `ServiceLoader` lookup, and — after the transition
+  release — `GITLAB_MODE` and the legacy `gitLab:` config adapter.
+- **`NoReviewsReviewApi`** goes when Studio consumes
+  `GET /configuration/capabilities` for its review UI (L6 affordance,
+  decision 2026-07-14).
+- **`InMemoryModule`'s fixture apis** replaced by the real in-memory backend,
+  upgrading the in-memory test servers to a real `backend:` configuration.
+- **A GitLab TCK contract runner** — possible since the servlet decoupling;
+  needs a decision on what an all-capabilities backend run would certify.
+- **An FS deployment auth story** — a pac4j client yielding profiles for
+  sessions (migration doc covers the gap).
+- **Metrics and health surfaces on the backend SPI** — deferred, additive.
+- **The two companion plans** — config-options (seams S1–S3 reserved) and
+  layout-reconciliation (R1–R2 reserved) — deliberately separate, dependent
+  plans; their sequencing decisions are on the record in the memory/plan
+  docs.
+- **Small deferred conveniences**: the CLI veneer over `legend-sdlc-local`
+  (§4.1 defers it; unowned) and JGit-backed local revision history (the
+  provider's javadoc leaves the door open; unowned).
+
+Nothing else is open: every §6 phase deliverable either shipped or has its
+deviation recorded in this worklog at the step where it was decided.
