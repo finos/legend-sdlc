@@ -43,11 +43,23 @@ public interface ProjectConfiguration
 
     List<MetamodelDependency> getMetamodelDependencies();
 
+    /**
+     * Option of the owning structure version, not a project-configuration concern (re-architecture seam S1). Do not
+     * add further top-level option accessors like this one: new version-/extension-scoped options belong in the
+     * namespaced configuration bags that the project-structure-configuration-options plan introduces (together with
+     * their persistence), at which point this getter is deprecated in favor of the structure-configuration bag.
+     */
     default Boolean getRunDependencyTests()
     {
         return null;
     }
 
+    /**
+     * Option of the owning structure version, not a project-configuration concern (re-architecture seam S1). Do not
+     * add further top-level option accessors like this one: new version-/extension-scoped options belong in the
+     * namespaced configuration bags that the project-structure-configuration-options plan introduces (together with
+     * their persistence), at which point this getter is deprecated in favor of the structure-configuration bag.
+     */
     default Boolean getProduceShadedServiceJar()
     {
         return null;

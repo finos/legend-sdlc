@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
 import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;

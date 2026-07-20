@@ -845,17 +845,17 @@ abstract class BaseGitLabApi
         }
     }
 
-    protected LegendSDLCServerException buildException(Exception e, String message)
+    protected LegendSDLCException buildException(Exception e, String message)
     {
         return buildException(e, null, null, ex -> message);
     }
 
-    protected LegendSDLCServerException buildException(Exception e, Supplier<String> message)
+    protected LegendSDLCException buildException(Exception e, Supplier<String> message)
     {
         return buildException(e, null, null, (message == null) ? null : ex -> message.get());
     }
 
-    protected LegendSDLCServerException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
+    protected LegendSDLCException buildException(Exception e, Supplier<String> forbiddenMessage, Supplier<String> notFoundMessage, Supplier<String> defaultMessage)
     {
         return buildException(e,
                 (forbiddenMessage == null) ?
@@ -869,7 +869,7 @@ abstract class BaseGitLabApi
                         ex -> Optional.ofNullable(defaultMessage.get()).map(m -> StringTools.appendThrowableMessageIfPresent(m, ex)).orElse(null));
     }
 
-    protected LegendSDLCServerException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
+    protected LegendSDLCException buildException(Exception e, Function<? super GitLabApiException, String> forbiddenMessage, Function<? super GitLabApiException, String> notFoundMessage, Function<? super Exception, String> defaultMessage)
     {
         return processException(e,
             Function.identity(),
@@ -951,14 +951,15 @@ abstract class BaseGitLabApi
         return "An unexpected error occurred (GitLab response status: " + glae.getHttpStatus() + ")";
     }
 
-    protected LegendSDLCServerException processException(Exception e, Function<? super LegendSDLCServerException, ? extends LegendSDLCServerException> meHandler, Function<? super GitLabApiException, ? extends LegendSDLCServerException> glaeHandler, Function<? super Exception, ? extends LegendSDLCServerException> defaultHandler)
+    protected LegendSDLCException processException(Exception e, Function<? super LegendSDLCException, ? extends LegendSDLCException> meHandler, Function<? super GitLabApiException, ? extends LegendSDLCServerException> glaeHandler, Function<? super Exception, ? extends LegendSDLCServerException> defaultHandler)
     {
-        // Special handling
-        if ((meHandler != null) && (e instanceof LegendSDLCServerException))
+        // Special handling (the base LegendSDLCException is passed through so that exceptions thrown by relocated,
+        // framework-free code - the project structure and SDLC core modules - keep their status and message)
+        if ((meHandler != null) && (e instanceof LegendSDLCException))
         {
             try
             {
-                LegendSDLCServerException result = meHandler.apply((LegendSDLCServerException) e);
+                LegendSDLCException result = meHandler.apply((LegendSDLCException) e);
                 if (result != null)
                 {
                     return result;

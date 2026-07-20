@@ -190,3 +190,306 @@ still pre-release:
   `ProjectConfigurationStatusReport`, `config/`, and the concrete extension
   impls. The updater and same-package tests gained explicit imports of the
   relocated L1/L2 types.
+
+## Phase 3 — SDLC core (L3)
+
+**Status: in progress.**
+
+### Step 1: characterization tests (before any move)
+
+Two suites pin the duplicated entity access/modification behavior of
+`GitLabEntityApi` and `FileSystemEntityApi` as it stands, so the Phase 3
+factoring has a net. Both stay put (they pin the api classes, which do not
+move):
+
+- `TestGitLabEntityApiCharacterization` (server module, `gitlab.api` package):
+  drives the real `GitLabEntityApi` over the test `InMemoryProjectFileAccessProvider`
+  via a subclass overriding `getProjectFileAccessProvider()` (constructed with
+  null GitLab config/user context/task processor — none is touched on non-GitLab
+  paths; `buildException` passes `LegendSDLCServerException` through). Covers
+  `getEntity`/`getEntities`/`getEntityPaths` (predicates, `excludeInvalid`),
+  `updateEntities` (replace semantics, validation), `performChanges` (all four
+  change types, validation, error statuses/messages). GitLab-native paths
+  (review from/to contexts, GitLab error translation) are out of reach and out
+  of scope.
+- `TestFileSystemEntityApiCharacterization` (new test tree in
+  `legend-sdlc-server-fs`, which previously had none; pom gains `junit` usage
+  and the `legend-sdlc-model` test-jar): end-to-end over a real git repo in a
+  temp directory via `FileSystemProjectApi.createProject` +
+  `FileSystemWorkspaceApi.newWorkspace`.
+
+Behavior observed and pinned (bugs preserved, not fixed — behavior-preserving
+phase; candidates for post-phase fixes):
+
+1. **Entity content does not round-trip identically** (both backends): the
+   serializer normalizes content (a class gains `superTypes`, `stereotypes`,
+   `constraints`, expanded `genericType`, …). What `getEntity` returns is the
+   normalized form, not what was submitted.
+2. **No-op suppression is byte-level, not content-level**: `updateEntities`
+   with semantically identical entities still generates MODIFY changes, but
+   `entityChangeToFileOperation` drops them when the re-serialized bytes equal
+   the current file bytes → null revision (pinned: null revision on no-op
+   updates and on empty change lists).
+3. **RENAME moves the entity file without rewriting its content** (GitLab
+   path): after a rename, the file at the new location still declares the old
+   package/name, so reading the renamed entity fails with a path-mismatch
+   deserialization error, while `getEntityPaths` happily lists the new path.
+4. **`getEntityPaths` lists entity files it cannot parse** (it never
+   deserializes); `getEntities(…, excludeInvalid=true)` silently drops them;
+   `getEntities(…, excludeInvalid=false)` fails wholesale with 500.
+5. **Non-validation failures are 500s** ("entity already exists",
+   "could not find entity"), only argument validation is 400; unknown entity
+   on `getEntity` is 404.
+6. **FS: enumeration through the standard `FileAccessContext` is broken** —
+   `FileSystemFileAccessContext.getFilesInCanonicalDirectories` compares
+   canonical directory names (leading `/`) against git tree paths (no leading
+   `/`), so it never matches; additionally it does `ObjectId.fromString(revisionId)`
+   with the null revision id the entity access context is always created with.
+   Consequences pinned: `getEntityPaths` **always throws** ("Error getting
+   files in directories …"); `updateEntities` never sees existing entities —
+   modifying an existing entity fails with "already exists" (500), and
+   `replace=true` deletes nothing.
+7. **FS: `getEntities` enumeration is platform-dependent** — the git-tree-walk
+   variant relativizes canonical file paths with `java.nio.Path` + string
+   concatenation, producing `\`-separated paths on Windows that match no
+   source directory: `getEntities` returns entities on POSIX, empty on
+   Windows (assertions conditional on `File.separatorChar`; POSIX branch
+   verified by CI).
+8. **FS: stale reference revision loses its 409**: the modification context
+   correctly detects the conflict, but `FSException.getLegendSDLCServerException`
+   re-wraps it into a 500 with a concatenated message.
+9. **FS: `getEntities`' two overloads take different code paths** — the
+   3-arg default and 4-arg `excludeInvalid` form go through the git tree
+   walk, `getEntityPaths` through the (broken) standard context; GitLab's
+   implementation routes everything through one path.
+
+### Step 2: create `legend-sdlc-core` (L3); move the updaters into it
+
+- **Package decision (user, 2026-07-08)**: the module is `legend-sdlc-core`
+  (per the plan doc), rooted at `org.finos.legend.sdlc.core` — but with **no
+  classes at the bare root**. Concern subpackages mirror the domain-API concern
+  names: `core.entity` (model editing), `core.project` (configuration/structure
+  write-side), `core.dependency`, `core.comparison`. Rationale: L3 spans model
+  editing *and* project maintenance, so `…sdlc.project.core` was rejected as
+  structure-slanted, and bare `…sdlc.core` as too general for classes to live
+  in directly; the umbrella marks the module and keeps one JPMS-friendly root.
+- **Moved (git mv)**: `ProjectStructureUpdater`
+  (`server.project` → `org.finos.legend.sdlc.core.project`; **no bridge** — the
+  class was created in Phase 2 on this branch and no release ever shipped it at
+  the server FQN) and `ProjectConfigurationUpdater`
+  (`server.domain.api.project` → `core.project`; `@Deprecated` bridge subclass
+  left in `legend-sdlc-server`, with the caveat that the fluent `with*` methods
+  return the relocated type). `TestProjectConfigurationUpdater` moved along.
+- **Carry-in resolved — `ProjectConfigurationUpdater` placement (L3, not L4)**:
+  it is a pure configuration-delta value object over L0 types, consumed by the
+  L3 updater and needed by local tooling (adding a dependency to a checkout);
+  the plan's §3.3 listing under L4 reflects the domain-API *interfaces*
+  consuming it, which Phase 4 will re-export — the type itself belongs at L3.
+- `ProjectConfigurationApi` (same package as the bridge) now single-type-imports
+  the relocated type so its signatures bind to the L3 class, not the bridge
+  (same JLS 7.5.1 shadowing pattern as the Phase 2 extension impls).
+- Seam R1 unaffected: the updater's single write-side dispatch method moved
+  verbatim, javadoc intact.
+
+### Step 3: factor the duplicated entity logic into `core.entity`
+
+- **New in `org.finos.legend.sdlc.core.entity`**: `EntityAccessOperations`
+  (getEntity / getEntities / getEntityPaths / entity-project-file streaming with
+  predicate filtering), `EntityModificationOperations` (updateEntities diffing,
+  entity-change validation, change→file-operation translation, performChanges),
+  and `EntityProjectFile` — a verbatim transplant of the GitLab implementation
+  (which was identical to the FS one on these paths). Exception-context strings
+  are parameterized: operations take a nullable `referenceInfo` description, so
+  GitLab passes `getReferenceInfo(…)` and FS passes null /
+  `String.valueOf(sourceSpecification)` — pinned messages preserved exactly.
+- **`GitLabEntityApi` and `FileSystemEntityApi` delegate; they do not move.**
+  GitLab keeps: review from/to access contexts (GitLab-native), its
+  `buildException` error translation around every core call, null-validations.
+  FS keeps: its git-tree-walk enumeration variant and its own
+  `EntityProjectFile` with root-directory relativization (including the
+  platform-dependent behavior pinned in Step 1), review contexts unsupported.
+  FS's standard-variant enumeration and all duplicated write logic deleted in
+  favor of core (observable behavior identical — the FS access context, where
+  the Step 1 bugs live, is unchanged).
+- **Core throws `LegendSDLCException`** (base type, framework-free), statuses
+  and messages unchanged. `BaseGitLabApi.processException`'s pass-through
+  branch (and `buildException`'s return type) widened from
+  `LegendSDLCServerException` to the base `LegendSDLCException` so core-thrown
+  exceptions keep their status/message through GitLab's error translation —
+  first instalment of the Phase 2 catch-site audit carry-in. The
+  characterization tests' `assertThrows` were deliberately widened to the base
+  type in the same commit (Phase 2 precedent: thrown *type* may change to the
+  base for relocated code; codes/messages stay pinned; HTTP behavior unchanged
+  since the server maps both types identically).
+- **Documented wrapping-boundary drift** (error-path edges, not pinned
+  behavior): (a) GitLab's `updateEntities` now wraps the whole flow in
+  `buildException` (previously only the inner performChanges compute+submit
+  was wrapped), so a raw non-`LegendSDLCException` failure during the diffing
+  phase — e.g. an unparseable entity file — now surfaces as "Failed to perform
+  changes on …" (500) instead of a raw exception (still 500 via the generic
+  mapper); (b) GitLab's unknown-entity 404 now passes through the identity
+  branch of `buildException` instead of being thrown after the try block —
+  same observable exception; (c) the debug-log lines moved with the logic, so
+  their logger names are now `org.finos.legend.sdlc.core.entity.*`; (d) — the
+  one the characterization net caught — `getEntities` over an unparseable
+  entity file (`excludeInvalid=false`): the L2 deserialization
+  `LegendSDLCException` used to be re-wrapped by `buildException` as "Failed
+  to get entities for <context>: …", and now passes through directly ("Error
+  deserializing entity from file …"; same 500, more precise message, request
+  context lost). Accepted deliberately: the alternative — distinguishing
+  "core-thrown" from "L2-thrown" base exceptions at the GitLab boundary — has
+  no type-level expression, and re-narrowing the pass-through would break the
+  404/400 preservation for core-thrown exceptions. Pin updated in the same
+  commit.
+
+### Step 4: dependency resolution and comparison logic into core
+
+- **`core.dependency.DependencyOperations`**: the transitive upstream walk from
+  `DependenciesApiImpl.searchUpstream`, parameterized over a
+  dependency→configuration resolver. `DependenciesApiImpl` delegates, passing a
+  resolver over its `ProjectConfigurationApi`. **Plan deviation, resolved on
+  the record**: §3.3/§6 say `DependenciesApiImpl` "moves" to L3, but the
+  domain-API interfaces it implements and consumes (`DependenciesApi`,
+  `ProjectApi`, `ProjectConfigurationApi`, `RevisionApi`) are L4 material that
+  stays in the server until Phase 4 — so in Phase 3 the backend-neutral *logic*
+  moves and the api impl shrinks to wiring; the class itself moves in Phase 4
+  with its interfaces. `getDownstreamProjects` stays as-is: its substance is
+  project enumeration + a one-line dependency test; there is no L3-sized logic
+  to extract.
+- **`core.comparison`**: `FileDiff` (backend-neutral file-change description)
+  and `ComparisonOperations` — `newComparison` (the entity-diff assembly
+  factored verbatim from `GitLabComparisonApi`, consuming `FileDiff`s instead
+  of gitlab4j `Diff`s) plus `compare`, the generic two-`FileAccessContext`
+  walking comparison from plan §3.3 (byte-level; no rename detection — a move
+  surfaces as delete+create). `GitLabComparisonApi` keeps its native GitLab
+  compare call and delegates the assembly, translating `Diff` → `FileDiff`.
+  The generic `compare` has no production caller yet (FS/in-memory comparison
+  apis are stubs); it is exercised by the seam-R2 TCK seed and becomes the L3
+  default behind the Phase 4 `AbstractBackend`.
+
+### Step 5: seam S1 — namespaced configuration bags on the L0 model
+
+- `ProjectConfiguration` (L0) gains `getStructureConfiguration()` /
+  `getExtensionConfiguration()` (default empty maps) — the namespaced,
+  version-/extension-scoped option bags of the config-options plan (§4.1–4.2).
+  The two legacy flat booleans are now *defined* as structure-configuration
+  options: `getRunDependencyTests()` / `getProduceShadedServiceJar()` are
+  `@Deprecated` and their interface defaults read the bag, and
+  `SimpleProjectConfiguration` exposes its (still field-stored) booleans
+  through a read-only bag view. **No new top-level config booleans may be
+  added** — new options go in the bags.
+- **Wire format deliberately unchanged**: the bags are `@JsonIgnore`d at the
+  interface, so neither `project.json` (written via L2's mapper over any
+  `ProjectConfiguration` impl) nor REST payloads (Dropwizard bean
+  serialization) gain keys; the flat booleans still serialize top-level from
+  `SimpleProjectConfiguration`'s overriding getters. Migrating storage to the
+  namespaced form (read-fold + write-normalization, §4.7) belongs to the
+  config-options plan. `TestProjectConfigurationSerialization` (first test in
+  the L2 module's new test tree) pins all of this; it is the pin that plan
+  replaces when it lands.
+- **`legend-sdlc-model` gains a `jackson-annotations` dependency** (its first
+  compile dependency) to carry the `@JsonIgnore`. Alternative considered and
+  rejected: keeping L0 annotation-free by scattering `@JsonIgnore` overrides
+  across every implementation (`Simple*`, FS, in-memory, anonymous updater
+  output) plus a mapper mix-in in L2 — covers the file format but not REST
+  serialization of arbitrary impls, and is easy to get wrong for the next
+  implementation. `jackson-annotations` is a small, dependency-free jar and
+  the annotation is additive; noted here because L0 is the stable tier.
+
+### Step 6: seam R2 — TCK seed with the layout invariants
+
+- **`LayoutInvariantsTestSuite`** (abstract, in `legend-sdlc-core`'s test tree,
+  published as a test-jar; package `org.finos.legend.sdlc.core.tck`) expresses
+  the layout-reconciliation plan's invariants as executable contract,
+  parameterized over a `ProjectFileAccessProvider`: **update ≡ create**
+  (updating from an older structure version — V11/V12 seeds — yields
+  byte-identical layouts to a fresh build at the target version, entity
+  migration included) and **reconciling an already-correct project is a
+  no-op** (re-applying the current configuration produces no revision and no
+  file changes). All three invariants **hold today** for the imperative
+  write-side over the in-memory provider (`TestInMemoryLayoutInvariants`).
+  This grows into `legend-sdlc-backend-test-suite` in Phase 4; reconciling
+  structure versions must be certified by the same suite.
+- **`InMemoryProjectFileAccessProvider` + `SimpleInMemoryVCS` moved to the L1
+  module's test-jar** (`org.finos.legend.sdlc.project.files`, git mv from the
+  server test tree): they are the L1 SPI's test double and the TCK's default
+  harness, and Phase 5's in-memory backend builds on them. The server module
+  consumes the test-jar; its tests' imports updated.
+- **Phase 2 leftover found by the TCK**: the V11–V13 structure factories load
+  test-template resources (`project/tests/v4/*.java`) from the classpath, but
+  the resources had stayed in `legend-sdlc-server`'s jar when the factories
+  moved to L2 — invisible until something exercised the factories without the
+  server jar present. Resources moved (git mv) to
+  `legend-sdlc-project-structure`. Related audit note:
+  `MavenProjectStructure.loadTestResourceCode` resolves via the **thread
+  context classloader** — fine under Maven/server, fragile in an embedded/IDE
+  host; added to the §4.5 audit list alongside `PROJECT_STRUCTURE_FACTORY`.
+- **The FS provider does not run the suite yet**: its standard-context
+  enumeration is broken (Step 1 quirks 6–7 — `getFiles` throws on the null
+  revision id, canonical-directory matching never succeeds), so the invariants
+  cannot even be evaluated over it. Certifying the FS backend against the TCK
+  is part of its Phase 5 refit, after those defects are fixed deliberately.
+- `EntityModificationOperations.updateEntities`/`performChanges` signatures
+  widened from `WorkspaceSourceSpecification` to `SourceSpecification` (the L1
+  type): the L1 provider is source-agnostic, the TCK and local tooling edit at
+  project level, and the api delegates pass workspace specs unchanged.
+
+### Phase 3 wrap-up: carry-ins and audit items
+
+- **`ProjectConfigurationUpdater` placement (Phase 2 carry-in)**: resolved — L3
+  (`core.project`), see Step 2. The class moves *again* only in the sense that
+  Phase 4's domain-API interfaces will keep referring to it; the type itself is
+  settled at L3.
+- **`catch (LegendSDLCServerException)` audit (Phase 1/2 carry-in)**: the paths
+  that newly call L3-thrown code are the GitLab entity/comparison delegates —
+  covered by widening `BaseGitLabApi.processException`/`buildException` to the
+  base type (Step 3). A repo-wide sweep finds the only remaining
+  subclass-typed catches are the 8 revision-api sites (GitLab + FS), which
+  Phase 2 already ruled on: they feed subclass-typed exception processors and
+  guard backend-native code that never calls L3. No change.
+- **§4.5 process-global state audit list** (unchanged status, restated):
+  `ProjectStructure.PROJECT_STRUCTURE_FACTORY` (classloader-captured factory
+  at class-init, now in L2) and — added this phase —
+  `MavenProjectStructure.loadTestResourceCode`'s use of the thread context
+  classloader. Both are pre-existing behavior, preserved; they must be
+  addressed before Phase 6 declares L0–L3 embeddable.
+- **Module inventory after Phase 3**: `legend-sdlc-core` (L3) holds
+  `core.entity` (entity read/write over L1+L2), `core.project` (the
+  configuration/structure write-side: `ProjectStructureUpdater` with seam R1's
+  single dispatch point, `ProjectConfigurationUpdater`), `core.dependency`
+  (upstream dependency walking), `core.comparison` (entity-diff assembly +
+  generic walking comparison), and the TCK seed (`core.tck`, test-jar). The
+  GitLab/FS api classes remain in their modules as delegating shells, to move
+  (GitLab) or be refit (FS) in Phases 4–5.
+- **Not done, deliberately**: no Phase 4 API shapes (no `Backend` aggregate,
+  no capability model, no domain-API interface moves — all pending the Phase 4
+  design review); the FS provider's characterized defects are documented, not
+  fixed; the `SourceSpecification` L1/L4 split remains deferred (Phase 4
+  design-review decision, per the Phase 2 record).
+
+**Status: complete** pending the full-reactor verification build recorded in
+the closing commit.
+
+### Correction (2026-07-09, user review): seam S1 implementation reverted
+
+Step 5's implementation is reverted on two user rulings:
+
+1. **`legend-sdlc-model` takes no dependencies.** The `jackson-annotations`
+   dependency (added to `@JsonIgnore` the new bag accessors) is removed; the
+   constraint is now stated in re-architecture §5.
+2. **The bags do not belong at this stage.** They had no consumer in Phase 3,
+   and the entire `@JsonIgnore` apparatus existed only because they arrived
+   *ahead of* their persistence: when the config-options plan introduces them
+   together with §4.2/§4.7 (values persisted from day one), no serialization
+   suppression is needed at all. Landing them early created an artificial
+   interim state and an L0 dependency to hold it up.
+
+What Phase 3 now does for S1 — the seam's actual substance, re-worded in both
+plan docs: the **negative obligation**. No new top-level config booleans; no
+new updater API designed around the existing two flat ones (both were already
+true); a pointed javadoc on the two boolean getters directing new options to
+the future bags. `SimpleProjectConfiguration` and `ProjectConfiguration`
+restored to their pre-Step-5 shape. The L2 wire-format pin
+(`TestProjectConfigurationSerialization`) is kept in slimmed form — the flags
+serialize top-level, present only when set — as the baseline the config-options
+plan deliberately replaces.

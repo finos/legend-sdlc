@@ -569,7 +569,7 @@ not a second migration of `project.json`:
 
 | Seam | Where | Why |
 |---|---|---|
-| **S1 — introduce the namespaced bag when the config model/updater are touched** | L0 `ProjectConfiguration`, L3 updater | The refactor already rewrites these; adding `getStructureConfiguration()`/`getExtensionConfiguration()` (even if only the two existing booleans live there, behind their deprecated getters) avoids re-migrating `project.json` later. Do **not** entrench new flat booleans. |
+| **S1 — keep the config model/updater free of new flat options while the re-architecture rewrites them** | L0 `ProjectConfiguration`, L3 updater | Honored by re-architecture Phase 3 as a negative obligation: no new top-level config booleans, no new updater API around the existing two. The `getStructureConfiguration()`/`getExtensionConfiguration()` bags are introduced by **this plan**, together with their persistence (§4.2/§4.7) - introducing them ahead of persistence would require suppressing their serialization at L0, and `legend-sdlc-model` takes no dependencies (2026-07-09; a first Phase 3 implementation that added `jackson-annotations` for that suppression was reverted). |
 | **S2 — reserve the option-schema method shape on the version/extension SPI** | L2 `ProjectStructureVersionFactory`, `ProjectStructureExtension` | Land `getConfigurationProperties()` defaulting empty so versions/extensions can opt in without an SPI break later. |
 | **S3 — make capability/discovery extensible to option schemas** | L4 discovery endpoint (Phase 4 of re-architecture) | Design the "describe what this structure/extension supports" call so it can also carry option schemas, instead of bolting on a separate endpoint afterward. |
 

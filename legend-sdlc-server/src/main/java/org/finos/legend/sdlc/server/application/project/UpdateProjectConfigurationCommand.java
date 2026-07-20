@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactGeneration;
 import org.finos.legend.sdlc.domain.model.project.configuration.PlatformConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationUpdater;
+import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
 import org.finos.legend.sdlc.project.structure.SimpleArtifactGeneration;
 import org.finos.legend.sdlc.project.structure.SimpleProjectConfiguration;
 import org.finos.legend.sdlc.project.structure.SimpleProjectDependency;
