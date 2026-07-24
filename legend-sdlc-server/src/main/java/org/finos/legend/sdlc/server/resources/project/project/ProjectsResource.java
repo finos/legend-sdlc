@@ -26,8 +26,8 @@ import org.finos.legend.sdlc.server.application.project.CreateProjectCommand;
 import org.finos.legend.sdlc.server.application.project.ImportProjectCommand;
 import org.finos.legend.sdlc.server.application.project.UpdateProjectCommand;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi.ImportReport;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi.ImportReport;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

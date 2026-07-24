@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
-import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.backend.api.backup.BackupApi;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
 import javax.inject.Inject;
 

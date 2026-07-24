@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.user.User;
-import org.finos.legend.sdlc.server.domain.api.user.UserApi;
+import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;

@@ -25,10 +25,10 @@ import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.server.api.entity.FileSystemApiWithFileAccess;
 import org.finos.legend.sdlc.server.api.user.FileSystemUserApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.exception.FSException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
@@ -40,7 +40,7 @@ import java.util.*;
 import javax.inject.Inject;
 import javax.ws.rs.core.Response;
 
-import static org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification.workspaceSourceSpecification;
+import static org.finos.legend.sdlc.project.source.SourceSpecification.workspaceSourceSpecification;
 
 public class FileSystemWorkspaceApi extends FileSystemApiWithFileAccess implements WorkspaceApi
 {

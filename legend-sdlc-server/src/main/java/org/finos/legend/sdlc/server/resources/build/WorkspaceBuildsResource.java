@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.build.Build;
 import org.finos.legend.sdlc.domain.model.build.BuildStatus;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
+import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowsResource;

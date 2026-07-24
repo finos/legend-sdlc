@@ -1,4 +1,4 @@
-// Copyright 2022 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,11 +14,11 @@
 
 package org.finos.legend.sdlc.server.project;
 
-import java.util.List;
-
-public interface ProjectConfigurationStatusReport
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusReport} instead.
+ */
+@Deprecated
+public interface ProjectConfigurationStatusReport extends org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusReport
 {
-    boolean isProjectConfigured();
-
-    List<String> getReviewIds();
 }

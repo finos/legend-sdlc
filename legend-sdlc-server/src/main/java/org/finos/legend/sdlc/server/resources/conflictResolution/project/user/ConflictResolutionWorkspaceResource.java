@@ -17,9 +17,11 @@ package org.finos.legend.sdlc.server.resources.conflictResolution.project.user;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
+import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
@@ -107,7 +109,7 @@ public class ConflictResolutionWorkspaceResource extends BaseResource
         LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");
         executeWithLogging(
                 "accept conflict resolution for user workspace " + workspaceId + " in project " + projectId,
-                () -> this.conflictResolutionApi.acceptConflictResolutionInUserWorkspace(projectId, workspaceId, command)
+                () -> this.conflictResolutionApi.acceptConflictResolution(projectId, WorkspaceSpecification.newWorkspaceSpecification(workspaceId, WorkspaceType.USER), command.getMessage(), command.getEntityChanges(), command.getRevisionId())
         );
     }
 }

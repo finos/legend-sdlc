@@ -27,15 +27,15 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.revision.RevisionAlias;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.PatchSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationConsumer;
-import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.source.PatchSourceSpecification;
+import org.finos.legend.sdlc.project.source.ProjectSourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecificationConsumer;
+import org.finos.legend.sdlc.project.source.VersionSourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSourceConsumer;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
@@ -51,7 +51,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.files.ProjectFiles;
 import org.finos.legend.sdlc.project.files.ProjectPaths;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.tools.IOTools;
 import org.finos.legend.sdlc.tools.StringTools;
 import org.gitlab4j.api.CommitsApi;
@@ -142,7 +142,7 @@ abstract class GitLabApiWithFileAccess extends BaseGitLabApi
         return ProjectStructure.getProjectStructure(projectId, sourceSpecification, revisionId, getProjectFileAccessProvider());
     }
 
-    protected ProjectFileAccessProvider getProjectFileAccessProvider()
+    public ProjectFileAccessProvider getProjectFileAccessProvider()
     {
         return new ProjectFileAccessProvider()
         {

@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,29 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.revision;
 
-import org.finos.legend.sdlc.domain.model.revision.RevisionStatus;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-
 /**
- * Note that all of these APIs support revision ID alias as they all essentially calls getRevision() from RevisionAccessContext
- * which takes into account revision ID alias
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.revision.RevisionApi} instead.
  */
-public interface RevisionApi
+@Deprecated
+public interface RevisionApi extends org.finos.legend.sdlc.backend.api.revision.RevisionApi
 {
-    RevisionAccessContext getRevisionContext(String projectId, SourceSpecification sourceSpec);
-
-    RevisionAccessContext getPackageRevisionContext(String projectId, SourceSpecification sourceSpec, String packagePath);
-
-    RevisionAccessContext getEntityRevisionContext(String projectId, SourceSpecification sourceSpec, String entityPath);
-
-    RevisionStatus getRevisionStatus(String projectId, String revisionId);
-
-    // Deprecated APIs
-
-    @Deprecated
-    default RevisionStatus getRevisionStatus(String projectId, VersionId patchReleaseVersionId, String revisionId)
-    {
-        return getRevisionStatus(projectId, revisionId);
-    }
 }

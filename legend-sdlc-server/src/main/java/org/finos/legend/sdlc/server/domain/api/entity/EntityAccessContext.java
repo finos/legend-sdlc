@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,22 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.entity;
 
-import org.finos.legend.sdlc.domain.model.entity.Entity;
-
-import java.util.List;
-import java.util.Map;
-import java.util.function.Predicate;
-
-public interface EntityAccessContext
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.entity.EntityAccessContext} instead.
+ */
+@Deprecated
+public interface EntityAccessContext extends org.finos.legend.sdlc.backend.api.entity.EntityAccessContext
 {
-    Entity getEntity(String path);
-
-    default List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
-    {
-        return getEntities(entityPathPredicate, classifierPathPredicate, entityContentPredicate, false);
-    }
-
-    List<Entity> getEntities(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid);
-
-    List<String> getEntityPaths(Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate);
 }

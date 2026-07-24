@@ -15,45 +15,34 @@
 package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
+import com.google.inject.Provides;
 import com.google.inject.Scopes;
+import com.google.inject.servlet.RequestScoped;
+import org.finos.legend.sdlc.backend.api.backup.BackupApi;
+import org.finos.legend.sdlc.backend.api.build.BuildApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
+import org.finos.legend.sdlc.backend.api.issue.IssueApi;
+import org.finos.legend.sdlc.backend.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.review.ReviewApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.backend.api.spi.BackendSession;
+import org.finos.legend.sdlc.backend.api.user.UserApi;
+import org.finos.legend.sdlc.backend.api.version.VersionApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
+import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.depot.api.DepotMetadataApi;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
-import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
-import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.user.UserApi;
-import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabBackupApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabBuildApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabComparisonApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabConflictResolutionApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabEntityApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabIssueApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabProjectConfigurationApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabReviewApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabRevisionApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabUserApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabVersionApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabWorkspaceApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitLabPatchApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowApi;
-import org.finos.legend.sdlc.server.gitlab.api.GitlabWorkflowJobApi;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
@@ -73,24 +62,8 @@ public class BaseModule extends AbstractBaseModule
     @Override
     protected void configureApis(Binder binder)
     {
-        if (BaseLegendSDLCServer.GITLAB_MODE.equals(this.server.getMode()))
+        if (getConfiguration().getGitLabConfiguration() != null)
         {
-            binder.bind(ProjectApi.class).to(GitLabProjectApi.class);
-            binder.bind(ProjectConfigurationApi.class).to(GitLabProjectConfigurationApi.class);
-            binder.bind(UserApi.class).to(GitLabUserApi.class);
-            binder.bind(IssueApi.class).to(GitLabIssueApi.class);
-            binder.bind(EntityApi.class).to(GitLabEntityApi.class);
-            binder.bind(WorkspaceApi.class).to(GitLabWorkspaceApi.class);
-            binder.bind(PatchApi.class).to(GitLabPatchApi.class);
-            binder.bind(RevisionApi.class).to(GitLabRevisionApi.class);
-            binder.bind(ReviewApi.class).to(GitLabReviewApi.class);
-            binder.bind(BuildApi.class).to(GitLabBuildApi.class);
-            binder.bind(VersionApi.class).to(GitLabVersionApi.class);
-            binder.bind(ComparisonApi.class).to(GitLabComparisonApi.class);
-            binder.bind(ConflictResolutionApi.class).to(GitLabConflictResolutionApi.class);
-            binder.bind(BackupApi.class).to(GitLabBackupApi.class);
-            binder.bind(WorkflowApi.class).to(GitlabWorkflowApi.class);
-            binder.bind(WorkflowJobApi.class).to(GitlabWorkflowJobApi.class);
             binder.bind(GitLabUserContext.class);
             binder.bind(GitLabAuthResource.class);
             binder.bind(GitLabAuthCheckResource.class);
@@ -101,9 +74,127 @@ public class BaseModule extends AbstractBaseModule
         configureMetadataApi(binder);
     }
 
+    @Override
+    protected void bindUserContext(Binder binder)
+    {
+        // The backend session context wraps the UserContext; in a GitLab deployment it must be the GitLab
+        // user context (the GitLab backend unwraps it until its extraction re-plumbs auth through the SPI)
+        if (getConfiguration().getGitLabConfiguration() != null)
+        {
+            binder.bind(UserContext.class).to(GitLabUserContext.class);
+        }
+        else
+        {
+            super.bindUserContext(binder);
+        }
+    }
+
     protected void configureMetadataApi(Binder binder)
     {
         binder.bind(MetadataApi.class).to(DepotMetadataApi.class);
+    }
+
+    @Provides
+    @RequestScoped
+    public BackendSession provideBackendSession(Backend backend, UserContext userContext)
+    {
+        return backend.newSession(new ServletBackendSessionContext(userContext));
+    }
+
+    @Provides
+    public ProjectApi provideProjectApi(BackendSession session)
+    {
+        return session.getProjectApi();
+    }
+
+    @Provides
+    public ProjectConfigurationApi provideProjectConfigurationApi(BackendSession session)
+    {
+        return session.getProjectConfigurationApi();
+    }
+
+    @Provides
+    public WorkspaceApi provideWorkspaceApi(BackendSession session)
+    {
+        return session.getWorkspaceApi();
+    }
+
+    @Provides
+    public RevisionApi provideRevisionApi(BackendSession session)
+    {
+        return session.getRevisionApi();
+    }
+
+    @Provides
+    public EntityApi provideEntityApi(BackendSession session)
+    {
+        return session.getEntityApi();
+    }
+
+    @Provides
+    public ComparisonApi provideComparisonApi(BackendSession session)
+    {
+        return session.getComparisonApi();
+    }
+
+    @Provides
+    public UserApi provideUserApi(BackendSession session)
+    {
+        return session.getUserApi();
+    }
+
+    @Provides
+    public ReviewApi provideReviewApi(BackendSession session)
+    {
+        return session.getReviewApi();
+    }
+
+    @Provides
+    public VersionApi provideVersionApi(BackendSession session)
+    {
+        return session.getVersionApi();
+    }
+
+    @Provides
+    public PatchApi providePatchApi(BackendSession session)
+    {
+        return session.getPatchApi();
+    }
+
+    @Provides
+    public WorkflowApi provideWorkflowApi(BackendSession session)
+    {
+        return session.getWorkflowApi();
+    }
+
+    @Provides
+    public WorkflowJobApi provideWorkflowJobApi(BackendSession session)
+    {
+        return session.getWorkflowJobApi();
+    }
+
+    @Provides
+    public BuildApi provideBuildApi(BackendSession session)
+    {
+        return session.getBuildApi();
+    }
+
+    @Provides
+    public BackupApi provideBackupApi(BackendSession session)
+    {
+        return session.getBackupApi();
+    }
+
+    @Provides
+    public ConflictResolutionApi provideConflictResolutionApi(BackendSession session)
+    {
+        return session.getConflictResolutionApi();
+    }
+
+    @Provides
+    public IssueApi provideIssueApi(BackendSession session)
+    {
+        return session.getIssueApi();
     }
 
     private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)

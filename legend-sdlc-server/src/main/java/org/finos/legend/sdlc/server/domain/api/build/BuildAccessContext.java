@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,15 +14,11 @@
 
 package org.finos.legend.sdlc.server.domain.api.build;
 
-import org.finos.legend.sdlc.domain.model.build.Build;
-import org.finos.legend.sdlc.domain.model.build.BuildStatus;
-
-import java.util.List;
-
-public interface BuildAccessContext
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.build.BuildAccessContext} instead.
+ */
+@Deprecated
+public interface BuildAccessContext extends org.finos.legend.sdlc.backend.api.build.BuildAccessContext
 {
-    Build getBuild(String buildId);
-
-    // TODO add temporal constraints
-    List<Build> getBuilds(Iterable<String> revisionIds, Iterable<BuildStatus> statuses, Integer limit);
 }

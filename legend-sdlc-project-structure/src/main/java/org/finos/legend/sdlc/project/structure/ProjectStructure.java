@@ -41,8 +41,8 @@ import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.serialization.EntitySerializers;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
@@ -78,6 +78,17 @@ public abstract class ProjectStructure
             .build();
 
     private static final ProjectStructureFactory PROJECT_STRUCTURE_FACTORY = ProjectStructureFactory.newFactory(ProjectStructure.class.getClassLoader());
+
+    /**
+     * The default factory, loaded from this class's classloader at initialization (on the re-architecture
+     * section 4.5 process-global-state audit list).
+     *
+     * @return default project structure factory
+     */
+    public static ProjectStructureFactory getDefaultProjectStructureFactory()
+    {
+        return PROJECT_STRUCTURE_FACTORY;
+    }
 
     private static final Pattern VALID_ARTIFACT_ID_PATTERN = Pattern.compile("[a-z][a-z\\d_]*+(-[a-z][a-z\\d_]*+)*+");
     private static final Pattern STRICT_VERSION_ID_PATTERN = Pattern.compile("((0|([1-9]\\d*+))\\.){2}(0|([1-9]\\d*+))");

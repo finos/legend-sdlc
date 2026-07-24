@@ -19,13 +19,13 @@ import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.PatchWorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSource;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSourceConsumer;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
+import org.finos.legend.sdlc.project.workspace.PatchWorkspaceSource;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSource;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSourceConsumer;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
@@ -34,7 +34,7 @@ import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.CallUntil;
 import org.gitlab4j.api.CommitsApi;
 import org.gitlab4j.api.Constants;
@@ -420,7 +420,7 @@ public class GitLabWorkspaceApi extends GitLabApiWithFileAccess implements Works
         String projectTag = this.getGitLabConfiguration().getProjectTag();
         if (tags.contains(projectTag + "_sandbox") && tags.contains(projectTag))
         {
-            this.projectApi.configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
+            ((GitLabProjectApi) this.projectApi).configureProjectInWorkspace(gitLabProjectId, ProjectType.MANAGED, sandboxGroupId, sandboxArtifactId, workspaceSpecification);
         }
         return fromWorkspaceBranchName(projectId, branch.getName());
     }
