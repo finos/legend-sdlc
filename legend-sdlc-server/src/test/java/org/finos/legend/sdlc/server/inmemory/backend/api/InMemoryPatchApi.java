@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.server.application.version.CreateVersionCommand;
-import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 

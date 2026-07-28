@@ -18,7 +18,7 @@ import org.eclipse.collections.api.factory.Lists;
 import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.api.map.ImmutableMap;
 import org.finos.legend.sdlc.domain.model.user.User;
-import org.finos.legend.sdlc.server.domain.api.user.UserApi;
+import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.server.domain.model.user.FileSystemUser;
 
 import javax.inject.Inject;

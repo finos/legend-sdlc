@@ -15,7 +15,9 @@
 package org.finos.legend.sdlc.server.startup;
 
 import com.google.inject.Binder;
+import com.google.inject.Provides;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.server.BaseServer;
 import org.finos.legend.sdlc.server.api.backup.FileSystemBackupApi;
 import org.finos.legend.sdlc.server.api.build.FileSystemBuildApi;
@@ -38,25 +40,25 @@ import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.FileSystemMetadataApi;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
-import org.finos.legend.sdlc.server.domain.api.backup.BackupApi;
-import org.finos.legend.sdlc.server.domain.api.build.BuildApi;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
-import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.backup.BackupApi;
+import org.finos.legend.sdlc.backend.api.build.BuildApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
-import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.review.ReviewApi;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
+import org.finos.legend.sdlc.backend.api.issue.IssueApi;
+import org.finos.legend.sdlc.backend.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.review.ReviewApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
-import org.finos.legend.sdlc.server.domain.api.user.UserApi;
-import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowJobApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceApi;
+import org.finos.legend.sdlc.backend.api.user.UserApi;
+import org.finos.legend.sdlc.backend.api.version.VersionApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
+import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 import org.finos.legend.sdlc.server.project.config.ProjectPlatformsConfiguration;
@@ -185,7 +187,7 @@ import org.finos.legend.sdlc.server.resources.workspace.patch.group.PatchesGroup
 import org.finos.legend.sdlc.server.resources.workspace.patch.user.PatchesWorkspacesResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.group.GroupWorkspacesResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 
 import java.io.File;
 import java.util.Collections;
@@ -417,6 +419,18 @@ public class FSModule extends DropwizardAwareModule<LegendSDLCServerFSConfigurat
         binder.bind(PatchesGroupWorkspaceRevisionProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceProjectConfigurationResource.class);
         binder.bind(PatchesWorkspaceRevisionProjectConfigurationResource.class);
+    }
+
+    /**
+     * Interim: the FS server has not yet been refit onto the backend SPI (that is the next phase); this
+     * binding exists so resources that inject {@code Provider<Backend>} (the discovery endpoints) resolve. Exercising
+     * it fails until the refit. Deliberately not {@code @Singleton}: eager singleton instantiation at injector
+     * creation would turn the throw into a server startup failure.
+     */
+    @Provides
+    public Backend provideBackend()
+    {
+        throw new UnsupportedOperationException("The filesystem server does not yet implement the backend SPI");
     }
 
     public void initRootDirectory(FSConfiguration fsConfiguration)

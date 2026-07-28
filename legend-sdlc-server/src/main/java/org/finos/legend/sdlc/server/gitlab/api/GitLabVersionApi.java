@@ -16,14 +16,14 @@ package org.finos.legend.sdlc.server.gitlab.api;
 
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.version.NewVersionType;
-import org.finos.legend.sdlc.server.domain.api.version.VersionApi;
+import org.finos.legend.sdlc.backend.api.version.NewVersionType;
+import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.PagerTools;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 
 import java.util.Comparator;
 import java.util.List;

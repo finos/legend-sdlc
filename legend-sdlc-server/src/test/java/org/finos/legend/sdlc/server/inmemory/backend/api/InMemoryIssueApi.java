@@ -15,7 +15,7 @@
 package org.finos.legend.sdlc.server.inmemory.backend.api;
 
 import org.finos.legend.sdlc.domain.model.issue.Issue;
-import org.finos.legend.sdlc.server.domain.api.issue.IssueApi;
+import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 
 import javax.inject.Inject;
 import java.util.List;

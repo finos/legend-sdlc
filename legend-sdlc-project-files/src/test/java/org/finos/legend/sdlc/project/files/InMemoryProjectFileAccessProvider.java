@@ -20,12 +20,12 @@ import org.eclipse.collections.api.map.MutableMap;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.source.ProjectSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecificationVisitor;
-import org.finos.legend.sdlc.server.domain.api.project.source.VersionSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.source.ProjectSourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecificationVisitor;
+import org.finos.legend.sdlc.project.source.VersionSourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
 import java.io.InputStream;
 import java.time.Instant;

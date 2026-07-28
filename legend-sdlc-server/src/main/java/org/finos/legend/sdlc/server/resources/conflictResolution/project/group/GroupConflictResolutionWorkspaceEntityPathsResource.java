@@ -18,9 +18,9 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 

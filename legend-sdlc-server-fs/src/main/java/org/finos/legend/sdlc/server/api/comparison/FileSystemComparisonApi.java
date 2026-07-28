@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.api.comparison;
 
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.exception.FSException;
-import org.finos.legend.sdlc.server.domain.api.comparison.ComparisonApi;
+import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 
 import javax.inject.Inject;
 

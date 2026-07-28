@@ -14,22 +14,23 @@
 
 package org.finos.legend.sdlc.server.gitlab.api;
 
-import org.finos.legend.sdlc.server.application.entity.PerformChangesCommand;
-import org.finos.legend.sdlc.server.domain.api.conflictResolution.ConflictResolutionApi;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
+import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
 import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
 import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.server.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.Branch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import javax.inject.Inject;
 
 public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess implements ConflictResolutionApi
@@ -236,7 +237,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
      * 7. Remove backup branch `w1`
      */
     @Override
-    public void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, PerformChangesCommand command)
+    public void acceptConflictResolution(String projectId, WorkspaceSpecification workspaceSpecification, String message, List<? extends EntityChange> entityChanges, String revisionId)
     {
         LegendSDLCServerException.validateNonNull(projectId, "projectId may not be null");
         LegendSDLCServerException.validateNonNull(workspaceSpecification, "workspace specification may not be null");
@@ -272,7 +273,7 @@ public class GitLabConflictResolutionApi extends GitLabApiWithFileAccess impleme
         // Perform entity changes to resolve conflicts
         try
         {
-            this.entityApi.getEntityModificationContext(projectId, conflictResWorkspaceSpec.getSourceSpecification()).performChanges(command.getEntityChanges(), command.getRevisionId(), command.getMessage());
+            this.entityApi.getEntityModificationContext(projectId, conflictResWorkspaceSpec.getSourceSpecification()).performChanges(entityChanges, revisionId, message);
         }
         catch (Exception e)
         {

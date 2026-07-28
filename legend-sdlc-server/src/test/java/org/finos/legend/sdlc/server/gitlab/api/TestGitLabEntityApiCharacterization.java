@@ -21,13 +21,13 @@ import org.finos.legend.sdlc.domain.model.entity.change.EntityChange;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityApi;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityModificationContext;
+import org.finos.legend.sdlc.backend.api.entity.EntityAccessContext;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityModificationContext;
 import org.finos.legend.sdlc.core.project.ProjectConfigurationUpdater;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.project.source.WorkspaceSourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
+import org.finos.legend.sdlc.project.source.WorkspaceSourceSpecification;
+import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
@@ -75,7 +75,7 @@ public class TestGitLabEntityApiCharacterization
         }
 
         @Override
-        protected ProjectFileAccessProvider getProjectFileAccessProvider()
+        public ProjectFileAccessProvider getProjectFileAccessProvider()
         {
             return this.fileAccessProvider;
         }

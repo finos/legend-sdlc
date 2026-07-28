@@ -55,6 +55,17 @@ public class ProjectStructureFactory
         return this.projectStructureFactories.containsKey(version);
     }
 
+    /**
+     * Get the version factory for a supported structure version; null if the version is not supported.
+     *
+     * @param version project structure version
+     * @return version factory or null
+     */
+    public ProjectStructureVersionFactory getVersionFactory(int version)
+    {
+        return this.projectStructureFactories.get(version);
+    }
+
     public ProjectStructure newProjectStructure(ProjectConfiguration projectConfiguration, ProjectStructurePlatformExtensions projectStructurePlatformExtensions)
     {
         int version = getVersion(projectConfiguration);

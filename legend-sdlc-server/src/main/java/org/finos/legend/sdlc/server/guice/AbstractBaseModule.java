@@ -14,9 +14,12 @@
 
 package org.finos.legend.sdlc.server.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Binder;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
+import io.dropwizard.jackson.Jackson;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
@@ -24,7 +27,12 @@ import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.auth.AuthClientInjector;
-import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
+import org.finos.legend.sdlc.backend.api.spi.BackendEnvironment;
+import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
+import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.domain.api.dependency.DependenciesApiImpl;
 import org.finos.legend.sdlc.server.domain.api.test.TestModelBuilder;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
@@ -224,7 +232,7 @@ import org.finos.legend.sdlc.server.resources.revision.project.user.WorkspaceRev
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowJobsResource;
 import org.finos.legend.sdlc.server.resources.workflow.project.user.WorkspaceWorkflowsResource;
 import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesResource;
-import org.finos.legend.sdlc.server.tools.BackgroundTaskProcessor;
+import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
@@ -236,6 +244,7 @@ import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.Optional;
 import javax.inject.Named;
 
@@ -244,6 +253,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     protected final BaseLegendSDLCServer<?> server;
     protected ProjectStructureExtensionProvider extensionProvider;
     private AuthClientInjector authClientInjector;
+    private volatile Backend backend;
 
     public AbstractBaseModule(BaseLegendSDLCServer<?> server)
     {
@@ -256,7 +266,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         configureCommonApis(binder);
         configureApis(binder);
 
-        binder.bind(UserContext.class);
+        bindUserContext(binder);
         binder.bind(TestModelBuilder.class);
         binder.bind(ProjectStructureConfiguration.class).toProvider(this::getProjectStructureConfiguration);
         binder.bind(ProjectStructureExtensionProvider.class).toProvider(this::getProjectStructureExtensionProvider);
@@ -469,6 +479,95 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     private void configureCommonApis(Binder binder)
     {
         binder.bind(DependenciesApi.class).to(DependenciesApiImpl.class);
+    }
+
+    @Provides
+    @Singleton
+    public BackendEnvironment provideBackendEnvironment(ProjectStructureExtensionProvider extensionProvider, ProjectStructurePlatformExtensions platformExtensions, BackgroundTaskProcessor taskProcessor, ProjectStructureConfiguration projectStructureConfiguration)
+    {
+        ObjectMapper objectMapper = Jackson.newObjectMapper();
+        return new BackendEnvironment()
+        {
+            @Override
+            public ObjectMapper getObjectMapper()
+            {
+                return objectMapper;
+            }
+
+            @Override
+            public BackgroundTaskProcessor getTaskProcessor()
+            {
+                return taskProcessor;
+            }
+
+            @Override
+            public ProjectStructureExtensionProvider getProjectStructureExtensionProvider()
+            {
+                return extensionProvider;
+            }
+
+            @Override
+            public ProjectStructurePlatformExtensions getProjectStructurePlatformExtensions()
+            {
+                return platformExtensions;
+            }
+
+            @Override
+            public <T> T getService(Class<T> serviceType)
+            {
+                return (serviceType == ProjectStructureConfiguration.class) ? serviceType.cast(projectStructureConfiguration) : null;
+            }
+        };
+    }
+
+    /**
+     * The deployment's backend: built once, on first use — deliberately not an eager {@code @Singleton}. The
+     * injector is created with eager singleton instantiation in the bundle run phase, and a configuration
+     * without a backend (e.g. the in-memory test servers, pending their own backend module) must still yield a
+     * valid injector; resources inject {@code Provider<Backend>} and only a request that actually exercises the
+     * backend may fail.
+     *
+     * @param environment backend environment
+     * @return backend
+     */
+    @Provides
+    public Backend provideBackend(BackendEnvironment environment)
+    {
+        Backend localBackend = this.backend;
+        if (localBackend == null)
+        {
+            synchronized (this)
+            {
+                localBackend = this.backend;
+                if (localBackend == null)
+                {
+                    this.backend = localBackend = buildBackend(environment);
+                }
+            }
+        }
+        return localBackend;
+    }
+
+    private Backend buildBackend(BackendEnvironment environment)
+    {
+        BackendConfiguration backendConfiguration = getConfiguration().getBackendConfiguration();
+        if (backendConfiguration == null)
+        {
+            throw new LegendSDLCServerException("No backend configured: expected a \"backend\" configuration section (or a legacy \"gitLab\" section)");
+        }
+        for (BackendFactory factory : ServiceLoader.load(BackendFactory.class))
+        {
+            if (factory.getConfigurationClass().isInstance(backendConfiguration))
+            {
+                return factory.build(backendConfiguration, environment);
+            }
+        }
+        throw new LegendSDLCServerException("No backend factory found for configuration of type " + backendConfiguration.getClass().getName());
+    }
+
+    protected void bindUserContext(Binder binder)
+    {
+        binder.bind(UserContext.class);
     }
 
     protected abstract void configureApis(Binder binder);

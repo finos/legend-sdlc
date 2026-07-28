@@ -20,7 +20,7 @@ import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 

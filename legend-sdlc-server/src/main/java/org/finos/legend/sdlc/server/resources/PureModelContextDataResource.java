@@ -19,7 +19,7 @@ import org.finos.legend.engine.protocol.pure.v1.model.context.AlloySDLC;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.protocol.pure.v1.PureModelContextDataBuilder;
-import org.finos.legend.sdlc.server.domain.api.entity.EntityAccessContext;
+import org.finos.legend.sdlc.backend.api.entity.EntityAccessContext;
 
 public abstract class PureModelContextDataResource extends BaseResource
 {

@@ -1,4 +1,4 @@
-// Copyright 2020 Goldman Sachs
+// Copyright 2026 Goldman Sachs
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,87 +14,23 @@
 
 package org.finos.legend.sdlc.server.domain.api.dependency;
 
-import org.eclipse.collections.api.factory.Sets;
-import org.eclipse.collections.impl.utility.Iterate;
-import org.finos.legend.sdlc.core.dependency.DependencyOperations;
-import org.finos.legend.sdlc.domain.model.project.Project;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
-import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectApi;
-import org.finos.legend.sdlc.server.domain.api.project.ProjectConfigurationApi;
-import org.finos.legend.sdlc.server.domain.api.project.source.SourceSpecification;
-import org.finos.legend.sdlc.server.domain.api.revision.RevisionApi;
+import org.finos.legend.sdlc.backend.api.dependency.DefaultDependenciesApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.Set;
 
-public class DependenciesApiImpl implements DependenciesApi
+/**
+ * @deprecated Retained temporarily for backward compatibility. Use
+ * {@link org.finos.legend.sdlc.backend.api.dependency.DefaultDependenciesApi} instead.
+ */
+@Deprecated
+public class DependenciesApiImpl extends DefaultDependenciesApi
 {
-    private final ProjectApi projectApi;
-    private final ProjectConfigurationApi projectConfigurationApi;
-    private final RevisionApi revisionApi;
-
     @Inject
     public DependenciesApiImpl(ProjectApi projectApi, ProjectConfigurationApi projectConfigurationApi, RevisionApi revisionApi)
     {
-        this.projectApi = projectApi;
-        this.projectConfigurationApi = projectConfigurationApi;
-        this.revisionApi = revisionApi;
-    }
-
-    @Override
-    public Set<ProjectDependency> getWorkspaceRevisionUpstreamProjects(String projectId, SourceSpecification sourceSpecification, String revisionId, boolean transitive)
-    {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getWorkspaceRevisionProjectConfiguration(projectId, sourceSpecification, revisionId);
-        return searchUpstream(projectConfiguration, transitive);
-    }
-
-    @Override
-    public Set<ProjectDependency> getProjectRevisionUpstreamProjects(String projectId, VersionId patchReleaseVersionId, String revisionId, boolean transitive)
-    {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(projectId, (patchReleaseVersionId == null) ? SourceSpecification.projectSourceSpecification() : SourceSpecification.patchSourceSpecification(patchReleaseVersionId), revisionId);
-        return searchUpstream(projectConfiguration, transitive);
-    }
-
-    @Override
-    public Set<ProjectDependency> getProjectVersionUpstreamProjects(String projectId, String versionId, boolean transitive)
-    {
-        ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(projectId, SourceSpecification.versionSourceSpecification(versionId), versionId);
-        return searchUpstream(projectConfiguration, transitive);
-    }
-
-    @Override
-    public Set<ProjectRevision> getDownstreamProjects(String projectId)
-    {
-        /*
-            TODO : Maybe enable ElasticSearch for Gitlab https://docs.gitlab.com/ee/integration/elasticsearch.html ??
-        */
-        List<Project> projects = this.projectApi.getProjects(false,  // false because downstream projects might not be owned by the current user
-                null, null, null, null);
-
-        Set<ProjectRevision> results = Sets.mutable.empty();
-        for (Project otherProject : projects)
-        {
-            String otherProjectId = otherProject.getProjectId();
-            if (!projectId.equals(otherProjectId))
-            {
-                Revision otherProjectRevision = this.revisionApi.getRevisionContext(otherProjectId, SourceSpecification.projectSourceSpecification()).getCurrentRevision();
-                ProjectConfiguration projectConfiguration = this.projectConfigurationApi.getProjectConfiguration(otherProjectId, SourceSpecification.projectSourceSpecification(), otherProjectRevision.getId());
-                if (Iterate.anySatisfy(projectConfiguration.getProjectDependencies(), d -> projectId.equals(d.getProjectId())))
-                {
-                    results.add(new ProjectRevision(otherProject.getProjectId(), otherProjectRevision.getId()));
-                }
-            }
-        }
-        return results;
-    }
-
-    private Set<ProjectDependency> searchUpstream(ProjectConfiguration rootProjectConfiguration, boolean transitive)
-    {
-        return DependencyOperations.getUpstreamDependencies(rootProjectConfiguration, transitive,
-                dependency -> this.projectConfigurationApi.getProjectConfiguration(dependency.getProjectId(), SourceSpecification.versionSourceSpecification(dependency.getVersionId())));
+        super(projectApi, projectConfigurationApi, revisionApi);
     }
 }

@@ -19,7 +19,7 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
-import org.finos.legend.sdlc.server.domain.api.workflow.WorkflowApi;
+import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import javax.inject.Inject;
