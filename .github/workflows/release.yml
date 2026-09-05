@@ -61,22 +61,34 @@ jobs:
           gpg-private-key: ${{ secrets.CI_GPG_PRIVATE_KEY }}
           gpg-passphrase: CI_GPG_PASSPHRASE
 
-      - name: Compute next development version
-        run: |
-          releaseVersion=${{ github.event.inputs.releaseVersion }}
-          n=${releaseVersion//[!0-9]/ }
-          a=(${n//\./ })
-          nextPatch=$((${a[2]} + 1))
-          developmentVersion="${a[0]}.${a[1]}.${nextPatch}-SNAPSHOT"
-          echo "DEVELOPMENT_VERSION=${developmentVersion}" >> $GITHUB_ENV
-
       - name: Collect Workflow Telemetry
         uses: runforesight/workflow-telemetry-action@v1
         with:
           theme: dark
 
-      - name: Prepare release
-        run: mvn -B -DpreparationGoals=clean release:prepare -DreleaseVersion=${{ github.event.inputs.releaseVersion }} -DdevelopmentVersion=${{ env.DEVELOPMENT_VERSION }} -P release
+      - name: Build and deploy release
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
+        run: mvn -B -e -Dorg.slf4j.simpleLogger.defaultLogLevel=${{ github.event.inputs.logLevel }} -Drevision="${RELEASE_VERSION}" deploy -P release,docker
 
-      - name: Perform release
-        run: mvn -Dorg.slf4j.simpleLogger.defaultLogLevel=${{ github.event.inputs.logLevel }} -B release:perform -P release,docker
+      - name: Create and push git tag
+        env:
+          TAG: ${{ github.event.repository.name }}-${{ github.event.inputs.releaseVersion }}
+        run: |
+          set -euo pipefail
+          git tag "${TAG}"
+          git push origin "refs/tags/${TAG}"
+
+      - name: Compute and set next SNAPSHOT
+        env:
+          RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
+        run: |
+          set -euo pipefail
+          IFS=. read -r major minor patch <<< "${RELEASE_VERSION}"
+          nextSnapshot="${major}.${minor}.$((patch + 1))-SNAPSHOT"
+          git fetch origin "${GITHUB_REF_NAME}"
+          git checkout -B "${GITHUB_REF_NAME}" "origin/${GITHUB_REF_NAME}"
+          sed -i "s|<revision>.*</revision>|<revision>${nextSnapshot}</revision>|" pom.xml
+          git add pom.xml
+          git commit -m "Bump version to ${nextSnapshot}"
+          git push origin "${GITHUB_REF_NAME}"
