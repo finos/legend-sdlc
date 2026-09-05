@@ -40,6 +40,21 @@ jobs:
           git config --global user.email "37706051+finos-admin@users.noreply.github.com"
           git config --global user.name "FINOS Administrator"
 
+      - name: Check release version is unused
+        env:
+          RELEASE_VERSION: ${{ github.event.client_payload.releaseVersion }}
+          TAG: ${{ github.event.repository.name }}-${{ github.event.client_payload.releaseVersion }}
+        run: |
+          set -euo pipefail
+          if ! [[ "${RELEASE_VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::releaseVersion must be MAJOR.MINOR.PATCH; got '${RELEASE_VERSION}'."
+            exit 1
+          fi
+          if git ls-remote --exit-code origin "refs/tags/${TAG}" > /dev/null 2>&1; then
+            echo "::error::Tag ${TAG} already exists; ${RELEASE_VERSION} has been released."
+            exit 1
+          fi
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
