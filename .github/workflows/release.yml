@@ -36,13 +36,15 @@ on:
         - debug
 
 jobs:
-  release:
+  prepare:
+    name: Prepare
+    # Validation only, and it runs before `verify` so that a typo in
+    # releaseVersion or a branch that has moved costs seconds rather than a
+    # full test matrix.
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo
         uses: actions/checkout@v6
-        with:
-          token: ${{ secrets.FINOS_GITHUB_TOKEN }}
 
       - name: Configure git
         run: |
@@ -103,6 +105,35 @@ jobs:
             exit 1
           fi
 
+  verify:
+    # The build-once, test-on-every-JDK pipeline, shared with `Build CI` so
+    # that a release is tested exactly the way ordinary CI tests. Pinned to
+    # the commit this run was dispatched for, which `prepare` has just
+    # confirmed is still the branch tip.
+    needs: prepare
+    uses: ./.github/workflows/build-and-test.yml
+    with:
+      ref: ${{ github.sha }}
+      # A release always exercises every supported JDK, whatever branch it
+      # was cut from.
+      jdks: '[25, 21, 17, 11]'
+    secrets: inherit
+
+  release:
+    # Publish only once every JDK has gone green against this commit.
+    needs: [prepare, verify]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.FINOS_GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config --global user.email "37706051+finos-admin@users.noreply.github.com"
+          git config --global user.name "FINOS Administrator"
+
       - name: Set up JDK
         uses: actions/setup-java@v5
         with:
@@ -140,6 +171,10 @@ jobs:
           [ "${count}" -gt 0 ]
 
       - name: Build and deploy release
+        # Tests are skipped: the `verify` job already ran the whole suite on
+        # every supported JDK against this exact commit, so this build only
+        # needs to compile, sign, package and publish.
+        #
         # `clean` on a checkout nothing has built yet is a no-op, and that is
         # the point: it keeps what gets published independent of whatever
         # steps this job grows above it. release:perform got the same
@@ -147,7 +182,7 @@ jobs:
         env:
           RELEASE_VERSION: ${{ github.event.inputs.releaseVersion }}
           LOG_LEVEL: ${{ github.event.inputs.logLevel }}
-        run: mvn -B -e -Dorg.slf4j.simpleLogger.defaultLogLevel="${LOG_LEVEL}" -Drevision="${RELEASE_VERSION}" clean deploy -P release,docker
+        run: mvn -B -e -DskipTests -Dorg.slf4j.simpleLogger.defaultLogLevel="${LOG_LEVEL}" -Drevision="${RELEASE_VERSION}" clean deploy -P release,docker
 
       - name: Create and push git tag
         env:
