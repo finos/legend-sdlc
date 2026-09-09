@@ -40,6 +40,20 @@ jobs:
           git config --global user.email "37706051+finos-admin@users.noreply.github.com"
           git config --global user.name "FINOS Administrator"
 
+      - name: Check the release branch
+        run: |
+          set -euo pipefail
+          # Both the stack-version commit and the version bump below commit
+          # onto this branch, so it has to still be where it was when the run
+          # started. Fail here, before anything is built or published. This is
+          # not the only guard: both pushes are plain and never forced, so git
+          # still rejects them if the branch moves later in the run.
+          tip="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
+          if [ "${tip}" != "${GITHUB_SHA}" ]; then
+            echo "::error::${GITHUB_REF_NAME} moved from ${GITHUB_SHA} to ${tip} after this run was dispatched. Nothing has been published; dispatch the release again."
+            exit 1
+          fi
+
       - name: Check release version is unused
         env:
           RELEASE_VERSION: ${{ github.event.client_payload.releaseVersion }}
@@ -52,6 +66,23 @@ jobs:
           fi
           if git ls-remote --exit-code origin "refs/tags/${TAG}" > /dev/null 2>&1; then
             echo "::error::Tag ${TAG} already exists; ${RELEASE_VERSION} has been released."
+            exit 1
+          fi
+          # The branch has to be on a snapshot, and the release must not go
+          # backwards from it. The tag check above catches re-releasing a
+          # version that shipped; this catches a typo naming one that never
+          # did, which nothing else would notice.
+          current="$(python3 -c 'import xml.etree.ElementTree as ET; ns="{http://maven.apache.org/POM/4.0.0}"; print(ET.parse("pom.xml").getroot().find(ns + "properties").find(ns + "revision").text)')"
+          case "${current}" in
+            *-SNAPSHOT) ;;
+            *)
+              echo "::error::The root pom is at ${current}, not a snapshot; this branch is not in a releasable state."
+              exit 1
+              ;;
+          esac
+          base="${current%-SNAPSHOT}"
+          if [ "$( { echo "${base}"; echo "${RELEASE_VERSION}"; } | sort -V | head -n 1 )" != "${base}" ]; then
+            echo "::error::releaseVersion ${RELEASE_VERSION} is below the branch's current version ${current}."
             exit 1
           fi
 
@@ -121,10 +152,35 @@ jobs:
             git push origin master
           fi    
 
-      - name: Build and deploy release
+      - name: Verify the release version resolves in every pom
         env:
           RELEASE_VERSION: ${{ github.event.client_payload.releaseVersion }}
-        run: mvn -B -e -Drevision="${RELEASE_VERSION}" deploy -P release,docker
+        run: |
+          set -euo pipefail
+          # flatten-maven-plugin is what rewrites the revision property into
+          # the poms that get published, and it is the same goal the deploy
+          # below runs at process-resources. Run it on its own first:
+          # autoPublish is on, so a pom that reaches Maven Central still
+          # carrying an unresolved property cannot be withdrawn.
+          mvn -B -q -Drevision="${RELEASE_VERSION}" flatten:flatten
+          if grep -rlF '${revision}' --include='.flattened-pom.xml' .; then
+            echo "::error::A pom above still carries an unresolved revision property; flatten-maven-plugin did not resolve it."
+            exit 1
+          fi
+          count="$(find . -name .flattened-pom.xml | wc -l)"
+          echo "${count} poms flattened to ${RELEASE_VERSION}"
+          [ "${count}" -gt 0 ]
+
+      - name: Build and deploy release
+        # `clean` matters here: `Build + Test` and `Gitlab Docker Test` above
+        # have already run the lifecycle over this workspace, at the snapshot
+        # version. Re-entering it lets plugins act on their own previous
+        # output rather than on a clean build of the commit being tagged.
+        # release:perform used to avoid this by building in a fresh
+        # target/checkout.
+        env:
+          RELEASE_VERSION: ${{ github.event.client_payload.releaseVersion }}
+        run: mvn -B -e -Drevision="${RELEASE_VERSION}" clean deploy -P release,docker
 
       - name: Create and push git tag
         env:
@@ -141,9 +197,17 @@ jobs:
           set -euo pipefail
           IFS=. read -r major minor patch <<< "${RELEASE_VERSION}"
           nextSnapshot="${major}.${minor}.$((patch + 1))-SNAPSHOT"
-          git fetch origin "${GITHUB_REF_NAME}"
-          git checkout -B "${GITHUB_REF_NAME}" "origin/${GITHUB_REF_NAME}"
+          # Committed onto the commit that was built, deployed and tagged --
+          # which is the stack-version commit, if there was one -- never onto
+          # whatever the remote tip has become, so the push below is a plain
+          # fast-forward: if anything landed on the branch while this ran, git
+          # rejects it rather than reverting a revision somebody else changed.
+          git checkout -B "${GITHUB_REF_NAME}" HEAD
           sed -i "s|<revision>.*</revision>|<revision>${nextSnapshot}</revision>|" pom.xml
+          if git diff --quiet -- pom.xml; then
+            echo "::error::sed left pom.xml unchanged; set <revision> to ${nextSnapshot} by hand on ${GITHUB_REF_NAME}."
+            exit 1
+          fi
           git add pom.xml
           git commit -m "Bump version to ${nextSnapshot}"
           git push origin "${GITHUB_REF_NAME}"
