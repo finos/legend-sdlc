@@ -147,7 +147,7 @@ jobs:
           DOCKER_USERNAME: finos
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           PROFILES: ${{ inputs.docker-snapshot && '-P docker-snapshot' || '' }}
-        run: mvn -B -e -DskipTests ${PROFILES} install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+        run: mvn -B -e -T 4 -DskipTests ${PROFILES} install javadoc:javadoc -Dorg.slf4j.simpleLogger.showThreadName=true
 
       - name: Archive build output
         # Bundle the whole workspace (compiled classes, generated sources,
@@ -242,7 +242,7 @@ jobs:
           export JAVA_HOME="$JAVA_HOME_25_X64"
           test_jvm_home="JAVA_HOME_${{ matrix.jdk }}_X64"
           TEST_JVM="${!test_jvm_home}/bin/java"
-          mvn -B -e surefire:test -Djvm="${TEST_JVM}" -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
+          mvn -B -e surefire:test -Djvm="${TEST_JVM}" -DargLine="-XX:MaxRAMPercentage=50.0" -DforkCount=1
 
       - name: Upload Test Results
         # Every leg writes to the same repo-relative directory, but each runs
