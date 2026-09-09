@@ -19,8 +19,16 @@ env:
   CI_DEPLOY_PASSWORD: ${{ secrets.CI_DEPLOY_PASSWORD }}
   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
-on: [push, pull_request]
-  
+on:
+  push:
+    # Branch pushes only. A release tag lands on a commit this workflow already
+    # built when it went onto the branch, so building it again on the tag push
+    # spends a second full build on it and hands `Publish Test Results` a
+    # duplicate set of results for the same commit.
+    tags-ignore:
+      - '**'
+  pull_request:
+
 jobs:
   build:
     name: Build
