@@ -41,7 +41,7 @@ jobs:
         # Also, if this gets more complicated, consider having this as a bash script.
         run: mkdir -p ./legend-sdlc-server/target && touch ./legend-sdlc-server/target/legend-sdlc-server-dummy-shaded.jar && docker build --quiet --tag local/legend-sdlc-server:${{ github.sha }} ./legend-sdlc-server
       - name: Scan image for security issues
-        uses: aquasecurity/trivy-action@0.36.0
+        uses: aquasecurity/trivy-action@v0.36.0
         with:
           # TODO: we should probably also setup misconfiguration scanning
           # See https://github.com/aquasecurity/trivy-action#using-trivy-to-scan-infrastucture-as-code
