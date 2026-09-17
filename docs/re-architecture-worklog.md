@@ -1816,3 +1816,67 @@ record struck again — the moved `BackendFactory` registration lingered in
     gates — needs thought about what it would certify); metrics and health
     surfaces on the SPI remain deferred/additive (the one sub-L6 prometheus
     counter was dropped at extraction).
+
+### Correction (2026-09-17, found by the PR's GitLab Docker integration tests): GitLab4J's runtime JSON dependency lost at extraction
+
+The `gitlab-docker-int-test-latest-twelve` workflow failed on the Phase 5 PR:
+all 7 `IntegrationTestGitLab*` classes errored in suite setup with
+`NoClassDefFoundError: com/fasterxml/jackson/module/jaxb/JaxbAnnotationIntrospector`,
+raised while GitLab4J's Jersey client built its JSON message body provider
+for its first request.
+
+- **Root cause**: the root pom's `gitlab4j-api` management excludes
+  `jackson-module-jaxb-annotations` and `jackson-jaxrs-base` (since the
+  gitlab4j 5.x upgrade, #980), but the Jersey JSON provider GitLab4J
+  registers on its client needs `jackson-module-jaxb-annotations` at runtime.
+  Inside the server the jar arrived through the server's own direct
+  `jackson-jaxrs-json-provider` dependency; Step 5 part 3 moved the GitLab
+  code, and its integration tests, into a module with no such dependency.
+  The standard server was unaffected — its runtime classpath still carries
+  the jar — but the backend jar on any other classpath (these tests; an
+  assembly without the server's Jackson JAX-RS dependency) failed on its
+  first GitLab call.
+- **Why Phase 5 shipped it**: none of the module's unit tests constructs
+  GitLab4J's HTTP client, and the integration tests run only under the
+  `test-gitlab-docker` profile against a GitLab container, which the per-step
+  local verification did not run.
+- **Fix (this commit)**: `legend-sdlc-backend-gitlab` declares
+  `jackson-jaxrs-json-provider` at runtime scope exactly as
+  `legend-sdlc-server` declares it (same `jakarta.activation-api` exclusion,
+  same managed version) — deliberately the server's declaration rather than
+  the narrower `jackson-module-jaxb-annotations` alone, so the GitLab client
+  runs against the Jackson JAX-RS configuration production has run since the
+  gitlab4j 5.x upgrade, whose first attempt (#976, reverted) generated
+  incorrect JSON. The gitlab4j exclusions are untouched. On the record from
+  the history: #976 already carried the same exclusions; the JSON fix #980
+  added over it is `BaseServer`'s `ContextResolver<ObjectMapper>`, which
+  stands. A first attempt at this correction — version-managing
+  `jackson-module-jaxb-annotations` in the root pom with the activation
+  exclusion — was rejected: exclusions in `dependencyManagement` apply
+  transitively, and would have stripped `jakarta.activation-api` from
+  `legend-sdlc-generation-service`, `legend-sdlc-test-generation`, and
+  several Maven plugins.
+- **Classpath evidence**: ordered runtime and test classpaths
+  (`dependency:build-classpath`) compared for every reactor module with and
+  without the change are identical except in `legend-sdlc-backend-gitlab`,
+  which gains `jackson-jaxrs-json-provider`, `jackson-jaxrs-base`,
+  `jackson-module-jaxb-annotations` (all 2.10.5), and `jakarta.xml.bind-api`
+  — all already on the server's runtime classpath at those versions. Every
+  Jackson, Jersey, JAX-RS, and GitLab4J artifact on the module's test
+  classpath is on the server's runtime classpath at the same version. The
+  server's extras (Dropwizard's Jackson setup, server-side Jersey,
+  `jersey-metainf-services`) cannot reach GitLab4J's client: it sets
+  `jersey.config.client.disableAutoDiscovery` and
+  `jersey.config.client.disableMetainfServicesLookup`, and its only JSON
+  providers are the `JacksonJson` and `JacksonFeature` it registers itself
+  (alongside `MultiPartFeature`; checked in the gitlab4j 5.8.0
+  bytecode, as is jersey-common 2.25.1's `ServiceFinderBinder` honoring the
+  lookup flag), so the tests exercise the client's JSON configuration as
+  production has it.
+- Verified: locally, without a GitLab container, all 7 integration test
+  classes now get past client construction and fail only on
+  `Connection refused` (before the fix: the `NoClassDefFoundError`);
+  `legend-sdlc-backend-gitlab` `mvn install javadoc:javadoc` green (55 tests,
+  checkstyle, PMD, `dependency:analyze`, enforcer); `legend-sdlc-server`
+  enforcer (dependency convergence) green. The run against a real GitLab is
+  the workflow's.
