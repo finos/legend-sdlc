@@ -49,4 +49,13 @@ public class UserContext
         return this.httpRequest;
     }
 
+    public HttpServletResponse getHttpResponse()
+    {
+        return this.httpResponse;
+    }
+
+    public Session getSession()
+    {
+        return this.session;
+    }
 }
