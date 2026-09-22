@@ -1109,3 +1109,774 @@ introduced by Steps 6–7 and verified pre-existing by stash + re-run at HEAD).
   test servers from "backend-less by laziness" to a real in-memory `backend:`
   configuration, at which point the discovery endpoints work on test servers
   too.
+
+## Phase 5 — Backend extraction (L5)
+
+**Status: in progress.**
+
+Sequencing note (user-directed, on the record): plan §6 lists the GitLab
+extraction first; this phase runs the **in-memory backend first** — the first
+real TCK runner proves the L4 defaults and the suite itself before the two
+riskier refits (FS, GitLab) lean on them. The Phase 4 hand-off's
+"`DefaultEntityApi` as the first task of the FS refit" is pulled forward for
+the same reason: the in-memory backend needs a working entity api anyway, so
+the remaining L4 defaults land as their own step and the FS refit consumes
+them ready-made.
+
+### Step 1: the remaining L4 defaults (entity, configuration, revision)
+
+- **`DefaultEntityApi`** (`backend.api.entity`): the generic `EntityApi` over a
+  `ProjectFileAccessProvider` — reads via `core.entity.EntityAccessOperations`,
+  writes via `EntityModificationOperations`, with the null-validations of the
+  delegating shells it generalizes. Review access contexts resolve the review
+  through a supplied `ReviewApi` (the supplier is wired to the session's
+  REVIEWS-gated accessor, the `DefaultComparisonApi` pattern) and mirror the
+  default comparison semantics — from = the review workspace's source at its
+  current revision, to = the workspace at its current revision; backends whose
+  reviews carry native refs (GitLab MR diff refs) override.
+- **`DefaultProjectConfigurationApi`** (`backend.api.project`): read = the L2
+  `ProjectStructure.getProjectConfiguration` with the default-configuration
+  fallback both backends use today; update = the L3 `ProjectStructureUpdater`
+  at the source's current revision, applied with the deployment's extension
+  provider and platform extensions from `BackendEnvironment` (decision 3's
+  pass-through made concrete); artifact generations and latest structure
+  version exactly as in the (previously duplicated) GitLab/FS code. The
+  configuration status report carries no review ids — surfacing config-setup
+  reviews is backend-native (GitLab's MR search); documented override point.
+- **`DefaultRevisionApi`** (`backend.api.revision`): project/package/entity
+  revision contexts over the provider's revision access contexts, with the
+  packageable-path message rewriting factored from `GitLabRevisionApi`
+  (exception handling widened to base `LegendSDLCException`).
+  **`getRevisionStatus` is deliberately not defaulted**: which
+  workspaces/versions/patches contain a revision is an enumeration only the
+  backend can answer natively; the default throws 501 (a strict improvement on
+  FS's raw-`UnsupportedOperationException` 500, consistent with decision 2),
+  GitLab keeps its native implementation.
+- **Cross-API scope gate — decision 2's second enforcement point, now real**:
+  `BackendCapability.checkSourceScope(backend, sourceSpec)` — version sources
+  require `VERSIONS`; patch sources (including patch-sourced workspaces)
+  `PATCHES`; workspace sources their flavor (`USER_/GROUP_WORKSPACES`) and,
+  for backup/conflict-resolution access types, that capability. All three new
+  defaults apply it before touching storage. It lives on `BackendCapability`,
+  which already carries the scope→capability documentation.
+- `AbstractBackend.Session` wires the three defaults; together with Phase 4's
+  dependencies/comparison defaults, §3.2's minimal contract is now literal:
+  a backend supplies its storage provider, `ProjectApi`, `WorkspaceApi`, its
+  user directory (`UserApi`), and a factory — everything else defaults.
+- TCK: `BackendContractTestSuite` gains `testCrossApiSourceScopeGates`
+  (version-/patch-scoped entity access on a backend without the capability ⇒
+  `UnsupportedCapabilityException` carrying that capability and 501).
+  `TestMinimalBackendContract` drops its entity/configuration/revision
+  throwing stubs — the defaults now cover them over the fixture's provider,
+  which is itself the certification that the base class satisfies the grown
+  contract.
+- **Verification note (2026-07-10)**: this step's full-reactor verification
+  surfaced that `reorg` HEAD was red — a Phase 4 server startup regression,
+  diagnosed and fixed as the Phase 4 correction above (its own commit,
+  preceding this step's). With the correction in place the full reactor is
+  green including this step.
+
+### Step 2: `legend-sdlc-backend-inmemory` (L5) — the first real TCK runner
+
+- **New module `legend-sdlc-backend-inmemory`**, package
+  `org.finos.legend.sdlc.backend.inmemory`. `SimpleInMemoryVCS` and
+  `InMemoryProjectFileAccessProvider` move (git mv) from the
+  `legend-sdlc-project-files` **test-jar into this module's main tree** — they
+  are now regular published classes, the storage provider behind the backend
+  (no bridges: test-utility population, the Phase 2/3 ruling; migration-doc
+  row added). Two provider upgrades on the way, both formerly stubbed because
+  no test needed them: `getBaseRevision` is implemented (a branch records the
+  parent tip it was created from), and the revision-context scope paths are
+  canonicalized file-vs-directory aware (trailing-separator convention; the
+  old code canonicalized everything as directories, so a file-scoped context
+  matched nothing — the entity revision context scenario caught it).
+- **`InMemoryBackend extends AbstractBackend`** (`type: "inMemory"`), the
+  §3.2 minimal contract made literal: it supplies the storage provider and
+  native `InMemoryProjectApi` (registry + structure build via the L3 updater
+  with the environment's extensions), `InMemoryWorkspaceApi` (registry +
+  provider branches; workspace flavor/scope gating via `checkSourceScope`;
+  `updateWorkspace` is NO_OP-or-501 — the VCS has no source-into-branch
+  merge), and `InMemoryUserApi` (no directory: the session user is the only
+  known user); everything else — entities, configuration, revisions,
+  dependencies, comparison — is the inherited L4 defaults. Declares
+  `USER_WORKSPACES` only, deliberately: the first runner exercises both the
+  declared-capability branch and all the undeclared-capability gates.
+  `InMemoryBackendFactory`/`InMemoryBackendConfiguration` registered under
+  `META-INF/services`; project ids are project names; all state is
+  process-local.
+- **TCK grows `BackendScenarioTestSuite`** (extends the contract suite, so
+  one runner class certifies both): end-to-end over a real session — project
+  creation (configured, right coordinates, no entities), workspace lifecycle
+  (create/list/get/delete/outdated), entity round-trip (create/read/delete in
+  a workspace; project source unaffected), configuration update in a
+  workspace, workspace source+creation comparisons (one entity diff), and
+  revision contexts (project current revision; entity-scoped revision
+  history). This is the certification of the Step 1 defaults over real
+  storage. TCK pom gains `legend-sdlc-shared`, drops the project-files
+  test-jar; `TestMinimalBackendContract`'s fixture now uses an inline
+  throwing provider (the capability contract never reaches storage).
+- **Runners**: `TestInMemoryBackendContract` (contract + scenarios, 10 tests)
+  and `TestInMemoryLayoutInvariants` (moved from the TCK's own test tree —
+  it could not stay there once the provider lives in a module that depends on
+  the TCK) run in this module's test tree, i.e. in CI on every build — the
+  first real `BackendContractTestSuite` runner, per the phase's sequencing
+  note.
+- **The test server now declares the in-memory backend**: `config-test.yaml`
+  replaces its dummy `gitLab:` section (values "na") with
+  `backend: {type: inMemory}`, so the resource tests boot with the GitLab
+  bundle inactive and the real factory/config chain in place, and the new
+  `TestBackendDiscovery` hits `GET /configuration/capabilities` end to end
+  (200, `backendType: inMemory`, `USER_WORKSPACES`) — discharging the Phase 4
+  correction's forward note; the interim "backend-less by laziness" state is
+  gone from the in-memory test server. (`InMemoryModule` still binds the
+  fixture apis the resource tests seed — replacing that fixture with the real
+  in-memory backend is possible follow-up work, not Phase 5 scope.)
+- Consumer updates: `legend-sdlc-server` swaps the project-files test-jar for
+  a test dependency on this module (3 test classes re-import);
+  `legend-sdlc-core` drops its project-files test-jar dependency (stale since
+  the Phase 4 TCK-seed move). The project-files test-jar remains published
+  (its two remaining classes are its own tests).
+
+### The decision-2 compatibility check: Studio/omnibus tolerance of FS `getReviews` → 501 (2026-07-14)
+
+Decision 2 flagged one behavior change requiring verification before the FS
+refit lands it: FS's two `getReviews` overloads return empty lists today and
+would 501 under an undeclared `REVIEWS` capability; "consistency wins on the
+record, but the Phase 5 FS refit must verify Studio/omnibus tolerance before
+flipping them." legend-studio is not in this workspace; the check was run
+against `finos/legend-studio` master and the `finos/legend` omnibus sources
+(2026-07-14). Findings, verified verbatim from source:
+
+1. **The pairing is real.** The omnibus `example-esg-2023`/`example-ghc-2023`
+   variants ship Studio against the FS server (`run-sdlc.file-system.sh` runs
+   `org.finos.legend.sdlc.server.startup.LegendSDLCServerFS` with
+   `config.file-system.yml` and preloaded FS project data;
+   `finos/legend`, `installers/omnibus/**`). Consequence for the refit noted
+   below: omnibus also depends on the parallel-server main class the refit
+   deletes — the migration recipe must cover it.
+2. **Studio is NOT tolerant of `getReviews` → 501.** In standard mode the
+   editor's initialization awaits `fetchCurrentWorkspaceReview()`
+   (`WorkspaceReviewState`), which calls
+   `GET /projects/{id}/reviews?state=OPEN&…`; its catch block calls
+   `EditorSDLCState.handleChangeDetectionRefreshIssue(error)`, which raises a
+   **blocking modal alert for any error** (404 gets a "project or workspace no
+   longer exists" flavor; everything else — a 501 included —
+   `setBlockingAlert({message: error.message})`). Flipping the list routes to
+   501 puts a blocking modal on every workspace open of an FS-backed
+   deployment.
+3. **The intolerance is specific to the review-list route.** The other
+   awaited init fetches degrade gracefully: `fetchLatestCommittedReviews`
+   (the second `getReviews` overload's consumer) and
+   `checkIfWorkspaceIsOutdated` notify-and-continue; `fetchProjectVersions`
+   (FS `getVersions` also returns an empty list today, unflagged by
+   decision 2) and `fetchAuthorizedActions` log-and-continue. So `VERSIONS` and the
+   rest can go undeclared with 501s per decision 2 without breaking Studio;
+   only review *enumeration* under an absent `REVIEWS` capability cannot 501
+   until Studio adapts.
+
+Tolerance is thereby established **in the negative**, so decision 2's default
+(consistency wins) does not apply — it was expressly conditioned on verified
+tolerance. Options put on the record for the user:
+
+- **(a) Flip anyway** — rejected by the findings above.
+- **(b) Undeclared-capability enumeration affordance at L6** (recommended):
+  FS declares no `REVIEWS`; discovery stays honest; the server's per-API
+  `ReviewApi` provider, on `UnsupportedCapabilityException`, supplies a
+  no-reviews implementation whose *list* methods return empty lists and whose
+  every other method rethrows — review enumeration degrades to "none", all
+  other review routes 501 per decision 2. Applies to any reviews-less backend
+  (in-memory included), is one provider method, and is retained temporarily
+  until Studio consumes `GET /configuration/capabilities`, at which point it
+  is removed and decision 2 applies in full.
+- **(c) FS declares `REVIEWS` with a null implementation** (empty lists, 404
+  unknown review, 501 mutations) — preserves today's wire behavior but makes
+  the discovery surface lie (Studio's capability-adaptive UI would offer
+  reviews a backend can never create); rejected as poisoning the seam the
+  capability model exists to provide.
+
+**Decision (user, 2026-07-14): option (b)** — the undeclared-capability
+enumeration affordance at L6. Recorded as a compatibility amendment to
+decision 2's HTTP mapping: review *enumeration* under an absent `REVIEWS`
+capability reports no reviews (200, empty list) instead of 501; every other
+review route 501s as decided. The affordance is L6-only (capabilities and
+discovery are untouched — FS does not declare `REVIEWS`), and is removed once
+Studio consumes `GET /configuration/capabilities` for its review UI.
+
+### Step 3: FS refit, part 1 — the characterized provider defects fixed deliberately
+
+Phase 3 Step 1's FS quirks 6–9 are fixed in place in `legend-sdlc-server-fs`
+(the module refit onto the SPI follows as part 2), and the characterization
+pins updated in the same commit to assert the fixed behavior — the suite's
+javadoc now marks it as pinning post-fix behavior rather than preserved bugs.
+
+- **Quirk 6 (standard-context enumeration broken)**:
+  `FileSystemFileAccessContext.getFilesInCanonicalDirectories` now walks the
+  tree of the context's resolved commit, mapping git tree paths (no leading
+  separator) to canonical paths (leading `/`) before matching against the
+  canonical directory list (root short-circuits), and reads blobs from that
+  same tree; `ObjectId.fromString(null)` is gone — a null revision id
+  resolves to the tip of the branch the source specification designates.
+- **The context now honors its revision id** (latent, unpinned defect fixed
+  with quirk 6, same root): `getFile` and `fileExists` previously read the
+  branch tip regardless of the context's revision id; all three accessors now
+  resolve one commit — pinned revision or branch tip — and read its tree.
+  `FileSystemEntityApi.getEntityAccessContext` previously dropped its
+  `revisionId` argument on the floor (passed null to the provider); it now
+  passes it through. New pin: `testRevisionPinnedAccessContext`.
+- **Quirks 7 and 9 (platform-dependent enumeration; two code paths)**: fixed
+  by unification — `FileSystemEntityApi`'s git-tree-walk enumeration variant,
+  its private `EntityProjectFile`, and the `java.nio.Path` relativization
+  that produced `\`-separated paths on Windows are deleted; `getEntities`
+  joins `getEntity`/`getEntityPaths` on `core.entity.EntityAccessOperations`
+  over the (now working) standard context. The entity api is a pure
+  delegating shell, and the FS enumeration pins are no longer conditional on
+  `File.separatorChar`.
+- **Quirk 8 (stale reference revision loses its 409)**:
+  `FSException.getLegendSDLCServerException` passes a `LegendSDLCException`
+  through unchanged instead of re-wrapping it into a message-concatenated
+  500 (return type widened to the base `LegendSDLCException`; every call
+  site is a `throw`). The modification context's conflict now surfaces as
+  409 with its original message, pinned exactly.
+- **New defect found by the re-pinned tests, fixed**: `submit()` built its
+  returned revision from the branch `Ref` looked up *before* committing — a
+  stale snapshot, so every write reported its *parent* revision (invisible
+  until the revision-pinned pin above compared trees). It now builds the
+  revision from the `RevCommit` that `git.commit().call()` returns.
+- **Deliberately not fixed here** (they belong to part 2, where the TCK
+  certifies them): `getAllRevisions` still throws; the revision access
+  context still ignores its `paths` scoping; `getBaseRevision` is not a true
+  merge base; the workspace api's defects (`deleteWorkspace` unimplemented,
+  `getWorkspaces` swaps the USER/GROUP flavors, `updateWorkspace`
+  unsupported).
+- Verified: FS characterization 9/9 green; full-reactor
+  `mvn install javadoc:javadoc` green.
+
+### Step 4: FS refit, part 2 — `legend-sdlc-backend-fs` (L5); the parallel server deleted
+
+The file-system implementation is refit from a standalone server onto the
+backend SPI: a new module `legend-sdlc-backend-fs` (package
+`org.finos.legend.sdlc.backend.fs`), and `legend-sdlc-server-fs` reduced to a
+relocation POM. One commit, not the two remaining pieces of the natural split
+(part 1 took the defect fixes separately): the review-enumeration affordance
+is the module's Studio-safety prerequisite, and the deletion's relocation POM
+points at the module — landing them together keeps the commit-on-green
+convention intact without verifying an intermediate tree no one will check
+out.
+
+**The decision-(b) affordance, implemented at L6.** New
+`org.finos.legend.sdlc.server.backend.NoReviewsReviewApi`: both `getReviews`
+overloads return empty lists; every other method rethrows the stored
+`UnsupportedCapabilityException`. `BaseModule.provideReviewApi` supplies it
+when `session.getReviewApi()` throws for the undeclared capability, so it
+applies to any reviews-less backend (in-memory included), not just FS.
+Capabilities and discovery are untouched; the javadoc records the amendment
+and the removal condition (Studio consuming
+`GET /configuration/capabilities`). Pinned by `TestNoReviewsReviewApi`.
+
+**The module.** `FileSystemBackendFactory` (ServiceLoader-registered) builds
+`FileSystemBackend` from `backend: {type: fileSystem, rootDirectory: …}`.
+The backend extends `AbstractBackend`, declares **only `USER_WORKSPACES`**,
+and creates the root directory if missing. Its session owns a session-scoped
+`FileSystemProjectFileAccessProvider` (jgit over one repository per project
+under the root; project source = `master`, workspace = branch
+`workspace/{user}/{id}`) and supplies three native apis —
+`FileSystemProjectApi` (repository scan/init, git-config metadata,
+structure built at the latest version through `ProjectStructureUpdater` with
+the environment's extensions), `FileSystemWorkspaceApi` (branch lifecycle;
+`updateWorkspace` reports `NO_OP` when current, 501 when outdated — the
+provider has no merge), `FileSystemUserApi` (session user only). Everything
+else — entity, configuration, revision, dependencies, comparison — is the
+inherited L4 defaults over the provider; the old module's fourteen stub api
+classes have no successors at all, the capability gates replace them.
+
+**The provider completes what part 1 deferred**, and the TCK certifies it:
+`getAllRevisions` implemented (alias resolution for BASE/HEAD/CURRENT/LATEST,
+since/until/limit); the revision access context honors its `paths` scoping
+(scoped `log`, membership-checked `getRevision`); `getBaseRevision` is a true
+merge base (`RevFilter.MERGE_BASE`; first commit on `master` itself);
+`deleteWorkspace` works; the USER/GROUP listing swap is gone.
+
+**Decisions taken in the refit** (checked against the worklog; none had a
+prior ruling):
+
+- **`USER_WORKSPACES` only.** The old server's group-workspace support was
+  characterized broken (quirk: flavors swapped), so it is not carried:
+  group creation fails on the `checkSourceScope` gate (501), group-filtered
+  listings return empty lists. Studio-safe — its group-workspace fetches
+  tolerate both.
+- **`deleteProject` stays 501** (`PROJECT_DELETION` undeclared). The old
+  implementation existed but deleting a git repository out from under
+  concurrent sessions was never safe; a deliberate implementation can declare
+  the capability later.
+- **Projects are created at the latest structure version.** The old server
+  consulted `ProjectCreationConfiguration` for a default version; that type
+  is server configuration (L6) and would drag a server dependency into L5.
+  If a configured default is wanted, it belongs in the config-options plan
+  (seam S2).
+- **Null session user maps to `local_user`**, the old server's fixed user id,
+  so existing root directories — and their `workspace/local_user/…` branches
+  — keep working unchanged.
+- **`submit` refuses empty commits**: jgit commits unconditionally by
+  default; a no-op change set now returns null (no revision) instead of
+  minting an empty commit. Found by the reconcile-no-op layout invariant.
+- **The server does not gain a `legend-sdlc-backend-fs` dependency.** The
+  standard server distribution currently bundles no L5 backend; whether it
+  should ship with backends on the classpath or leave that to deployments is
+  the same question the GitLab extraction must answer (the GitLab backend
+  starts *inside* the server), so it is deferred to that step rather than
+  answered piecemeal here.
+
+**The deletion.** `legend-sdlc-server-fs` loses `src/**`, its Dockerfile,
+and its shaded-jar build; the POM becomes a relocation POM
+(`distributionManagement/relocation` → `legend-sdlc-backend-fs`), so
+dependents get the pointer at resolution time. No deprecated bridges: the old
+classes were a self-contained runnable, not an API surface. The migration
+recipe gains the table row and an "If you deploy the file-system SDLC server"
+section (standard server + `backend:` config + classpath; the omnibus
+`run-sdlc.file-system.sh` dependency found in the tolerance check is covered
+by it).
+
+- Verified: `legend-sdlc-backend-fs` 22/22 — scenario+contract TCK 10/10 on
+  the first substantive run, characterization 9/9 (moved into the module,
+  now driving the session's L4 `DefaultEntityApi`), layout invariants 3/3
+  (after two test-harness/product fixes: a fresh root per invariant case —
+  the suite reuses project ids — and the empty-commit guard above);
+  `legend-sdlc-server` 269 green with the affordance; full-reactor
+  `mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 1 — the SPI crossings (L4, additive)
+
+The GitLab extraction needs four things to cross the SPI that Phase 4's
+staging deferred (per decision 1 and the Step 5 staging record). All are
+additive to `legend-sdlc-backend-api`; no consumer changes in this commit.
+
+- **`BackendSessionContext.getService(Class)`** (default null): the per-user
+  counterpart of `BackendEnvironment.getService` — typed lookup for auth
+  material the host can offer beyond identity + state store. Everything
+  published through it is data or a JDK type; pac4j never crosses. The server
+  will publish `javax.security.auth.Subject` (Kerberos), plus two new L4
+  value types: **`OidcAuthMaterial`** (issuer, access token, scopes, refresh
+  token, expiration) and **`PersonalAccessTokenAuthMaterial`** (host, token).
+  These replace the token harvesting that today lives *inside* the GitLab
+  session classes (`GitLabOidcSession`/`GitLabPersonalAccessTokenSession`
+  constructors): the host describes how the user authenticated, as data; the
+  backend decides whether that material is usable against its upstream
+  (issuer/host match) — that logic is backend knowledge and moves to L5.
+- **`StaleAuthorizationException`** (503 default): decision 1 enumerated two
+  redirect flows (302 to the authorization URI; 403 with `auth_uri`), both
+  covered by `AuthorizationRequiredException(URI)`. The GitLab code has a
+  *third* — `BaseGitLabApi.buildException`'s 401 branch clears the stale
+  token and redirects the client back to *the original request* (GET; 503
+  "please retry" otherwise). Its redirect target is the request itself, which
+  only the host knows, so it crosses as a type: the backend throws after
+  discarding stale material; the server's mapper reproduces today's
+  302-to-self / 503 pair exactly.
+- **`BackendFactory.configureObjectMapper(ObjectMapper)`** (default no-op):
+  the GitLab configuration needs a Jackson mix-in for its polymorphic
+  `gitlabAuthorizers` list, registered today by a hard-wired
+  `GitLabConfiguration.configureObjectMapper` call in
+  `BaseLegendSDLCServer.initialize`. The factory hook lets any backend
+  configure the host's configuration mapper at bootstrap, alongside subtype
+  registration; the hard-wired call dies in part 2.
+- **`BackendEnvironment.getProjectCreationConfiguration()`** (default null) +
+  L4 value type **`ProjectCreationConfiguration`** (default structure
+  version, groupId/artifactId patterns): `GitLabProjectApi`'s only real use
+  of the server's `ProjectStructureConfiguration` — reached today through the
+  `getService` escape hatch — is its project-creation section. Decision 3
+  said such needs cross "as data via environment accessors"; this is that
+  accessor. The server's configuration class stays at L6; the environment
+  publishes the data view. (The FS refit's "projects are created at the
+  latest structure version" ruling stands — whether FS *adopts* the policy
+  remains config-options work; the accessor exists because GitLab's current
+  behavior must be preserved through the extraction.)
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 2 — the re-plumb, in place
+
+The GitLab code is re-plumbed onto the SPI *inside* the server module, so the
+relocation (part 3) is purely mechanical. Everything decision 1 staged for the
+extraction lands here: no GitLab code touches servlet, pac4j, Guice, or JAX-RS
+types any more.
+
+**The server side (backend-independent):**
+
+- **Generic state sessions** (`legend-sdlc-server-shared`, replacing the GitLab
+  session family): `StateSession` — identity plus a mutable string-keyed state
+  bag — with `CommonProfileStateSession`/`KerberosStateSession` over the pac4j
+  profiles and a `StateSessionBuilder`. The bag is what backends see through
+  the session state store port; the cookie encodes it generically (format
+  marker + sorted key/value pairs, `SessionStateCodec`). Cookies from before
+  the format change decode to an *empty* bag — the marker distinguishes them —
+  so existing sessions re-acquire their state once after upgrade: OIDC-, PAT-,
+  and Kerberos-authenticated users silently (the harvest/authorizer chain
+  re-runs), interactive-OAuth users through one extra authorize redirect.
+  `TestStateSession` pins the round-trip and the legacy-cookie tolerance.
+- **`StateSessionWebFilter`** (server) replaces `GitLabWebFilter` and is
+  registered *unconditionally* in `BaseLegendSDLCServer.run` under the name
+  `LegendSDLCSession` (same supported profile types as before). Deployments
+  order the filter via `filterPriorities` under its historical name "GitLab";
+  `LegendSDLCServerConfiguration.getFilterPriorities()` aliases that name to
+  the new one so existing configuration keeps working (migration row).
+  `GitLabBundle` and `GitLabServerHealthCheck` are deleted: the bundle's only
+  remaining job was the filter, and the health check only validated config
+  shape (its own TODO said as much). A backend health surface on the SPI is
+  deferred (additive later, like metrics); the `gitLabServer` health-check
+  entry disappears from deployments (migration row).
+- **`ServletBackendSessionContext` completes** (closing the Phase 4 interim):
+  the state store is real — reads and writes go to the `StateSession` bag,
+  every write triggers the session-cookie write-back — and `getService`
+  publishes the per-user auth material as data: `javax.security.auth.Subject`
+  for Kerberos sessions, `OidcAuthMaterial` / `PersonalAccessTokenAuthMaterial`
+  harvested from the pac4j profile types. This is decision 1's "L6 adapter"
+  made literal: the only place pac4j appears on the backend session path. A
+  request-transient store remains as fallback for non-state sessions (test
+  fixtures).
+- **The generic `/auth` surface** (`server.resources.auth`, bound for every
+  server variant in `AbstractBaseModule`): `AuthResource`
+  (authorize/callback/termsOfServiceAcceptance) over `BackendSession`'s auth
+  contract, and `AuthCheckResource` (authorized) with the session-bootstrap
+  machinery (PAT header, session store) from the former GitLab check resource.
+  The OAuth `state` round-trip is owned here: the resource encodes the current
+  request into `state` and appends it to the backend's authorization URI —
+  parameter order (and hence the URI) identical to the old GitLab-built one.
+  The former GitLab auth resources are deleted; routes and wire behavior are
+  unchanged. `TestAuthResources` pins the surface on the in-memory test server.
+- **Two new exception mappers**: `AuthorizationRequiredException` → 403 with
+  the historical `{"message":"Authorization required","auth_uri":"/auth/authorize"}`
+  body (byte-identical, by delegating to the server exception mapper), except
+  on the authorize route, where `AuthResource` catches it and issues the 302.
+  `StaleAuthorizationException` → 302-back-to-the-same-request for GET, 503
+  "please retry" otherwise — exactly the former 401-stale-token pair.
+  Implementation note, learned the hard way: the stale mapper needs the
+  request, and `@Context` *field* injection of request-scoped types into a
+  Jersey-registered provider instance fails at servlet initialization under
+  the Guice–HK2 bridge (the bridge provisions eagerly instead of proxying);
+  the mapper is therefore Guice-bound (lazy `Provider<HttpServletRequest>`)
+  and reaches Jersey through the Guice bundle's binding scan, like the
+  resources do.
+- **Module rewiring**: `BaseModule` loses all GitLab bindings and its
+  `UserContext` override (plain `UserContext` everywhere); the request-scoped
+  `BackendSession` provider moves up to `AbstractBaseModule` (the auth
+  resources need it under `InMemoryModule` too). The environment no longer
+  publishes `ProjectStructureConfiguration` through `getService` — its one
+  consumer now gets data (below); it implements
+  `getProjectCreationConfiguration()` instead, built from the server config.
+- **The legacy-config adapter is re-based on raw JSON**: the server no longer
+  compiles against the GitLab configuration classes, so
+  `LegendSDLCServerConfiguration` holds the legacy `gitLab:` section as a
+  `JsonNode` and `AbstractBaseModule.buildBackend` synthesizes
+  `backend: {type: gitlab, ...}` from it through the bootstrap object mapper
+  (which carries the ServiceLoader-registered subtypes and the factories'
+  mapper hooks). The legacy `uat:`/`prod:` mode sections are accepted and
+  flattened by `GitLabBackendConfiguration`'s creator (GitLab owns its legacy
+  configuration shapes; the host adapter only stamps the type), so the
+  raw-JSON path handles everything the old typed parse did. Validation timing
+  changes: a
+  structurally invalid legacy section now fails at first backend use rather
+  than at config parse (the backend was already built lazily).
+  `GitLabConfiguration.configureObjectMapper` at bootstrap is replaced by the
+  part-1 `BackendFactory.configureObjectMapper` hook, which the GitLab factory
+  implements.
+
+**The GitLab side (framework-free):**
+
+- **`GitLabTokenManager` persists through the session state store** (keys
+  `gitlab.appId`/`gitlab.token.type`/`gitlab.token`/`gitlab.refreshToken`/
+  `gitlab.tokenExpiry`, write-through): state is keyed to the GitLab
+  application id, as the old cookie encoding was. `PRIVATE`-typed tokens are
+  never OAuth-refreshed — replicating the former PAT session's
+  `shouldRefreshToken() == false` override in the one manager that now serves
+  all auth flavors. `GitLabTokenResponse` gains a typed-token constructor (the
+  PAT harvest yields a `PRIVATE` token) and an optional exact expiry (the OIDC
+  harvest carries the profile's expiration; a response without any expiry gets
+  the default-derived one — the former OIDC-without-expiration edge, which
+  left the expiry null and forced an immediate refresh attempt, now trusts the
+  token for the default window; judged the saner reading of an
+  unreachable-in-practice edge). `TestGitLabTokenManager` re-pins all of this
+  over an in-memory store (the old test pinned the dead cookie encoding).
+- **`GitLabUserContext` is rebuilt framework-free** (name kept — it is still
+  the per-user view; 17 api classes construct against it unchanged): identity
+  and state from `BackendSessionContext`, the `GitLabApi`/token life cycle
+  logic otherwise verbatim. The OIDC/PAT token harvests that lived in the
+  session-class constructors run at user-context construction when the
+  persisted state has no token — preserving `/auth/authorized` semantics for
+  OIDC/PAT users (authorized on first request, before any interactive flow).
+  One deliberate micro-fix: `isUserAuthorized` returns false when the
+  authorizer chain yields nothing (previously an NPE → 500 on a
+  cleared-token-with-future-expiry session).
+- **The authorizer chain crosses the SPI**: `GitLabAuthorizer.authorize` takes
+  `BackendSessionContext` instead of the server `Session` — a breaking change
+  for externally configured authorizers (Jackson-polymorphic `gitlabAuthorizers`
+  list; class names in YAML keep resolving, implementations re-target the new
+  signature — migration recipe in part 3). `KerberosGitLabAuthorizer` reads
+  the `Subject` from `getService`; two new harvest authorizers
+  (`OidcGitLabAuthorizer`, `PersonalAccessTokenGitLabAuthorizer`) head every
+  chain, then the configured authorizers or the historical Kerberos default.
+- **The redirect flows convert** per decision 1: interactive authorization is
+  `AuthorizationRequiredException(buildAppAuthorizationURI(appInfo))` (no
+  state — the host appends it); auth failure 403 / auth error 500 as before
+  (base exception type); `BaseGitLabApi.buildException`'s 401 branch clears
+  the token and throws `StaleAuthorizationException`.
+- **The `LegendSDLCServerException` sweep**: ~330 throw/validate/catch sites
+  across the GitLab tree converted to the base `LegendSDLCException` with int
+  status codes (identical mapper output; the Phase 2/3 precedent applied
+  wholesale), `javax.ws.rs` gone from the tree (`Status.Family` classification
+  replaced by an int range check; two `Status.fromStatusCode` coercions became
+  int passthrough — unknown codes no longer collapse to 500 on those two
+  paths, unreachable with our own thrown codes). `@Inject` stripped from all
+  api classes (L5 takes no `javax.inject`).
+- **`GitLabBackend`** builds its own `GitLabAppInfo` and authorizer manager
+  from `GitLabConfiguration`, constructs the user context from the session
+  context (the `ServletBackendSessionContext` unwrapping and its
+  `IllegalArgumentException`s are gone), and now implements the auth surface
+  fully: `isAuthorized` absorbs the check resource's
+  `GitLabAuthAccessException` → false handling;
+  `getUnacceptedTermsOfService` is aligned to the deleted resource's exact
+  wire behavior (401/403 → 403 with the "Error checking acceptance of terms
+  of service" message — the Phase 4 replication had dropped that mapping, a
+  latent drift caught at this rewiring). `GitLabProjectApi` consumes the L4
+  `ProjectCreationConfiguration` from the environment (decision 3's
+  data-crossing made concrete); the factory's `getService` escape hatch use is
+  gone.
+
+Verified: `legend-sdlc-server` 261 green (258 + the new `TestAuthResources` 3,
+including all resource tests — the server boots with the unconditional session
+filter and the generic auth surface under the in-memory backend);
+`legend-sdlc-server-shared` green with the new session pins; full-reactor
+`mvn install javadoc:javadoc` green.
+
+### Step 5: GitLab extraction, part 3 — `legend-sdlc-backend-gitlab` (L5); the relocation
+
+The mechanical half: the re-plumbed GitLab tree moves (git mv) from
+`legend-sdlc-server` to the new module **`legend-sdlc-backend-gitlab`**,
+packages `org.finos.legend.sdlc.server.gitlab.*` →
+`org.finos.legend.sdlc.backend.gitlab.*` (root, `api`, `auth`, `tools`).
+GitLab4J, jsoup, and commons-compress leave the server's dependency tree; the
+`BackendFactory` services registration travels with the factory. The plan's
+§3.3 expectation ("expected to shrink substantially") was already realized by
+Phases 3–5: what moves is only what genuinely *is* GitLab.
+
+- **The deferred bundling decision (Phase 5 Step 4), resolved**: the standard
+  server distribution ships all three L5 backends — the server pom takes
+  **runtime**-scoped dependencies on `legend-sdlc-backend-gitlab`,
+  `legend-sdlc-backend-fs`, and `legend-sdlc-backend-inmemory` (test →
+  runtime). Grounds: the Phase 4 legacy-config promise ("a legacy deployment
+  needs no config change") requires the GitLab factory on the standard
+  distribution's classpath, which settles the question for gitlab; decided
+  once and applied to all three per the Step 4 hand-off (§3.5's "can bundle
+  any set of backend jars" and §8's "backends arrive on the runtime
+  classpath" made concrete — compile scope would violate the layering,
+  runtime scope expresses exactly "present, not depended on"). The omnibus
+  file-system pairing gets its backend from the standard distribution for
+  free. Assemblies that build their own classpath add the backend jar(s) they
+  deploy (migration row).
+- **No bridges at the old FQNs** — and not by the usual population argument
+  alone: the server module *cannot* alias classes that now live in a module
+  below it (a bridge would need a compile dependency the layering forbids),
+  and bridges inside the L5 jar under `server.gitlab.*` would ship old names
+  in a new artifact to no benefit (any consumer must change its dependency
+  anyway). The gitlab classes were server-internal implementation, never a
+  published API; the migration doc carries the rename rows. One genuinely
+  consumed surface gets a recipe instead of a bridge: **`GitLabAuthorizer`**
+  (externally implemented, configured by class name in YAML) — its part-2
+  signature change is documented with the getService/state-store re-targeting
+  recipe.
+- **Stragglers found by the move**, each with a ruling:
+  - `server.tools.CallUntil`/`ThrowingRunnable`/`ThrowingSupplier` (Phase 1's
+    remaining "Phase 4/5 material") were gitlab-only consumers but generic
+    utilities; `CallUntil` needs slf4j, which rules out zero-dependency
+    `legend-sdlc-shared` — they join `BackgroundTaskProcessor` in
+    **`backend.api.tools`** (the exact Phase 4 precedent), with deprecated
+    bridges at the old server FQNs. `AuthenticationTools` (Kerberos/SPNEGO
+    HTTP plumbing) is consumed only by the GitLab SAML authenticators and
+    moves with them to `backend.gitlab.tools` (no bridge, migration row).
+    `server.tools` now holds only `SessionProvider` and the bridges — the
+    Phase 1 carry-in is discharged.
+  - `GitLabApiTools`' retry counter called the server-shared prometheus
+    handler (`SDLCMetricsHandler`, "gitlab retryable exception"). Metrics on
+    `BackendEnvironment` were expressly deferred in the Phase 4 review, so
+    the counter is **dropped** (debug log in its place), not smuggled through
+    a new port; it returns when the environment grows a metrics surface.
+    Deployment-visible: the counter disappears (migration row).
+  - `DepotServerException.getDetail()` walked a `GitLabAuthException` cause —
+    an incidental coupling from shared authorship; the branch is removed
+    (depot exceptions never carry GitLab causes on any live path).
+  - The deprecated `ProjectApi` bridge's `configureProjectInWorkspace`
+    (GitLab-specific, kept on the bridge in Phase 4 "for external
+    implementors") referenced `GitLabProjectId` and cannot survive on a
+    server-resident bridge; it is removed (migration row). The bridge
+    interface itself stands.
+  - `FinosGitlabProjectStructureExtensionProvider` (+ its yaml/ci resources)
+    stays in the server at its old FQN: deployments reference it by class
+    name in configuration, and concrete extensions are deployment-scoped
+    configuration, not backend code (§3.3) — the gitlab backend jar bundles
+    no extensions (seam-S3 obligation held).
+  - The moved tests: `JerseyGuiceUtils.install` static appeasement dropped
+    (jersey2-guice is not on the module's classpath — and in the server pom
+    that bridge is now runtime-scoped, its only compile references having
+    been these tests); the two project tests' extension fixture
+    (`DefaultProjectStructureExtension`, a server class) replaced by an
+    inline test fixture over the L2 SPI; the characterization's
+    entity-normalization pin follows the FS module's precedent (asserts
+    against the in-use serializer's normal form rather than assuming the
+    engine serializer extensions are present). The `test-gitlab-com`
+    failsafe profile moves to the module pom.
+- The server pom also sheds `metrics-healthchecks`, `commons-codec`,
+  `commons-compress`, and `hk2-api` (all orphaned by the extraction — found
+  by `dependency:analyze`).
+- The GitLab backend can now in principle run the TCK's contract suite (the
+  servlet-bound session context is gone); wiring a
+  `TestGitLabBackendContract` needs thought about which contract tests are
+  meaningful without a reachable GitLab (the fully-declared capability set
+  means the undeclared-gate branches never fire) — left to Phase 6-adjacent
+  test work rather than done thinly here.
+
+Verified: `legend-sdlc-backend-gitlab` 55 green (the moved unit tests: token
+manager over the state store, backend configuration incl. the legacy
+uat/prod flattening, SAML authenticator, project id, api statics,
+characterization 17/17); `legend-sdlc-server` 204 green after a **clean**
+build (the stale-`target/classes` services-file hazard from the Phase 2
+record struck again — the moved `BackendFactory` registration lingered in
+`target/classes` and broke the `ServiceLoader` at app bootstrap until
+`mvn clean`); full-reactor `mvn clean install javadoc:javadoc` green.
+
+### Step 6: close-out — the last bridge binding, the environment mapper decision
+
+- **`DependenciesApi` moves off its bridge binding onto the session** (the
+  last Phase 4 interim): the common `bind(DependenciesApi.class)
+  .to(DependenciesApiImpl.class)` leaves `AbstractBaseModule`; `BaseModule`
+  gains the seventeenth per-API session provider
+  (`session.getDependenciesApi()` — the inherited `DefaultDependenciesApi`,
+  whose composition Phase 4 verified identical to the bridge's).
+  `InMemoryModule` binds the bridge explicitly: its fixture apis predate the
+  SPI and the bridge composes them as before — the fixture's replacement by
+  the real in-memory backend remains possible follow-up work, not Phase 5
+  scope. The `@Deprecated` `DependenciesApiImpl` bridge class stays for
+  external assemblies that bind it by FQN.
+- **The environment `ObjectMapper`, decided**: `BackendEnvironment
+  .getObjectMapper()` stays a dedicated plain `Jackson.newObjectMapper()` —
+  deliberately *not* the server's wire mapper. The wire mapper carries
+  REST-surface concerns (mix-ins, serialization features, engine protocol
+  extensions) that are contract with Studio, not with backends; handing it
+  across the SPI would let backend serialization drift with wire-format
+  tuning and vice versa. Backends get a predictable, unconfigured mapper for
+  their internal serialization needs and configure their own modules on it if
+  they need more (nothing consumes it today; the GitLab backend's config
+  parsing runs on the bootstrap mapper via the part-1 factory hook, which is
+  the one place backend Jackson needs meet host parsing). Recorded on
+  `BackendEnvironment.getObjectMapper()`'s javadoc.
+
+### Phase 5 wrap-up: module inventory and the Phase 6 hand-off
+
+**Status: complete.**
+
+- **Module inventory after Phase 5**: three L5 backends —
+  **`legend-sdlc-backend-gitlab`** (`backend.gitlab[.api|.auth|.tools]`;
+  gitlab4j, the GitLab api classes, OAuth/SAML token machinery over the SPI's
+  session state store), **`legend-sdlc-backend-fs`** (jgit over a root
+  directory), **`legend-sdlc-backend-inmemory`** (process-local; the TCK's
+  first runner) — all ServiceLoader-registered, all shipped by the standard
+  server distribution at runtime scope, selected by the polymorphic
+  `backend:` configuration (legacy `gitLab:` adapter intact, uat/prod forms
+  included). `legend-sdlc-server-fs` is a relocation POM. The server (L6) has
+  no backend-specific compile dependency; its auth surface is generic (state
+  sessions, one `/auth` resource set, the three SPI exception mappings), and
+  `server.gitlab` survives only as `server.gitlab.finos` — deployment
+  configuration. The plan's §8 dependency graph is now literal.
+- **Phase 4 hand-off, fully discharged**: GitLab extracted (state-store
+  re-plumb + `AuthorizationRequiredException` conversion); the state store is
+  persistent (session cookie write-back); the per-backend auth resources are
+  replaced by the generic surface; `FSModule` died with the parallel server;
+  `DependenciesApi` is on the session; the environment mapper is decided (on
+  the record above); the FS `getReviews` tolerance was decided as the L6
+  affordance (option (b), 2026-07-14).
+- **Hand-off to Phase 6** (and adjacent follow-ups, none blocking it):
+  - The **§4.5 audit list** now gates the work:
+    `ProjectStructure.PROJECT_STRUCTURE_FACTORY` (process-global,
+    classloader-captured) and `MavenProjectStructure.loadTestResourceCode`'s
+    TCCL lookup must be resolved before L0–L3 is declared embeddable.
+  - `legend-sdlc-local` per §4 (rooted contexts, `LocalModel`, the §4.5 IDE
+    constraints); the §4.6 degraded-mode/provider-acquisition decisions are
+    already on the record from the Phase 4 review and need confirming in
+    implementation.
+  - **Removal conditions to track** (not Phase 6 work, but recorded here so
+    they are not lost): `NoReviewsReviewApi` goes when Studio consumes
+    `GET /configuration/capabilities` for its review UI; the deprecation
+    bridges (`server.domain.api.*` interfaces, `DependenciesApiImpl`,
+    `BackgroundTaskProcessor`, `CallUntil`/`Throwing*`, `LegendSDLCServerException`,
+    Phase 1/2 tool and extension bridges) are removed together, coordinated
+    with the origin project per §5; `GITLAB_MODE` and the legacy `gitLab:`
+    adapter go after the transition release.
+  - **Known gaps, documented not fixed**: an FS deployment needs a
+    pac4j client that yields profiles for sessions (the old FS server was
+    sessionless; migration doc covers it); the GitLab backend does not yet
+    run the TCK contract suite (possible now that the servlet coupling is
+    gone, but the all-capabilities backend exercises none of the undeclared
+    gates — needs thought about what it would certify); metrics and health
+    surfaces on the SPI remain deferred/additive (the one sub-L6 prometheus
+    counter was dropped at extraction).
+
+### Correction (2026-09-17, found by the PR's GitLab Docker integration tests): GitLab4J's runtime JSON dependency lost at extraction
+
+The `gitlab-docker-int-test-latest-twelve` workflow failed on the Phase 5 PR:
+all 7 `IntegrationTestGitLab*` classes errored in suite setup with
+`NoClassDefFoundError: com/fasterxml/jackson/module/jaxb/JaxbAnnotationIntrospector`,
+raised while GitLab4J's Jersey client built its JSON message body provider
+for its first request.
+
+- **Root cause**: the root pom's `gitlab4j-api` management excludes
+  `jackson-module-jaxb-annotations` and `jackson-jaxrs-base` (since the
+  gitlab4j 5.x upgrade, #980), but the Jersey JSON provider GitLab4J
+  registers on its client needs `jackson-module-jaxb-annotations` at runtime.
+  Inside the server the jar arrived through the server's own direct
+  `jackson-jaxrs-json-provider` dependency; Step 5 part 3 moved the GitLab
+  code, and its integration tests, into a module with no such dependency.
+  The standard server was unaffected — its runtime classpath still carries
+  the jar — but the backend jar on any other classpath (these tests; an
+  assembly without the server's Jackson JAX-RS dependency) failed on its
+  first GitLab call.
+- **Why Phase 5 shipped it**: none of the module's unit tests constructs
+  GitLab4J's HTTP client, and the integration tests run only under the
+  `test-gitlab-docker` profile against a GitLab container, which the per-step
+  local verification did not run.
+- **Fix (this commit)**: `legend-sdlc-backend-gitlab` declares
+  `jackson-jaxrs-json-provider` at runtime scope exactly as
+  `legend-sdlc-server` declares it (same `jakarta.activation-api` exclusion,
+  same managed version) — deliberately the server's declaration rather than
+  the narrower `jackson-module-jaxb-annotations` alone, so the GitLab client
+  runs against the Jackson JAX-RS configuration production has run since the
+  gitlab4j 5.x upgrade, whose first attempt (#976, reverted) generated
+  incorrect JSON. The gitlab4j exclusions are untouched. On the record from
+  the history: #976 already carried the same exclusions; the JSON fix #980
+  added over it is `BaseServer`'s `ContextResolver<ObjectMapper>`, which
+  stands. A first attempt at this correction — version-managing
+  `jackson-module-jaxb-annotations` in the root pom with the activation
+  exclusion — was rejected: exclusions in `dependencyManagement` apply
+  transitively, and would have stripped `jakarta.activation-api` from
+  `legend-sdlc-generation-service`, `legend-sdlc-test-generation`, and
+  several Maven plugins.
+- **Classpath evidence**: ordered runtime and test classpaths
+  (`dependency:build-classpath`) compared for every reactor module with and
+  without the change are identical except in `legend-sdlc-backend-gitlab`,
+  which gains `jackson-jaxrs-json-provider`, `jackson-jaxrs-base`,
+  `jackson-module-jaxb-annotations` (all 2.10.5), and `jakarta.xml.bind-api`
+  — all already on the server's runtime classpath at those versions. Every
+  Jackson, Jersey, JAX-RS, and GitLab4J artifact on the module's test
+  classpath is on the server's runtime classpath at the same version. The
+  server's extras (Dropwizard's Jackson setup, server-side Jersey,
+  `jersey-metainf-services`) cannot reach GitLab4J's client: it sets
+  `jersey.config.client.disableAutoDiscovery` and
+  `jersey.config.client.disableMetainfServicesLookup`, and its only JSON
+  providers are the `JacksonJson` and `JacksonFeature` it registers itself
+  (alongside `MultiPartFeature`; checked in the gitlab4j 5.8.0
+  bytecode, as is jersey-common 2.25.1's `ServiceFinderBinder` honoring the
+  lookup flag), so the tests exercise the client's JSON configuration as
+  production has it.
+- Verified: locally, without a GitLab container, all 7 integration test
+  classes now get past client construction and fail only on
+  `Connection refused` (before the fix: the `NoClassDefFoundError`);
+  `legend-sdlc-backend-gitlab` `mvn install javadoc:javadoc` green (55 tests,
+  checkstyle, PMD, `dependency:analyze`, enforcer); `legend-sdlc-server`
+  enforcer (dependency convergence) green. The run against a real GitLab is
+  the workflow's.

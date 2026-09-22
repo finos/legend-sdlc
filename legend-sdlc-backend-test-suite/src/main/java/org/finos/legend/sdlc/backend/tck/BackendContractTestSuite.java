@@ -22,6 +22,8 @@ import org.finos.legend.sdlc.backend.api.spi.BackendSession;
 import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
 import org.finos.legend.sdlc.backend.api.spi.UnsupportedCapabilityException;
+import org.finos.legend.sdlc.domain.model.version.VersionId;
+import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -134,6 +136,43 @@ public abstract class BackendContractTestSuite
             assertAccessor(session, capabilities, BackendCapability.BACKUP, BackendSession::getBackupApi);
             assertAccessor(session, capabilities, BackendCapability.CONFLICT_RESOLUTION, BackendSession::getConflictResolutionApi);
             assertAccessor(session, capabilities, BackendCapability.ISSUES, BackendSession::getIssueApi);
+        }
+    }
+
+    /**
+     * Cross-API scope gates: a source specification whose scope requires an undeclared capability must be
+     * rejected with {@link UnsupportedCapabilityException} by the scoped methods of the core APIs — a
+     * version-scoped entity access context is meaningless on a backend without {@code VERSIONS}, and 501 there
+     * must be indistinguishable from 501 on the whole-concept accessor.
+     */
+    @Test
+    public void testCrossApiSourceScopeGates()
+    {
+        Backend backend = newBackend();
+        Set<BackendCapability> capabilities = backend.getCapabilities();
+        BackendSession session = backend.newSession(newSessionContext());
+
+        if (!capabilities.contains(BackendCapability.VERSIONS))
+        {
+            assertSourceScopeGate(BackendCapability.VERSIONS, () -> session.getEntityApi().getEntityAccessContext("project", SourceSpecification.versionSourceSpecification("1.0.0")));
+        }
+        if (!capabilities.contains(BackendCapability.PATCHES))
+        {
+            assertSourceScopeGate(BackendCapability.PATCHES, () -> session.getEntityApi().getEntityAccessContext("project", SourceSpecification.patchSourceSpecification(VersionId.newVersionId(1, 0, 0))));
+        }
+    }
+
+    private void assertSourceScopeGate(BackendCapability capability, Runnable scopedAccess)
+    {
+        try
+        {
+            scopedAccess.run();
+            Assert.fail("scoped access requiring undeclared capability " + capability + " must throw UnsupportedCapabilityException");
+        }
+        catch (UnsupportedCapabilityException e)
+        {
+            Assert.assertEquals(capability, e.getCapability());
+            Assert.assertEquals(UnsupportedCapabilityException.STATUS_CODE, e.getStatusCode());
         }
     }
 

@@ -22,7 +22,7 @@ import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider;
+import org.finos.legend.sdlc.backend.inmemory.InMemoryProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
