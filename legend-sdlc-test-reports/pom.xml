@@ -32,6 +32,13 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.github.mikkoi</groupId>
+                        <artifactId>maven-enforcer-rule-depend-on-all-projects</artifactId>
+                        <version>1.0.0</version>
+                    </dependency>
+                </dependencies>
                 <configuration>
                     <rules combine.self="override">
                         <requireJavaVersion>
@@ -39,6 +46,23 @@
                         </requireJavaVersion>
                     </rules>
                 </configuration>
+                <executions>
+                    <execution>
+                        <id>depend-on-all-projects</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <dependOnAllProjects>
+                                    <includeRootProject>false</includeRootProject>
+                                    <errorIfUnknownProject>true</errorIfUnknownProject>
+                                </dependOnAllProjects>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
             <plugin>
                 <groupId>org.sonatype.plugins</groupId>
@@ -182,6 +206,7 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-entity-maven-plugin</artifactId>
+            <type>maven-plugin</type>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -192,6 +217,7 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-file-maven-plugin</artifactId>
+            <type>maven-plugin</type>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -202,6 +228,7 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-model-maven-plugin</artifactId>
+            <type>maven-plugin</type>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -212,6 +239,7 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
+            <type>maven-plugin</type>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
@@ -232,6 +260,69 @@
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>
             <artifactId>legend-sdlc-test-utils</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-server-fs</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-version-package-maven-plugin</artifactId>
+            <type>maven-plugin</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-test-generation</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-test-generation</artifactId>
+            <type>maven-plugin</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-test-generation-maven-plugin</artifactId>
+            <type>maven-plugin</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>*</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.finos.legend.sdlc</groupId>
+            <artifactId>legend-sdlc-generation-shared</artifactId>
             <exclusions>
                 <exclusion>
                     <groupId>*</groupId>
