@@ -21,6 +21,51 @@ directly.
 | `org.finos.legend.sdlc.server.domain.api.project.source.*` (`SourceSpecification` and subclasses, `SourceSpecificationVisitor`/`Consumer`) in `legend-sdlc-project-files` | `org.finos.legend.sdlc.project.source.*` (same module; **no deprecated bridges** — update imports and recompile). Decided in the Phase 4 design review: the taxonomy's home is L1, final. |
 | `org.finos.legend.sdlc.server.domain.api.workspace.WorkspaceSpecification` / `WorkspaceSource` / `ProjectWorkspaceSource` / `PatchWorkspaceSource` / `WorkspaceSourceVisitor` / `WorkspaceSourceConsumer` in `legend-sdlc-project-files` | `org.finos.legend.sdlc.project.workspace.*` (same module; **no deprecated bridges**). `WorkspaceApi` and the other domain API interfaces are unaffected by this row (see the next row). |
 | The domain API interfaces `org.finos.legend.sdlc.server.domain.api.<concern>.*` (`EntityApi`, `ProjectApi`, `WorkspaceApi`, `ReviewApi`, …, including the access contexts and `ProjectRevision`), and `org.finos.legend.sdlc.server.project.ProjectConfigurationStatusReport`, in `legend-sdlc-server` | `org.finos.legend.sdlc.backend.api.<concern>.*` in **`legend-sdlc-backend-api`** (note `conflictResolution` → `conflictresolution`); deprecated bridge interfaces remain at the old FQNs in `legend-sdlc-server`, so implementations and injection points keep compiling. **Not bridged**: `NewVersionType` (an enum cannot be bridged — update imports). **Changed on the relocated types** (old shapes remain on the bridges): `ProjectApi` no longer declares the GitLab-specific `configureProjectInWorkspace`; `ConflictResolutionApi.acceptConflictResolution` takes the message/entity-changes/revision-id directly instead of a `PerformChangesCommand`; `VersionApi`/`BuildApi` default methods throw `LegendSDLCException` (same 400 status) instead of `LegendSDLCServerException`. |
+| `org.finos.legend.sdlc.project.files.InMemoryProjectFileAccessProvider` / `SimpleInMemoryVCS` in the `legend-sdlc-project-files` **test-jar** | `org.finos.legend.sdlc.backend.inmemory.*` in the main jar of **`legend-sdlc-backend-inmemory`** (no deprecated bridges — test utilities; update the dependency from the test-jar to the new module and fix imports). They are now regular published classes: the storage provider behind the in-memory backend. |
+| **`legend-sdlc-server-fs`** (the standalone file-system SDLC server: `LegendSDLCServerFS`, `FSModule`, the `FileSystem*Api` classes, `FSException`) | **`legend-sdlc-backend-fs`**, package `org.finos.legend.sdlc.backend.fs` — a backend for the standard server, not a server (a relocation POM points the old Maven coordinates at the new ones; **no deprecated bridges** — the old classes were a self-contained runnable, not an API surface, and most have no equivalent in the refit: the stub api classes are replaced by the capability model and the generic L4 defaults). See "If you deploy the file-system SDLC server" below. |
+| The GitLab implementation `org.finos.legend.sdlc.server.gitlab.**` in `legend-sdlc-server` (`GitLabConfiguration`, `GitLabAppInfo`, `GitLabServerInfo`, `GitLabProjectId`, the `GitLab*Api` classes, `GitLabOAuthAuthenticator`, the SAML authenticators, the auth exceptions, `GitLabApiTools`, `PagerTools`, `GitLabBackend`/`GitLabBackendFactory`/`GitLabBackendConfiguration`), plus `org.finos.legend.sdlc.server.tools.AuthenticationTools` | `org.finos.legend.sdlc.backend.gitlab.**` in **`legend-sdlc-backend-gitlab`** (**no deprecated bridges** — the server cannot alias classes that now live below it, and these were server-internal implementation, not published API; depend on `legend-sdlc-backend-gitlab` and update imports). `org.finos.legend.sdlc.server.gitlab.finos.FinosGitlabProjectStructureExtensionProvider` stays in `legend-sdlc-server` at its old FQN — it is deployment configuration, not backend code. GitLab4J leaves the server's dependency tree. |
+| `GitLabAuthorizer.authorize(Session, GitLabAppInfo)` (implementations configured in the `gitlabAuthorizers` list) | `org.finos.legend.sdlc.backend.gitlab.auth.GitLabAuthorizer.authorize(BackendSessionContext, GitLabAppInfo)` — a **breaking signature change**. Configured class names in YAML keep resolving; re-target the implementation: identity via `BackendSessionContext.getUserId()`, the Kerberos `Subject` via `getService(javax.security.auth.Subject.class)`, OIDC/personal-access-token material via `getService(OidcAuthMaterial.class)` / `getService(PersonalAccessTokenAuthMaterial.class)`, per-user persistence via `getStateStore()`. |
+| The GitLab-specific auth machinery in the server: `GitLabBundle`, `GitLabServerHealthCheck`, the GitLab session classes (`GitLabSession` and implementations, `GitLabSessionBuilder`, `GitLabWebFilter`), the servlet-bound `GitLabUserContext`, the GitLab `/auth` resources | Gone, no bridges. The server's session filter is backend-independent (registered as **"LegendSDLCSession"**; a `filterPriorities` entry under the old name **"GitLab"** is honored as an alias), sessions are generic state-carrying sessions, one generic `/auth` surface serves every backend (same routes and wire behavior), and the GitLab token life cycle lives in the backend over the SPI's session state store. Consequences: the `gitLabServer` health-check entry disappears from `/healthcheck`; session cookies from earlier releases decode without token state, so users re-authorize once after upgrade (silently for OIDC-, personal-access-token-, and Kerberos-authenticated users); the `"gitlab retryable exception"` prometheus counter is no longer emitted. |
+| `org.finos.legend.sdlc.server.tools.CallUntil` / `ThrowingRunnable` / `ThrowingSupplier` in `legend-sdlc-server` | `org.finos.legend.sdlc.backend.api.tools.*` in **`legend-sdlc-backend-api`** (joining `BackgroundTaskProcessor`); deprecated bridges remain at the old FQNs in `legend-sdlc-server`. |
+| `legend-sdlc-server` bundles GitLab on its compile classpath | The standard server distribution ships all three backends (`legend-sdlc-backend-gitlab`, `-fs`, `-inmemory`) as **runtime** dependencies; a deployment selects one by the `backend:` configuration (a legacy top-level `gitLab:` section still selects the GitLab backend, including the deprecated `uat`/`prod` mode forms). Assemblies that construct their own classpath must add the backend jar(s) they deploy. `DepotServerException.getDetail()` no longer reads a GitLab auth exception cause's detail; the deprecated GitLab-specific `configureProjectInWorkspace` is gone from the `ProjectApi` bridge (its `GitLabProjectId` parameter now lives below the server). |
+
+## If you deploy the file-system SDLC server
+
+The standalone file-system server — the `legend-sdlc-server-fs` shaded jar, its
+`org.finos.legend.sdlc.server.startup.LegendSDLCServerFS` main class, and the
+`finos/legend-sdlc-server-fs` Docker image — no longer exists. A file-system deployment
+now runs the **standard** server:
+
+1. Run `org.finos.legend.sdlc.server.LegendSDLCServer` (the standard `legend-sdlc-server`
+   distribution) with `legend-sdlc-backend-fs` and its dependencies on the classpath.
+2. Replace the old top-level `fileSystem:` configuration section with the polymorphic
+   backend selection:
+
+   ```yaml
+   backend:
+     type: fileSystem
+     rootDirectory: /path/under/which/project/repositories/live
+   ```
+
+   Everything else in the configuration (server connectors, filters, `projectStructure:`,
+   …) is standard-server configuration and keeps its shape.
+3. An existing root directory keeps working: projects are discovered by scanning it, and
+   workspace branches created by the old server (`workspace/local_user/…`) remain
+   addressable — sessions without an authenticated user id map to the old server's fixed
+   `local_user`.
+4. The standard server creates its per-request session from the pac4j authentication
+   profiles (the old file-system server needed no session at all), so the deployment's
+   `pac4j:` section must configure a client that yields a profile — e.g.
+   `LocalKerberosClient` for a single-user local setup. Requests without an
+   authentication profile get no session, and session-bound routes fail.
+
+Behavior differences to be aware of: routes for features the file-system backend does not
+declare (reviews other than listing, versions, workflows, patches, builds, backup,
+conflict resolution, issues) now return **501 with a structured body** naming the missing
+capability, instead of the old stubs' empty responses and 500s; review **listing** reports
+an empty list (a compatibility affordance for Legend Studio, retained temporarily until
+Studio consumes `GET /configuration/capabilities`). The capability set is discoverable at
+`GET /configuration/capabilities`.
 
 ## If you implement project structure extensions (the expected case)
 
