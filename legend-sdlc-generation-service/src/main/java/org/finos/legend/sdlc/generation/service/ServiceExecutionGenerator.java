@@ -73,7 +73,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.RecursiveTask;
 import javax.lang.model.SourceVersion;
 import javax.tools.JavaFileObject;
 
@@ -94,9 +93,9 @@ public class ServiceExecutionGenerator
     private final String clientVersion;
     private final RichIterable<? extends Root_meta_pure_extension_Extension> extensions;
     private final Iterable<? extends PlanTransformer> transformers;
-    private final ForkJoinPool executorService;
+    private final int parallelism;
 
-    private ServiceExecutionGenerator(ListIterable<Service> services, ListIterable<FunctionJar> functionJars, PureModel pureModel, PureModelContextData pureModelContextData, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, String clientVersion, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, ForkJoinPool executorService)
+    private ServiceExecutionGenerator(ListIterable<Service> services, ListIterable<FunctionJar> functionJars, PureModel pureModel, PureModelContextData pureModelContextData, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper, String clientVersion, RichIterable<? extends Root_meta_pure_extension_Extension> extensions, Iterable<? extends PlanTransformer> transformers, int parallelism)
     {
         this.services = services;
         this.functionJars = functionJars;
@@ -107,7 +106,7 @@ public class ServiceExecutionGenerator
         this.resourceOutputDirectory = resourceOutputDirectory;
         this.objectMapper = (jsonMapper == null) ? getDefaultJsonMapper() : jsonMapper;
         this.clientVersion = clientVersion;
-        this.executorService = executorService;
+        this.parallelism = parallelism;
         this.extensions = extensions;
         this.transformers = transformers;
     }
@@ -115,7 +114,7 @@ public class ServiceExecutionGenerator
     @Deprecated
     public ServiceExecutionGenerator(Service service, PureModel pureModel, String packagePrefix, Path javaSourceOutputDirectory, Path resourceOutputDirectory, JsonMapper jsonMapper)
     {
-        this(Lists.immutable.with(validateService(service)), null, pureModel, null, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, resolveClientVersion(null), Lists.immutable.empty(), Lists.immutable.empty(), null);
+        this(Lists.immutable.with(validateService(service)), null, pureModel, null, canonicalizePackagePrefix(packagePrefix), javaSourceOutputDirectory, resourceOutputDirectory, jsonMapper, resolveClientVersion(null), Lists.immutable.empty(), Lists.immutable.empty(), 1);
     }
 
     public void generateUtil(ExecClassNamesAndEnumerations execClassNamesAndEnums)
@@ -143,13 +142,58 @@ public class ServiceExecutionGenerator
         LOGGER.info("Finished generation of {} function jar", this.functionJars.size());
     }
 
+    // Delegates the whole batch to engine: one call runs the LEAF/JOIN fork-join + the ROOT shared-type
+    // generation, dependency resolution, and serialization. sdlc only owns validation, exec-class
+    // generation, and file writing.
     public void generateService()
     {
         LOGGER.info("Starting generation of {} services", this.services.size());
-        ExecClassNamesAndEnumerations execClassNamesAndEnums = (this.executorService == null) ?
-                this.services.injectInto(null, (accumulator, service) -> ExecClassNamesAndEnumerations.merge(accumulator, generate(service))) :
-                this.executorService.invoke(new ServiceGenerationTask());
-        generateUtil(execClassNamesAndEnums);
+        if (this.services.isEmpty())
+        {
+            LOGGER.info("Finished generation of {} services", this.services.size());
+            return;
+        }
+
+        // Pre-validate service param types and generate main execution classes up front; fail fast
+        // before the expensive engine batch runs.
+        MutableList<GeneratedJavaCode> mainClasses = Lists.mutable.ofInitialCapacity(this.services.size());
+        MutableList<ListIterable<Enumeration<? extends Enum>>> perServiceEnums = Lists.mutable.ofInitialCapacity(this.services.size());
+        for (Service service : this.services)
+        {
+            perServiceEnums.add(validateServiceParameterTypes(service));
+            mainClasses.add(ServiceExecutionClassGenerator.newGenerator(this.packagePrefix)
+                    .withPlanResourceName(getExecutionPlanResourceName(service.getPath()))
+                    .withService(service)
+                    .generate());
+        }
+
+        ServicePlanGenerator.ServicePlanBatchResult batch = ServicePlanGenerator.generateServiceExecutionPlanBatch(
+                Lists.mutable.withAll(this.services),
+                this.pureModel,
+                this.clientVersion,
+                PlanPlatform.JAVA,
+                this.packagePrefix,
+                this.extensions,
+                this.transformers,
+                this.parallelism);
+
+        // Per-service artifacts: plan JSON + main execution class.
+        ExecClassNamesAndEnumerations names = null;
+        for (int i = 0; i < this.services.size(); i++)
+        {
+            Service service = this.services.get(i);
+            writeExecutionPlan(service.getPath(), batch.perServicePlans.get(i));
+            writeJavaClass(mainClasses.get(i));
+            names = ExecClassNamesAndEnumerations.merge(names, new ExecClassNamesAndEnumerations(mainClasses.get(i).getClassName(), perServiceEnums.get(i)));
+        }
+
+        // Merged Java sources for all services (shared types generated exactly once by the engine).
+        if (batch.mergedJavaPlan != null)
+        {
+            JavaSourceHelper.writeJavaSourceFiles(this.javaSourceOutputDirectory, batch.mergedJavaPlan);
+        }
+
+        generateUtil(names);
         LOGGER.info("Finished generation of {} services", this.services.size());
     }
 
@@ -315,27 +359,6 @@ public class ServiceExecutionGenerator
         return javaClassName.replace(".", this.javaSourceOutputDirectory.getFileSystem().getSeparator()) + JavaFileObject.Kind.SOURCE.extension;
     }
 
-    private String getPlanId(String servicePath)
-    {
-        StringBuilder builder = new StringBuilder();
-        if (this.packagePrefix != null)
-        {
-            appendReplacingDelimiter(builder, this.packagePrefix, ".", "_").append('_');
-        }
-        appendReplacingDelimiter(builder, servicePath, EntityPaths.PACKAGE_SEPARATOR, "_");
-        return JavaSourceHelper.toValidJavaIdentifier(builder.toString(), '$', true);
-    }
-
-    private ExecClassNamesAndEnumerations generate(int index)
-    {
-        LOGGER.info("index gotten is {}", index);
-        if (index >= this.services.size())
-        {
-            return generate(this.functionJars.get(index - this.services.size()));
-        }
-        return generate(this.services.get(index));
-    }
-
     private ExecClassNamesAndEnumerations generate(FunctionJar functionJar)
     {
         long start = System.nanoTime();
@@ -375,49 +398,6 @@ public class ServiceExecutionGenerator
         {
             long end = System.nanoTime();
             LOGGER.info("Finished generation for {} ({}s)", functionJarPath, String.format("%.9f", (end - start) / 1_000_000_000.0));
-        }
-        return execClassNamesAndEnums;
-    }
-
-    private ExecClassNamesAndEnumerations generate(Service service)
-    {
-        long start = System.nanoTime();
-        String servicePath = service.getPath();
-        LOGGER.info("Starting generation for {}", servicePath);
-
-        // Validate service parameter types and collect enumerations to generate
-        ListIterable<Enumeration<? extends Enum>> enumerations = validateServiceParameterTypes(service);
-
-        // Generate plan
-        ExecutionPlan plan = generateExecutionPlan(service, servicePath);
-
-        // Write any Java classes from the plan, then remove them from the plan
-        LOGGER.debug("Writing Java source files from plan for {}", servicePath);
-        JavaSourceHelper.writeJavaSourceFiles(this.javaSourceOutputDirectory, plan);
-        LOGGER.debug("Finished writing Java source files from plan for {}", servicePath);
-        JavaSourceHelper.removeJavaImplementationClasses(plan);
-
-        // Generate execution class for service
-        LOGGER.debug("Starting generating main service execution class for {}", servicePath);
-        GeneratedJavaCode generatedJavaClass = ServiceExecutionClassGenerator.newGenerator(this.packagePrefix)
-                .withPlanResourceName(getExecutionPlanResourceName(servicePath))
-                .withService(service)
-                .generate();
-        LOGGER.debug("Finished generating main service execution class for {}", servicePath);
-
-        // Write plan resource and execution class
-        LOGGER.debug("Starting writing execution plan for {}", servicePath);
-        writeExecutionPlan(servicePath, plan);
-        LOGGER.debug("Finished writing execution plan for {}", servicePath);
-        LOGGER.debug("Starting writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
-        writeJavaClass(generatedJavaClass);
-        LOGGER.debug("Finished writing main service execution class for {}: {}", servicePath, generatedJavaClass.getClassName());
-
-        ExecClassNamesAndEnumerations execClassNamesAndEnums = new ExecClassNamesAndEnumerations(generatedJavaClass.getClassName(), enumerations);
-        if (LOGGER.isInfoEnabled())
-        {
-            long end = System.nanoTime();
-            LOGGER.info("Finished generation for {} ({}s)", servicePath, String.format("%.9f", (end - start) / 1_000_000_000.0));
         }
         return execClassNamesAndEnums;
     }
@@ -494,128 +474,6 @@ public class ServiceExecutionGenerator
         }
 
         return validateVariable(((PureExecution) service.execution).func.parameters);
-    }
-
-    private ExecutionPlan generateExecutionPlan(Service service, String servicePath)
-    {
-        LOGGER.debug("Starting generating execution plan for {}", servicePath);
-        String planId = getPlanId(servicePath);
-        LOGGER.debug("Plan id: {}", planId);
-        ExecutionPlan plan;
-        try
-        {
-            plan = ServicePlanGenerator.generateServiceExecutionPlan(service, null, this.pureModel, this.clientVersion, PlanPlatform.JAVA, planId, this.extensions, this.transformers, this.executorService);
-        }
-        catch (Exception e)
-        {
-            LOGGER.error("Error generating execution plan for {}", servicePath, e);
-            StringBuilder builder = new StringBuilder("Error generating execution plan for ").append(servicePath);
-            String eMessage = e.getMessage();
-            if (eMessage != null)
-            {
-                builder.append(": ").append(eMessage);
-            }
-            throw new RuntimeException(builder.toString(), e);
-        }
-        LOGGER.debug("Finished generating execution plan for {}", servicePath);
-        return plan;
-    }
-
-    private class ServiceGenerationTask extends RecursiveTask<ExecClassNamesAndEnumerations>
-    {
-        private static final long serialVersionUID = 1497257368185923326L;
-
-        private volatile boolean terminated = false;
-
-        private ServiceGenerationTask()
-        {
-        }
-
-        @Override
-        public void reinitialize()
-        {
-            this.terminated = false;
-            super.reinitialize();
-        }
-
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning)
-        {
-            this.terminated = true;
-            return super.cancel(mayInterruptIfRunning);
-        }
-
-        @Override
-        public void completeExceptionally(Throwable ex)
-        {
-            this.terminated = true;
-            super.completeExceptionally(ex);
-        }
-
-        @Override
-        protected ExecClassNamesAndEnumerations compute()
-        {
-            ExecClassNamesAndEnumerations result = computeForRange(0, ServiceExecutionGenerator.this.services.size() + ServiceExecutionGenerator.this.functionJars.size());
-            if (this.terminated && !isCompletedAbnormally())
-            {
-                LOGGER.warn("Service generation terminated without abnormal completion");
-                throw new IllegalStateException("Unexpected error during service generation");
-            }
-            return result;
-        }
-
-        private ExecClassNamesAndEnumerations computeForRange(int start, int end)
-        {
-            if (this.terminated)
-            {
-                return null;
-            }
-
-            int length = end - start;
-            if (length < 1)
-            {
-                return null;
-            }
-
-            try
-            {
-                if (length == 1)
-                {
-                    return generate(start);
-                }
-
-                int split = start + (length / 2);
-                RecursiveServiceGeneration task1 = new RecursiveServiceGeneration(start, split);
-                RecursiveServiceGeneration task2 = new RecursiveServiceGeneration(split, end);
-                invokeAll(task1, task2);
-                return this.terminated ? null : ExecClassNamesAndEnumerations.merge(task1.getRawResult(), task2.getRawResult());
-            }
-            catch (Throwable t)
-            {
-                this.terminated = true;
-                throw t;
-            }
-        }
-
-        private class RecursiveServiceGeneration extends RecursiveTask<ExecClassNamesAndEnumerations>
-        {
-            private static final long serialVersionUID = 221339527579068715L;
-
-            private final int start;
-            private final int end;
-
-            private RecursiveServiceGeneration(int start, int end)
-            {
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            protected ExecClassNamesAndEnumerations compute()
-            {
-                return computeForRange(this.start, this.end);
-            }
-        }
     }
 
     private static class ExecClassNamesAndEnumerations
@@ -758,7 +616,7 @@ public class ServiceExecutionGenerator
         private final MutableList<PlanGeneratorExtension> planGeneratorExtensions = Lists.mutable.empty();
         private final MutableList<LegendPureCoreExtension> pureCoreExtensions = Lists.mutable.empty();
         private String clientVersion;
-        private ForkJoinPool executorService;
+        private int parallelism = 1;
 
         private Builder()
         {
@@ -860,9 +718,21 @@ public class ServiceExecutionGenerator
             return this;
         }
 
+        public Builder withParallelism(int parallelism)
+        {
+            this.parallelism = parallelism;
+            return this;
+        }
+
+        /**
+         * @deprecated Use {@link #withParallelism(int)} instead. The pool argument is ignored
+         * except for its {@link ForkJoinPool#getParallelism() parallelism} level; engine owns the
+         * fork-join pool lifecycle and applies its own worker-thread context class loader guard.
+         */
+        @Deprecated
         public Builder withExecutorService(ForkJoinPool executorService)
         {
-            this.executorService = executorService;
+            this.parallelism = (executorService == null) ? 1 : executorService.getParallelism();
             return this;
         }
 
@@ -895,7 +765,7 @@ public class ServiceExecutionGenerator
                     resolvedClientVersion,
                     extensions.toImmutable(),
                     transformers.toImmutable(),
-                    this.executorService);
+                    this.parallelism);
         }
     }
 
@@ -925,6 +795,6 @@ public class ServiceExecutionGenerator
                 resolveClientVersion(clientVersion),
                 extensions,
                 transformers,
-                null);
+                1);
     }
 }
