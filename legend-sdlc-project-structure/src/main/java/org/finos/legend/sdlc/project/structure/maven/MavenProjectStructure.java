@@ -35,13 +35,13 @@ import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfigura
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependencyExclusion;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
-import org.finos.legend.sdlc.serialization.EntitySerializer;
-import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.FileAccessContext;
 import org.finos.legend.sdlc.project.files.ProjectFileOperation;
+import org.finos.legend.sdlc.project.structure.EntitySourceDirectory;
 import org.finos.legend.sdlc.project.structure.ProjectStructure;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
+import org.finos.legend.sdlc.serialization.EntitySerializer;
 import org.finos.legend.sdlc.tools.IOTools;
 import org.finos.legend.sdlc.tools.StringTools;
 
@@ -382,13 +382,16 @@ public abstract class MavenProjectStructure extends ProjectStructure
         Collection<? extends ArtifactType> resolvedArtifactTypes = ((artifactTypes == null) || artifactTypes.isEmpty()) ? DEFAULT_ARTIFACT_TYPES.castToCollection() : artifactTypes;
         return resolvedArtifactTypes.stream().map(artifactType ->
         {
-            Dependency newDependency = newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + "-" + artifactType.name().replace('_', '-').toLowerCase(), versionString);
+            // A project publishes one artifact per type, each named <artifactId>-<type>: what the dependency's artifact
+            // brings in transitively from an excluded project is that project's artifact of the same type
+            String artifactIdSuffix = "-" + artifactType.name().replace('_', '-').toLowerCase();
+            Dependency newDependency = newMavenDependency(mavenCoordinates.getOne(), mavenCoordinates.getTwo() + artifactIdSuffix, versionString);
             if (!projectDependencyExclusions.isEmpty())
             {
                 List<Exclusion> exclusions = projectDependencyExclusions.stream().map(e ->
                 {
                     Pair<String, String> projectDependencyExclusionMavenCoordinates = getGroupAndArtifactIdFromProjectDependencyExclusion(e);
-                    return newMavenExclusion(projectDependencyExclusionMavenCoordinates.getOne(), projectDependencyExclusionMavenCoordinates.getTwo());
+                    return newMavenExclusion(projectDependencyExclusionMavenCoordinates.getOne(), projectDependencyExclusionMavenCoordinates.getTwo() + artifactIdSuffix);
                 }).collect(Collectors.toList());
                 newDependency.setExclusions(exclusions);
             }
