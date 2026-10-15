@@ -22,6 +22,7 @@ import org.apache.maven.model.io.xpp3.MavenXpp3Writer;
 import org.apache.maven.plugin.testing.MojoRule;
 import org.apache.maven.project.MavenProject;
 import org.codehaus.plexus.util.xml.Xpp3Dom;
+import org.eclipse.collections.api.factory.Maps;
 import org.eclipse.collections.impl.utility.ArrayIterate;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.serialization.EntityLoader;
@@ -89,6 +90,34 @@ public class TestModelGenerationMojo
     }
 
 
+    @Test
+    public void testErrorDefectFailsGeneration() throws Exception
+    {
+        File entitiesDir = writeErrorDefectTrigger();
+        File projectDir = buildSingleModuleProject("project", "org.finos.test", "test-project", "1.0.0", entitiesDir);
+
+        Exception e = Assert.assertThrows(Exception.class, () -> executeMojo(projectDir, entitiesDir));
+        Assert.assertTrue(String.valueOf(e), causeMessages(e).contains("Test error defect for test::defect::error::Trigger"));
+    }
+
+    private File writeErrorDefectTrigger() throws IOException
+    {
+        File entitiesDir = this.tempFolder.newFolder();
+        writeEntityToDirectory(entitiesDir.toPath(), Entity.newEntity(TestErrorDefectCompilerExtension.ERROR_PACKAGE + "::Trigger", "meta::pure::metamodel::type::Class",
+                Maps.mutable.with("_type", "class", "package", TestErrorDefectCompilerExtension.ERROR_PACKAGE, "name", "Trigger")));
+        return entitiesDir;
+    }
+
+    private static String causeMessages(Throwable t)
+    {
+        StringBuilder builder = new StringBuilder();
+        for (Throwable cause = t; cause != null; cause = cause.getCause())
+        {
+            builder.append(cause.getMessage()).append('\n');
+        }
+        return builder.toString();
+    }
+
     private Model buildMavenModel(String groupId, String artifactId, String version, String packaging)
     {
         Model mavenModel = new Model();
@@ -135,7 +164,7 @@ public class TestModelGenerationMojo
     private Plugin buildPlugin(File[] includedDirectories, Set<String> includedPaths, Set<String> includedPackages, File[] excludedDirectories, Set<String> excludedPaths, Set<String> excludedPackages, File outputDirectory)
     {
         Plugin plugin = new Plugin();
-        plugin.setGroupId("platform.alloy");
+        plugin.setGroupId("org.finos.legend.sdlc");
         plugin.setArtifactId("legend-sdlc-generation-model-maven-plugin");
         // config
         Xpp3Dom configuration = newXpp3Dom("configuration", null, null);

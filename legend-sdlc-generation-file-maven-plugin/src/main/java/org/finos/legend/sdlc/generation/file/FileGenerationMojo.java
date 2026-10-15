@@ -97,7 +97,7 @@ public class FileGenerationMojo extends AbstractMojo
         // Load Model
         long modelStart = System.nanoTime();
         getLog().info("Start loading model");
-        PureModelBuilder pureModelBuilder = PureModelBuilder.newBuilder();
+        PureModelBuilder pureModelBuilder = PureModelBuilder.newBuilder().withFailOnErrorDefects(true);
         try (EntityLoader allEntities = EntityLoader.newEntityLoader(Thread.currentThread().getContextClassLoader()))
         {
             pureModelBuilder.addEntitiesIfPossible(allEntities.getAllEntities());
