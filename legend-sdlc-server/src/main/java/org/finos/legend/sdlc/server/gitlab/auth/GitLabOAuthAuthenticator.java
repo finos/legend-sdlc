@@ -211,8 +211,8 @@ public class GitLabOAuthAuthenticator
         {
             String responseString = EntityUtils.toString(response.getEntity());
             Document doc = Jsoup.parse(responseString);
-            Element header = doc.getElementsByClass("page-title").get(0);
-            if ("Redirecting".equals(header.text()))
+            Element header = doc.selectFirst("[data-testid=page-heading]");
+            if (header != null && "Redirecting".equals(header.text()))
             {
                 Element anchor = doc.getElementsByTag("a").get(0);
                 String redirectUrl = anchor.attr("href");
