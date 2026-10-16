@@ -36,6 +36,7 @@ public class PureModelBuilder
     private ClassLoader classLoader;
     private CompilerExtensions extensions;
     private String packagePrefix;
+    private boolean failOnErrorDefects;
 
     private PureModelBuilder(EntityToPureConverter converter)
     {
@@ -191,6 +192,17 @@ public class PureModelBuilder
         return this;
     }
 
+    public void setFailOnErrorDefects(boolean failOnErrorDefects)
+    {
+        this.failOnErrorDefects = failOnErrorDefects;
+    }
+
+    public PureModelBuilder withFailOnErrorDefects(boolean failOnErrorDefects)
+    {
+        setFailOnErrorDefects(failOnErrorDefects);
+        return this;
+    }
+
     public PureModelWithContextData build()
     {
         PureModelContextData pureModelContextData = this.contextDataBuilder.build();
@@ -217,7 +229,12 @@ public class PureModelBuilder
 
     private PureModel buildPureModel(PureModelContextData pureModelContextData)
     {
-        return new PureModel(pureModelContextData, getExtensions(), null, this.classLoader, DeploymentMode.PROD, new PureModelProcessParameter(this.packagePrefix), null);
+        PureModel pureModel = new PureModel(pureModelContextData, getExtensions(), null, this.classLoader, DeploymentMode.PROD, new PureModelProcessParameter(this.packagePrefix), null);
+        if (this.failOnErrorDefects)
+        {
+            pureModel.checkNoErrorDefect();
+        }
+        return pureModel;
     }
 
     private CompilerExtensions getExtensions()
