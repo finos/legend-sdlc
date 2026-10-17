@@ -36,4 +36,22 @@ public interface BackendSessionContext
      * @return state store
      */
     BackendSessionStateStore getStateStore();
+
+    /**
+     * A typed lookup for per-user auth material the host can offer beyond the identity and the state store —
+     * the per-user counterpart of {@link BackendEnvironment#getService}. What is available depends on how the
+     * user authenticated to the host; the server publishes {@link javax.security.auth.Subject} for
+     * Kerberos-authenticated users, {@link OidcAuthMaterial} for OIDC-authenticated users, and
+     * {@link PersonalAccessTokenAuthMaterial} where a personal access token identified the user. Everything
+     * offered here is data or a JDK type — the host's authentication framework types never cross the SPI.
+     * Default: nothing available.
+     *
+     * @param serviceType service type
+     * @param <T>         service type
+     * @return service of the requested type, or null if the host offers none
+     */
+    default <T> T getService(Class<T> serviceType)
+    {
+        return null;
+    }
 }

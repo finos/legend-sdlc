@@ -16,12 +16,11 @@ package org.finos.legend.sdlc.server.guice;
 
 import com.google.inject.Binder;
 import com.google.inject.Provides;
-import com.google.inject.Scopes;
-import com.google.inject.servlet.RequestScoped;
 import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
+import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.backend.api.patch.PatchApi;
@@ -29,28 +28,17 @@ import org.finos.legend.sdlc.backend.api.project.ProjectApi;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.backend.api.review.ReviewApi;
 import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
-import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendSession;
+import org.finos.legend.sdlc.backend.api.spi.UnsupportedCapabilityException;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
-import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
-import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
+import org.finos.legend.sdlc.server.backend.NoReviewsReviewApi;
 import org.finos.legend.sdlc.server.depot.api.DepotMetadataApi;
 import org.finos.legend.sdlc.server.depot.api.MetadataApi;
-import org.finos.legend.sdlc.server.gitlab.GitLabAppInfo;
-import org.finos.legend.sdlc.server.gitlab.GitLabConfiguration;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizer;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabAuthorizerManager;
-import org.finos.legend.sdlc.server.gitlab.auth.GitLabUserContext;
-import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthCheckResource;
-import org.finos.legend.sdlc.server.gitlab.resources.GitLabAuthResource;
-
-import java.util.Collections;
-import java.util.List;
 
 public class BaseModule extends AbstractBaseModule
 {
@@ -62,43 +50,12 @@ public class BaseModule extends AbstractBaseModule
     @Override
     protected void configureApis(Binder binder)
     {
-        if (getConfiguration().getGitLabConfiguration() != null)
-        {
-            binder.bind(GitLabUserContext.class);
-            binder.bind(GitLabAuthResource.class);
-            binder.bind(GitLabAuthCheckResource.class);
-            binder.bind(GitLabConfiguration.class).toProvider(() -> getConfiguration().getGitLabConfiguration());
-            binder.bind(GitLabAppInfo.class).toProvider(() -> GitLabAppInfo.newAppInfo(getConfiguration().getGitLabConfiguration()));
-            binder.bind(GitLabAuthorizerManager.class).toProvider(() -> this.provideGitLabAuthorizerManager(getConfiguration())).in(Scopes.SINGLETON);
-        }
         configureMetadataApi(binder);
-    }
-
-    @Override
-    protected void bindUserContext(Binder binder)
-    {
-        // The backend session context wraps the UserContext; in a GitLab deployment it must be the GitLab
-        // user context (the GitLab backend unwraps it until its extraction re-plumbs auth through the SPI)
-        if (getConfiguration().getGitLabConfiguration() != null)
-        {
-            binder.bind(UserContext.class).to(GitLabUserContext.class);
-        }
-        else
-        {
-            super.bindUserContext(binder);
-        }
     }
 
     protected void configureMetadataApi(Binder binder)
     {
         binder.bind(MetadataApi.class).to(DepotMetadataApi.class);
-    }
-
-    @Provides
-    @RequestScoped
-    public BackendSession provideBackendSession(Backend backend, UserContext userContext)
-    {
-        return backend.newSession(new ServletBackendSessionContext(userContext));
     }
 
     @Provides
@@ -138,6 +95,12 @@ public class BaseModule extends AbstractBaseModule
     }
 
     @Provides
+    public DependenciesApi provideDependenciesApi(BackendSession session)
+    {
+        return session.getDependenciesApi();
+    }
+
+    @Provides
     public UserApi provideUserApi(BackendSession session)
     {
         return session.getUserApi();
@@ -146,7 +109,16 @@ public class BaseModule extends AbstractBaseModule
     @Provides
     public ReviewApi provideReviewApi(BackendSession session)
     {
-        return session.getReviewApi();
+        try
+        {
+            return session.getReviewApi();
+        }
+        catch (UnsupportedCapabilityException e)
+        {
+            // review enumeration degrades to "no reviews" for backends without the capability; every other
+            // review route keeps its 501 (see NoReviewsReviewApi)
+            return new NoReviewsReviewApi(e);
+        }
     }
 
     @Provides
@@ -197,16 +169,4 @@ public class BaseModule extends AbstractBaseModule
         return session.getIssueApi();
     }
 
-    private GitLabAuthorizerManager provideGitLabAuthorizerManager(LegendSDLCServerConfiguration configuration)
-    {
-        List<GitLabAuthorizer> gitLabAuthorizers = configuration.getGitLabConfiguration().getGitLabAuthorizers();
-        if (gitLabAuthorizers == null)
-        {
-            return GitLabAuthorizerManager.newManager(Collections.emptyList());
-        }
-        else
-        {
-            return GitLabAuthorizerManager.newManager(gitLabAuthorizers);
-        }
-    }
 }

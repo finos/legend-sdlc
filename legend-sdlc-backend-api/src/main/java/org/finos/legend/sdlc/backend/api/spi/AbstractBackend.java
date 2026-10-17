@@ -21,9 +21,15 @@ import org.finos.legend.sdlc.backend.api.comparison.DefaultComparisonApi;
 import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionApi;
 import org.finos.legend.sdlc.backend.api.dependency.DefaultDependenciesApi;
 import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
+import org.finos.legend.sdlc.backend.api.entity.DefaultEntityApi;
+import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.backend.api.issue.IssueApi;
 import org.finos.legend.sdlc.backend.api.patch.PatchApi;
+import org.finos.legend.sdlc.backend.api.project.DefaultProjectConfigurationApi;
+import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.backend.api.review.ReviewApi;
+import org.finos.legend.sdlc.backend.api.revision.DefaultRevisionApi;
+import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
@@ -74,8 +80,10 @@ public abstract class AbstractBackend implements Backend
 
     /**
      * Base session: defaults for the generic APIs, capability-gated throws for the optional ones. Subclasses
-     * implement the core APIs (projects, workspaces, revisions, entities, configuration, users) and the storage
-     * provider, and override the optional accessors for capabilities they declare.
+     * implement the storage provider and the backend-native core APIs (projects, workspaces, users), and
+     * override the optional accessors for capabilities they declare. Entities, project configuration, revisions,
+     * dependencies, and comparison default to the generic implementations over the storage provider (§3.2's
+     * minimal backend contract); a backend overrides them where it can do better natively.
      */
     public abstract class Session implements BackendSession
     {
@@ -103,6 +111,25 @@ public abstract class AbstractBackend implements Backend
          * @return project file access provider
          */
         protected abstract ProjectFileAccessProvider getProjectFileAccessProvider();
+
+        @Override
+        public EntityApi getEntityApi()
+        {
+            return new DefaultEntityApi(AbstractBackend.this, getProjectFileAccessProvider(), this::getReviewApi);
+        }
+
+        @Override
+        public ProjectConfigurationApi getProjectConfigurationApi()
+        {
+            BackendEnvironment environment = getEnvironment();
+            return new DefaultProjectConfigurationApi(AbstractBackend.this, getProjectFileAccessProvider(), environment.getProjectStructureExtensionProvider(), environment.getProjectStructurePlatformExtensions(), this::getReviewApi);
+        }
+
+        @Override
+        public RevisionApi getRevisionApi()
+        {
+            return new DefaultRevisionApi(AbstractBackend.this, getProjectFileAccessProvider());
+        }
 
         @Override
         public DependenciesApi getDependenciesApi()

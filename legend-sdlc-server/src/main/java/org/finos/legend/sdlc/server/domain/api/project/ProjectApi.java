@@ -14,22 +14,13 @@
 
 package org.finos.legend.sdlc.server.domain.api.project;
 
-import org.finos.legend.sdlc.domain.model.project.ProjectType;
-import org.finos.legend.sdlc.domain.model.revision.Revision;
-import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
-import org.finos.legend.sdlc.server.gitlab.GitLabProjectId;
-
 /**
  * @deprecated Retained temporarily for backward compatibility. Use
- * {@link org.finos.legend.sdlc.backend.api.project.ProjectApi} instead.
+ * {@link org.finos.legend.sdlc.backend.api.project.ProjectApi} instead. (The deprecated GitLab-specific
+ * {@code configureProjectInWorkspace} this bridge once carried is gone with the GitLab backend's extraction —
+ * its {@code GitLabProjectId} parameter now lives below the server.)
  */
 @Deprecated
 public interface ProjectApi extends org.finos.legend.sdlc.backend.api.project.ProjectApi
 {
-    /**
-     * @deprecated This is a GitLab-specific operation that is not part of the backend-neutral API; it is retained
-     * temporarily on this bridge only. GitLab-internal callers use the implementing class directly.
-     */
-    @Deprecated
-    Revision configureProjectInWorkspace(GitLabProjectId projectId, ProjectType type, String groupId, String artifactId, WorkspaceSpecification workspaceSpec);
 }

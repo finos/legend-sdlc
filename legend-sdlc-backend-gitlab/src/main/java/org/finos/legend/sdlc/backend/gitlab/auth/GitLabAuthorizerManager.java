@@ -1,0 +1,73 @@
+// Copyright 2021 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.finos.legend.sdlc.backend.gitlab.auth;
+
+import org.eclipse.collections.api.factory.Lists;
+import org.eclipse.collections.api.list.ListIterable;
+import org.eclipse.collections.api.list.MutableList;
+import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
+import org.finos.legend.sdlc.backend.gitlab.GitLabAppInfo;
+
+import java.util.Arrays;
+
+/**
+ * The chain of {@link GitLabAuthorizer}s tried, in order, when a session has no GitLab token. The harvest
+ * authorizers ({@link OidcGitLabAuthorizer}, {@link PersonalAccessTokenGitLabAuthorizer}) always head the chain
+ * — they read auth material the host already holds, which the former session classes harvested at session
+ * construction; then the configured authorizers, or {@link KerberosGitLabAuthorizer} when none are configured
+ * (the historical default).
+ */
+public class GitLabAuthorizerManager
+{
+    private final ListIterable<? extends GitLabAuthorizer> gitLabAuthorizers;
+
+    private GitLabAuthorizerManager(Iterable<? extends GitLabAuthorizer> gitLabAuthorizers)
+    {
+        MutableList<GitLabAuthorizer> authorizers = Lists.mutable.<GitLabAuthorizer>with(new OidcGitLabAuthorizer(), new PersonalAccessTokenGitLabAuthorizer());
+        MutableList<GitLabAuthorizer> configured = Lists.mutable.ofAll(gitLabAuthorizers);
+        if (configured.isEmpty())
+        {
+            authorizers.add(new KerberosGitLabAuthorizer());
+        }
+        else
+        {
+            authorizers.addAll(configured);
+        }
+        this.gitLabAuthorizers = authorizers.toImmutable();
+    }
+
+    public static GitLabAuthorizerManager newManager(GitLabAuthorizer... gitLabAuthorizers)
+    {
+        return newManager(Arrays.asList(gitLabAuthorizers));
+    }
+
+    public static GitLabAuthorizerManager newManager(Iterable<? extends GitLabAuthorizer> gitLabAuthorizers)
+    {
+        return new GitLabAuthorizerManager(gitLabAuthorizers);
+    }
+
+    public GitLabTokenResponse authorize(BackendSessionContext sessionContext, GitLabAppInfo appInfo)
+    {
+        for (GitLabAuthorizer gitLabAuthorizer : this.gitLabAuthorizers)
+        {
+            GitLabTokenResponse token = gitLabAuthorizer.authorize(sessionContext, appInfo);
+            if (token != null)
+            {
+                return token;
+            }
+        }
+        return null;
+    }
+}
