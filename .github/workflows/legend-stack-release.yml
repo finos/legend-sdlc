@@ -115,11 +115,6 @@ jobs:
             mvn versions:set-property -Dproperty=legend.engine.version -DnewVersion=${engineVersion}
           fi
 
-      - name: Collect Workflow Telemetry
-        uses: runforesight/workflow-telemetry-action@v1
-        with:
-          theme: dark
-
       - name: Build + Test
         run: mvn clean install javadoc:javadoc -Dorg.slf4j.simpleLogger.showDateTime=true -Dorg.slf4j.simpleLogger.dateTimeFormat=HH:mm:ss.SSSZ
 
