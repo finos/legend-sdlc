@@ -87,6 +87,7 @@ import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
+import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -567,7 +568,7 @@ public class TestServiceExecutionGenerator
                 .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
                 .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
                 .withClientVersion("vX_X_X")
-                .withParallelism(2)
+                .withExecutorService(new ForkJoinPool())
                 .build();
 
         return generateAndCompileFunctionJarUtil(generator, packagePrefix, functionJars);
