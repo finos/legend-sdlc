@@ -51,6 +51,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.ServiceLoader;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -250,28 +252,41 @@ public class ServicesGenerationMojo extends AbstractMojo
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
                 .build());
 
-        int effectiveParallelism = ((parallelism > 1) && ((servicesByPath.size() > 1) || servicesByPath.anySatisfy(s -> s.execution instanceof PureMultiExecution))) ? parallelism : 1;
-        if (effectiveParallelism > 1)
+        ForkJoinPool pool;
+        // We only create a pool if parallelism level is greater than 1 and we expect to generate multiple plans, which
+        // is true if we have multiple services or we have one or more a multi-execution service.
+        if ((parallelism > 1) && ((servicesByPath.size() > 1) || servicesByPath.anySatisfy(s -> s.execution instanceof PureMultiExecution)))
         {
-            getLog().info("Generating services in parallel with parallelism level " + effectiveParallelism);
+            getLog().info("Generating services in parallel with parallelism level " + parallelism);
+            pool = createForkJoinPool(parallelism);
         }
-        else if (parallelism > 1)
+        else
         {
-            getLog().info("Requested parallelism " + parallelism + " reduced to 1 (single-execution service and no multi-execution services to parallelize)");
+            pool = null;
         }
-        ServiceExecutionGenerator.newBuilder()
-                .withServices(servicesByPath.values())
-                .withFunctionJars(functionJarsByPath.values())
-                .withPureModel(pureModel)
-                .withPureModelContextData(pureModelContextData)
-                .withPackagePrefix(this.packagePrefix)
-                .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
-                .withJsonMapper(jsonMapper)
-                .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
-                .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
-                .withParallelism(effectiveParallelism)
-                .build()
-                .generate();
+        try
+        {
+            ServiceExecutionGenerator.newBuilder()
+                    .withServices(servicesByPath.values())
+                    .withFunctionJars(functionJarsByPath.values())
+                    .withPureModel(pureModel)
+                    .withPureModelContextData(pureModelContextData)
+                    .withPackagePrefix(this.packagePrefix)
+                    .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
+                    .withJsonMapper(jsonMapper)
+                    .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
+                    .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
+                    .withExecutorService(pool)
+                    .build()
+                    .generate();
+        }
+        finally
+        {
+            if (pool != null)
+            {
+                pool.shutdown();
+            }
+        }
     }
 
     private int getParallelism()
@@ -283,6 +298,19 @@ public class ServicesGenerationMojo extends AbstractMojo
             return 1;
         }
         return parallelism;
+    }
+
+    private ForkJoinPool createForkJoinPool(int parallelism)
+    {
+        // We have to create a custom fork join thread worker factory to ensure the worker threads use this thread's
+        // context class loader. This is why we cannot use the common pool.
+        return new ForkJoinPool(
+                parallelism,
+                pool -> new ForkJoinWorkerThread(pool)
+                {
+                },
+                null,
+                false);
     }
 
     private static ResolvedServicesSpecification resolveServicesSpecification(ServicesSpecification servicesSpec) throws Exception
