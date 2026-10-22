@@ -83,8 +83,8 @@
         <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>4.151.5</legend.engine.version>
-        <legend.pure.version>5.107.0</legend.pure.version>
+        <legend.engine.version>4.152.0</legend.engine.version>
+        <legend.pure.version>5.108.0</legend.pure.version>
         <legend.shared.version>0.37.0</legend.shared.version>
 
         <!-- Dependency versions -->
