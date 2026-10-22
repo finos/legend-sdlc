@@ -1,0 +1,129 @@
+# Copyright 2026 Goldman Sachs
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# Checks that a developer can build and test on Windows and macOS. This is
+# about developer usage, not production: what ships is built and tested on
+# Linux by `Build CI`, so this runs on JDK 25 only and in a single job per
+# platform (build, then test), with nothing published anywhere.
+name: Developer Platforms
+
+on:
+  # PRs, not pushes: a push to a PR's branch would otherwise be built twice,
+  # and a contributor who wants a result before opening a PR can run this by
+  # hand on a fork's branch. Drafts are skipped below, so marking one ready
+  # for review has to start a run too.
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  # A newer push to the same PR or branch supersedes an older run instead of
+  # queuing behind it.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: Build and Test (${{ matrix.name }})
+    # A draft is still being worked on, and this check matters once the PR is
+    # up for review; skipping drafts saves a Windows and a macOS run on every
+    # push while it is.
+    if: github.event_name != 'pull_request' || !github.event.pull_request.draft
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        # Sized to the standard runners: windows-latest has 4 cores and 16 GB,
+        # like the Linux runners `Build CI` uses, so it builds with the same
+        # settings; macos-latest (Apple silicon) has 3 cores and 7 GB, so it
+        # runs fewer builder threads. The tests run in a single fork on both,
+        # as they do in `Build CI`.
+        include:
+          - name: Windows
+            os: windows-latest
+            build-threads: 4
+            build-ram-percentage: 80.0
+          - name: macOS
+            os: macos-latest
+            build-threads: 2
+            build-ram-percentage: 75.0
+    defaults:
+      run:
+        # Git Bash on Windows, so both platforms share one set of scripts
+        shell: bash
+    steps:
+      - name: Enable long paths
+        # Some checked-out paths, such as legend-sdlc-test-generation's
+        # expected generated test sources, exceed Windows' 260-character
+        # limit. Line endings are deliberately left at the runner's default
+        # (core.autocrlf=true), which is also Git for Windows' default, so
+        # the build sees CRLF sources just as a Windows developer's does.
+        if: runner.os == 'Windows'
+        run: git config --global core.longpaths true
+
+      - name: Checkout repo
+        uses: actions/checkout@v6
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v5
+        with:
+          # Never cache this project's own artifacts (see build-and-test.yml).
+          path: |
+            ~/.m2/repository
+            !~/.m2/repository/org/finos/legend/sdlc
+          key: ${{ runner.os }}-${{ runner.arch }}-developer-platforms-mvn-deps-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-${{ runner.arch }}-developer-platforms-mvn-deps-
+
+      - name: Set up JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: 25
+
+      - name: Build
+        env:
+          MAVEN_OPTS: -XX:MaxRAMPercentage=${{ matrix.build-ram-percentage }}
+        run: mvn -B -e -T ${{ matrix.build-threads }} install -DskipTests
+
+      - name: Test
+        # `install` above put this build's artifacts in the local repository,
+        # which is where `surefire:test` resolves inter-module dependencies.
+        # Every module writes its reports to one directory, which the root
+        # pom sets.
+        env:
+          MAVEN_OPTS: -XX:MaxRAMPercentage=25.0
+        run: mvn -B -e -fae surefire:test -DforkCount=1 -DargLine=-XX:MaxRAMPercentage=50.0
+
+      - name: Summarize test results
+        # Puts the results on the run's summary page. Reporting only, so a
+        # problem here never fails the job. Windows runners provide Python as
+        # `python` rather than `python3`.
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: >-
+          ${{ runner.os == 'Windows' && 'python' || 'python3' }}
+          .github/scripts/test-summary.py --title "${{ matrix.name }}" legend-sdlc-test-reports/surefire-reports-aggregate
+
+      - name: Upload test results
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: test-results-${{ matrix.name }}
+          path: legend-sdlc-test-reports/surefire-reports-aggregate/*.xml
+          retention-days: 7

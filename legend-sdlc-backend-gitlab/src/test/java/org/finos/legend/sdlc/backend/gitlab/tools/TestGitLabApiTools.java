@@ -27,7 +27,10 @@ public class TestGitLabApiTools
     private static final int MAX_MAX_RETRIES = 50;
 
     private static final long MAX_UNDER_DURATION_NANOS = 1_000_000;
-    private static final long MAX_OVER_DURATION_NANOS = 100_000_000;
+    private static final long BASE_MAX_OVER_DURATION_NANOS = 40_000_000;
+    // Per retry, because Thread.sleep can overshoot by tens of milliseconds per sleep on a shared or virtualized
+    // machine, such as a GitHub macOS runner, so the total overshoot grows with the number of retries.
+    private static final long MAX_OVER_DURATION_NANOS_PER_RETRY = 100_000_000;
 
     @Test
     public void testIsNotFoundGitLabApiException()
@@ -245,10 +248,11 @@ public class TestGitLabApiTools
 
     private void assertDuration(int maxRetries, long expected, long actual)
     {
-        long difference = actual - expected;
-        if ((difference < -MAX_UNDER_DURATION_NANOS) || (difference > MAX_OVER_DURATION_NANOS))
+        long minDuration = expected - MAX_UNDER_DURATION_NANOS;
+        long maxDuration = expected + BASE_MAX_OVER_DURATION_NANOS + (maxRetries * MAX_OVER_DURATION_NANOS_PER_RETRY);
+        if ((actual < minDuration) || (actual > maxDuration))
         {
-            Assert.fail(String.format("maxRetries: %,d; expected duration: %,dns; duration: %,dns", maxRetries, expected, actual));
+            Assert.fail(String.format("maxRetries: %,d; expected duration: %,dns (allowed range: [%,dns, %,dns]); duration: %,dns", maxRetries, expected, minDuration, maxDuration, actual));
         }
     }
 

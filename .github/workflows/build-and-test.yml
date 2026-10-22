@@ -46,7 +46,7 @@ on:
         required: false
         default: false
       upload-event-file:
-        description: "Upload the triggering event payload, which the `Publish Test Results` workflow needs."
+        description: "Upload the triggering event payload, which the `Publish Test Results` workflow needs for a PR or a master build."
         type: boolean
         required: false
         default: false
@@ -164,8 +164,9 @@ jobs:
           retention-days: 1
 
       - name: Upload CI Event
-        # Consumed by the `Publish Test Results` workflow, which only watches
-        # `Build CI`; a release run has nothing to publish it to.
+        # Consumed by the `Publish Test Results` workflow, which reports only
+        # on `Build CI` runs for PRs and master; no other run has anything to
+        # publish it to.
         if: ${{ always() && inputs.upload-event-file }}
         uses: actions/upload-artifact@v7
         with:
@@ -238,6 +239,15 @@ jobs:
           test_jvm_home="JAVA_HOME_${{ matrix.jdk }}_X64"
           TEST_JVM="${!test_jvm_home}/bin/java"
           mvn -B -e surefire:test -Djvm="${TEST_JVM}" -DargLine="-XX:MaxRAMPercentage=50.0" -DforkCount=1
+
+      - name: Summarize test results
+        # Puts this leg's results on the run's summary page, for every caller:
+        # PRs, master, release branches, and releases alike. Reporting only, so
+        # a problem here never fails the leg, and so never blocks a release.
+        # The script comes from the build output extracted above.
+        if: ${{ !cancelled() }}
+        continue-on-error: true
+        run: python3 .github/scripts/test-summary.py --title "JDK ${{ matrix.jdk }}" legend-sdlc-test-reports/surefire-reports-aggregate
 
       - name: Upload Test Results
         # Every leg writes to the same repo-relative directory, but each runs

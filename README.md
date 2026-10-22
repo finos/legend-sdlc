@@ -54,7 +54,14 @@ classpath to add functionality extensions.
 
 ## Development setup
 
-This application uses Maven 3.6+ and JDK 11 or 17 to build. Simply run `mvn install` to compile.
+This application uses Maven 3.6+ and JDK 11, 17, 21, or 25 to build. Simply run `mvn install` to compile.
+
+You can build and test on Linux, Windows, or macOS. On Windows, enable Git's long path support before you clone,
+because some test resources have paths longer than Windows' 260-character limit:
+
+```sh
+git config --global core.longpaths true
+```
 
 ## Roadmap
 
