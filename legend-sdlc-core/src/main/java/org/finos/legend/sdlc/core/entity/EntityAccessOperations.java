@@ -50,7 +50,16 @@ public class EntityAccessOperations
      */
     public static Entity getEntity(ProjectFileAccessProvider.FileAccessContext fileAccessContext, String path, String referenceInfo)
     {
-        ProjectStructure projectStructure = ProjectStructure.getProjectStructure(fileAccessContext);
+        return getEntity(ProjectStructure.getProjectStructure(fileAccessContext), fileAccessContext, path, referenceInfo);
+    }
+
+    /**
+     * As {@link #getEntity(ProjectFileAccessProvider.FileAccessContext, String, String)}, but against an
+     * already-resolved project structure — for callers (such as a local model handle) that hold a structure across
+     * many operations rather than re-resolving it from the context per call.
+     */
+    public static Entity getEntity(ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, String path, String referenceInfo)
+    {
         for (EntitySourceDirectory sourceDirectory : projectStructure.getEntitySourceDirectories())
         {
             String filePath = sourceDirectory.entityPathToFilePath(path);
@@ -84,7 +93,12 @@ public class EntityAccessOperations
 
     public static List<Entity> getEntities(ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
     {
-        try (Stream<EntityProjectFile> stream = getEntityProjectFiles(fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid))
+        return getEntities(ProjectStructure.getProjectStructure(fileAccessContext), fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid);
+    }
+
+    public static List<Entity> getEntities(ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate, boolean excludeInvalid)
+    {
+        try (Stream<EntityProjectFile> stream = getEntityProjectFiles(projectStructure, fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate, excludeInvalid))
         {
             return stream.map(excludeInvalid ? epf ->
             {
@@ -102,7 +116,12 @@ public class EntityAccessOperations
 
     public static List<String> getEntityPaths(ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
     {
-        try (Stream<EntityProjectFile> stream = getEntityProjectFiles(fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate))
+        return getEntityPaths(ProjectStructure.getProjectStructure(fileAccessContext), fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate);
+    }
+
+    public static List<String> getEntityPaths(ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> entityContentPredicate)
+    {
+        try (Stream<EntityProjectFile> stream = getEntityProjectFiles(projectStructure, fileAccessContext, entityPathPredicate, classifierPathPredicate, entityContentPredicate, false))
         {
             return stream.map(EntityProjectFile::getEntityPath).collect(Collectors.toList());
         }
@@ -115,7 +134,12 @@ public class EntityAccessOperations
 
     public static Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate, boolean excludeInvalid)
     {
-        Stream<EntityProjectFile> stream = getEntityProjectFiles(fileAccessContext);
+        return getEntityProjectFiles(ProjectStructure.getProjectStructure(fileAccessContext), fileAccessContext, entityPathPredicate, classifierPathPredicate, contentPredicate, excludeInvalid);
+    }
+
+    public static Stream<EntityProjectFile> getEntityProjectFiles(ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext fileAccessContext, Predicate<String> entityPathPredicate, Predicate<String> classifierPathPredicate, Predicate<? super Map<String, ?>> contentPredicate, boolean excludeInvalid)
+    {
+        Stream<EntityProjectFile> stream = getEntityProjectFiles(projectStructure, fileAccessContext);
         if (entityPathPredicate != null)
         {
             stream = stream.filter(epf -> entityPathPredicate.test(epf.getEntityPath()));
@@ -157,7 +181,11 @@ public class EntityAccessOperations
 
     public static Stream<EntityProjectFile> getEntityProjectFiles(ProjectFileAccessProvider.FileAccessContext accessContext)
     {
-        ProjectStructure projectStructure = ProjectStructure.getProjectStructure(accessContext);
+        return getEntityProjectFiles(ProjectStructure.getProjectStructure(accessContext), accessContext);
+    }
+
+    public static Stream<EntityProjectFile> getEntityProjectFiles(ProjectStructure projectStructure, ProjectFileAccessProvider.FileAccessContext accessContext)
+    {
         List<EntitySourceDirectory> sourceDirectories = projectStructure.getEntitySourceDirectories();
         ProjectFileAccessProvider.FileAccessContext cachingAccessContext = (sourceDirectories.size() > 1) ? CachingFileAccessContext.wrap(accessContext) : accessContext;
         return sourceDirectories.stream().flatMap(sd -> getSourceDirectoryProjectFiles(cachingAccessContext, sd));

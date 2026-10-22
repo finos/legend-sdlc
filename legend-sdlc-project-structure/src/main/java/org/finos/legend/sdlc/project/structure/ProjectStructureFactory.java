@@ -36,6 +36,8 @@ import java.util.function.Consumer;
 
 public class ProjectStructureFactory
 {
+    private static volatile ProjectStructureFactory defaultFactory;
+
     private final IntObjectMap<ProjectStructureVersionFactory> projectStructureFactories;
     private final int latestVersion;
 
@@ -88,6 +90,37 @@ public class ProjectStructureFactory
             }
         }
         return 0;
+    }
+
+    /**
+     * Get the default factory: the version factories registered (by service file) on the classpath of the
+     * classloader that loaded this class. The result is an immutable snapshot, materialized lazily on first call
+     * and shared thereafter — deliberately not built during class initialization, so that a service-loading failure
+     * surfaces as an exception from this method (and is retried on the next call) rather than permanently poisoning
+     * class initialization, and no I/O happens before it is needed. The lookup deliberately does not consult the
+     * thread context classloader: the version lineup is code, shipped alongside this class, and resolution must not
+     * vary with ambient thread state. Embedders that compose a different lineup (for example, version factories from
+     * another classloader) should build their own factory with {@link #newFactory} and use its instance methods; the
+     * static conveniences on {@link ProjectStructure} always use this default.
+     *
+     * @return default project structure factory
+     */
+    public static ProjectStructureFactory getDefaultFactory()
+    {
+        ProjectStructureFactory factory = defaultFactory;
+        if (factory == null)
+        {
+            synchronized (ProjectStructureFactory.class)
+            {
+                factory = defaultFactory;
+                if (factory == null)
+                {
+                    factory = newFactory(ProjectStructureFactory.class.getClassLoader());
+                    defaultFactory = factory;
+                }
+            }
+        }
+        return factory;
     }
 
     public static ProjectStructureFactory newFactory(Iterable<? extends ProjectStructureVersionFactory> versionFactories)

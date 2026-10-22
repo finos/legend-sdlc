@@ -1112,7 +1112,7 @@ introduced by Steps 6–7 and verified pre-existing by stash + re-run at HEAD).
 
 ## Phase 5 — Backend extraction (L5)
 
-**Status: in progress.**
+**Status: complete** (see the phase wrap-up).
 
 Sequencing note (user-directed, on the record): plan §6 lists the GitLab
 extraction first; this phase runs the **in-memory backend first** — the first
@@ -1880,3 +1880,400 @@ for its first request.
   checkstyle, PMD, `dependency:analyze`, enforcer); `legend-sdlc-server`
   enforcer (dependency convergence) green. The run against a real GitLab is
   the workflow's.
+
+## Phase 6 — Local / IDE tooling
+
+**Status: complete** (see the phase wrap-up, which also closes the plan).
+
+### Step 1: the §4.5 audit discharged — ambient state leaves the L0–L3 read/write paths
+
+The audit bar (plan §4.5, restated at each phase wrap-up since Phase 2): L0–L3
+must be **safe to instantiate many times concurrently in a shared JVM** before
+this phase may declare them embeddable. Two items were on the list; a Phase 6
+static-field sweep of the six L0–L3 modules (promised by the §7 "IDE embedding
+exposes hidden global state" row) found two more instances of the same disease.
+All four are resolved in this step.
+
+**The design decision, on the record — how the factory threads through without
+a process-global.** The §4.5 rule ("static caches, singletons, and
+`ServiceLoader` results captured in statics are out") is enforced by its
+rationale: what makes shared-JVM embedding unsafe is (a) *mutable* global
+state, (b) dependence on *ambient* thread state (the context classloader) for
+correctness, and (c) service loading during *class initialization* — a failure
+there is an `ExceptionInInitializerError` that permanently poisons the class
+for the whole JVM, and the capture happens at an uncontrollable moment. A
+`ProjectStructureFactory` instance is none of these: it is an immutable index
+of the version factories, and the version lineup is *code* — it ships in the
+jars on the classpath, identical for every consumer in the process, unlike the
+deployment-scoped `ProjectStructureExtensionProvider`, which is configuration
+and is already threaded explicitly everywhere. So the resolution is **one JVM,
+one lineup, materialized lazily**, not threading a factory parameter through
+every L3 signature:
+
+- `ProjectStructureFactory.getDefaultFactory()` (new) owns the default: built
+  on first call (double-checked on a volatile, so a service-loading failure
+  surfaces to the caller and is retried on the next call rather than poisoning
+  class init), from `ProjectStructureFactory.class.getClassLoader()` — its own
+  loader, deterministic under layered-classloader hosts, never the TCCL. The
+  `ProjectStructure` static conveniences (`getProjectStructure(...)`,
+  `getLatestProjectStructureVersion()`, the discovery accessor
+  `getDefaultProjectStructureFactory()`) all delegate to it; the class-init
+  `PROJECT_STRUCTURE_FACTORY` field is gone.
+- Per-instance factory variance is deliberately **not** offered (no factory
+  parameter on `LocalModel`, no `UpdateBuilder` knob): nothing in the plan
+  wants two version lineups in one JVM, and a knob honored by some L3 paths
+  but not others would be a trap. An embedder composing an exotic lineup
+  (version factories from another classloader) builds its own factory with
+  `newFactory(...)` — public since Phase 2 — and uses the instance API
+  (`newProjectStructure`, `getLatestVersion`, `getVersionFactory`), which is
+  sufficient and was already what discovery consumes.
+- Pinned by `TestDefaultProjectStructureFactory` (L2): shared instance, full
+  lineup (latest = 13; 0/11/12/13 supported), same instance from many
+  threads, and resolution with the TCCL set to null — the ambient-state
+  independence in executable form.
+
+**`MavenProjectStructure.loadTestResourceCode` (audit item 2)**: now resolves
+against `MavenProjectStructure.class.getClassLoader()` first — the resources
+this module ships (`project/tests/v4/*.java`, the only in-repo uses) are
+always found there regardless of ambient thread state — with the TCCL kept as
+a *fallback* for external structure-version subclasses (the origin project's
+v1–10 authoring population, §5) whose resources ride a loader this module
+cannot see; a `loadTestResourceCode(String, Charset, ClassLoader)` overload is
+added for subclasses that know their loader. Behavior on a single classpath
+(every current deployment) is unchanged.
+
+**Swept up, same disease (undocumented ambient-loader dependence on the
+structure-resolution path)** — both were implicit-TCCL `ServiceLoader` calls
+that would have made V11+ structures *silently wrong* (not failing) in an IDE
+host whose TCCL is not the plugin loader:
+
+- V11–V13's `getEntitySourceDirectories` resolved the "pure"/"legend" entity
+  serializers via `EntitySerializers.getAvailableSerializersByName()` —
+  no-arg, therefore TCCL. Under a foreign TCCL the named serializers are not
+  found, the extra source directories are silently dropped, and entity
+  discovery misses every `.pure` file. `EntitySerializers` gains explicit
+  `ClassLoader` overloads for its four lookup methods; the V-factories pass
+  their own class's loader. The no-arg forms keep their TCCL semantics —
+  now documented as such — because Maven plugin executions (`EntityMojo`)
+  rely on the `ServiceLoader` convention and their TCCL (the plugin realm)
+  is the right loader there.
+- V11–V13's `collectUpdateProjectConfigurationOperations` loaded
+  `UpdateProjectStructureExtension` via single-arg `ServiceLoader.load` —
+  same problem on the write side; now `getClass().getClassLoader()` (the
+  concrete structure class's loader, so an external subclass resolves
+  extensions its own jar can see).
+
+Sweep result, for the record: with these four fixed, the remaining statics in
+L0–L3 main sources are immutable constants (configured `JsonMapper`s, regex
+patterns, loggers, immutable collections, and the two sealed source-taxonomy
+singletons) — none mutable, none classloader-capturing, none I/O-bearing at
+class init. The §4.5 gate is discharged; L0–L3 are declared embeddable.
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Step 2: `legend-sdlc-local` — rooted storage, the two-tier `LocalModel`, diagnostics as data
+
+The module: **`legend-sdlc-local`** (`org.finos.legend.sdlc.local`), consuming
+L0–L3 only per §3.1 — no container, no backend, no server. Its dependency list
+is the five SDLC layer jars plus `eclipse-collections-api`; Jackson arrives
+transitively for `project.json`/entity JSON and nothing else does. The
+`package-info` documents the surface as the IDE-plugin contract (§4.5's
+"stable, lean, published API" deliverable), including the lifecycle/threading
+rules and the footprint statement.
+
+**Rooted storage (§4.2), with one placement decision.** Rooting is implemented
+as the plan's storage-layer decorator — `RootedFileAccessContext` /
+`RootedFileModificationContext`, which prefix operation paths and strip
+returned paths so a subtree presents as a complete project — and the
+decorators live in **L1** (`project.files`, beside `CachingFileAccessContext`),
+not in `legend-sdlc-local`: §4.1 left the placement open ("actually in L1 or
+here"), and the decorator is storage-generic — it is the piece a future
+monorepo-mapping backend reuses (§4.2's "this also benefits backends"), which
+must not require a dependency on the local module. `LocalModel` itself roots
+by opening the subdirectory (`Path.resolve` — same semantics, no decorator
+needed on a real filesystem); the end-to-end test pins the equivalence by
+reading one model both ways.
+
+**`LocalProjectFileAccessProvider`** (in the local module — it drags
+`java.nio` file walking and working-copy failure modes L1's surface does not
+need): the L1 provider over a directory tree. File reads are live views;
+modifications validate all operations against the working tree first (add:
+absent; modify/delete: present; move: source present, target absent), then
+write directly to disk in order, pruning directories the operations emptied —
+no atomicity promised beyond that, since undo on a working copy belongs to
+the IDE/VCS. Only the project source specification is accepted; workspace/
+version/patch sources throw `UnsupportedOperationException` with a message
+saying why.
+
+**Revisions — the deliberate failure mode.** The plan offered "unsupported or
+backed by JGit later"; what shipped is deliberately neither a stub throw nor
+JGit: the provider exposes the working tree as a **single synthetic revision**
+(`working-copy`) — the revision context reports it as base/current/only, and
+access/modification contexts accept it (or null) as a revision id; unknown
+ids are rejected loudly. Grounds: L3's write paths (the updater's reference
+probe, bulk entity update) consult the revision context for a *reference*,
+not for history — a one-state, unstamped, documented-mutable "history" keeps
+the entire generic write-side working unmodified over local storage, where a
+throwing context would have forced local-only forks of L3 code. Time-window
+arguments to revision enumeration are ignored (documented); real history
+remains a possible later JGit upgrade, per the plan.
+
+**`LocalModel` — the two-tier handle (§4.4/§4.5).**
+`LocalModel.open(root) → handle → close`, entities-only (Form 2 / EMBEDDED):
+entity read/list/get plus create/update/delete and bulk `applyEntityChanges`,
+all through the L3 operations; `validate()`; explicit `refresh()`. The caching
+contract is stated exactly: the handle caches only the configuration/structure
+*resolution*; file reads are live. So external entity-file edits are visible
+immediately, external `project.json` changes are visible after `refresh()`
+(edits through the handle refresh automatically), and `close()` makes the
+handle refuse further work. Threading contract on the class javadoc: a handle
+is not thread-safe, callers serialize; handles are mutually independent.
+**`ManagedLocalModel`** (Form 1 / MANAGED) layers configuration updates on
+top via a small single-use builder over the L3
+`ProjectConfigurationUpdater`/`UpdateBuilder`. It takes the deployment's
+`ProjectStructureExtensionProvider` **explicitly at open** (the §4.6
+corollary; null is a supported input) — and the **degraded mode is confirmed
+in implementation** exactly as the Phase 4 review decided: with no provider,
+entity editing is unaffected; configuration/structure updates proceed
+(`project.json`, structure-managed build files) and preserve any recorded
+extension version, but extension-managed files are left untouched for
+server-side reconciliation; setting a *new* extension version without a
+provider fails (nothing can compute what it manages). Notably the degraded
+behavior required **zero new L3 logic** — the updater already collects
+extension operations only when a provider is present; Phase 6's work was to
+not "fix" that, and to document and pin it.
+
+**Diagnostics as data.** `validate()` returns `LocalModelDiagnostic`s
+(severity × category × message × file path) and throws for nothing that is
+*in* the model: unparseable or unsupported-version `project.json` (in which
+case operations refuse with a pointer to `validate()`, but validation itself
+runs), invalid/missing ids (missing ids are legal on EMBEDDED models — flagged
+only on MANAGED, where updates would fail), legacy dependencies, unsupported
+artifact generations, undeserializable entity files, and entity content
+disagreeing with file location. The SDLC/Engine boundary is stated on the
+type: layout and configuration here, model semantics (compilation,
+resolution) never — that is Engine's.
+
+**Discovery.** `LocalModelDiscovery.findModelRoots(tree[, descendInto])`:
+every directory containing `project.json`, stable path order, pruning
+dot-directories, `target`, and `node_modules` by default (predicate
+overridable). Discovery reports and does not judge — nested finds (e.g. test
+resources) are the caller's decision.
+
+**L3 additions in support (additive):** the entity read/write operations
+gained overloads taking an already-resolved `ProjectStructure`
+(`EntityAccessOperations.getEntity/getEntities/getEntityPaths/
+getEntityProjectFiles`, `EntityModificationOperations.performChanges`), so a
+handle that caches its structure uses it consistently instead of re-resolving
+per call — this also completes the Step 1 story for embedders composing their
+own `ProjectStructureFactory`. Context-only forms delegate unchanged.
+
+**A published-API decision worth its own record: no `renameEntity`
+convenience.** The SPI-wide `RENAME` semantics move the entity file without
+rewriting content; serializers derive the entity path *from* content
+(package/name), so a bare rename leaves a file whose location and content
+disagree — unreadable until content is fixed. Rather than ship a trap,
+`LocalModel` offers no rename method; `applyEntityChanges` still accepts
+`RENAME` for callers who know the semantics, and the javadoc spells out that
+a consistent local rename is delete + create with rewritten content
+(reference rewriting being an Engine/IDE refactoring concern). The
+characterized `RENAME` behavior itself is untouched — backends and Studio
+flows depend on it.
+
+**The §6 end-to-end test, green:** a repository with non-Legend content and
+two models at subpaths (EMBEDDED V0 at `analytics/model`; MANAGED V11 with
+extension version 1 at `services/svc-model`): discovery finds exactly the
+two; the embedded model is opened, entities created/read/updated/deleted with
+files verified on disk and the sibling model and non-Legend content verified
+untouched; the managed model takes a dependency-add configuration update both
+with a fixture extension provider (extension-managed file maintained,
+structure files written) and in degraded mode (extension file byte-identical,
+extension version preserved, new-extension-version rejected); and files are
+mutated on disk under an open handle — entity file appears live, external
+`project.json` change appears only after `refresh()`. Plus unit suites for
+the provider (path escapes rejected, validation-before-application, the
+working-copy revision contract), the rooted decorators (L1), discovery
+pruning, and diagnostics. 21 tests in the local module + 3 in L1.
+
+Verified: full-reactor `mvn install javadoc:javadoc` green.
+
+### Phase 6 wrap-up: module inventory, plan conformance, and the whole-plan close-out
+
+**Status: complete** — and with it, the plan's phased work (§6 ends at Phase
+6). What follows is the phase wrap-up, a plan-conformance note (§7 and §8
+against what shipped), and the explicit list of what remains open across the
+whole plan.
+
+- **Module inventory after Phase 6**: **`legend-sdlc-local`**
+  (`org.finos.legend.sdlc.local`) — the working-copy provider with the
+  synthetic `working-copy` revision, the two-tier `LocalModel`/
+  `ManagedLocalModel` handle surface, diagnostics as data, and discovery;
+  depends on the five L0–L3 jars plus `eclipse-collections-api` only. L1
+  gained the storage-generic rooting decorators (`RootedFileAccessContext`,
+  `RootedFileModificationContext`); L3's entity operations gained
+  resolved-`ProjectStructure` overloads. The §4.5 audit is discharged (Step
+  1): no process-global mutable state, no ambient-classloader dependence, no
+  class-init service loading anywhere in L0–L3.
+
+**Plan conformance, §7 row by row** (status of each risk/question as the plan
+closes):
+
+1. *`SourceSpecification` L1/L4 split* — resolved 2026-07-09: rescinded;
+   taxonomy final at L1. Closed.
+2. *Session/auth contract* — decided in the Phase 4 review, implemented in
+   Phase 5 (state-store re-plumb, generic auth surface). The named residual —
+   integration tests on real GitLab auth flows — stands as the docker
+   integration suite; no new residual. Closed.
+3. *Behavioral drift GitLab vs. generic (Phase 3)* — characterization tests
+   moved first, the TCK now certifies in-memory and FS; the GitLab TCK runner
+   remains open (below). Substantially closed; residual tracked.
+4. *Git-flavored "generic" semantics* — the L4 interfaces were documented in
+   backend-neutral terms in Phase 4; capabilities let Git-less backends omit
+   concepts. Closed.
+5. *Package renames vs. external code* — the §5 contract held: extension SPI
+   bridges + dual-keyed `ServiceLoader` lookup shipped in Phase 2, migration
+   recipes accompany every authoring-framework break; bridge *removal* is
+   open (below), by design coordinated with the origin project. Closed as a
+   risk; removal tracked.
+6. *Two plans diverging* — the extraction doc carries the banner and its two
+   superseded decisions are annotated. Closed.
+7. *Monorepo scope creep* — held: no backend maps projects to subdirectories;
+   the rooting decorators landed at L1 as exactly the §4.2 seam, unused by
+   any backend. Closed (deferral intact).
+8. *Guice request-scoping subtleties* — survived extraction; the one real
+   incident (eager injector vs. run()-time state) is on the record with its
+   fix (2026-07-10 correction). Closed.
+9. *IDE embedding exposes global state / lifecycle gaps* — the row this phase
+   existed to close: the §4.5 audit is discharged with a recorded design
+   decision (one JVM, one lineup, lazy immutable default; TCCL off the
+   read/write paths), and `LocalModel` shipped with open/close,
+   invalidate/refresh, a stated threading contract, and the
+   files-change-under-an-open-handle test. Closed.
+10. *Managed projects edited locally* — decided in the Phase 4 review
+    (discovery serves schema and identity, never behavior; deployment
+    identity is explicit tool configuration), **confirmed in implementation
+    here**: the provider is an explicit input to the structure-aware tier and
+    the degraded mode (extension-managed files untouched, extension version
+    preserved) is implemented and pinned by test. Closed.
+11. *Companion-plan drift* — the seams all exist in their reserved form (S1
+    negative obligation + javadoc pointers; S2 `getConfigurationProperties()`
+    on the version factory and extension SPI; S3 the `/configuration`
+    discovery surface; R1 the single write-side dispatch point, marked in
+    code; R2 the layout-invariants TCK seed). Both companion plans remain
+    separate and dependent, as decided (see the recorded
+    separate-plan decisions). Open by design — they are plans, not debts.
+
+**Plan conformance, §8**: the shipped graph is the plan's graph, literally —
+three L0 modules; L1 `project-files`; L2 `project-structure`; L3 `core`; L4
+`backend-api` + `backend-test-suite`; L5 `backend-gitlab` (gitlab4j),
+`backend-fs` (jgit), `backend-inmemory`; L6 `server` with backends at runtime
+scope only; and now `legend-sdlc-local` consuming L0–L3 only. Deviations from
+the plan text, all recorded where they happened: `legend-sdlc-server-fs`
+survives as a relocation POM (not in the plan's graph; §5 compatibility);
+`legend-sdlc-server-shared` remains as an L6-adjacent module (Dropwizard/
+pac4j utilities shared by server assemblies — outside the §8 graph, and
+correctly above the §3.1 fence, not below it); the generation modules and
+Maven plugins kept their positions untouched, as the plan's closing note
+allows.
+
+**Open across the whole plan when its phases end** (owners in parentheses):
+
+- **Deprecation-bridge removals, as one coordinated batch** (§5; with the
+  origin project): the `server.domain.api.*` interface bridges,
+  `DependenciesApiImpl`, `BackgroundTaskProcessor`, `CallUntil`/`Throwing*`,
+  `LegendSDLCServerException`, the Phase 1/2 tool and extension bridges, the
+  legacy dual-keyed `ServiceLoader` lookup, and — after the transition
+  release — `GITLAB_MODE` and the legacy `gitLab:` config adapter.
+- **`NoReviewsReviewApi`** goes when Studio consumes
+  `GET /configuration/capabilities` for its review UI (L6 affordance,
+  decision 2026-07-14).
+- **`InMemoryModule`'s fixture apis** replaced by the real in-memory backend,
+  upgrading the in-memory test servers to a real `backend:` configuration.
+- **A GitLab TCK contract runner** — possible since the servlet decoupling;
+  needs a decision on what an all-capabilities backend run would certify
+  (elaborated in the 2026-07-17 addendum below).
+- **An FS deployment auth story** — a pac4j client yielding profiles for
+  sessions (migration doc covers the gap).
+- **Metrics and health surfaces on the backend SPI** — deferred, additive.
+- **The two companion plans** — config-options (seams S1–S3 reserved) and
+  layout-reconciliation (R1–R2 reserved) — deliberately separate, dependent
+  plans; their sequencing decisions are on the record in the memory/plan
+  docs.
+- **Small deferred conveniences**: the CLI veneer over `legend-sdlc-local`
+  (§4.1 defers it; unowned) and JGit-backed local revision history (the
+  provider's javadoc leaves the door open; unowned).
+
+Nothing else is open: every §6 phase deliverable either shipped or has its
+deviation recorded in this worklog at the step where it was decided.
+
+### Addendum (2026-07-17): the GitLab TCK runner open item, elaborated
+
+The open-list entry above compresses an analysis worth keeping; recorded here
+so the eventual decision starts from it rather than re-deriving it. No
+decision is taken in this addendum.
+
+**Where the TCK stands.** `legend-sdlc-backend-test-suite` has three abstract
+suites a runner subclasses, supplying `newBackend()`:
+`BackendContractTestSuite` (the capability model — declared capabilities
+yield an api, undeclared ones throw `UnsupportedCapabilityException`/501, and
+the cross-API source-scope gates), `BackendScenarioTestSuite` (end-to-end
+project/workspace/entity/config/comparison/revision scenarios over real
+storage — what certifies the L4 defaults), and `LayoutInvariantsTestSuite`
+(seam R2: update ≡ create; reconcile-noop). In-memory and FS run all three in
+CI on every build; their runners are trivial (the FS one points
+`FileSystemBackend` at a temp folder). GitLab runs none; its coverage is the
+seven per-API docker integration suites (`api/docker`, profile-gated
+`test-#version-gitlab`, throwaway GitLab container on `localhost:8090`).
+
+**Why it is now possible (the Phase 5 claim, made concrete).** Pre-extraction,
+the GitLab api classes unwrapped `ServletBackendSessionContext` — no GitLab
+session existed without the servlet/Guice machinery, so a plain-JUnit runner
+was structurally impossible. Post-extraction,
+`GitLabBackend.newSession(BackendSessionContext)` is reachable from any JVM:
+the context is a user id plus a string-keyed state store, and
+`GitLabTokenManager` reads its tokens from that store. The docker suite
+already owns the hard fixtures (container lifecycle, user provisioning,
+`oauth2Login`). A runner is therefore: subclass the suites in the docker
+package, `newBackend()` builds a `GitLabBackend` against the container, and —
+the one genuinely new piece — override the TCK's `newSessionContext()` to
+plant real auth material under the `gitlab.*` state-store keys instead of the
+default empty in-memory store. Incidentally, that override would be the first
+proof of the SPI's claim that a session context is *sufficient* bootstrap:
+GitLab is the only backend whose `newSession` does real work (token
+acquisition), and no servlet would be anywhere in sight.
+
+**What an all-capabilities run would (not) certify.** `GitLabBackend`
+declares `EnumSet.allOf(BackendCapability.class)`. Against that declaration:
+
+- `testCapabilityGatedAccessors` walks the nine gated accessors, but every
+  501 branch — the contract actually being certified — is unreachable; the
+  test degenerates to "every accessor returns non-null".
+- `testCrossApiSourceScopeGates` is two `if (!capabilities.contains(...))`
+  blocks; both guards are false, so the test body executes nothing.
+
+So the *contract* suite is near-vacuous on GitLab. The certification content
+lives in the scenario and layout-invariant suites: the same generic
+assertions all backends satisfy, run over real GitLab branches — including
+exactly the places GitLab overrides L3 defaults natively (comparison via the
+GitLab compare API, revisions as commits), which is the behavioral-drift
+residual §7 row 3 tracks. That value overlaps heavily with the existing
+per-API docker integration suites; the marginal gain is that the TCK is the
+*shared* contract — one suite, same assertions, all backends — i.e. drift
+protection, not new coverage.
+
+**The actual decision to make** is CI cost vs. what the certification says:
+a GitLab runner is forever docker-profile-gated (the scenario suite creates
+projects, fine only on a throwaway instance) and would be the only TCK
+runner not running on every build. Options, for whoever picks this up:
+
+- *(a)* add the runner to the existing docker profile and accept the overlap
+  — cheapest path to "all three backends run the TCK" being literally true;
+- *(b)* declare the per-API integration suites GitLab's equivalent and
+  record the TCK requirement as satisfied in spirit;
+- *(c)* run only the scenario/layout suites in the docker profile (skip the
+  vacuous contract suite) — the part with real certification content.
+
+One forcing condition either way: if capabilities ever become
+deployment-conditional (e.g. a GitLab configuration that drops `PATCHES`),
+the gate tests stop being vacuous and the calculus flips decisively toward
+running the full TCK.

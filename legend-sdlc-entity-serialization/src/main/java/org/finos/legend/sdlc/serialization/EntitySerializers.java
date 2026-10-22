@@ -20,6 +20,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 
+/**
+ * Access to the registered {@link EntitySerializer}s. The no-argument lookup methods use the thread context
+ * classloader (the {@link ServiceLoader} convention, which Maven plugin executions rely on); code that must not
+ * depend on ambient thread state — anything reachable from a shared-JVM embedding (re-architecture section 4.5) —
+ * should use the overloads taking an explicit {@link ClassLoader}.
+ */
 public class EntitySerializers
 {
     private EntitySerializers()
@@ -33,15 +39,25 @@ public class EntitySerializers
 
     public static Iterable<EntitySerializer> getAvailableSerializers()
     {
+        return getAvailableSerializers(Thread.currentThread().getContextClassLoader());
+    }
+
+    public static Iterable<EntitySerializer> getAvailableSerializers(ClassLoader classLoader)
+    {
         List<EntitySerializer> serializers = new ArrayList<>();
-        ServiceLoader.load(EntitySerializer.class).forEach(serializers::add);
+        ServiceLoader.load(EntitySerializer.class, classLoader).forEach(serializers::add);
         return serializers;
     }
 
     public static Iterable<EntityTextSerializer> getAvailableTextSerializers()
     {
+        return getAvailableTextSerializers(Thread.currentThread().getContextClassLoader());
+    }
+
+    public static Iterable<EntityTextSerializer> getAvailableTextSerializers(ClassLoader classLoader)
+    {
         List<EntityTextSerializer> serializers = new ArrayList<>();
-        ServiceLoader.load(EntitySerializer.class).forEach(s ->
+        ServiceLoader.load(EntitySerializer.class, classLoader).forEach(s ->
         {
             if (s instanceof EntityTextSerializer)
             {
@@ -53,8 +69,13 @@ public class EntitySerializers
 
     public static Map<String, EntitySerializer> getAvailableSerializersByName()
     {
+        return getAvailableSerializersByName(Thread.currentThread().getContextClassLoader());
+    }
+
+    public static Map<String, EntitySerializer> getAvailableSerializersByName(ClassLoader classLoader)
+    {
         Map<String, EntitySerializer> result = new HashMap<>();
-        ServiceLoader.load(EntitySerializer.class).forEach(s ->
+        ServiceLoader.load(EntitySerializer.class, classLoader).forEach(s ->
         {
             String name = s.getName();
             EntitySerializer old = result.put(name, s);
@@ -68,8 +89,13 @@ public class EntitySerializers
 
     public static Map<String, EntityTextSerializer> getAvailableTextSerializersByName()
     {
+        return getAvailableTextSerializersByName(Thread.currentThread().getContextClassLoader());
+    }
+
+    public static Map<String, EntityTextSerializer> getAvailableTextSerializersByName(ClassLoader classLoader)
+    {
         Map<String, EntityTextSerializer> result = new HashMap<>();
-        ServiceLoader.load(EntitySerializer.class).forEach(s ->
+        ServiceLoader.load(EntitySerializer.class, classLoader).forEach(s ->
         {
             if (s instanceof EntityTextSerializer)
             {
