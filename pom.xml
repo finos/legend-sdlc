@@ -66,7 +66,7 @@
 
     <properties>
         <!-- CI-Friendly Version -->
-        <revision>0.236.1-SNAPSHOT</revision>
+        <revision>0.237.1-SNAPSHOT</revision>
 
         <sonar.projectKey>legend-sdlc</sonar.projectKey>
         <sonar.moduleKey>${project.groupId}:${project.artifactId}</sonar.moduleKey>
