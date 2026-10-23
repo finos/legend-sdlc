@@ -39,7 +39,12 @@ on:
 jobs:
   build:
     name: Run GitLab Docker Integration Tests
-    if: (github.repository == 'finos/legend-sdlc')
+    # Not for a push whose head commit finos-admin authored: that is a release
+    # workflow's version bump, or a commit it has already run this test
+    # against. Other events carry no head commit, so the check passes them.
+    if: >-
+      github.repository == 'finos/legend-sdlc'
+      && github.event.head_commit.author.username != 'finos-admin'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repo

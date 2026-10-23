@@ -48,9 +48,16 @@ jobs:
     # `Publish Test Results` watches this workflow by name and, for a PR or a
     # master build, needs the event payload uploaded alongside the surefire
     # reports.
+    #
+    # Not for a push whose head commit finos-admin authored. Only the release
+    # workflows commit as that account, and what they push is either the
+    # version bump after a release or a commit they have just built and
+    # tested themselves. Checking the author rather than the message means
+    # rewording the bump cannot quietly start building it again. Other events
+    # carry no head commit, so the check passes them.
     if: >-
       (github.event_name != 'push' || github.repository == 'finos/legend-sdlc')
-      && !startsWith(github.event.head_commit.message, 'Bump version to')
+      && github.event.head_commit.author.username != 'finos-admin'
     uses: ./.github/workflows/build-and-test.yml
     with:
       sonar: true
