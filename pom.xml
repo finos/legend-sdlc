@@ -102,7 +102,7 @@
         <dropwizard-swagger.version>4.0.5-1</dropwizard-swagger.version>
         <eclipsecollections.version>10.2.0</eclipsecollections.version>
         <findbugs.version>3.0.0</findbugs.version>
-        <freemarker.version>2.3.30</freemarker.version>
+        <freemarker.version>2.3.35</freemarker.version>
         <gitlab4j.version>6.0.0</gitlab4j.version>
         <guava.version>31.1-jre</guava.version>
         <guice.version>7.0.0</guice.version>
