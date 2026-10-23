@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.resources.project.project.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -26,17 +26,17 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/configuration")
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupWorkspaceProjectConfigurationResource extends BaseResource
@@ -50,7 +50,7 @@ public class GroupWorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a group workspace")
+    @Operation(summary = "Get the configuration of a project in a group workspace")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -60,7 +60,7 @@ public class GroupWorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @POST
-    @ApiOperation("Update the project configuration of a project in a group workspace")
+    @Operation(summary = "Update the project configuration of a project in a group workspace")
     public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
@@ -72,7 +72,7 @@ public class GroupWorkspaceProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in a group workspace")
+    @Operation(summary = "Get the available generation types of a project in a group workspace")
     public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(

@@ -16,18 +16,17 @@ package org.finos.legend.sdlc.server;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import io.dropwizard.Application;
+import io.dropwizard.core.Application;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
-import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.core.setup.Environment;
 import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import javax.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.ContextResolver;
 import org.eclipse.collections.impl.utility.LazyIterate;
-import org.eclipse.jetty.server.session.SessionHandler;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.ee10.servlet.SessionHandler;
+import org.eclipse.jetty.ee10.servlets.CrossOriginFilter;
 import org.finos.legend.sdlc.server.config.ErrorHandlingConfiguration;
 import org.finos.legend.sdlc.server.config.ServerConfiguration;
 import org.finos.legend.sdlc.server.error.CatchAllExceptionMapper;
@@ -44,11 +43,11 @@ import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterRegistration;
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.ext.ParamConverter;
-import javax.ws.rs.ext.ParamConverterProvider;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.FilterRegistration;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.ext.ParamConverter;
+import jakarta.ws.rs.ext.ParamConverterProvider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
@@ -225,7 +224,7 @@ public abstract class BaseServer<C extends ServerConfiguration> extends Applicat
         }
     }
 
-    private static class DropwizardConfigurationSwaggerBundle extends SwaggerBundle<ServerConfiguration>
+    private static class DropwizardConfigurationSwaggerBundle extends ServerUrlSwaggerBundle<ServerConfiguration>
     {
         @Override
         protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(ServerConfiguration configuration)

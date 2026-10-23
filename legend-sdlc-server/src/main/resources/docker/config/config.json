@@ -24,13 +24,7 @@
     },
     "requestLog": {
       "type": "classic",
-      "level": "OFF",
-      "appenders": [
-        {
-          "type": "console",
-          "logFormat": "OFF"
-        }
-      ]
+      "appenders": []
     },
     "rootPath": "/api"
   },
@@ -57,8 +51,6 @@
   },
   "filterPriorities": {
     "GitLab": 1,
-    "org.pac4j.j2e.filter.CallbackFilter": 2,
-    "org.pac4j.j2e.filter.SecurityFilter": 3,
     "CORS": 4
   },
   "pac4j": {

@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.project.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.Project;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.accessRole.AccessRole;
@@ -31,25 +31,25 @@ import org.finos.legend.sdlc.backend.api.project.ProjectApi.ImportReport;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.PUT;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
 @Path("/projects")
-@Api("Projects")
+@Tag(name = "Projects")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProjectsResource extends BaseResource
@@ -65,21 +65,21 @@ public class ProjectsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get projects")
+    @Operation(summary = "Get projects")
     public List<Project> getProjects(@QueryParam("search")
-                                     @ApiParam("search string") String search,
+                                     @Parameter(description = "search string") String search,
                                      @QueryParam("user")
                                      @DefaultValue("true")
-                                     @ApiParam("only include projects the user is associated with") boolean user,
+                                     @Parameter(description = "only include projects the user is associated with") boolean user,
                                      @QueryParam("tag")
-                                     @ApiParam("only include projects with one or more of these tags") Set<String> tags,
+                                     @Parameter(description = "only include projects with one or more of these tags") Set<String> tags,
                                      @QueryParam("excludeTag")
-                                     @ApiParam("exclude projects that have one or more of these tags") Set<String> excludeTags,
+                                     @Parameter(description = "exclude projects that have one or more of these tags") Set<String> excludeTags,
                                      @QueryParam("limit")
-                                     @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
+                                     @Parameter(description = "If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
                                      // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
                                      @QueryParam("type")
-                                     @ApiParam(hidden = true, value = "DEPRECATED - this parameter will be ignored") Set<ProjectType> types)
+                                     @Parameter(hidden = true, description = "DEPRECATED - this parameter will be ignored") Set<ProjectType> types)
     {
         return execute(
             "getting projects",
@@ -89,7 +89,7 @@ public class ProjectsResource extends BaseResource
 
     @GET
     @Path("{id}")
-    @ApiOperation("Get a specific project by id")
+    @Operation(summary = "Get a specific project by id")
     public Project getProjectById(@PathParam("id") String id)
     {
         return executeWithLogging(
@@ -100,7 +100,7 @@ public class ProjectsResource extends BaseResource
     }
 
     @POST
-    @ApiOperation("Create a new project")
+    @Operation(summary = "Create a new project")
     public Project createProject(CreateProjectCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create project");
@@ -122,7 +122,7 @@ public class ProjectsResource extends BaseResource
 
     @PUT
     @Path("{id}")
-    @ApiOperation("Update existing project")
+    @Operation(summary = "Update existing project")
     public void updateProject(@PathParam("id") String id, UpdateProjectCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project");
@@ -153,7 +153,7 @@ public class ProjectsResource extends BaseResource
 
     @DELETE
     @Path("{id}")
-    @ApiOperation("Delete existing project")
+    @Operation(summary = "Delete existing project")
     public void deleteProject(@PathParam("id") String projectId)
     {
         executeWithLogging(
@@ -165,7 +165,7 @@ public class ProjectsResource extends BaseResource
 
     @POST
     @Path("import")
-    @ApiOperation(value = "Import a project", notes = "Import a project which exists in the underlying system. The supplied id need not be the same as what the final project id will be; it need only be sufficient to identify the project in the underlying system.")
+    @Operation(summary = "Import a project", description = "Import a project which exists in the underlying system. The supplied id need not be the same as what the final project id will be; it need only be sufficient to identify the project in the underlying system.")
     public ImportReport importProject(ImportProjectCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to import project");
@@ -177,7 +177,7 @@ public class ProjectsResource extends BaseResource
 
     @GET
     @Path("{id}/userAccessRole/currentUser")
-    @ApiOperation("Get project access role for current user")
+    @Operation(summary = "Get project access role for current user")
     public AccessRole getProjectAccessRole(@PathParam("id") String projectId)
     {
         return executeWithLogging(
@@ -187,9 +187,9 @@ public class ProjectsResource extends BaseResource
 
     @GET
     @Path("{id}/authorizedActions")
-    @ApiOperation("Check if the current user can perform set of actions provided")
+    @Operation(summary = "Check if the current user can perform set of actions provided")
     public Set<AuthorizableProjectAction> checkAuthorizedActions(@PathParam("id") String projectId,
-                                                                 @ApiParam("List of actions to be checked for the current user")
+                                                                 @Parameter(description = "List of actions to be checked for the current user")
                                                                  @QueryParam("actions") Set<AuthorizableProjectAction> actions)
     {
         LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
@@ -202,9 +202,9 @@ public class ProjectsResource extends BaseResource
 
     @GET
     @Path("{id}/authorizedActions/{action}")
-    @ApiOperation("Check if the current user can perform an action ")
+    @Operation(summary = "Check if the current user can perform an action ")
     public boolean checkAuthorizedAction(@PathParam("id") String projectId,
-                                         @ApiParam("action to be checked for the current user")
+                                         @Parameter(description = "action to be checked for the current user")
                                          @QueryParam("action") AuthorizableProjectAction action)
     {
         LegendSDLCServerException.validateNonNull(projectId, "id may not be null");
@@ -217,9 +217,9 @@ public class ProjectsResource extends BaseResource
 
     @GET
     @Path("{id}/allUsersAuthorizedActions")
-    @ApiOperation("Get all the users who can perform set of actions provided")
+    @Operation(summary = "Get all the users who can perform set of actions provided")
     public Set<UserPermission> getAllUsersAuthorizedActions(@PathParam("id") String projectId,
-                                                      @ApiParam("List of actions to be checked for the current user")
+                                                      @Parameter(description = "List of actions to be checked for the current user")
                                                                  @QueryParam("actions") Set<AuthorizableProjectAction> actions)
     {
         LegendSDLCServerException.validateNonNull(projectId, "id may not be null");

@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryComparisonApi implements ComparisonApi
 {

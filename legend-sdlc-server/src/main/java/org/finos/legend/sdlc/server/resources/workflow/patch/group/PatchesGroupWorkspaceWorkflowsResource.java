@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.workflow.patch.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
@@ -29,20 +29,20 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Set;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/workflows")
-@Api("Workflows")
+@Tag(name = "Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesGroupWorkspaceWorkflowsResource extends BaseResource
@@ -56,16 +56,16 @@ public class PatchesGroupWorkspaceWorkflowsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get workflows for a group workspace for patch release version", notes = "Get workflows for a group workspace. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @Operation(summary = "Get workflows for a group workspace for patch release version", description = "Get workflows for a group workspace. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<Workflow> getWorkflows(@PathParam("projectId") String projectId,
                                        @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("revisionId")
-                                       @ApiParam("Only include workflows for one of the given revisions") Set<String> revisionIds,
+                                       @Parameter(description = "Only include workflows for one of the given revisions") Set<String> revisionIds,
                                        @QueryParam("status")
-                                       @ApiParam("Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
+                                       @Parameter(description = "Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
                                        @QueryParam("limit")
-                                       @ApiParam("Limit the number of workflows returned") Integer limit)
+                                       @Parameter(description = "Limit the number of workflows returned") Integer limit)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;
@@ -85,7 +85,7 @@ public class PatchesGroupWorkspaceWorkflowsResource extends BaseResource
 
     @GET
     @Path("{workflowId}")
-    @ApiOperation("Get a workflow for a group workspace for patch release version for patch release version")
+    @Operation(summary = "Get a workflow for a group workspace for patch release version for patch release version")
     public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId, @PathParam("workflowId") String workflowId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");

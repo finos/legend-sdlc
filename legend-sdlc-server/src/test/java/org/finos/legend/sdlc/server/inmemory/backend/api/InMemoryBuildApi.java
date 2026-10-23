@@ -20,7 +20,7 @@ import org.finos.legend.sdlc.backend.api.build.BuildAccessContext;
 import org.finos.legend.sdlc.backend.api.build.BuildApi;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryBuildApi implements BuildApi
 {

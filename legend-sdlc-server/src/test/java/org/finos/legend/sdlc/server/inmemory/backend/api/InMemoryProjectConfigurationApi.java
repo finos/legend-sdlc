@@ -41,7 +41,7 @@ import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationStatusRepor
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 
 import java.util.List;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryProjectConfigurationApi implements ProjectConfigurationApi
 {

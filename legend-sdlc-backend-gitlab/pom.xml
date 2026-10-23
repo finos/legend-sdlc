@@ -64,10 +64,14 @@
             <groupId>org.gitlab4j</groupId>
             <artifactId>gitlab4j-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.gitlab4j</groupId>
+            <artifactId>gitlab4j-models</artifactId>
+        </dependency>
         <!-- Declared as legend-sdlc-server declares it: GitLab4J's Jersey client needs jackson-module-jaxb-annotations at runtime, which the root pom excludes from gitlab4j-api -->
         <dependency>
-            <groupId>com.fasterxml.jackson.jaxrs</groupId>
-            <artifactId>jackson-jaxrs-json-provider</artifactId>
+            <groupId>com.fasterxml.jackson.jakarta.rs</groupId>
+            <artifactId>jackson-jakarta-rs-json-provider</artifactId>
             <scope>runtime</scope>
             <exclusions>
                 <exclusion>

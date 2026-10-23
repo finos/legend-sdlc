@@ -21,7 +21,7 @@ import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.Map;
 
 @JsonIgnoreProperties(ignoreUnknown = true)

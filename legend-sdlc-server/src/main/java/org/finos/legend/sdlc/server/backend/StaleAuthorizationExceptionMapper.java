@@ -18,12 +18,12 @@ import org.finos.legend.sdlc.backend.api.spi.StaleAuthorizationException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerExceptionMapper;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Response.Status;
-import javax.ws.rs.ext.ExceptionMapper;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
+import jakarta.ws.rs.ext.ExceptionMapper;
 
 /**
  * Maps a backend's {@link StaleAuthorizationException} — stale authorization material was discarded and the
@@ -35,7 +35,7 @@ import javax.ws.rs.ext.ExceptionMapper;
  * direct {@code @Context} field injection of request-scoped types fails at servlet initialization under the
  * Guice-HK2 bridge.
  */
-@javax.ws.rs.ext.Provider
+@jakarta.ws.rs.ext.Provider
 public class StaleAuthorizationExceptionMapper implements ExceptionMapper<StaleAuthorizationException>
 {
     private final LegendSDLCServerExceptionMapper delegate = new LegendSDLCServerExceptionMapper();

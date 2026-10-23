@@ -18,26 +18,30 @@ import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.auth.StateSessionBuilder;
 import org.finos.legend.server.pac4j.gitlab.GitlabClient;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenAuthenticator;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenCredentials;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenExtractor;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfileCreator;
-import org.pac4j.core.context.JEEContext;
+import org.pac4j.core.context.CallContext;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.credentials.Credentials;
+import org.pac4j.core.credentials.authenticator.Authenticator;
+import org.pac4j.core.credentials.extractor.CredentialsExtractor;
 import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.profile.UserProfile;
+import org.pac4j.core.profile.creator.ProfileCreator;
 import org.pac4j.core.util.Pac4jConstants;
+import org.pac4j.jee.context.JEEContext;
+import org.pac4j.jee.context.session.JEESessionStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletRequestWrapper;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletRequestWrapper;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import java.util.Map;
+import java.util.Optional;
 
 public class SessionProvider
 {
@@ -126,25 +130,69 @@ public class SessionProvider
                                                                    HttpServletResponse httpResponse,
                                                                    GitlabPersonalAccessTokenClient client)
     {
-        WebContext context = new JEEContext(httpRequest, httpResponse);
-        String host = (client.host == null) ? client.gitlabHost : client.host;
-        String apiVersion = (client.apiVersion == null) ? client.gitlabApiVersion : client.apiVersion;
-        GitlabPersonalAccessTokenExtractor extractor = new GitlabPersonalAccessTokenExtractor(client.headerTokenName);
-        GitlabPersonalAccessTokenProfileCreator creator = new GitlabPersonalAccessTokenProfileCreator(host);
-        GitlabPersonalAccessTokenAuthenticator authenticator = new GitlabPersonalAccessTokenAuthenticator(client.scheme, host, apiVersion);
-        GitlabPersonalAccessTokenCredentials credentials = extractor.extract(context).get();
+        WebContext webContext = new JEEContext(httpRequest, httpResponse);
+        CallContext callContext = new CallContext(webContext, new JEESessionStore());
 
+        client.init();
+        return getSessionUsingGitlabPersonalAccessToken(callContext, client.getCredentialsExtractor(), client.getAuthenticator(), client.getProfileCreator());
+    }
+
+    static Session getSessionUsingGitlabPersonalAccessToken(CallContext callContext,
+                                                             CredentialsExtractor extractor,
+                                                             Authenticator authenticator,
+                                                             ProfileCreator creator)
+    {
+        Optional<Credentials> extracted;
         try
         {
-            authenticator.validate(credentials, context);
+            extracted = extractor.extract(callContext);
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Could not extract PA token credentials", e);
+            return null;
+        }
+        if (!extracted.isPresent())
+        {
+            LOGGER.error("No PA token credentials found on the request");
+            return null;
+        }
+
+        // pac4j 6 may reject a token by returning an empty Optional instead of throwing
+        Optional<Credentials> validated;
+        try
+        {
+            validated = authenticator.validate(callContext, extracted.get());
         }
         catch (Exception e)
         {
             LOGGER.error("Validation failed for PA token", e);
             return null;
         }
+        if (!validated.isPresent())
+        {
+            LOGGER.error("Validation failed for PA token: authenticator returned no credentials");
+            return null;
+        }
 
-        GitlabPersonalAccessTokenProfile profile = (GitlabPersonalAccessTokenProfile) creator.create(credentials, context).get();
+        // validate() fills in the GitLab user id and name, so the profile is built from its result, not the extracted credentials
+        Optional<UserProfile> created;
+        try
+        {
+            created = creator.create(callContext, validated.get());
+        }
+        catch (Exception e)
+        {
+            LOGGER.error("Profile creation failed for PA token", e);
+            return null;
+        }
+        if (!created.isPresent())
+        {
+            LOGGER.error("Profile creation declined for PA token");
+            return null;
+        }
+
+        GitlabPersonalAccessTokenProfile profile = (GitlabPersonalAccessTokenProfile) created.get();
         return StateSessionBuilder.newBuilder().withProfile(profile).build();
     }
 }

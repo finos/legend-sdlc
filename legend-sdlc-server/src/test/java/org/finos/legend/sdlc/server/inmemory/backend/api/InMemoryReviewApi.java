@@ -29,7 +29,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiPredicate;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryReviewApi implements ReviewApi
 {

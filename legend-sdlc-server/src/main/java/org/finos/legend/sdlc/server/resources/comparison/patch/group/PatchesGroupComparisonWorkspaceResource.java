@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.resources.comparison.patch.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -26,17 +26,17 @@ import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/groupWorkspaces/{workspaceId}/comparison")
-@Api("Comparison")
+@Tag(name = "Comparison")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesGroupComparisonWorkspaceResource extends BaseResource
@@ -51,7 +51,7 @@ public class PatchesGroupComparisonWorkspaceResource extends BaseResource
 
     @GET
     @Path("workspaceCreation")
-    @ApiOperation("Get comparison between current group workspace revision and workspace creation revision for patch release version")
+    @Operation(summary = "Get comparison between current group workspace revision and workspace creation revision for patch release version")
     public Comparison getWorkspaceCreationComparison(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -72,7 +72,7 @@ public class PatchesGroupComparisonWorkspaceResource extends BaseResource
 
     @GET
     @Path("projectLatest")
-    @ApiOperation("Get comparison between current group workspace revision and current project revision for patch release version")
+    @Operation(summary = "Get comparison between current group workspace revision and current project revision for patch release version")
     public Comparison getWorkspaceProjectComparison(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");

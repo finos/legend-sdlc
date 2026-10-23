@@ -14,18 +14,18 @@
 
 package org.finos.legend.sdlc.server.resources;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Deprecated
-@Api("Info")
+@Tag(name = "Info")
 @Path("/info")
 @Produces(MediaType.APPLICATION_JSON)
 public class InfoResource
@@ -39,7 +39,7 @@ public class InfoResource
     }
 
     @GET
-    @ApiOperation("Provides server information")
+    @Operation(summary = "Provides server information")
     public ServerInfo getServerInfo()
     {
         return this.serverInfo;

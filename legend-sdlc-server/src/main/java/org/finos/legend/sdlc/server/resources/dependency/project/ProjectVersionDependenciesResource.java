@@ -14,25 +14,25 @@
 
 package org.finos.legend.sdlc.server.resources.dependency.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.Set;
 
 @Path("/projects/{projectId}/versions/{versionId}/upstreamProjects")
-@Api("Dependencies")
+@Tag(name = "Dependencies")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProjectVersionDependenciesResource extends BaseResource
@@ -46,7 +46,7 @@ public class ProjectVersionDependenciesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get projects that the current version depends on. Use transitive=true for transitive dependencies.")
+    @Operation(summary = "Get projects that the current version depends on. Use transitive=true for transitive dependencies.")
     public Set<ProjectDependency> getUpstreamDependencies(
             @PathParam("projectId") String projectId,
             @PathParam("versionId") String versionId,

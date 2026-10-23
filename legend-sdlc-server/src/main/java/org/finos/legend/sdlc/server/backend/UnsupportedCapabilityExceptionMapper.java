@@ -18,10 +18,10 @@ import org.finos.legend.sdlc.backend.api.spi.UnsupportedCapabilityException;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.ext.ExceptionMapper;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
 
 /**
  * Maps an exercised-but-undeclared backend capability to 501 with a structured body naming the capability and

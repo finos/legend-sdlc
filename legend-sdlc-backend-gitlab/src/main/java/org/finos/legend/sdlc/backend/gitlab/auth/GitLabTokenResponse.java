@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.backend.gitlab.auth;
 
-import org.gitlab4j.api.Constants.TokenType;
+import org.gitlab4j.models.Constants.TokenType;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

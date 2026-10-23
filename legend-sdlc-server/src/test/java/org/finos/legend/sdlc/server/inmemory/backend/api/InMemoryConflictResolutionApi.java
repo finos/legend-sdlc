@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.backend.api.conflictresolution.ConflictResolutionAp
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
 import java.util.List;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryConflictResolutionApi implements ConflictResolutionApi
 {

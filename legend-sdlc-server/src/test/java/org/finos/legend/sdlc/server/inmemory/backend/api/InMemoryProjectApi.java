@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.domain.model.project.accessRole.UserPermission;
 import org.finos.legend.sdlc.backend.api.project.ProjectApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 import java.util.Set;
 

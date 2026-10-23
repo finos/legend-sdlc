@@ -15,11 +15,11 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.List;
 import java.util.Map;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * The backend discovery chain end to end: the test configuration declares {@code backend: {type: inMemory}},

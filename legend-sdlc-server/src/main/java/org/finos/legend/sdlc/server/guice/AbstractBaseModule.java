@@ -21,7 +21,6 @@ import com.google.inject.Binder;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
-import com.hubspot.dropwizard.guicier.DropwizardAwareModule;
 import io.dropwizard.jackson.Jackson;
 import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
@@ -240,17 +239,27 @@ import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
-import org.pac4j.core.context.JEEContext;
-import org.pac4j.core.context.session.JEESessionStore;
+import org.finos.legend.server.pac4j.mongostore.MongoDbSessionStore;
+import org.finos.legend.server.pac4j.sessionutil.SessionToken;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.jax.rs.pac4j.JaxRsContext;
+import org.pac4j.jax.rs.servlet.pac4j.ServletJaxRsContext;
 import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
+import org.pac4j.jee.context.JEEContext;
+import org.pac4j.jee.context.session.JEESessionStore;
+import ru.vyarus.dropwizard.guice.module.support.DropwizardAwareModule;
+
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.MongoClients;
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoDatabase;
+import org.bson.Document;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.ServiceLoader;
 import java.util.Optional;
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDLCServerConfiguration>
 {
@@ -265,8 +274,9 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
     }
 
     @Override
-    public void configure(Binder binder)
+    protected void configure()
     {
+        Binder binder = binder();
         configureApis(binder);
 
         bindUserContext(binder);
@@ -577,7 +587,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private Backend buildBackend(BackendEnvironment environment)
     {
-        BackendConfiguration backendConfiguration = getConfiguration().getBackendConfiguration();
+        BackendConfiguration backendConfiguration = configuration().getBackendConfiguration();
         if (backendConfiguration == null)
         {
             backendConfiguration = buildLegacyGitLabBackendConfiguration();
@@ -607,7 +617,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
      */
     private BackendConfiguration buildLegacyGitLabBackendConfiguration()
     {
-        JsonNode legacyGitLabConfig = getConfiguration().getLegacyGitLabConfig();
+        JsonNode legacyGitLabConfig = configuration().getLegacyGitLabConfig();
         if ((legacyGitLabConfig == null) || legacyGitLabConfig.isNull())
         {
             return null;
@@ -620,7 +630,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         backendNode.put("type", "gitlab");
         try
         {
-            return getBootstrap().getObjectMapper().convertValue(backendNode, BackendConfiguration.class);
+            return bootstrap().getObjectMapper().convertValue(backendNode, BackendConfiguration.class);
         }
         catch (IllegalArgumentException e)
         {
@@ -637,13 +647,13 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private ProjectStructureConfiguration getProjectStructureConfiguration()
     {
-        ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
+        ProjectStructureConfiguration projectStructureConfiguration = configuration().getProjectStructureConfiguration();
         return (projectStructureConfiguration == null) ? ProjectStructureConfiguration.emptyConfiguration() : projectStructureConfiguration;
     }
 
     private ProjectStructurePlatformExtensions buildProjectStructurePlatformExtensions()
     {
-        return Optional.ofNullable(getConfiguration().getProjectStructureConfiguration())
+        return Optional.ofNullable(configuration().getProjectStructureConfiguration())
                 .map(ProjectStructureConfiguration::getProjectPlatformsConfiguration)
                 .map(ProjectPlatformsConfiguration::buildProjectStructurePlatformExtensions)
                 .orElseGet(() -> ProjectStructurePlatformExtensions.newPlatformExtensions(Collections.emptyList(), Collections.emptyList()));
@@ -660,7 +670,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private ProjectStructureExtensionProvider resolveProjectStructureExtensionProvider()
     {
-        ProjectStructureConfiguration projectStructureConfiguration = getConfiguration().getProjectStructureConfiguration();
+        ProjectStructureConfiguration projectStructureConfiguration = configuration().getProjectStructureConfiguration();
         if (projectStructureConfiguration != null)
         {
             ProjectStructureExtensionProvider configuredProvider = projectStructureConfiguration.getProjectStructureExtensionProvider();
@@ -679,19 +689,19 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private DepotConfiguration getDepotConfiguration()
     {
-        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        DepotConfiguration depotConfiguration = configuration().getDepotConfiguration();
         return (depotConfiguration == null) ? DepotConfiguration.emptyConfiguration() : depotConfiguration;
     }
 
     private LegendSDLCServerFeaturesConfiguration getFeaturesConfiguration()
     {
-        LegendSDLCServerFeaturesConfiguration featuresConfiguration = getConfiguration().getFeaturesConfiguration();
+        LegendSDLCServerFeaturesConfiguration featuresConfiguration = configuration().getFeaturesConfiguration();
         return (featuresConfiguration == null) ? LegendSDLCServerFeaturesConfiguration.emptyConfiguration() : featuresConfiguration;
     }
 
     private LegendPac4jConfiguration getLegendPac4jConfiguration()
     {
-        return getConfiguration().getPac4jConfiguration();
+        return configuration().getPac4jConfiguration();
     }
 
     private AuthClientInjector getAuthClientInjector()
@@ -705,7 +715,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private AuthClientInjector resolveAuthClientInjector()
     {
-        DepotConfiguration depotConfiguration = getConfiguration().getDepotConfiguration();
+        DepotConfiguration depotConfiguration = configuration().getDepotConfiguration();
         if (depotConfiguration != null)
         {
             AuthClientInjector authClientInjector = depotConfiguration.getAuthClientInjector();
@@ -719,19 +729,49 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
 
     private SessionProvider getSessionProvider()
     {
-        LegendPac4jConfiguration config = getConfiguration().getPac4jConfiguration();
+        LegendPac4jConfiguration config = configuration().getPac4jConfiguration();
         return new SessionProvider(getSessionStoreFromConfig(config));
     }
 
-    private SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
+    /**
+     * Must mirror {@code LegendPac4jBundle}'s session-store construction, so that {@link SessionProvider} reads the
+     * same store pac4j writes.
+     */
+    static SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
     {
+        String sessionTokenName = config.getSessionTokenName() != null ? config.getSessionTokenName() : "LegendSSO";
+        String sameSitePolicy = SessionToken.sameSitePolicy(config.getSessionTokenSameSite());
         if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
         {
-            return new HazelcastSessionStore(
+            HazelcastSessionStore sessionStore = new HazelcastSessionStore(
                     config.getHazelcastSession().getConfigFilePath(),
                     Maps.immutable.with(
                             JEEContext.class, new JEESessionStore(),
-                            JaxRsContext.class, new ServletSessionStore()).castToMap(), config.getSessionTokenName() != null ? config.getSessionTokenName() : "LegendSSO");
+                            JaxRsContext.class, ServletSessionStore.INSTANCE,
+                            ServletJaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(), sessionTokenName);
+            sessionStore.setSameSitePolicy(sameSitePolicy);
+            return sessionStore;
+        }
+        if (config.getMongoSession() != null && config.getMongoSession().isEnabled())
+        {
+            if ((config.getMongoUri() == null) || config.getMongoUri().isEmpty() || (config.getMongoDb() == null) || config.getMongoDb().isEmpty())
+            {
+                throw new RuntimeException("MongoDB needs to be configured if MongoSession is used");
+            }
+            MongoClient client = MongoClients.create(config.getMongoUri());
+            MongoDatabase database = client.getDatabase(config.getMongoDb());
+            MongoCollection<Document> userSessions = database.getCollection(config.getMongoSession().getCollection());
+            MongoDbSessionStore sessionStore = new MongoDbSessionStore(
+                    config.getMongoSession().getCryptoAlgorithm(),
+                    config.getMongoSession().getMaxSessionLength(),
+                    userSessions,
+                    Maps.immutable.with(
+                            JEEContext.class, new JEESessionStore(),
+                            JaxRsContext.class, ServletSessionStore.INSTANCE,
+                            ServletJaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(),
+                    config.getTrustedPackages(), sessionTokenName);
+            sessionStore.setSameSitePolicy(sameSitePolicy);
+            return sessionStore;
         }
         return null;
     }

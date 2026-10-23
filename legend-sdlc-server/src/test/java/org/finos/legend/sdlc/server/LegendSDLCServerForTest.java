@@ -16,11 +16,10 @@ package org.finos.legend.sdlc.server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
-import com.hubspot.dropwizard.guicier.GuiceBundle;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import io.dropwizard.jackson.Jackson;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.core.setup.Environment;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -37,13 +36,14 @@ import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
 import org.finos.legend.sdlc.domain.model.review.Review;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
 
-import javax.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.ContextResolver;
 
 
 public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServerConfiguration>
 {
-    private GuiceBundle<LegendSDLCServerConfiguration> guiceBundle;
+    private GuiceBundle guiceBundle;
 
     public LegendSDLCServerForTest()
     {
@@ -64,7 +64,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
     }
 
     @Override
-    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle buildGuiceBundle()
     {
         this.guiceBundle = super.buildGuiceBundle();
         return this.guiceBundle;
@@ -76,7 +76,7 @@ public class LegendSDLCServerForTest extends BaseLegendSDLCServer<LegendSDLCServ
         return new InMemoryModule(this);
     }
 
-    public GuiceBundle<LegendSDLCServerConfiguration> getGuiceBundle()
+    public GuiceBundle getGuiceBundle()
     {
         return this.guiceBundle;
     }

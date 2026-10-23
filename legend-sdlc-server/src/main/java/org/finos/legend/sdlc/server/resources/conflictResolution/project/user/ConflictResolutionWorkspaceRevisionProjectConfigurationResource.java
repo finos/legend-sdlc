@@ -14,23 +14,23 @@
 
 package org.finos.legend.sdlc.server.resources.conflictResolution.project.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/revisions/{revisionId}/configuration")
-@Api("Conflict Resolution")
+@Tag(name = "Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ConflictResolutionWorkspaceRevisionProjectConfigurationResource extends BaseResource
@@ -44,10 +44,10 @@ public class ConflictResolutionWorkspaceRevisionProjectConfigurationResource ext
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a user workspace with conflict resolution at a revision")
+    @Operation(summary = "Get the configuration for a revision of a project in a user workspace with conflict resolution at a revision")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("workspaceId") String workspaceId,
-                                                                         @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                                                         @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
                 "getting project " + projectId + " configuration in user workspace with conflict resolution " + workspaceId + " at revision " + revisionId,

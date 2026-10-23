@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.resources.conflictResolution.project.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
@@ -25,18 +25,18 @@ import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/conflictResolution")
-@Api("Conflict Resolution")
+@Tag(name = "Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupConflictResolutionWorkspaceResource extends BaseResource
@@ -52,7 +52,7 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get a group workspace with conflict resolution by id")
+    @Operation(summary = "Get a group workspace with conflict resolution by id")
     public Workspace getGroupWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -65,7 +65,7 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a group workspace with conflict resolution is outdated")
+    @Operation(summary = "Check if a group workspace with conflict resolution is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -77,7 +77,7 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
     }
 
     @DELETE
-    @ApiOperation("Discard a conflict resolution for a group workspace")
+    @Operation(summary = "Discard a conflict resolution for a group workspace")
     public void discardConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -90,7 +90,7 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("discardChanges")
-    @ApiOperation("Discard all conflict resolution changes for a group workspace")
+    @Operation(summary = "Discard all conflict resolution changes for a group workspace")
     public void discardChangesConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -103,7 +103,7 @@ public class GroupConflictResolutionWorkspaceResource extends BaseResource
 
     @POST
     @Path("accept")
-    @ApiOperation("Accept a conflict resolution for a group workspace")
+    @Operation(summary = "Accept a conflict resolution for a group workspace")
     public void acceptConflictResolution(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, PerformChangesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to accept conflict resolution");

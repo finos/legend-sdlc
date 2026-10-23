@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.backend.gitlab.auth;
 import org.finos.legend.sdlc.backend.api.spi.BackendSessionContext;
 import org.finos.legend.sdlc.backend.api.spi.OidcAuthMaterial;
 import org.finos.legend.sdlc.backend.gitlab.GitLabAppInfo;
-import org.gitlab4j.api.Constants.TokenType;
+import org.gitlab4j.models.Constants.TokenType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

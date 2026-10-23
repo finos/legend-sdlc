@@ -25,7 +25,7 @@ import org.finos.legend.sdlc.backend.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.backend.gitlab.tools.GitLabApiTools;
 import org.finos.legend.sdlc.backend.gitlab.tools.PagerTools;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.models.Constants;
 import org.gitlab4j.api.Pager;
 import org.gitlab4j.api.RepositoryApi;
 import org.gitlab4j.api.models.Branch;

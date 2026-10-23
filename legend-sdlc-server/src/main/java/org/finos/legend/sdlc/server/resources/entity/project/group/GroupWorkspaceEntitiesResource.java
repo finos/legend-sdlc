@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.entity.project.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
@@ -31,22 +31,22 @@ import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.EntityAccessResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/entities")
-@Api("Entities")
+@Tag(name = "Entities")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupWorkspaceEntitiesResource extends EntityAccessResource
@@ -60,25 +60,25 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @GET
-    @ApiOperation("Get entities of the group workspace")
+    @Operation(summary = "Get entities of the group workspace")
     public List<Entity> getAllEntities(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("classifierPath")
-                                       @ApiParam("Only include entities with one of these classifier paths.") Set<String> classifierPaths,
+                                       @Parameter(description = "Only include entities with one of these classifier paths.") Set<String> classifierPaths,
                                        @QueryParam("package")
-                                       @ApiParam("Only include entities in one of these packages. If includeSubPackages is true (which it is by default), then entities in subpackages are also included. Otherwise, only entities directly in one of the packages are included.") Set<String> packages,
+                                       @Parameter(description = "Only include entities in one of these packages. If includeSubPackages is true (which it is by default), then entities in subpackages are also included. Otherwise, only entities directly in one of the packages are included.") Set<String> packages,
                                        @QueryParam("includeSubPackages")
                                        @DefaultValue("true")
-                                       @ApiParam("Whether to include entities from subpackages or only directly in one of the given packages. This is ignored if no packages are supplied.") boolean includeSubPackages,
+                                       @Parameter(description = "Whether to include entities from subpackages or only directly in one of the given packages. This is ignored if no packages are supplied.") boolean includeSubPackages,
                                        @QueryParam("name")
-                                       @ApiParam("Only include entities with a name matching this regular expression.") String nameRegex,
+                                       @Parameter(description = "Only include entities with a name matching this regular expression.") String nameRegex,
                                        @QueryParam("stereotype")
-                                       @ApiParam("Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
+                                       @Parameter(description = "Only include entities with one of these stereotypes. The syntax is PROFILE.NAME, where PROFILE is the full path of the Profile that owns the Stereotype.") Set<String> stereotypes,
                                        @QueryParam("taggedValue")
-                                       @ApiParam("Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
+                                       @Parameter(description = "Only include entities with a matching tagged value. The syntax is PROFILE.NAME/REGEX, where PROFILE is the full path of the Profile that owns the Tag, NAME is the name of the Tag, and REGEX is a regular expression to match against the value.") List<String> taggedValueRegexes,
                                        @QueryParam("excludeInvalid")
                                        @DefaultValue("false")
-                                       @ApiParam("If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid
+                                       @Parameter(description = "If true, exclude invalid entities and return valid entities only. If false, the endpoint will return an error if there are any invalid entities.") boolean excludeInvalid
     )
     {
         return execute(
@@ -89,7 +89,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @DELETE
-    @ApiOperation(value = "Delete multiple entities in a group workspace", notes = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
+    @Operation(summary = "Delete multiple entities in a group workspace", description = "Delete multiple entities. If the list of entities to delete is null, all entities will be deleted.")
     public Revision deleteEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, DeleteEntitiesCommand command)
     {
         List<String> entityPathsToDelete = command.getEntitiesToDelete();
@@ -106,7 +106,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
     }
 
     @POST
-    @ApiOperation(value = "Update entities in a group workspace", notes = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
+    @Operation(summary = "Update entities in a group workspace", description = "Update entities with new definitions. If replace is true, then all entities are replaced. This means that existing entities are deleted unless a new definition is supplied.")
     public Revision updateEntities(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, UpdateEntitiesCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update entities");
@@ -119,7 +119,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @GET
     @Path("{path}")
-    @ApiOperation("Get an entity of the group workspace by its path")
+    @Operation(summary = "Get an entity of the group workspace by its path")
     public Entity getEntityByPath(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path)
     {
         return executeWithLogging(
@@ -130,7 +130,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @POST
     @Path("{path}")
-    @ApiOperation("Create a new entity or update an existing entity in a group workspace")
+    @Operation(summary = "Create a new entity or update an existing entity in a group workspace")
     public Revision createOrUpdateEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, CreateOrUpdateEntityCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to create or update an entity");
@@ -142,7 +142,7 @@ public class GroupWorkspaceEntitiesResource extends EntityAccessResource
 
     @DELETE
     @Path("{path}")
-    @ApiOperation("Delete an entity in a group workspace")
+    @Operation(summary = "Delete an entity in a group workspace")
     public Revision deleteEntity(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId, @PathParam("path") String path, DeleteEntityCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to delete an entity");

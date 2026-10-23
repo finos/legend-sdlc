@@ -14,28 +14,28 @@
 
 package org.finos.legend.sdlc.server.resources.workspace.project.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/workspaces")
-@Api("Workspaces")
+@Tag(name = "Workspaces")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class WorkspacesResource extends BaseResource
@@ -49,11 +49,11 @@ public class WorkspacesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all user workspaces for a project")
+    @Operation(summary = "Get all user workspaces for a project")
     public List<Workspace> getUserWorkspaces(@PathParam("projectId") String projectId,
                                              @QueryParam("owned")
                                              @DefaultValue("true")
-                                             @ApiParam("Only include workspaces owned by current user") boolean ownedOnly)
+                                             @Parameter(description = "Only include workspaces owned by current user") boolean ownedOnly)
     {
         return executeWithLogging(
                 "getting " + (ownedOnly ? "user" : "all") + " workspaces for project " + projectId,
@@ -64,7 +64,7 @@ public class WorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}")
-    @ApiOperation("Get a user workspace for a project by id")
+    @Operation(summary = "Get a user workspace for a project by id")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -77,7 +77,7 @@ public class WorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}/outdated")
-    @ApiOperation("Check if a user workspace is outdated")
+    @Operation(summary = "Check if a user workspace is outdated")
     public boolean isUserWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -90,7 +90,7 @@ public class WorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}/inConflictResolutionMode")
-    @ApiOperation("Check if a user workspace is in conflict resolution mode")
+    @Operation(summary = "Check if a user workspace is in conflict resolution mode")
     public boolean isUserWorkspaceInConflictResolutionMode(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -103,7 +103,7 @@ public class WorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}")
-    @ApiOperation("Create a new user workspace")
+    @Operation(summary = "Create a new user workspace")
     public Workspace createUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return execute(
@@ -117,7 +117,7 @@ public class WorkspacesResource extends BaseResource
 
     @DELETE
     @Path("{workspaceId}")
-    @ApiOperation("Delete a user workspace")
+    @Operation(summary = "Delete a user workspace")
     public void deleteUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -130,7 +130,7 @@ public class WorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}/update")
-    @ApiOperation("Update a user workspace")
+    @Operation(summary = "Update a user workspace")
     public WorkspaceApi.WorkspaceUpdateReport updateUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(

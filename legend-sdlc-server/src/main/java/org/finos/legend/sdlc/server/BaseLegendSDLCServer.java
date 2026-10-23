@@ -15,11 +15,10 @@
 package org.finos.legend.sdlc.server;
 
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import com.hubspot.dropwizard.guicier.GuiceBundle;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
-import io.dropwizard.setup.Bootstrap;
-import io.dropwizard.setup.Environment;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.core.setup.Environment;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.sdlc.backend.api.spi.BackendFactory;
 import org.finos.legend.sdlc.server.backend.UnsupportedCapabilityExceptionMapper;
@@ -31,14 +30,17 @@ import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
+import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
+import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.dropwizard.guice.GuiceBundle;
 
 import java.util.EnumSet;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
-import javax.servlet.DispatcherType;
-import javax.servlet.FilterRegistration;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.FilterRegistration;
 
 public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfiguration> extends BaseServer<T>
 {
@@ -100,9 +102,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         bootstrap.addBundle(buildGuiceBundle());
     }
 
-    protected GuiceBundle<LegendSDLCServerConfiguration> buildGuiceBundle()
+    protected GuiceBundle buildGuiceBundle()
     {
-        return GuiceBundle.defaultBuilder(LegendSDLCServerConfiguration.class)
+        return GuiceBundle.builder()
                 .modules(buildBaseModule())
                 .build();
     }
@@ -116,6 +118,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public void run(T configuration, Environment environment)
     {
         super.run(configuration, environment);
+        doNotPersistPersonalAccessTokenProfiles(configuration.getPac4jConfiguration());
         environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
         environment.jersey().register(new AuthorizationRequiredExceptionMapper());
         // StaleAuthorizationExceptionMapper is Guice-bound (it needs the request through a lazy provider) and
@@ -155,6 +158,22 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public String getMode()
     {
         return this.mode;
+    }
+
+    /**
+     * Deliberately overrides the saveProfileInSession flag the pac4j bundle set: a personal-access-token profile
+     * carries the GitLab token itself, and once persisted it is honoured through the session cookie alone, so a
+     * revoked token would keep working until the session expires.
+     */
+    static void doNotPersistPersonalAccessTokenProfiles(LegendPac4jConfiguration pac4jConfiguration)
+    {
+        if ((pac4jConfiguration == null) || (pac4jConfiguration.getClients() == null))
+        {
+            return;
+        }
+        pac4jConfiguration.getClients().stream()
+                .filter(c -> c instanceof GitlabPersonalAccessTokenClient)
+                .forEach(c -> ((GitlabPersonalAccessTokenClient) c).setSaveProfileInSession(false));
     }
 
     /**

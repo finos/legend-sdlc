@@ -19,7 +19,7 @@ import org.finos.legend.sdlc.backend.api.project.ProjectApi;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 /**
  * @deprecated Retained temporarily for backward compatibility. Use

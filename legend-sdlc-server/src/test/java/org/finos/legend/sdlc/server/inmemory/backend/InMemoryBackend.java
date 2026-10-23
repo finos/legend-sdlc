@@ -45,8 +45,8 @@ import org.finos.legend.sdlc.server.inmemory.backend.api.InMemoryReviewApi;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
-import javax.inject.Singleton;
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
 
 @Singleton
 public class InMemoryBackend

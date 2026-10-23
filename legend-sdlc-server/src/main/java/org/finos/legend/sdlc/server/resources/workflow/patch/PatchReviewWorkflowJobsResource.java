@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.workflow.patch;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
@@ -26,20 +26,20 @@ import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/reviews/{reviewId}/workflows/{workflowId}/jobs")
-@Api("Workflows")
+@Tag(name = "Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchReviewWorkflowJobsResource extends BaseResource
@@ -53,12 +53,12 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get jobs for a workflow for patch release version", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @Operation(summary = "Get jobs for a workflow for patch release version", description = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
                                              @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                              @PathParam("reviewId") String reviewId,
                                              @PathParam("workflowId") String workflowId,
-                                             @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
+                                             @QueryParam("status") @Parameter(description = "Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;
@@ -78,7 +78,7 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}")
-    @ApiOperation("Get a workflow job for patch release version")
+    @Operation(summary = "Get a workflow job for patch release version")
     public WorkflowJob getWorkflowJob(@PathParam("projectId") String projectId,
                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                       @PathParam("reviewId") String reviewId,
@@ -103,7 +103,7 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}/logs")
-    @ApiOperation("Get a workflow job log for patch release version")
+    @Operation(summary = "Get a workflow job log for patch release version")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getWorkflowJobLogs(@PathParam("projectId") String projectId,
                                        @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
@@ -135,7 +135,7 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/run")
-    @ApiOperation("Run a manual workflow job for patch release version")
+    @Operation(summary = "Run a manual workflow job for patch release version")
     public WorkflowJob runWorkflowJob(@PathParam("projectId") String projectId,
                                       @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                       @PathParam("reviewId") String reviewId,
@@ -160,7 +160,7 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/retry")
-    @ApiOperation("Retry a failed workflow job for patch release version")
+    @Operation(summary = "Retry a failed workflow job for patch release version")
     public WorkflowJob retryWorkflowJob(@PathParam("projectId") String projectId,
                                         @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                         @PathParam("reviewId") String reviewId,
@@ -186,7 +186,7 @@ public class PatchReviewWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/cancel")
-    @ApiOperation("Cancel a workflow job that is in progress for patch release version")
+    @Operation(summary = "Cancel a workflow job that is in progress for patch release version")
     public WorkflowJob cancelWorkflowJob(@PathParam("projectId") String projectId,
                                          @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                          @PathParam("reviewId") String reviewId,

@@ -24,8 +24,8 @@ import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.oidc.profile.OidcProfile;
 
 import java.util.List;
-import javax.servlet.FilterConfig;
-import javax.servlet.http.Cookie;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.http.Cookie;
 
 /**
  * The server's session filter, backend-independent: builds a {@link StateSession} from the pac4j profiles and
@@ -34,6 +34,11 @@ import javax.servlet.http.Cookie;
  */
 public class StateSessionWebFilter extends LegendSDLCWebFilter<CommonProfile>
 {
+    public StateSessionWebFilter()
+    {
+        super(CommonProfile.class);
+    }
+
     @Override
     public void init(FilterConfig filterConfig)
     {

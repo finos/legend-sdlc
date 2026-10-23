@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryBackupApi implements BackupApi
 {
