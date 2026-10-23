@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.backend.gitlab.auth;
 import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
 import org.finos.legend.sdlc.backend.gitlab.GitLabAppInfo;
 import org.finos.legend.sdlc.backend.gitlab.GitLabServerInfo;
-import org.gitlab4j.api.Constants.TokenType;
+import org.gitlab4j.models.Constants.TokenType;
 import org.junit.Assert;
 import org.junit.Test;
 

@@ -32,7 +32,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryWorkspaceApi implements WorkspaceApi
 {

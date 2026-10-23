@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.backup.patch.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -29,20 +29,20 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAccessType;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/backup")
-@Api("Backup")
+@Tag(name = "Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class BackupPatchesWorkspaceResource extends BaseResource
@@ -58,7 +58,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get a backup user workspace by id for patch release version")
+    @Operation(summary = "Get a backup user workspace by id for patch release version")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -79,7 +79,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a backup user workspace is outdated for patch release version")
+    @Operation(summary = "Check if a backup user workspace is outdated for patch release version")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -99,7 +99,7 @@ public class BackupPatchesWorkspaceResource extends BaseResource
     }
 
     @DELETE
-    @ApiOperation("Discard a backup user workspace for patch release version")
+    @Operation(summary = "Discard a backup user workspace for patch release version")
     public void discardBackup(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -120,11 +120,11 @@ public class BackupPatchesWorkspaceResource extends BaseResource
 
     @POST
     @Path("recover")
-    @ApiOperation("Recover the user workspace from backup for patch release version")
+    @Operation(summary = "Recover the user workspace from backup for patch release version")
     public void recoverBackup(@PathParam("projectId") String projectId,
                               @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                               @PathParam("workspaceId") String workspaceId,
-                              @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
+                              @QueryParam("forceRecovery") @Parameter(description = "Whether to override the workspace if it exists with the backup") boolean forceRecovery)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;

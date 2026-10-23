@@ -24,7 +24,7 @@ import org.slf4j.event.SubstituteLoggingEvent;
 import org.slf4j.helpers.SubstituteLoggerFactory;
 
 import java.util.List;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class TestBaseResource
 {

@@ -14,21 +14,21 @@
 
 package org.finos.legend.sdlc.server.resources.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/currentUser")
-@Api("Users")
+@Tag(name = "Users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class CurrentUserResource extends BaseResource
@@ -42,7 +42,7 @@ public class CurrentUserResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the current user")
+    @Operation(summary = "Get the current user")
     public User getCurrentUser()
     {
         return executeWithLogging("getting the current user", this.userApi::getCurrentUserInfo);

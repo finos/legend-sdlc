@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class TestSwagger extends AbstractLegendSDLCServerResourceTest
 {
@@ -25,6 +25,13 @@ public class TestSwagger extends AbstractLegendSDLCServerResourceTest
     public void testSwaggerPageAccessible()
     {
         Response response = clientFor("/api/swagger").request().get();
+        Assert.assertEquals(200, response.getStatus());
+    }
+
+    @Test
+    public void testOpenApiDocumentAccessible()
+    {
+        Response response = clientFor("/api/openapi.json").request().get();
         Assert.assertEquals(200, response.getStatus());
     }
 }

@@ -14,28 +14,28 @@
 
 package org.finos.legend.sdlc.server.resources.dependency.patch;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectDependency;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.backend.api.dependency.DependenciesApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.Set;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/revisions/{revisionId}/upstreamProjects")
-@Api("Dependencies")
+@Tag(name = "Dependencies")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchRevisionDependenciesResource extends BaseResource
@@ -49,7 +49,7 @@ public class PatchRevisionDependenciesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get projects that the current revision depends on. Use transitive=true for transitive dependencies for patch release version.")
+    @Operation(summary = "Get projects that the current revision depends on. Use transitive=true for transitive dependencies for patch release version.")
     public Set<ProjectDependency> getUpstreamDependencies(@PathParam("projectId") String projectId,
                                                           @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                                           @PathParam("revisionId") String revisionId,

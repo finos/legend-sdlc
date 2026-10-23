@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.resources;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.fasterxml.jackson.jakarta.rs.json.JacksonJsonProvider;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.project.Project;
@@ -31,34 +31,20 @@ import org.finos.legend.sdlc.server.inmemory.backend.InMemoryMixins;
 import org.finos.legend.sdlc.server.jackson.ProjectDependencyMixin;
 import org.finos.legend.sdlc.server.jackson.ProjectRevisionMixin;
 import org.finos.legend.sdlc.server.jackson.VersionIdMixin;
-import org.junit.rules.TestRule;
-import org.junit.runner.Description;
-import org.junit.runners.model.Statement;
+import org.junit.jupiter.api.extension.BeforeEachCallback;
+import org.junit.jupiter.api.extension.ExtensionContext;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.ext.ContextResolver;
 
-public class SDLCServerClientRule implements TestRule
+public class SDLCServerClientRule implements BeforeEachCallback
 {
     private ObjectMapper objectMapper;
     private Client client;
 
     @Override
-    public Statement apply(Statement base, Description description)
-    {
-        return new Statement()
-        {
-            @Override
-            public void evaluate() throws Throwable
-            {
-                SDLCServerClientRule.this.before();
-                base.evaluate();
-            }
-        };
-    }
-
-    private void before()
+    public void beforeEach(ExtensionContext context)
     {
         this.client = this.createClient();
     }

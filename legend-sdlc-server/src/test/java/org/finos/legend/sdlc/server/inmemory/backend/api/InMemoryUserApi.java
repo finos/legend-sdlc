@@ -17,7 +17,7 @@ package org.finos.legend.sdlc.server.inmemory.backend.api;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 
 public class InMemoryUserApi implements UserApi

@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.server.error;
 
 import org.finos.legend.sdlc.error.LegendSDLCException;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.function.Predicate;

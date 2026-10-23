@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.project.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
@@ -24,16 +24,16 @@ import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/revisions/{revisionId}/configuration")
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProjectRevisionProjectConfigurationResource extends BaseResource
@@ -47,9 +47,9 @@ public class ProjectRevisionProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project at a revision")
+    @Operation(summary = "Get the configuration of a project at a revision")
     public ProjectConfiguration getProjectRevisionProjectConfiguration(@PathParam("projectId") String projectId,
-                                                                       @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                                                       @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
                 "getting project " + projectId + " configuration at revision " + revisionId,
@@ -59,9 +59,9 @@ public class ProjectRevisionProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project at a revision")
+    @Operation(summary = "Get the available generation types of a project at a revision")
     public List<ArtifactTypeGenerationConfiguration> getProjectSupportedArtifactGeneration(@PathParam("projectId") String projectId,
-                                                                                           @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                                                                           @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
 
     {
         return executeWithLogging(

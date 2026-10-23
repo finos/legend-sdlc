@@ -24,7 +24,7 @@ import org.finos.legend.sdlc.backend.gitlab.auth.GitLabAuthorizerManager;
 import org.finos.legend.sdlc.backend.gitlab.auth.GitLabToken;
 import org.finos.legend.sdlc.backend.gitlab.auth.GitLabUserContext;
 import org.finos.legend.sdlc.tools.StringTools;
-import org.gitlab4j.api.Constants.TokenType;
+import org.gitlab4j.models.Constants.TokenType;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.models.Branch;

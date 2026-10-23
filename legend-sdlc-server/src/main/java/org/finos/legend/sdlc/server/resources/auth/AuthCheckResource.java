@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.resources.auth;
 
 import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.guice.UserContext;
@@ -25,14 +26,15 @@ import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.pac4j.core.client.Client;
 import org.pac4j.core.util.Pac4jConstants;
 
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response.Status;
 
 import static org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter.SESSION_ATTRIBUTE;
 
@@ -85,7 +87,15 @@ public class AuthCheckResource extends BaseResource
                 }
                 else
                 {
-                    session = this.sessionProvider.getSessionFromSessionStore(this.httpRequest, this.httpResponse);
+                    // An unreadable session store has not said "not authorized"; report it as retryable
+                    try
+                    {
+                        session = this.sessionProvider.getSessionFromSessionStore(this.httpRequest, this.httpResponse);
+                    }
+                    catch (RuntimeException e)
+                    {
+                        throw new LegendSDLCException("Session store is currently unreachable", Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
+                    }
                 }
                 this.httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
             }

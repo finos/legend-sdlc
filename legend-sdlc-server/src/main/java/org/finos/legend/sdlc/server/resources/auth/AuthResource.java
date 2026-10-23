@@ -14,7 +14,7 @@
 
 package org.finos.legend.sdlc.server.resources.auth;
 
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Parameter;
 import org.finos.legend.sdlc.backend.api.spi.AuthorizationRequiredException;
 import org.finos.legend.sdlc.backend.api.spi.BackendSession;
 import org.finos.legend.sdlc.error.LegendSDLCException;
@@ -28,14 +28,14 @@ import java.net.URI;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response.Status;
+import jakarta.inject.Inject;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response.Status;
 
 /**
  * The generic authorization surface over {@link BackendSession}'s auth contract, replacing the per-backend
@@ -63,7 +63,7 @@ public class AuthResource extends BaseResource
     @GET
     @Path("authorize")
     @Produces(MediaType.TEXT_HTML)
-    public String authorize(@QueryParam("redirect_uri") @ApiParam("URI to redirect to when authorization is complete") String redirectUri)
+    public String authorize(@QueryParam("redirect_uri") @Parameter(description = "URI to redirect to when authorization is complete") String redirectUri)
     {
         return executeWithLogging("authorizing", () ->
         {

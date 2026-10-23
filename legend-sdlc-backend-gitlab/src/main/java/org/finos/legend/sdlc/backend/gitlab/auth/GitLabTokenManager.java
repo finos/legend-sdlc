@@ -16,7 +16,7 @@ package org.finos.legend.sdlc.backend.gitlab.auth;
 
 import org.finos.legend.sdlc.backend.api.spi.BackendSessionStateStore;
 import org.finos.legend.sdlc.backend.gitlab.GitLabAppInfo;
-import org.gitlab4j.api.Constants;
+import org.gitlab4j.models.Constants;
 
 import java.time.LocalDateTime;
 import java.util.Objects;

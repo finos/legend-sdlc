@@ -14,23 +14,23 @@
 
 package org.finos.legend.sdlc.server.resources.backup.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/backup")
-@Api("Backup")
+@Tag(name = "Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class BackupProjectResource extends BaseResource
@@ -44,7 +44,7 @@ public class BackupProjectResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all backup workspaces for the project")
+    @Operation(summary = "Get all backup workspaces for the project")
     public List<Workspace> getWorkspaces(@PathParam("projectId") String projectId)
     {
         return executeWithLogging(

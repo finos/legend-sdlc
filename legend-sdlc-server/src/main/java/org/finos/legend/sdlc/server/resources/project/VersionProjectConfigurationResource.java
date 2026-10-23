@@ -14,24 +14,24 @@
 
 package org.finos.legend.sdlc.server.resources.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.backend.api.project.ProjectConfigurationApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/versions/{versionId}/configuration")
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class VersionProjectConfigurationResource extends BaseResource
@@ -45,7 +45,7 @@ public class VersionProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration for a version of a project")
+    @Operation(summary = "Get the configuration for a version of a project")
     public ProjectConfiguration getVersionProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId)
     {
         return execute(
@@ -57,7 +57,7 @@ public class VersionProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types for a version of a project")
+    @Operation(summary = "Get the available generation types for a version of a project")
     public List<ArtifactTypeGenerationConfiguration> getProjectSupportedArtifactGeneration(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId)
     {
         return executeWithLogging(

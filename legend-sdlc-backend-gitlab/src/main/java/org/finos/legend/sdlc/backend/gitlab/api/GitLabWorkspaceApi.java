@@ -37,8 +37,8 @@ import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider.WorkspaceAc
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.backend.api.tools.CallUntil;
 import org.gitlab4j.api.CommitsApi;
-import org.gitlab4j.api.Constants;
-import org.gitlab4j.api.Constants.StateEvent;
+import org.gitlab4j.models.Constants;
+import org.gitlab4j.models.Constants.StateEvent;
 import org.gitlab4j.api.GitLabApi;
 import org.gitlab4j.api.GitLabApiException;
 import org.gitlab4j.api.MergeRequestApi;

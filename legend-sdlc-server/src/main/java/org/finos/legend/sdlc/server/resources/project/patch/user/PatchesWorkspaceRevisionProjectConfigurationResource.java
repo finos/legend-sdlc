@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.project.patch.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -28,18 +28,18 @@ import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/revisions/{revisionId}/configuration")
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesWorkspaceRevisionProjectConfigurationResource extends BaseResource
@@ -53,11 +53,11 @@ public class PatchesWorkspaceRevisionProjectConfigurationResource extends BaseRe
     }
 
     @GET
-    @ApiOperation("Get the configuration for a revision of a project in a workspace at a revision for patch release version")
+    @Operation(summary = "Get the configuration for a revision of a project in a workspace at a revision for patch release version")
     public ProjectConfiguration getWorkspaceRevisionProjectConfiguration(@PathParam("projectId") String projectId,
                                                                          @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                                                          @PathParam("workspaceId") String workspaceId,
-                                                                         @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                                                         @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;
@@ -77,11 +77,11 @@ public class PatchesWorkspaceRevisionProjectConfigurationResource extends BaseRe
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in workspace at a revision for patch release version")
+    @Operation(summary = "Get the available generation types of a project in workspace at a revision for patch release version")
     public List<ArtifactTypeGenerationConfiguration> getProjectAvailableArtifactGeneration(@PathParam("projectId") String projectId,
                                                                                            @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                                                                            @PathParam("workspaceId") String workspaceId,
-                                                                                           @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                                                                           @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;

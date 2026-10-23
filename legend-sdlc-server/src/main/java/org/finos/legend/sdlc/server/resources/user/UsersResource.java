@@ -14,24 +14,24 @@
 
 package org.finos.legend.sdlc.server.resources.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.user.User;
 import org.finos.legend.sdlc.backend.api.user.UserApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/users")
-@Api("Users")
+@Tag(name = "Users")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class UsersResource extends BaseResource
@@ -45,7 +45,7 @@ public class UsersResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get users", notes = "Get users. If a search string is provided, users matching that search string are returned. Otherwise, all users are returned.")
+    @Operation(summary = "Get users", description = "Get users. If a search string is provided, users matching that search string are returned. Otherwise, all users are returned.")
     public List<User> getAllUsers(@QueryParam("search") String search)
     {
         return (search == null) ? executeWithLogging("getting all users", this.userApi::getUsers) : executeWithLogging("finding users by search on \"" + search + "\"", this.userApi::findUsers, search);
@@ -53,7 +53,7 @@ public class UsersResource extends BaseResource
 
     @GET
     @Path("{userId}")
-    @ApiOperation("Get user")
+    @Operation(summary = "Get user")
     public User getUser(@PathParam("userId") String userId)
     {
         return executeWithLogging(

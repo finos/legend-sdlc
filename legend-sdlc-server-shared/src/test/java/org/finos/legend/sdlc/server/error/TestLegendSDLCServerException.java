@@ -19,7 +19,7 @@ import org.junit.Test;
 
 import java.util.function.Function;
 import java.util.function.Predicate;
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 public class TestLegendSDLCServerException
 {

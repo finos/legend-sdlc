@@ -21,7 +21,7 @@ import org.finos.legend.sdlc.backend.api.version.VersionApi;
 import org.finos.legend.sdlc.server.inmemory.backend.InMemoryBackend;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryProject;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 import java.util.List;
 
 public class InMemoryVersionApi implements VersionApi

@@ -37,7 +37,7 @@ import org.finos.legend.sdlc.project.files.ProjectFileAccessProvider;
 import java.time.Instant;
 import java.util.List;
 import java.util.function.Predicate;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryRevisionApi implements RevisionApi
 {

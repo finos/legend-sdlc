@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.backup.project.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
@@ -28,18 +28,18 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/backup/revisions")
-@Api("Backup")
+@Tag(name = "Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupBackupWorkspaceRevisionsResource extends BaseResource
@@ -53,7 +53,7 @@ public class GroupBackupWorkspaceRevisionsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all revisions for a group backup workspace")
+    @Operation(summary = "Get all revisions for a group backup workspace")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("since") StartInstant since,
@@ -68,10 +68,10 @@ public class GroupBackupWorkspaceRevisionsResource extends BaseResource
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the backup group workspace")
+    @Operation(summary = "Get a revision of the backup group workspace")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
-                                @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for backup group workspace " + workspaceId + " for project " + projectId,

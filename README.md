@@ -41,7 +41,7 @@ applies for this case as well. You can either create a new application for this,
 redirect URIs to your existing application. We recommend you use a single application for both purposes, as it makes the
 authentication and authorization process simpler and faster.
 
-Once you have your configuration file, you can run the server with Java 8 or later. You can use a command such as this
+Once you have your configuration file, you can run the server with Java 17 or later. You can use a command such as this
 to start the server:
 
 ```sh
@@ -54,7 +54,7 @@ classpath to add functionality extensions.
 
 ## Development setup
 
-This application uses Maven 3.6+ and JDK 11, 17, 21, or 25 to build. Simply run `mvn install` to compile.
+This application uses Maven 3.6+ and JDK 17, 21, or 25 to build. Simply run `mvn install` to compile.
 
 You can build and test on Linux, Windows, or macOS. On Windows, enable Git's long path support before you clone,
 because some test resources have paths longer than Windows' 260-character limit:

@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.conflictResolution.project.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
@@ -28,18 +28,18 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/workspaces/{workspaceId}/conflictResolution/revisions")
-@Api("Conflict Resolution")
+@Tag(name = "Conflict Resolution")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ConflictResolutionWorkspaceRevisionsResource extends BaseResource
@@ -53,7 +53,7 @@ public class ConflictResolutionWorkspaceRevisionsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all revisions for a user workspace with conflict resolution")
+    @Operation(summary = "Get all revisions for a user workspace with conflict resolution")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
                                        @PathParam("workspaceId") String workspaceId,
                                        @QueryParam("since") StartInstant since,
@@ -68,10 +68,10 @@ public class ConflictResolutionWorkspaceRevisionsResource extends BaseResource
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of the user workspace with conflict resolution")
+    @Operation(summary = "Get a revision of the user workspace with conflict resolution")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("workspaceId") String workspaceId,
-                                @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for user workspace with conflict resolution " + workspaceId + " for project " + projectId,

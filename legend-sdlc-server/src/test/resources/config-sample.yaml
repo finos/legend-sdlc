@@ -46,8 +46,6 @@ features:
 
 filterPriorities:
   GitLab: 1
-  org.pac4j.j2e.filter.CallbackFilter: 2
-  org.pac4j.j2e.filter.SecurityFilter: 3
   CORS: 4
 
 pac4j:
@@ -60,8 +58,7 @@ pac4j:
         discoveryUri: https://$GITLAB_HOST/.well-known/openid-configuration
         scope: openid profile api
   authorizers:
-    - id: isAuthenticated
-      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer
+    - class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer
   bypassPaths:
     - /api/info
     - /api/server/info

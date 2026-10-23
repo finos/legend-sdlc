@@ -14,27 +14,27 @@
 
 package org.finos.legend.sdlc.server.resources.backup.project.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.backend.api.backup.BackupApi;
 import org.finos.legend.sdlc.backend.api.workspace.WorkspaceApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/workspaces/{workspaceId}/backup")
-@Api("Backup")
+@Tag(name = "Backup")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class BackupWorkspaceResource extends BaseResource
@@ -50,7 +50,7 @@ public class BackupWorkspaceResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get a backup user workspace by id")
+    @Operation(summary = "Get a backup user workspace by id")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -63,7 +63,7 @@ public class BackupWorkspaceResource extends BaseResource
 
     @GET
     @Path("outdated")
-    @ApiOperation("Check if a backup user workspace is outdated")
+    @Operation(summary = "Check if a backup user workspace is outdated")
     public boolean isWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -75,7 +75,7 @@ public class BackupWorkspaceResource extends BaseResource
     }
 
     @DELETE
-    @ApiOperation("Discard a backup user workspace")
+    @Operation(summary = "Discard a backup user workspace")
     public void discardBackup(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         executeWithLogging(
@@ -88,10 +88,10 @@ public class BackupWorkspaceResource extends BaseResource
 
     @POST
     @Path("recover")
-    @ApiOperation("Recover the user workspace from backup")
+    @Operation(summary = "Recover the user workspace from backup")
     public void recoverBackup(@PathParam("projectId") String projectId,
                               @PathParam("workspaceId") String workspaceId,
-                              @QueryParam("forceRecovery") @ApiParam("Whether to override the workspace if it exists with the backup") boolean forceRecovery)
+                              @QueryParam("forceRecovery") @Parameter(description = "Whether to override the workspace if it exists with the backup") boolean forceRecovery)
     {
         executeWithLogging(
                 forceRecovery ? "force " : "" + "recovering user workspace " + workspaceId + " from backup in project " + projectId,

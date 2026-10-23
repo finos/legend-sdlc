@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.workflow;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.workflow.Workflow;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowStatus;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowApi;
@@ -24,17 +24,17 @@ import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/reviews/{reviewId}/workflows")
-@Api("Workflows")
+@Tag(name = "Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ReviewWorkflowsResource extends BaseResource
@@ -48,15 +48,15 @@ public class ReviewWorkflowsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get workflows for a review", notes = "Get workflows for a review. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @Operation(summary = "Get workflows for a review", description = "Get workflows for a review. If status is provided, then only workflows with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<Workflow> getWorkflows(@PathParam("projectId") String projectId,
                                        @PathParam("reviewId") String reviewId,
                                        @QueryParam("revisionId")
-                                       @ApiParam("Only include workflows for one of the given revisions") Set<String> revisionIds,
+                                       @Parameter(description = "Only include workflows for one of the given revisions") Set<String> revisionIds,
                                        @QueryParam("status")
-                                       @ApiParam("Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
+                                       @Parameter(description = "Only include workflows with one of the given statuses") Set<WorkflowStatus> statuses,
                                        @QueryParam("limit")
-                                       @ApiParam("Limit the number of workflows returned") Integer limit)
+                                       @Parameter(description = "Limit the number of workflows returned") Integer limit)
     {
         return executeWithLogging(
                 "getting workflows for review " + reviewId + " in project " + projectId,
@@ -66,7 +66,7 @@ public class ReviewWorkflowsResource extends BaseResource
 
     @GET
     @Path("{workflowId}")
-    @ApiOperation("Get a workflow for a user workspace")
+    @Operation(summary = "Get a workflow for a user workspace")
     public Workflow getWorkflow(@PathParam("projectId") String projectId, @PathParam("reviewId") String reviewId, @PathParam("workflowId") String workflowId)
     {
         return executeWithLogging(

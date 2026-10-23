@@ -1,4 +1,4 @@
-FROM eclipse-temurin:11.0.17_8-jdk-jammy
+FROM eclipse-temurin:17.0.20_8-jdk-jammy
 COPY target/legend-sdlc-server-*-shaded.jar /app/bin/
 COPY src/main/resources/docker/config /config
 CMD java -cp /app/bin/*.jar \

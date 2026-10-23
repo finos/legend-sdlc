@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.resources.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.backend.api.spi.Backend;
 import org.finos.legend.sdlc.backend.api.spi.BackendCapability;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
@@ -32,15 +32,15 @@ import org.finos.legend.sdlc.server.resources.BaseResource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.inject.Provider;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.inject.Provider;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Path("/configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
@@ -60,7 +60,7 @@ public class ConfigurationResource extends BaseResource
 
     @GET
     @Path("/latestProjectStructureVersion")
-    @ApiOperation("Get the latest project structure version and extension version")
+    @Operation(summary = "Get the latest project structure version and extension version")
     public ProjectStructureVersion getLatestProjectStructureVersion()
     {
         return this.projectConfigurationApi.getLatestProjectStructureVersion();
@@ -68,7 +68,7 @@ public class ConfigurationResource extends BaseResource
 
     @GET
     @Path("/latestAvailableGenerations")
-    @ApiOperation("Get available generations for the latest version")
+    @Operation(summary = "Get available generations for the latest version")
     @Deprecated
     public List<ArtifactTypeGenerationConfiguration> getLatestAvailableGenerations()
     {
@@ -77,7 +77,7 @@ public class ConfigurationResource extends BaseResource
 
     @GET
     @Path("/capabilities")
-    @ApiOperation("Get the backend type and the capabilities this deployment supports")
+    @Operation(summary = "Get the backend type and the capabilities this deployment supports")
     public CapabilitiesInfo getCapabilities()
     {
         return executeWithLogging("getting backend capabilities", () -> new CapabilitiesInfo(this.backend.get().getType(), this.backend.get().getCapabilities()));
@@ -85,7 +85,7 @@ public class ConfigurationResource extends BaseResource
 
     @GET
     @Path("/projectStructureVersions")
-    @ApiOperation("Describe the available project structure versions, their extension versions, and the configuration properties each declares")
+    @Operation(summary = "Describe the available project structure versions, their extension versions, and the configuration properties each declares")
     public List<ProjectStructureVersionInfo> getProjectStructureVersions()
     {
         return executeWithLogging("describing project structure versions", () ->

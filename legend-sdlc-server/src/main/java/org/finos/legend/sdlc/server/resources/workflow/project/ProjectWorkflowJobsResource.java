@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.workflow.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJob;
 import org.finos.legend.sdlc.domain.model.workflow.WorkflowJobStatus;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
@@ -24,20 +24,20 @@ import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
 import java.util.Set;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/projects/{projectId}/workflows/{workflowId}/jobs")
-@Api("Workflows")
+@Tag(name = "Workflows")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProjectWorkflowJobsResource extends BaseResource
@@ -51,10 +51,10 @@ public class ProjectWorkflowJobsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation(value = "Get jobs for a workflow", notes = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
+    @Operation(summary = "Get jobs for a workflow", description = "Get jobs for a workflow. If status is provided, then only workflow jobs with the given status are returned. Otherwise, all workflows are returned. If status is UNKNOWN, results are undefined.")
     public List<WorkflowJob> getWorkflowJobs(@PathParam("projectId") String projectId,
                                              @PathParam("workflowId") String workflowId,
-                                             @QueryParam("status") @ApiParam("Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
+                                             @QueryParam("status") @Parameter(description = "Only include workflow jobs with one of the given statuses") Set<WorkflowJobStatus> statuses)
     {
         return executeWithLogging(
                 "getting workflow jobs for project " + projectId,
@@ -64,7 +64,7 @@ public class ProjectWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}")
-    @ApiOperation("Get a workflow job")
+    @Operation(summary = "Get a workflow job")
     public WorkflowJob getWorkflowJob(@PathParam("projectId") String projectId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
@@ -77,7 +77,7 @@ public class ProjectWorkflowJobsResource extends BaseResource
 
     @GET
     @Path("{workflowJobId}/logs")
-    @ApiOperation("Get a workflow job log")
+    @Operation(summary = "Get a workflow job log")
     @Produces(MediaType.TEXT_PLAIN)
     public Response getWorkflowJobLogs(@PathParam("projectId") String projectId,
                                        @PathParam("workflowId") String workflowId,
@@ -97,7 +97,7 @@ public class ProjectWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/run")
-    @ApiOperation("Run a manual workflow job")
+    @Operation(summary = "Run a manual workflow job")
     public WorkflowJob runWorkflowJob(@PathParam("projectId") String projectId,
                                       @PathParam("workflowId") String workflowId,
                                       @PathParam("workflowJobId") String workflowJobId)
@@ -110,7 +110,7 @@ public class ProjectWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/retry")
-    @ApiOperation("Retry a failed workflow job")
+    @Operation(summary = "Retry a failed workflow job")
     public WorkflowJob retryWorkflowJob(@PathParam("projectId") String projectId,
                                         @PathParam("workflowId") String workflowId,
                                         @PathParam("workflowJobId") String workflowJobId)
@@ -124,7 +124,7 @@ public class ProjectWorkflowJobsResource extends BaseResource
 
     @POST
     @Path("{workflowJobId}/cancel")
-    @ApiOperation("Cancel a workflow job that is in progress")
+    @Operation(summary = "Cancel a workflow job that is in progress")
     public WorkflowJob cancelWorkflowJob(@PathParam("projectId") String projectId,
                                          @PathParam("workflowId") String workflowId,
                                          @PathParam("workflowJobId") String workflowJobId)

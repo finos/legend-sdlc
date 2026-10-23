@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.revision.project;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.backend.api.revision.RevisionApi;
@@ -25,18 +25,18 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
 @Path("/projects/{projectId}/entities/{path}/revisions")
-@Api("Revisions")
+@Tag(name = "Revisions")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ProjectEntityRevisionsResource extends BaseResource
@@ -50,12 +50,12 @@ public class ProjectEntityRevisionsResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all revisions for an entity in a project")
+    @Operation(summary = "Get all revisions for an entity in a project")
     public List<Revision> getRevisions(@PathParam("projectId") String projectId,
                                        @PathParam("path") String path,
                                        @QueryParam("since") StartInstant since,
                                        @QueryParam("until") EndInstant until,
-                                       @QueryParam("limit") @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
+                                       @QueryParam("limit") @Parameter(description = "If not provided or the provided value is non-positive, no filtering will be applied") Integer limit)
     {
         return executeWithLogging(
                 "getting revisions for entity " + path + " in project " + projectId,
@@ -65,10 +65,10 @@ public class ProjectEntityRevisionsResource extends BaseResource
 
     @GET
     @Path("{revisionId}")
-    @ApiOperation("Get a revision of an entity in a project")
+    @Operation(summary = "Get a revision of an entity in a project")
     public Revision getRevision(@PathParam("projectId") String projectId,
                                 @PathParam("path") String path,
-                                @PathParam("revisionId") @ApiParam("Including aliases: head, latest, current, base") String revisionId)
+                                @PathParam("revisionId") @Parameter(description = "Including aliases: head, latest, current, base") String revisionId)
     {
         return executeWithLogging(
                 "getting revision " + revisionId + " for entity " + path + " in project " + projectId,

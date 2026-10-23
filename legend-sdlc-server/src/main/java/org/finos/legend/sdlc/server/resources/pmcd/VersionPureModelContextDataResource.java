@@ -14,24 +14,24 @@
 
 package org.finos.legend.sdlc.server.resources.pmcd;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
 import org.finos.legend.sdlc.backend.api.entity.EntityApi;
 import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.server.resources.PureModelContextDataResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/versions/{versionId}/pureModelContextData")
-@Api("Pure Model Context")
+@Tag(name = "Pure Model Context")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class VersionPureModelContextDataResource extends PureModelContextDataResource
@@ -45,7 +45,7 @@ public class VersionPureModelContextDataResource extends PureModelContextDataRes
     }
 
     @GET
-    @ApiOperation("Get Pure model context data for a version of a project")
+    @Operation(summary = "Get Pure model context data for a version of a project")
     public PureModelContextData getPureModelContextData(@PathParam("projectId") String projectId, @PathParam("versionId") String versionId)
     {
         return executeWithLogging(

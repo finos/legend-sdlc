@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.workspace.patch.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.workspace.Workspace;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -26,24 +26,24 @@ import org.finos.legend.sdlc.project.workspace.WorkspaceSpecification;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.List;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces")
-@Api("Workspaces")
+@Tag(name = "Workspaces")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesWorkspacesResource extends BaseResource
@@ -57,12 +57,12 @@ public class PatchesWorkspacesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all user workspaces for a project for patch release version")
+    @Operation(summary = "Get all user workspaces for a project for patch release version")
     public List<Workspace> getUserWorkspaces(@PathParam("projectId") String projectId,
                                              @PathParam("patchReleaseVersionId") String patchReleaseVersionId,
                                              @QueryParam("owned")
                                              @DefaultValue("true")
-                                             @ApiParam("Only include workspaces owned by current user") boolean ownedOnly)
+                                             @Parameter(description = "Only include workspaces owned by current user") boolean ownedOnly)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
         VersionId versionId;
@@ -82,7 +82,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}")
-    @ApiOperation("Get a user workspace for a project by id for patch release version")
+    @Operation(summary = "Get a user workspace for a project by id for patch release version")
     public Workspace getUserWorkspace(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -103,7 +103,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}/outdated")
-    @ApiOperation("Check if a user workspace is outdated for patch release version")
+    @Operation(summary = "Check if a user workspace is outdated for patch release version")
     public boolean isUserWorkspaceOutdated(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -124,7 +124,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @GET
     @Path("{workspaceId}/inConflictResolutionMode")
-    @ApiOperation("Check if a user workspace is in conflict resolution mode for patch release version")
+    @Operation(summary = "Check if a user workspace is in conflict resolution mode for patch release version")
     public boolean isUserWorkspaceInConflictResolutionMode(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -145,7 +145,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}")
-    @ApiOperation("Create a new user workspace for patch release version")
+    @Operation(summary = "Create a new user workspace for patch release version")
     public Workspace createUserWorkspace(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -167,7 +167,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @DELETE
     @Path("{workspaceId}")
-    @ApiOperation("Delete a user workspace for patch release version")
+    @Operation(summary = "Delete a user workspace for patch release version")
     public void deleteUserWorkspace(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -188,7 +188,7 @@ public class PatchesWorkspacesResource extends BaseResource
 
     @POST
     @Path("{workspaceId}/update")
-    @ApiOperation("Update a user workspace for patch release version")
+    @Operation(summary = "Update a user workspace for patch release version")
     public WorkspaceApi.WorkspaceUpdateReport updateUserWorkspace(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");

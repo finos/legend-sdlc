@@ -14,22 +14,22 @@
 
 package org.finos.legend.sdlc.server.resources.comparison.project.group;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.comparison.Comparison;
 import org.finos.legend.sdlc.backend.api.comparison.ComparisonApi;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 
 @Path("/projects/{projectId}/groupWorkspaces/{workspaceId}/comparison")
-@Api("Comparison")
+@Tag(name = "Comparison")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class GroupComparisonWorkspaceResource extends BaseResource
@@ -44,7 +44,7 @@ public class GroupComparisonWorkspaceResource extends BaseResource
 
     @GET
     @Path("workspaceCreation")
-    @ApiOperation("Get comparison between current group workspace revision and workspace creation revision")
+    @Operation(summary = "Get comparison between current group workspace revision and workspace creation revision")
     public Comparison getWorkspaceCreationComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(
@@ -55,7 +55,7 @@ public class GroupComparisonWorkspaceResource extends BaseResource
 
     @GET
     @Path("projectLatest")
-    @ApiOperation("Get comparison between current group workspace revision and current project revision")
+    @Operation(summary = "Get comparison between current group workspace revision and current project revision")
     public Comparison getWorkspaceProjectComparison(@PathParam("projectId") String projectId, @PathParam("workspaceId") String workspaceId)
     {
         return executeWithLogging(

@@ -14,9 +14,10 @@
 
 package org.finos.legend.sdlc.server.resources.patch;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.parameters.RequestBody;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.patch.Patch;
 import org.finos.legend.sdlc.domain.model.version.Version;
 import org.finos.legend.sdlc.domain.model.version.VersionId;
@@ -24,21 +25,21 @@ import org.finos.legend.sdlc.backend.api.patch.PatchApi;
 import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DELETE;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.List;
 
 @Path("/projects/{projectId}/patches")
-@Api("Patches")
+@Tag(name = "Patches")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesResource extends BaseResource
@@ -52,8 +53,8 @@ public class PatchesResource extends BaseResource
     }
 
     @POST
-    @ApiOperation("Create a new patch release")
-    public Patch createPatchReleaseBranch(@PathParam("projectId") String projectId, @ApiParam("Source version for the patch release")  String sourceVersionId)
+    @Operation(summary = "Create a new patch release")
+    public Patch createPatchReleaseBranch(@PathParam("projectId") String projectId, @RequestBody(description = "Source version for the patch release") String sourceVersionId)
     {
         VersionId versionId;
         try
@@ -71,26 +72,26 @@ public class PatchesResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get all patch release branches for a project")
+    @Operation(summary = "Get all patch release branches for a project")
     public List<Patch> getpatchReleaseBranches(@PathParam("projectId") String projectId,
                                                @QueryParam("major")
-                                               @ApiParam("Exact major version (trumps minimum or maximum)") Integer majorVersion,
+                                               @Parameter(description = "Exact major version (trumps minimum or maximum)") Integer majorVersion,
                                                @QueryParam("minMajor")
-                                                   @ApiParam("Minimum major version (only used if exact major version is not supplied)") Integer minMajorVersion,
+                                                   @Parameter(description = "Minimum major version (only used if exact major version is not supplied)") Integer minMajorVersion,
                                                @QueryParam("maxMajor")
-                                                   @ApiParam("Maximum major version (only used if exact major version is not supplied)") Integer maxMajorVersion,
+                                                   @Parameter(description = "Maximum major version (only used if exact major version is not supplied)") Integer maxMajorVersion,
                                                @QueryParam("minor")
-                                                   @ApiParam("Exact minor version (trumps minimum or maximum)") Integer minorVersion,
+                                                   @Parameter(description = "Exact minor version (trumps minimum or maximum)") Integer minorVersion,
                                                @QueryParam("minMinor")
-                                                   @ApiParam("Minimum minor version (only used if exact minor version is not supplied)") Integer minMinorVersion,
+                                                   @Parameter(description = "Minimum minor version (only used if exact minor version is not supplied)") Integer minMinorVersion,
                                                @QueryParam("maxMinor")
-                                                   @ApiParam("Maximum minor version (only used if exact minor version is not supplied)") Integer maxMinorVersion,
+                                                   @Parameter(description = "Maximum minor version (only used if exact minor version is not supplied)") Integer maxMinorVersion,
                                                @QueryParam("patch")
-                                                   @ApiParam("Exact patch version (trumps minimum or maximum)") Integer patchVersion,
+                                                   @Parameter(description = "Exact patch version (trumps minimum or maximum)") Integer patchVersion,
                                                @QueryParam("minPatch")
-                                                   @ApiParam("Minimum patch version (only used if exact patch version is not supplied)") Integer minPatchVersion,
+                                                   @Parameter(description = "Minimum patch version (only used if exact patch version is not supplied)") Integer minPatchVersion,
                                                @QueryParam("maxPatch")
-                                                   @ApiParam("Maximum patch version (only used if exact patch version is not supplied)") Integer maxPatchVersion)
+                                                   @Parameter(description = "Maximum patch version (only used if exact patch version is not supplied)") Integer maxPatchVersion)
     {
         return executeWithLogging(
                 "getting patch release branches for project " + projectId,
@@ -106,7 +107,7 @@ public class PatchesResource extends BaseResource
 
     @GET
     @Path("{patchReleaseVersionId}")
-    @ApiOperation("Get a specific patch")
+    @Operation(summary = "Get a specific patch")
     public Patch getPatchReleaseBranch(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
         VersionId versionId;
@@ -126,7 +127,7 @@ public class PatchesResource extends BaseResource
 
     @DELETE
     @Path("{patchReleaseVersionId}")
-    @ApiOperation("Delete a patch release branch")
+    @Operation(summary = "Delete a patch release branch")
     public void deletePatchReleaseBranch(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
         VersionId versionId;
@@ -146,7 +147,7 @@ public class PatchesResource extends BaseResource
 
     @POST
     @Path("{patchReleaseVersionId}/release")
-    @ApiOperation("Release patch release branch")
+    @Operation(summary = "Release patch release branch")
     public Version createVersion(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId)
     {
         VersionId versionId;

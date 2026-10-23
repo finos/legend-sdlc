@@ -24,13 +24,13 @@ import org.finos.legend.sdlc.server.application.entity.UpdateEntitiesCommand;
 import org.finos.legend.sdlc.server.inmemory.domain.api.InMemoryEntity;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResourceTest
 {
@@ -168,7 +168,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         UpdateEntitiesCommand updateEntitiesCommand = new UpdateEntitiesCommand();
         updateEntitiesCommand.setReplace(true);
 
-        Response responseThree = this.clientFor("/api/projects/A/workspaces/entityw3/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
+        Response responseThree = this.clientFor("/api/projects/A/workspaces/entityw3/entities").request().post(jakarta.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
         if (responseThree.getStatus() != 200)
         {
@@ -226,7 +226,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         UpdateEntitiesCommand updateEntitiesCommand = new UpdateEntitiesCommand();
         updateEntitiesCommand.setReplace(true);
 
-        Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces/entityw4/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
+        Response responseThree = this.clientFor("/api/projects/A/groupWorkspaces/entityw4/entities").request().post(jakarta.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
         if (responseThree.getStatus() != 200)
         {
@@ -381,7 +381,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         UpdateEntitiesCommand updateEntitiesCommand = new UpdateEntitiesCommand();
         updateEntitiesCommand.setReplace(true);
 
-        Response responseThree = this.clientFor("/api/projects/A/patches/1.0.1/workspaces/entityw3/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
+        Response responseThree = this.clientFor("/api/projects/A/patches/1.0.1/workspaces/entityw3/entities").request().post(jakarta.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
         if (responseThree.getStatus() != 200)
         {
@@ -441,7 +441,7 @@ public class TestWorkspaceEntitiesResource extends AbstractLegendSDLCServerResou
         UpdateEntitiesCommand updateEntitiesCommand = new UpdateEntitiesCommand();
         updateEntitiesCommand.setReplace(true);
 
-        Response responseThree = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces/entityw4/entities").request().post(javax.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
+        Response responseThree = this.clientFor("/api/projects/A/patches/1.0.1/groupWorkspaces/entityw4/entities").request().post(jakarta.ws.rs.client.Entity.entity(updateEntitiesCommand, MediaType.APPLICATION_JSON));
 
         if (responseThree.getStatus() != 200)
         {

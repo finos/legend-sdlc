@@ -14,8 +14,8 @@
 
 package org.finos.legend.sdlc.server.resources.project.patch.user;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.configuration.ArtifactTypeGenerationConfiguration;
 import org.finos.legend.sdlc.domain.model.project.configuration.ProjectConfiguration;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
@@ -30,18 +30,18 @@ import org.finos.legend.sdlc.server.error.LegendSDLCServerException;
 import org.finos.legend.sdlc.server.resources.BaseResource;
 
 import java.util.List;
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.POST;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 
 @Path("/projects/{projectId}/patches/{patchReleaseVersionId}/workspaces/{workspaceId}/configuration")
-@Api("Project Configuration")
+@Tag(name = "Project Configuration")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
@@ -55,7 +55,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @GET
-    @ApiOperation("Get the configuration of a project in a workspace for patch release version for patch release version")
+    @Operation(summary = "Get the configuration of a project in a workspace for patch release version for patch release version")
     public ProjectConfiguration getWorkspaceProjectConfiguration(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");
@@ -75,7 +75,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
     }
 
     @POST
-    @ApiOperation("Update the project configuration of a project in a workspace for patch release version")
+    @Operation(summary = "Update the project configuration of a project in a workspace for patch release version")
     public Revision updateProjectStructureVersion(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId, UpdateProjectConfigurationCommand command)
     {
         LegendSDLCServerException.validateNonNull(command, "Input required to update project structure");
@@ -97,7 +97,7 @@ public class PatchesWorkspaceProjectConfigurationResource extends BaseResource
 
     @GET
     @Path("/availableGenerations")
-    @ApiOperation("Get the available generation types of a project in a workspace for patch release version")
+    @Operation(summary = "Get the available generation types of a project in a workspace for patch release version")
     public List<ArtifactTypeGenerationConfiguration> getWorkspaceAvailableGenerations(@PathParam("projectId") String projectId, @PathParam("patchReleaseVersionId") String patchReleaseVersionId, @PathParam("workspaceId") String workspaceId)
     {
         LegendSDLCServerException.validateNonNull(patchReleaseVersionId, "patchReleaseVersionId may not be null");

@@ -14,20 +14,20 @@
 
 package org.finos.legend.sdlc.server.resources;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerFeaturesConfiguration;
 import org.finos.legend.sdlc.project.structure.ProjectStructurePlatformExtensions;
 
-import javax.inject.Inject;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 
-@Api("Server")
+@Tag(name = "Server")
 @Path("/server")
 @Produces(MediaType.APPLICATION_JSON)
 public class ServerResource
@@ -48,7 +48,7 @@ public class ServerResource
 
     @GET
     @Path("/info")
-    @ApiOperation("Provides server information")
+    @Operation(summary = "Provides server information")
     public ServerInfo getServerInfo()
     {
         return this.serverInfo;
@@ -56,7 +56,7 @@ public class ServerResource
 
     @GET
     @Path("/features")
-    @ApiOperation("Provides server features information")
+    @Operation(summary = "Provides server features information")
     public LegendSDLCServerFeaturesConfiguration getServerFeaturesInfo()
     {
         return this.featuresConfiguration;
@@ -64,7 +64,7 @@ public class ServerResource
 
     @GET
     @Path("/platforms")
-    @ApiOperation("Provides platforms information")
+    @Operation(summary = "Provides platforms information")
     public List<ProjectStructurePlatformExtensions.Platform> getPlatformsInfo()
     {
         return this.projectStructurePlatformExtensions.getPlatforms();

@@ -23,7 +23,7 @@ import org.finos.legend.sdlc.domain.model.revision.Revision;
 import org.finos.legend.sdlc.server.inmemory.backend.RevisionIdGenerator;
 
 import java.time.Instant;
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class InMemoryRevision implements Revision

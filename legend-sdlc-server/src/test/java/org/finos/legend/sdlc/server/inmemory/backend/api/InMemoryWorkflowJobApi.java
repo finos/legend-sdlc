@@ -18,7 +18,7 @@ import org.finos.legend.sdlc.project.source.SourceSpecification;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobAccessContext;
 import org.finos.legend.sdlc.backend.api.workflow.WorkflowJobApi;
 
-import javax.inject.Inject;
+import jakarta.inject.Inject;
 
 public class InMemoryWorkflowJobApi implements WorkflowJobApi
 {

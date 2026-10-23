@@ -15,33 +15,35 @@
 package org.finos.legend.sdlc.server.resources;
 
 import io.dropwizard.testing.ResourceHelpers;
-import io.dropwizard.testing.junit.DropwizardAppRule;
+import io.dropwizard.testing.junit5.DropwizardAppExtension;
+import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.junit.Assert;
-import org.junit.Before;
-import org.junit.ClassRule;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.extension.RegisterExtension;
 
 import java.util.Optional;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 
+@ExtendWith(DropwizardExtensionsSupport.class)
 public class TestLegendSDLCServerAccessibility
 {
-    @ClassRule
-    public static final DropwizardAppRule<LegendSDLCServerConfiguration> APP_RULE =
-            new DropwizardAppRule<>(
+    @RegisterExtension
+    public static final DropwizardAppExtension<LegendSDLCServerConfiguration> APP_RULE =
+            new DropwizardAppExtension<>(
                     LegendSDLCServerForIntegrationTest.class,
                     ResourceHelpers.resourceFilePath("config-test.yaml"));
 
     protected Client client;
 
-    @Rule
+    @RegisterExtension
     public final SDLCServerClientRule sdlcServerClientRule = new SDLCServerClientRule();
 
-    @Before
+    @BeforeEach
     public void setUp()
     {
         configureClient();

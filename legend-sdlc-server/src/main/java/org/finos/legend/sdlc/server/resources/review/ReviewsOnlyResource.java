@@ -14,9 +14,9 @@
 
 package org.finos.legend.sdlc.server.resources.review;
 
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.finos.legend.sdlc.domain.model.project.ProjectType;
 import org.finos.legend.sdlc.domain.model.project.workspace.WorkspaceType;
 import org.finos.legend.sdlc.domain.model.review.Review;
@@ -27,19 +27,19 @@ import org.finos.legend.sdlc.server.time.EndInstant;
 import org.finos.legend.sdlc.server.time.ResolvedInstant;
 import org.finos.legend.sdlc.server.time.StartInstant;
 
-import javax.inject.Inject;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.MediaType;
+import jakarta.inject.Inject;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.GET;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
 @Path("/reviews")
-@Api("Reviews")
+@Tag(name = "Reviews")
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
 public class ReviewsOnlyResource extends ReviewFilterResource
@@ -53,28 +53,28 @@ public class ReviewsOnlyResource extends ReviewFilterResource
     }
 
     @GET
-    @ApiOperation(value = "Get reviews across all projects", notes = "Get reviews across all projects. If assignedToMe is set to true only reviews assigned to the user are returned, if authoredByMe is true only reviews authored by me are returned. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
+    @Operation(summary = "Get reviews across all projects", description = "Get reviews across all projects. If assignedToMe is set to true only reviews assigned to the user are returned, if authoredByMe is true only reviews authored by me are returned. If state is provided, then only reviews with the given state are returned. Otherwise, all reviews are returned. If state is UNKNOWN, results are undefined.")
     public List<Review> getReviews(@QueryParam("assignedToMe")
                                    @DefaultValue("false")
-                                   @ApiParam("Only include reviews assigned to me if true") boolean assignedToMe,
+                                   @Parameter(description = "Only include reviews assigned to me if true") boolean assignedToMe,
                                    @QueryParam("authoredByMe")
                                    @DefaultValue("true")
-                                   @ApiParam("Only include reviews authored/created by me if true") boolean authoredByMe,
+                                   @Parameter(description = "Only include reviews authored/created by me if true") boolean authoredByMe,
                                    @QueryParam("labels")
-                                   @ApiParam("Only include reviews that match all the given labels") List<String> labels,
-                                   @QueryParam("workspaceIdRegex") @ApiParam("Include reviews with a workspace id matching this regular expression") String workspaceIdRegex,
-                                   @QueryParam("workspaceTypes") @ApiParam("Include reviews with any of the given workspace types") Set<WorkspaceType> workspaceTypes,
+                                   @Parameter(description = "Only include reviews that match all the given labels") List<String> labels,
+                                   @QueryParam("workspaceIdRegex") @Parameter(description = "Include reviews with a workspace id matching this regular expression") String workspaceIdRegex,
+                                   @QueryParam("workspaceTypes") @Parameter(description = "Include reviews with any of the given workspace types") Set<WorkspaceType> workspaceTypes,
                                    @QueryParam("state")
-                                   @ApiParam("Only include reviews with the given state") ReviewState state,
+                                   @Parameter(description = "Only include reviews with the given state") ReviewState state,
                                    @QueryParam("since")
-                                   @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
+                                   @Parameter(description = "This time limit is interpreted based on the chosen state: for COMMITTED state `since` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") StartInstant since,
                                    @QueryParam("until")
-                                   @ApiParam("This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
+                                   @Parameter(description = "This time limit is interpreted based on the chosen state: for COMMITTED state `until` means committed time, for CLOSED state, it means closed time, for all other case, it means created time") EndInstant until,
                                    @QueryParam("limit")
-                                   @ApiParam("If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
+                                   @Parameter(description = "If not provided or the provided value is non-positive, no filtering will be applied") Integer limit,
                                    // TO BE DEPRECATED (in Swagger 3, we can use the `deprecated` flag)
                                    @QueryParam("projectTypes")
-                                   @ApiParam(hidden = true, value = "Only include reviews for the given project type") Set<ProjectType> projectTypes)
+                                   @Parameter(hidden = true, description = "Only include reviews for the given project type") Set<ProjectType> projectTypes)
     {
         return executeWithLogging(
             (state == null) ? ("getting reviews for project type(s) " + projectTypes) : ("getting reviews for project type(s) " + projectTypes + " with state " + state),

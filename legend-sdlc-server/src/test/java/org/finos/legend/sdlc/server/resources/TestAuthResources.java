@@ -15,9 +15,9 @@
 package org.finos.legend.sdlc.server.resources;
 
 import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 /**
  * The generic {@code /auth} surface (which replaced the per-backend auth resources) on a server with no

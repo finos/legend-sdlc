@@ -17,9 +17,10 @@
 # Do not inline a copy of this into a caller: the whole point is that the
 # release cannot drift away from what CI does.
 #
-# The build always runs on JDK 25 and compiles to Java 8 bytecode
-# (maven.compiler.release), so every JDK in the matrix runs the same class
-# files. Only the forked test JVM changes between legs.
+# The build always runs on JDK 25 and compiles to Java 11 bytecode
+# (maven.compiler.release), except legend-sdlc-server and
+# legend-sdlc-server-shared, which compile to Java 17. Only the forked test
+# JVM changes between legs, so the JDK 11 leg excludes those two modules.
 name: Build and Test
 
 on:
@@ -228,17 +229,28 @@ jobs:
           mkdir -p ~/.m2/repository/org/finos/legend
           cp -r project-artifacts ~/.m2/repository/org/finos/legend/sdlc
 
+      - name: Verify JDK-11 exclusion list matches the release-17 tier
+        # EXCLUDES in the Test step stays hand-maintained; this fails if it
+        # drifts from the modules that compile to release 17.
+        if: matrix.jdk == 11
+        run: python3 .github/scripts/check-ci-jdk11-exclusions.py
+
       - name: Test
         env:
           MAVEN_OPTS: -XX:MaxRAMPercentage=25.0
         run: |
-          # Maven runs on 25 in every leg; the compiled test classes already
-          # target Java 8 bytecode, so each leg just points Surefire's forked
-          # test JVM at the matrix JDK's install.
+          # Maven runs on 25 in every leg; each leg just points Surefire's
+          # forked test JVM at the matrix JDK's install. legend-sdlc-server and
+          # legend-sdlc-server-shared compile to release 17, so they can't run
+          # on the JDK 11 leg.
           export JAVA_HOME="$JAVA_HOME_25_X64"
           test_jvm_home="JAVA_HOME_${{ matrix.jdk }}_X64"
           TEST_JVM="${!test_jvm_home}/bin/java"
-          mvn -B -e surefire:test -Djvm="${TEST_JVM}" -DargLine="-XX:MaxRAMPercentage=50.0" -DforkCount=1
+          EXCLUDES=""
+          if [ "${{ matrix.jdk }}" = "11" ]; then
+            EXCLUDES="-pl !legend-sdlc-server,!legend-sdlc-server-shared"
+          fi
+          mvn -B -e surefire:test ${EXCLUDES} -Djvm="${TEST_JVM}" -DargLine="-XX:MaxRAMPercentage=50.0" -DforkCount=1
 
       - name: Summarize test results
         # Puts this leg's results on the run's summary page, for every caller:
