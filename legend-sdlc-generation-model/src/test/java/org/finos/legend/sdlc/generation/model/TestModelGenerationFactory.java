@@ -146,8 +146,7 @@ public class TestModelGenerationFactory
         myClass._package = "model";
         builder.addElement(myClass);
         ModelGenerationFactory factory = ModelGenerationFactory.newFactory(generationSpecification, builder.build());
-        factory.processModelGenerator(simpleClassGenerator);
-        RuntimeException runtimeException = Assert.assertThrows(RuntimeException.class, factory::validateAndBuildGeneratedModel);
+        RuntimeException runtimeException = Assert.assertThrows(RuntimeException.class, () -> factory.processModelGenerator(simpleClassGenerator));
         Assert.assertEquals("Generated element 'model::MyClass' of type Class can't override existing element of type Class", runtimeException.getMessage());
     }
 
