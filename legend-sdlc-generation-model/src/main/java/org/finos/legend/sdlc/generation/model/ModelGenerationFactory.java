@@ -14,61 +14,22 @@
 
 package org.finos.legend.sdlc.generation.model;
 
-import org.eclipse.collections.api.block.function.Function3;
-import org.eclipse.collections.api.map.MutableMap;
-import org.eclipse.collections.impl.utility.Iterate;
-import org.eclipse.collections.impl.utility.ListIterate;
-import org.finos.legend.engine.language.pure.compiler.toPureGraph.CompileContext;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
-import org.finos.legend.engine.language.pure.dsl.generation.compiler.toPureGraph.GenerationCompilerExtension;
-import org.finos.legend.engine.language.pure.dsl.generation.compiler.toPureGraph.HelperGenerationSpecificationBuilder;
-import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
-import org.finos.legend.engine.protocol.pure.m3.SourceInformation;
-import org.finos.legend.engine.protocol.pure.v1.model.context.EngineErrorType;
+import org.finos.legend.engine.language.pure.dsl.generation.model.ModelGenerationRunner;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationSpecification;
-import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.generationSpecification.GenerationTreeNode;
 import org.finos.legend.engine.shared.core.deployment.DeploymentMode;
-import org.finos.legend.engine.shared.core.operational.errorManagement.EngineException;
-import org.slf4j.Logger;
 
-import java.util.List;
-import java.util.Objects;
+import java.util.concurrent.ForkJoinPool;
 
 public class ModelGenerationFactory
 {
-    private static final Logger LOGGER = org.slf4j.LoggerFactory.getLogger(ModelGenerationFactory.class);
-    private final GenerationSpecification generationSpecification;
-
-
-    /**
-     * This holds the core elements. We keep these elements to validate. No generated element should overwrite elements in this model
-     */
-    private final PureModelContextData coreModel;
-    private final MutableMap<String, PackageableElement> coreModelElementIndex;
-    /**
-     * The full model is the model holding the elements from the original model and the elements generated from the generation specification.
-     * It will grow in size after each model generation.
-     * Used to recompile after each generation.
-     */
-    private final PureModelContextData.Builder fullModelBuilder;
-
-    /**
-     * Holds all the generated elements from the model generations
-     */
-    private final PureModelContextData.Builder generatedModelBuilder;
-
-    private PureModel pureModel;
-
+    private final ModelGenerationRunner runner;
 
     ModelGenerationFactory(GenerationSpecification generationSpecification, PureModelContextData protocol, PureModel pureModel)
     {
-        this.generationSpecification = generationSpecification;
-        this.pureModel = pureModel;
-        this.coreModel = protocol;
-        this.coreModelElementIndex = Iterate.groupByUniqueKey(this.coreModel.getElements(), PackageableElement::getPath);
-        this.fullModelBuilder = PureModelContextData.newBuilder().withPureModelContextData(protocol);
-        this.generatedModelBuilder = PureModelContextData.newBuilder();
+        this.runner = ModelGenerationRunner.newRunner(generationSpecification, protocol, pureModel)
+                .withCompiler(model -> new PureModel(model, null, null, DeploymentMode.PROD));
     }
 
     public static ModelGenerationFactory newFactory(GenerationSpecification generationSpecification, PureModelContextData protocol, PureModel pureModel)
@@ -78,84 +39,47 @@ public class ModelGenerationFactory
 
     public static ModelGenerationFactory newFactory(GenerationSpecification generationSpecification, PureModelContextData protocol)
     {
-        PureModel pureModel =  new PureModel(protocol, null, null, DeploymentMode.PROD);
-        return new ModelGenerationFactory(generationSpecification, protocol, pureModel);
+        return new ModelGenerationFactory(generationSpecification, protocol, null);
+    }
+
+    /**
+     * Generates the elements of a generation node in the given pool. See
+     * {@link ModelGenerationRunner#withForkJoinPool(ForkJoinPool)} before passing one.
+     */
+    public ModelGenerationFactory withForkJoinPool(ForkJoinPool forkJoinPool)
+    {
+        this.runner.withForkJoinPool(forkJoinPool);
+        return this;
     }
 
     public PureModelContextData generate() throws Exception
     {
-        if ((this.generationSpecification._package == null) || this.generationSpecification._package.isEmpty())
-        {
-            throw new RuntimeException("Invalid generation specifications, missing path '" + this.generationSpecification.name);
-        }
-        LOGGER.info("Generation generation specification '{}'", generationSpecification.getPath());
-        List<GenerationTreeNode> nodes = this.generationSpecification.generationNodes;
-        for (GenerationTreeNode node : nodes)
-        {
-            LOGGER.info("Start generating generation model element '{}'", node.generationElement);
-            List<Function3<String, SourceInformation, CompileContext, org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement>> extraModelGenerationSpecificationResolvers = ListIterate.flatCollect(HelperGenerationSpecificationBuilder.getGenerationCompilerExtensions(this.pureModel.getContext()), GenerationCompilerExtension::getExtraModelGenerationSpecificationResolvers);
-            org.finos.legend.pure.m3.coreinstance.meta.pure.metamodel.PackageableElement generationElement = extraModelGenerationSpecificationResolvers.stream().map(resolver -> resolver.value(node.generationElement, node.sourceInformation, this.pureModel.getContext())).filter(Objects::nonNull).findFirst()
-                    .orElseThrow(() -> new EngineException("Can't find generation element '" + node.generationElement + "'", node.sourceInformation, EngineErrorType.COMPILATION));
-            ModelGenerator modelGenerator = ModelGenerator.newGenerator(generationElement, this.pureModel);
-            processModelGenerator(modelGenerator);
-        }
-        return validateAndBuildGeneratedModel();
+        return this.runner.run().getGeneratedModel();
     }
-
 
     public void processModelGenerator(ModelGenerator modelGeneratorInterface)
     {
-        try
-        {
-            PureModelContextData generatedModelFromModelGenerator = modelGeneratorInterface.generateModel();
-            LOGGER.info("Finished generating model for '{}', {} elements generated", modelGeneratorInterface.getName(), generatedModelFromModelGenerator.getElements().size());
-            this.fullModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
-            this.generatedModelBuilder.withPureModelContextData(generatedModelFromModelGenerator).distinct().sorted();
-        }
-        catch (Throwable t)
-        {
-            LOGGER.info("Error generating element '{}'", modelGeneratorInterface.getName(), t);
-            throw t;
-        }
-        LOGGER.info("Recompiling graph with generated elements");
-        this.pureModel = new PureModel(this.fullModelBuilder.build(), null, null, DeploymentMode.PROD);
-        LOGGER.info("Finished recompiling graph");
+        this.runner.addGeneratedModel(modelGeneratorInterface.getName(), modelGeneratorInterface.generateModel());
+        this.runner.getPureModel();
     }
 
     public PureModelContextData validateAndBuildGeneratedModel()
     {
-        LOGGER.info("Validating generated elements");
-        PureModelContextData generatedPureModelContextData = this.generatedModelBuilder.build();
-        validateGeneratedElements(generatedPureModelContextData);
-        LOGGER.info("Finished generating generation specification. Generated {} elements", generatedPureModelContextData.getElements().size());
-        return generatedPureModelContextData;
-    }
-
-    private void validateGeneratedElements(PureModelContextData generatedPureModelContextData)
-    {
-        generatedPureModelContextData.getElements().forEach(e ->
-        {
-            String path = e.getPath();
-            PackageableElement coreElement = this.coreModelElementIndex.get(path);
-            if (coreElement != null)
-            {
-                throw new RuntimeException("Generated element '" + path + "' of type " + e.getClass().getSimpleName() + " can't override existing element of type " + coreElement.getClass().getSimpleName());
-            }
-        });
+        return this.runner.getGeneratedModel();
     }
 
     public PureModelContextData getFullModel()
     {
-        return this.fullModelBuilder.build();
+        return this.runner.getFullModel();
     }
 
     public PureModelContextData getGeneratedModel()
     {
-        return this.generatedModelBuilder.build();
+        return this.runner.getGeneratedModel();
     }
 
     public PureModel getPureModel()
     {
-        return this.pureModel;
+        return this.runner.getPureModel();
     }
 }
