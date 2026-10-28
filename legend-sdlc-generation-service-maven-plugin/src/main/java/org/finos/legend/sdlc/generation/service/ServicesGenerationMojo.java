@@ -14,12 +14,6 @@
 
 package org.finos.legend.sdlc.generation.service;
 
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.StreamReadFeature;
-import com.fasterxml.jackson.core.StreamWriteFeature;
-import com.fasterxml.jackson.databind.MapperFeature;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.LifecyclePhase;
@@ -35,7 +29,6 @@ import org.eclipse.collections.impl.utility.Iterate;
 import org.finos.legend.engine.language.pure.compiler.toPureGraph.PureModel;
 import org.finos.legend.engine.plan.generation.extension.PlanGeneratorExtension;
 import org.finos.legend.engine.protocol.functionJar.metamodel.FunctionJar;
-import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.engine.protocol.pure.v1.model.context.PureModelContextData;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.PureMultiExecution;
 import org.finos.legend.engine.protocol.pure.v1.model.packageableElement.service.Service;
@@ -243,15 +236,6 @@ public class ServicesGenerationMojo extends AbstractMojo
             getLog().info(Lists.mutable.withAll(functionJarsByPath.keySet()).toSortedList().makeString("Found " + (functionJarsByPath.size()) + " function jars for generation: ", ", ", ""));
         }
 
-        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
-                .enable(SerializationFeature.INDENT_OUTPUT)
-                .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-                .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
-                .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
-                .serializationInclusion(JsonInclude.Include.NON_NULL)
-                .build());
-
         ForkJoinPool pool;
         // We only create a pool if parallelism level is greater than 1 and we expect to generate multiple plans, which
         // is true if we have multiple services or we have one or more a multi-execution service.
@@ -273,7 +257,6 @@ public class ServicesGenerationMojo extends AbstractMojo
                     .withPureModelContextData(pureModelContextData)
                     .withPackagePrefix(this.packagePrefix)
                     .withOutputDirectories(this.javaSourceOutputDirectory.toPath(), this.resourceOutputDirectory.toPath())
-                    .withJsonMapper(jsonMapper)
                     .withPlanGeneratorExtensions(ServiceLoader.load(PlanGeneratorExtension.class))
                     .withPureCoreExtensions(ServiceLoader.load(LegendPureCoreExtension.class))
                     .withExecutorService(pool)

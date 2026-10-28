@@ -20,12 +20,21 @@ import org.finos.legend.sdlc.backend.api.spi.BackendConfiguration;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class LegendSDLCServerConfiguration extends ServerConfiguration
 {
+    private static final Logger LOGGER = LoggerFactory.getLogger(LegendSDLCServerConfiguration.class);
+
+    // dropwizard-pac4j registers these by class name and unannotated, so each has priority 0 unless configured
+    static final String PAC4J_SECURITY_FILTER_NAME = "org.pac4j.jee.filter.SecurityFilter";
+    static final String PAC4J_CALLBACK_FILTER_NAME = "org.pac4j.jee.filter.CallbackFilter";
+    static final String PAC4J_LOGOUT_FILTER_NAME = "org.pac4j.jee.filter.LogoutFilter";
+
     @JsonProperty("gitLab")
     private JsonNode legacyGitLabConfig;
 
@@ -69,20 +78,43 @@ public class LegendSDLCServerConfiguration extends ServerConfiguration
      * Filter priorities, with an alias for the session filter's historical registered name: the filter that
      * creates the server session was named "GitLab" before the backend extraction, and deployments order it via
      * this map, so a "GitLab" entry applies to the session filter unless the new name is configured explicitly.
+     * The session filter is always given a priority below every pac4j filter, including when the map does not name
+     * it or there is no map at all.
      *
-     * @return filter priorities
+     * @return filter priorities, never null
      */
     @Override
     public Map<String, Integer> getFilterPriorities()
     {
         Map<String, Integer> priorities = super.getFilterPriorities();
-        if ((priorities != null) && priorities.containsKey("GitLab") && !priorities.containsKey(BaseLegendSDLCServer.SESSION_FILTER_NAME))
+        Map<String, Integer> resolved = (priorities == null) ? new HashMap<>() : new HashMap<>(priorities);
+        if (resolved.containsKey("GitLab") && !resolved.containsKey(BaseLegendSDLCServer.SESSION_FILTER_NAME))
         {
-            Map<String, Integer> aliased = new HashMap<>(priorities);
-            aliased.put(BaseLegendSDLCServer.SESSION_FILTER_NAME, priorities.get("GitLab"));
-            return aliased;
+            resolved.put(BaseLegendSDLCServer.SESSION_FILTER_NAME, resolved.get("GitLab"));
         }
-        return priorities;
+
+        // The session filter builds the server session from the request's pac4j profiles. A profile that is not
+        // kept in the session store (a personal-access-token profile, any direct client's profile when the
+        // clients are not all serializable) only exists once SecurityFilter has run, so the session filter must
+        // run after it (ChainFixingFilterHandler runs higher priorities first). It also runs after the callback
+        // and logout filters, which end the chain on their own paths: a session filter that rejects a stored
+        // profile it cannot use would otherwise also reject the logout request that clears that profile.
+        // An unnamed filter sorts at 0 in registration order, and pac4j's filters register after the session filter.
+        Integer sessionPriority = resolved.get(BaseLegendSDLCServer.SESSION_FILTER_NAME);
+        int pac4jPriority = Math.min(resolved.getOrDefault(PAC4J_SECURITY_FILTER_NAME, 0),
+                Math.min(resolved.getOrDefault(PAC4J_CALLBACK_FILTER_NAME, 0), resolved.getOrDefault(PAC4J_LOGOUT_FILTER_NAME, 0)));
+        if (sessionPriority == null)
+        {
+            resolved.put(BaseLegendSDLCServer.SESSION_FILTER_NAME, pac4jPriority - 1);
+        }
+        else if (sessionPriority >= pac4jPriority)
+        {
+            // info, not warn: the shipped filterPriorities (session filter at 1, pac4j's logout filter at 0) get here
+            LOGGER.info("filterPriorities would run the {} filter ({}) before one of pac4j's filters (lowest priority {}); running it at {} instead",
+                    BaseLegendSDLCServer.SESSION_FILTER_NAME, sessionPriority, pac4jPriority, pac4jPriority - 1);
+            resolved.put(BaseLegendSDLCServer.SESSION_FILTER_NAME, pac4jPriority - 1);
+        }
+        return resolved;
     }
 
     public ProjectStructureConfiguration getProjectStructureConfiguration()

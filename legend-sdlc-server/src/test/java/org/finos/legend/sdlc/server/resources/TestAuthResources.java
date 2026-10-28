@@ -20,32 +20,31 @@ import org.junit.jupiter.api.Test;
 import jakarta.ws.rs.core.Response;
 
 /**
- * The generic {@code /auth} surface (which replaced the per-backend auth resources) on a server with no
- * authenticated session: the authorization check reports not-authorized without erroring; the session-bound
- * routes fail as any session-bound route does on a session-less request (a 500 from the provision failure of
- * the session-scoped user context - the same wire behavior the per-backend resources had).
+ * The generic {@code /auth} surface (which replaced the per-backend auth resources) on the test server, whose only
+ * pac4j client ({@code LocalKerberosClient}) authenticates every local request, so every request has a server
+ * session; the no-session paths are covered by {@code TestAuthCheckResource}.
  */
 public class TestAuthResources extends AbstractLegendSDLCServerResourceTest
 {
     @Test
-    public void testAuthorizedWithoutSession()
+    public void testAuthorizedWithLocalKerberosSession()
     {
         Response response = clientFor("/api/auth/authorized").request().get();
         Assert.assertEquals(200, response.getStatus());
-        Assert.assertEquals(Boolean.FALSE, response.readEntity(Boolean.class));
+        Assert.assertEquals(Boolean.TRUE, response.readEntity(Boolean.class));
     }
 
     @Test
-    public void testAuthorizeWithoutSession()
+    public void testAuthorizeWithLocalKerberosSession()
     {
         Response response = clientFor("/api/auth/authorize").request().get();
-        Assert.assertEquals(500, response.getStatus());
+        Assert.assertEquals(200, response.getStatus());
     }
 
     @Test
-    public void testTermsOfServiceAcceptanceWithoutSession()
+    public void testTermsOfServiceAcceptanceWithLocalKerberosSession()
     {
         Response response = clientFor("/api/auth/termsOfServiceAcceptance").request().get();
-        Assert.assertEquals(500, response.getStatus());
+        Assert.assertEquals(200, response.getStatus());
     }
 }

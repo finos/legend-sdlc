@@ -27,18 +27,6 @@
     <artifactId>legend-sdlc-test-generation-maven-plugin</artifactId>
     <name>Legend SDLC Test Generation Maven Plugin</name>
 
-    <!-- Overrides the root guice.version: the maven-core plugin-testing harness (Sisu) fails with
-         ExceptionInInitializerError under Guice 7. -->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>${guice.plugin-test.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <!-- SDLC -->
         <dependency>
@@ -92,7 +80,6 @@
             <groupId>org.codehaus.plexus</groupId>
             <artifactId>plexus-utils</artifactId>
         </dependency>
-
 
         <!-- TEST -->
         <dependency>

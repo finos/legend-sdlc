@@ -1,0 +1,33 @@
+# For RealModuleServerForTest: the production BaseModule with the in-memory backend
+applicationName: Legend SDLC
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 0
+  adminConnectors:
+    - type: http
+      port: 0
+  requestLog:
+    appenders: []
+  rootPath: /api
+
+pac4j:
+  clients:
+    - org.finos.legend.server.pac4j.kerberos.LocalKerberosClient: {}
+  bypassBranches:
+    - /api
+
+backend:
+  type: inMemory
+
+logging:
+  level: OFF
+  appenders:
+    - type: console
+
+swagger:
+  resourcePackage: org.finos.legend.sdlc.server.resources
+  title: Legend SDLC
+  version: local-snapshot
+  schemes: []

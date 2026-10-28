@@ -116,7 +116,12 @@ def load_module(reactor_root, module_dir, default_release, root_properties):
     if properties_elem is not None:
         local_release = text_of(properties_elem, "maven.compiler.release")
         if local_release is not None:
-            release = resolve_property(local_release, root_properties)
+            # Module-local properties shadow the root's, as they do in Maven.
+            properties = dict(root_properties)
+            for child in properties_elem:
+                if child.text:
+                    properties[strip_ns(child.tag)] = child.text.strip()
+            release = resolve_property(local_release, properties)
 
     reactor_deps = []
     deps_elem = local_find(root, "dependencies")

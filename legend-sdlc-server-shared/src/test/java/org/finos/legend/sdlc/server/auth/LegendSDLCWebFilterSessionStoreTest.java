@@ -229,6 +229,53 @@ public class LegendSDLCWebFilterSessionStoreTest
         Assert.assertEquals(Collections.emptyList(), this.newSessionCalls);
     }
 
+    @Test
+    public void aMalformedSsoCookieIsNoSession() throws Exception
+    {
+        for (String value : new String[]{"x", "a-b", "zz-zz/1-2", "1-2/"})
+        {
+            MockHttpServletRequest request = newRequest();
+            request.setCookies(new Cookie(SSO_COOKIE, value));
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain chain = new MockFilterChain();
+
+            newFilter().doFilter(request, response, chain);
+
+            Assert.assertNotEquals("malformed " + SSO_COOKIE + "=" + value + " was answered as a retryable store outage", HttpServletResponse.SC_SERVICE_UNAVAILABLE, response.getStatus());
+            Assert.assertEquals("malformed " + SSO_COOKIE + "=" + value, HttpServletResponse.SC_OK, response.getStatus());
+            Assert.assertSame("malformed " + SSO_COOKIE + "=" + value + " must pass through as no session", request, chain.getRequest());
+            Assert.assertEquals(Collections.emptyList(), this.newSessionCalls);
+        }
+    }
+
+    @Test
+    public void anUnreachableMongoIsStillAnsweredWith503() throws Exception
+    {
+        MockHttpServletRequest login = newRequest();
+        MockHttpServletResponse loginResponse = new MockHttpServletResponse();
+        saveProfile(login, loginResponse, "alice");
+
+        MongoServer dyingServer = new MongoServer(new MemoryBackend());
+        InetSocketAddress address = dyingServer.bind();
+        try (MongoClient dyingClient = MongoClients.create("mongodb://" + address.getHostName() + ":" + address.getPort() + "/?serverSelectionTimeoutMS=500&connectTimeoutMS=500&socketTimeoutMS=500"))
+        {
+            MongoDbSessionStore dyingStore = new MongoDbSessionStore("AES", 100, dyingClient.getDatabase("test").getCollection("userSessions"),
+                    Collections.singletonMap(JEEContext.class, new JEESessionStore()), Collections.emptyList(), SSO_COOKIE);
+            dyingServer.shutdownNow();
+
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.getServletContext().setAttribute(LegendSDLCWebFilter.SESSION_STORE, dyingStore);
+            request.setCookies(loginResponse.getCookies());
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            MockFilterChain chain = new MockFilterChain();
+
+            newFilter().doFilter(request, response, chain);
+
+            Assert.assertEquals(HttpServletResponse.SC_SERVICE_UNAVAILABLE, response.getStatus());
+            Assert.assertNull(chain.getRequest());
+        }
+    }
+
     private MockHttpServletRequest newRequest()
     {
         MockHttpServletRequest request = new MockHttpServletRequest();

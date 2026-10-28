@@ -26,18 +26,6 @@
     <artifactId>legend-sdlc-generation-service-maven-plugin</artifactId>
     <name>Legend SDLC Service Generation Maven Plugin</name>
 
-    <!-- Overrides the root guice.version: the maven-core plugin-testing harness (Sisu) fails with
-         ExceptionInInitializerError under Guice 7. -->
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>${guice.plugin-test.version}</version>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
-
     <dependencies>
         <!-- ENGINE -->
         <dependency>
@@ -124,19 +112,6 @@
         <dependency>
             <groupId>org.eclipse.collections</groupId>
             <artifactId>eclipse-collections</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-annotations</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
         </dependency>
 
         <!-- TEST -->

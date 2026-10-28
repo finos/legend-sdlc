@@ -20,12 +20,20 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.commons.text.StringEscapeUtils;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 
 import java.io.IOException;
 import java.util.Objects;
 
 public class GenerationOutput
 {
+    private static final JsonMapper JSON_MAPPER = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+            .enable(SerializationFeature.INDENT_OUTPUT)
+            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+            .serializationInclusion(JsonInclude.Include.NON_NULL)
+            .build()));
+
     private final String content;
     private final String fileName;
     private final String format;
@@ -61,14 +69,9 @@ public class GenerationOutput
     {
         if ("json".equals(this.format))
         {
-            return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
-                    .enable(SerializationFeature.INDENT_OUTPUT)
-                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-                    .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-                    .serializationInclusion(JsonInclude.Include.NON_NULL)
-                    .build())
-                    .readTree(this.content)
-                    .toPrettyString();
+            // not JsonNode.toPrettyString(): that writes through Jackson's own mapper, which keeps the default
+            // write nesting limit
+            return JSON_MAPPER.writeValueAsString(JSON_MAPPER.readTree(this.content));
         }
         else if ("yaml".equals(this.format))
         {
