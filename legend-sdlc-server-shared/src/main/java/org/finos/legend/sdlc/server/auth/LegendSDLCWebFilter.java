@@ -216,7 +216,10 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
     {
         try
         {
-            return httpRequest.getSession();
+            // Never create one: a caller without a cookie jar (a token-authenticated script) would get a new
+            // HttpSession on every request, and HttpSessions don't expire by default. A browser login already has
+            // one, which pac4j's indirect clients create.
+            return httpRequest.getSession(false);
         }
         catch (Exception e)
         {

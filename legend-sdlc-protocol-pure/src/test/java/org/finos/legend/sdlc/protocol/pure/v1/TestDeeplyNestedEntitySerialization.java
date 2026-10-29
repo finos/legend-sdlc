@@ -54,7 +54,7 @@ public class TestDeeplyNestedEntitySerialization
         Entity reread = this.jsonSerializer.deserialize(this.jsonSerializer.serializeToString(entity));
 
         // Converting back to Pure recurses through Jackson's polymorphic deserializers and overflows a 1 MB stack
-        // near this depth whatever the Jackson version; this test is about Jackson's limits, not the stack size.
+        // near this depth; this test is about Jackson's limits, not the stack size.
         String pure = onLargeStack(() -> this.pureSerializer.serializeToString(reread));
         Assert.assertTrue(pure, pure.contains("$x == " + (OR_OPERANDS - 1)));
         Assert.assertEquals(entity.getContent(), this.pureSerializer.deserialize(pure).getContent());

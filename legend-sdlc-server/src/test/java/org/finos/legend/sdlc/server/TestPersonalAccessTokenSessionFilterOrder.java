@@ -17,17 +17,28 @@ package org.finos.legend.sdlc.server;
 import com.sun.net.httpserver.HttpServer;
 import io.dropwizard.core.setup.Environment;
 import io.dropwizard.testing.DropwizardTestSupport;
+import jakarta.servlet.DispatcherType;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSessionEvent;
+import jakarta.servlet.http.HttpSessionListener;
 import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.Context;
 import jakarta.ws.rs.core.MediaType;
+import org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter;
+import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.junit.AfterClass;
 import org.junit.Assert;
+import org.junit.Assume;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
@@ -37,6 +48,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 
 import java.io.File;
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -48,11 +60,14 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @RunWith(Parameterized.class)
 public class TestPersonalAccessTokenSessionFilterOrder
@@ -61,6 +76,8 @@ public class TestPersonalAccessTokenSessionFilterOrder
     public static final TemporaryFolder TMP = new TemporaryFolder();
 
     private static final String TOKEN_HEADER = "PRIVATE-TOKEN";
+    private static final String SESSION_PROBE_HEADER = "X-Session-Probe";
+    private static final AtomicInteger HTTP_SESSIONS_CREATED = new AtomicInteger();
 
     // legend-shared's ChainFixingFilterHandler exposes the order it sorts the filters into only as a java.util.logging record
     private static final String CHAIN_FIXING_LOGGER = "org.finos.legend.server.shared.bundles.ChainFixingFilterHandler";
@@ -99,20 +116,28 @@ public class TestPersonalAccessTokenSessionFilterOrder
     @Parameterized.Parameter(1)
     public List<String> filterPriorities;
 
+    // whether the session filter stays ahead of the filters without a priority
+    @Parameterized.Parameter(2)
+    public boolean sessionBeforeUnprioritisedFilters;
+
     @Parameterized.Parameters(name = "{0}")
     public static Iterable<Object[]> shapes()
     {
         return Arrays.asList(
                 // session filter ordered under its historical name, no pac4j filter entries
-                new Object[]{"legacy", Arrays.asList("GitLab: 1", "CORS: 4")},
+                new Object[]{"legacy", Arrays.asList("GitLab: 1", "CORS: 4"), false},
                 // config.json, config-sample.yaml and config-test.yaml
-                new Object[]{"shipped", Arrays.asList("GitLab: 1", "org.pac4j.jee.filter.CallbackFilter: 2", "org.pac4j.jee.filter.SecurityFilter: 3", "CORS: 4")},
+                new Object[]{"shipped", Arrays.asList("GitLab: 1", "org.pac4j.jee.filter.CallbackFilter: 2", "org.pac4j.jee.filter.SecurityFilter: 3", "CORS: 4"), true},
+                // session filter ordered before every pac4j filter
+                new Object[]{"highSessionPriority", Arrays.asList("GitLab: 10", "org.pac4j.jee.filter.CallbackFilter: 2", "org.pac4j.jee.filter.SecurityFilter: 3", "CORS: 4"), true},
+                // session filter below the default priority, no pac4j filter entries
+                new Object[]{"negativeSessionPriority", Arrays.asList("GitLab: -5", "CORS: 4"), false},
                 // session filter not named
-                new Object[]{"securityFilterLowered", Arrays.asList("org.pac4j.jee.filter.SecurityFilter: -1", "CORS: 4")},
+                new Object[]{"securityFilterLowered", Arrays.asList("org.pac4j.jee.filter.SecurityFilter: -1", "CORS: 4"), false},
                 // session filter not named: unnamed filters keep registration order, which has it before pac4j's
-                new Object[]{"unnamed", Collections.singletonList("CORS: 4")},
+                new Object[]{"unnamed", Collections.singletonList("CORS: 4"), false},
                 // no filterPriorities (an empty YAML value is null)
-                new Object[]{"none", Collections.emptyList()});
+                new Object[]{"none", Collections.emptyList(), false});
     }
 
     @BeforeClass
@@ -250,6 +275,38 @@ public class TestPersonalAccessTokenSessionFilterOrder
         }
     }
 
+    @Test
+    public void filterWithoutPriorityAfterTheSessionFilterSeesTheSession() throws Exception
+    {
+        Assume.assumeTrue("the session filter runs after the filters without a priority in this shape", this.sessionBeforeUnprioritisedFilters);
+        HttpClient client = HttpClient.newBuilder().cookieHandler(new java.net.CookieManager()).build();
+        URI probe = URI.create("http://localhost:" + app.getLocalPort() + "/api/probe/user?client_name=gitlabPAToken");
+        for (int i = 1; i <= 2; i++)
+        {
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(probe).header(TOKEN_HEADER, "glpat-secret").GET().build(), HttpResponse.BodyHandlers.ofString());
+            Assert.assertEquals("token request " + i + "; filter order " + filterOrder() + "; body " + response.body(), 200, response.statusCode());
+            Assert.assertEquals("token request " + i + "; filter order " + filterOrder(), "someone", response.headers().firstValue(SESSION_PROBE_HEADER).orElse(null));
+        }
+    }
+
+    @Test
+    public void cookielessTokenCallerCreatesNoHttpSession() throws Exception
+    {
+        // java.net.http.HttpClient keeps no cookies unless given a cookie handler
+        HttpClient client = HttpClient.newHttpClient();
+        URI probe = URI.create("http://localhost:" + app.getLocalPort() + "/api/probe/user?client_name=gitlabPAToken");
+        int before = HTTP_SESSIONS_CREATED.get();
+        for (int i = 1; i <= 3; i++)
+        {
+            HttpResponse<String> response = client.send(HttpRequest.newBuilder(probe).header(TOKEN_HEADER, "glpat-secret").GET().build(), HttpResponse.BodyHandlers.ofString());
+            Assert.assertEquals("token request " + i + "; body " + response.body(), 200, response.statusCode());
+            Assert.assertEquals("someone", response.body());
+            Assert.assertEquals(response.headers().allValues("Set-Cookie").toString(), Collections.emptyList(),
+                    response.headers().allValues("Set-Cookie").stream().filter(c -> c.startsWith("LEGEND_SDLC_JSESSIONID=")).collect(Collectors.toList()));
+        }
+        Assert.assertEquals("HttpSessions created by cookieless token requests", 0, HTTP_SESSIONS_CREATED.get() - before);
+    }
+
     private static String filterOrder()
     {
         Assert.assertNotNull("ChainFixingFilterHandler did not log the filter order", filterOrder);
@@ -263,6 +320,31 @@ public class TestPersonalAccessTokenSessionFilterOrder
         {
             super.run(configuration, environment);
             environment.jersey().register(new UserProbeResource());
+            // registered without a priority, as a deployment's own filter would be
+            environment.servlets().addFilter("SessionProbe", new SessionProbeFilter())
+                    .addMappingForUrlPatterns(EnumSet.allOf(DispatcherType.class), true, "/*");
+            environment.servlets().addServletListeners(new HttpSessionListener()
+            {
+                @Override
+                public void sessionCreated(HttpSessionEvent event)
+                {
+                    HTTP_SESSIONS_CREATED.incrementAndGet();
+                }
+            });
+        }
+    }
+
+    /**
+     * Reports the SDLC session it sees in a response header.
+     */
+    public static class SessionProbeFilter implements Filter
+    {
+        @Override
+        public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+        {
+            Session session = LegendSDLCWebFilter.getSessionFromServletRequestAttribute(request);
+            ((HttpServletResponse) response).setHeader(SESSION_PROBE_HEADER, (session == null) ? "none" : session.getUserId());
+            chain.doFilter(request, response);
         }
     }
 

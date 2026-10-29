@@ -40,4 +40,14 @@ public class TestGenerationOutput
         Assert.assertTrue(content.contains("\"a\" : 1"));
         Assert.assertEquals(depth, content.chars().filter(c -> c == '{').count());
     }
+
+    @Test
+    public void emptyOrBlankJsonIsExtractedAsEmpty() throws Exception
+    {
+        for (String json : new String[]{"", " ", "\n", " \t\r\n "})
+        {
+            Assert.assertEquals("\"" + json + "\"", "", new GenerationOutput(json, "schema.json", "json").extractFileContent());
+        }
+        Assert.assertEquals("null", new GenerationOutput("null", "schema.json", "json").extractFileContent());
+    }
 }

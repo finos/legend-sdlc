@@ -42,6 +42,7 @@ import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
+import ru.vyarus.dropwizard.guice.hook.GuiceyConfigurationHook;
 import ru.vyarus.dropwizard.guice.module.installer.InstallersOptions;
 
 import java.io.IOException;
@@ -96,7 +97,7 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
 
         // SDLC specific initialization
         // Jersey reads and writes entities with this mapper; lift Jackson's stream limits, as the entity serializers
-        // do, so entities stored before Jackson 2.15 introduced them still round-trip.
+        // do, so large and deeply nested entities still round-trip.
         UnlimitedStreamConstraints.applyTo(bootstrap.getObjectMapper());
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         DepotConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
@@ -115,6 +116,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         });
 
         // Guice bootstrapping..
+        // Hooks run in GuiceBundle.Builder.build(), so resources stay per request even for a subclass that builds
+        // its own bundle instead of calling buildGuiceBundle()'s
+        ((GuiceyConfigurationHook) builder -> builder.option(InstallersOptions.ForceSingletonForJerseyExtensions, false)).register();
         bootstrap.addBundle(buildGuiceBundle());
     }
 

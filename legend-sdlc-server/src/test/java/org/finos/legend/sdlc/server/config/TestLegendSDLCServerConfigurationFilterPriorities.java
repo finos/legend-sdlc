@@ -64,9 +64,59 @@ public class TestLegendSDLCServerConfigurationFilterPriorities
     {
         // config.json, config-sample.yaml and config-test.yaml: the logout filter is unlisted, so stays at 0
         Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"GitLab\":1,\"" + CALLBACK + "\":2,\"" + SECURITY + "\":3,\"CORS\":4}}").getFilterPriorities();
-        Assert.assertEquals(Integer.valueOf(-1), priorities.get(SESSION));
+        // the session filter keeps its place before the filters at the default priority; the logout filter is lifted
+        Assert.assertEquals(Integer.valueOf(1), priorities.get(SESSION));
         Assert.assertEquals(Integer.valueOf(2), priorities.get(CALLBACK));
         Assert.assertEquals(Integer.valueOf(3), priorities.get(SECURITY));
+        Assert.assertEquals(Integer.valueOf(2), priorities.get(LOGOUT));
+    }
+
+    @Test
+    public void highSessionPriorityIsLoweredOnlyBelowThePrioritisedPac4jFilters() throws Exception
+    {
+        Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"GitLab\":10,\"" + CALLBACK + "\":2,\"" + SECURITY + "\":3,\"CORS\":4}}").getFilterPriorities();
+        // still above the default priority, so filters without a priority keep running after the session filter
+        Assert.assertEquals(Integer.valueOf(1), priorities.get(SESSION));
+        Assert.assertEquals(Integer.valueOf(2), priorities.get(LOGOUT));
+        Assert.assertEquals(Integer.valueOf(2), priorities.get(CALLBACK));
+    }
+
+    @Test
+    public void unprioritisedLogoutFilterIsLiftedAboveTheSessionFilter() throws Exception
+    {
+        Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"" + SESSION + "\":5,\"" + SECURITY + "\":7}}").getFilterPriorities();
+        Assert.assertEquals(Integer.valueOf(5), priorities.get(SESSION));
+        Assert.assertEquals(Integer.valueOf(6), priorities.get(CALLBACK));
+        Assert.assertEquals(Integer.valueOf(6), priorities.get(LOGOUT));
+        Assert.assertEquals(Integer.valueOf(7), priorities.get(SECURITY));
+    }
+
+    @Test
+    public void negativeSessionPriorityIsKeptBelowUnprioritisedPac4jFilters() throws Exception
+    {
+        // unprioritised pac4j filters sort at 0, so the session filter already runs after them
+        Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"GitLab\":-5,\"CORS\":4}}").getFilterPriorities();
+        Assert.assertEquals(Integer.valueOf(-5), priorities.get(SESSION));
+        Assert.assertNull(priorities.get(SECURITY));
+        Assert.assertNull(priorities.get(CALLBACK));
+        Assert.assertNull(priorities.get(LOGOUT));
+    }
+
+    @Test
+    public void negativeSessionPriorityWithPrioritisedSecurityFilterLiftsNothing() throws Exception
+    {
+        Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"" + SESSION + "\":-5,\"" + SECURITY + "\":3}}").getFilterPriorities();
+        Assert.assertEquals(Integer.valueOf(-5), priorities.get(SESSION));
+        Assert.assertNull(priorities.get(CALLBACK));
+        Assert.assertNull(priorities.get(LOGOUT));
+    }
+
+    @Test
+    public void legacyNameWithoutPac4jEntriesDoesNotLiftPac4jFilters() throws Exception
+    {
+        Map<String, Integer> priorities = parse("{\"filterPriorities\":{\"GitLab\":1,\"CORS\":4}}").getFilterPriorities();
+        Assert.assertNull(priorities.get(SECURITY));
+        Assert.assertNull(priorities.get(CALLBACK));
         Assert.assertNull(priorities.get(LOGOUT));
     }
 

@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.generation.file;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -27,13 +28,6 @@ import java.util.Objects;
 
 public class GenerationOutput
 {
-    private static final JsonMapper JSON_MAPPER = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
-            .enable(SerializationFeature.INDENT_OUTPUT)
-            .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
-            .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
-            .serializationInclusion(JsonInclude.Include.NON_NULL)
-            .build()));
-
     private final String content;
     private final String fileName;
     private final String format;
@@ -69,9 +63,18 @@ public class GenerationOutput
     {
         if ("json".equals(this.format))
         {
-            // not JsonNode.toPrettyString(): that writes through Jackson's own mapper, which keeps the default
-            // write nesting limit
-            return JSON_MAPPER.writeValueAsString(JSON_MAPPER.readTree(this.content));
+            // Built per call: the protocol extensions it loads depend on the current thread's context class loader.
+            // Not JsonNode.toPrettyString(): that writes through Jackson's own mapper, which keeps the default write
+            // nesting limit.
+            JsonMapper jsonMapper = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+                    .enable(SerializationFeature.INDENT_OUTPUT)
+                    .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
+                    .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
+                    .serializationInclusion(JsonInclude.Include.NON_NULL)
+                    .build()));
+            JsonNode node = jsonMapper.readTree(this.content);
+            // empty or blank content reads as a MissingNode, which toPrettyString() wrote as "" but the mapper writes as null
+            return node.isMissingNode() ? "" : jsonMapper.writeValueAsString(node);
         }
         else if ("yaml".equals(this.format))
         {
