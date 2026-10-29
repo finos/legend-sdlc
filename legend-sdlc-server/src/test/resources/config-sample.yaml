@@ -21,6 +21,8 @@ server:
     - type: http
       port: 6100
       maxRequestHeaderSize: 128KiB
+      # useForwardedHeaders defaults to true (legend-shared's pac4j bundle sets it, unlike Dropwizard's default);
+      # set it to false if clients reach this connector directly rather than through a proxy that sets X-Forwarded-*
   adminConnectors:
     - type: http
       port: 6101
@@ -46,6 +48,8 @@ features:
 
 filterPriorities:
   GitLab: 1
+  org.pac4j.jee.filter.CallbackFilter: 2
+  org.pac4j.jee.filter.SecurityFilter: 3
   CORS: 4
 
 pac4j:

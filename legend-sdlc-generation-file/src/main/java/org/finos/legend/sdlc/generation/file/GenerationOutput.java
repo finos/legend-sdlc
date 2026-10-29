@@ -15,11 +15,13 @@
 package org.finos.legend.sdlc.generation.file;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.commons.text.StringEscapeUtils;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -61,14 +63,18 @@ public class GenerationOutput
     {
         if ("json".equals(this.format))
         {
-            return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+            // Built per call: the protocol extensions it loads depend on the current thread's context class loader.
+            // Not JsonNode.toPrettyString(): that writes through Jackson's own mapper, which keeps the default write
+            // nesting limit.
+            JsonMapper jsonMapper = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
                     .enable(SerializationFeature.INDENT_OUTPUT)
                     .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                     .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                     .serializationInclusion(JsonInclude.Include.NON_NULL)
-                    .build())
-                    .readTree(this.content)
-                    .toPrettyString();
+                    .build()));
+            JsonNode node = jsonMapper.readTree(this.content);
+            // empty or blank content reads as a MissingNode, which toPrettyString() wrote as "" but the mapper writes as null
+            return node.isMissingNode() ? "" : jsonMapper.writeValueAsString(node);
         }
         else if ("yaml".equals(this.format))
         {

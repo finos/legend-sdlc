@@ -56,6 +56,7 @@ import org.finos.legend.pure.m3.execution.ExecutionSupport;
 import org.finos.legend.pure.m3.navigation.PrimitiveUtilities;
 import org.finos.legend.pure.m3.navigation.function.FunctionDescriptor;
 import org.finos.legend.sdlc.generation.GeneratedJavaCode;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -696,16 +697,16 @@ public class ServiceExecutionGenerator
         return builder.append(string, start, string.length());
     }
 
-    private static JsonMapper getDefaultJsonMapper()
+    static JsonMapper getDefaultJsonMapper()
     {
-        return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+        return UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                 .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                 .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
                 .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
-                .build());
+                .build()));
     }
 
     private static Service validateService(Service service)

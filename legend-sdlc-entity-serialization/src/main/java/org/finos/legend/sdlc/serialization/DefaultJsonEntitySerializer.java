@@ -34,13 +34,13 @@ import java.util.Map;
 
 public class DefaultJsonEntitySerializer implements EntityTextSerializer
 {
-    private static final JsonMapper JSON_MAPPER = JsonMapper.builder()
+    private static final JsonMapper JSON_MAPPER = UnlimitedStreamConstraints.applyTo(JsonMapper.builder()
             .enable(SerializationFeature.INDENT_OUTPUT)
             .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
             .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
             .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
             .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
-            .build();
+            .build());
     private static final JavaType ENTITY_FILE_TYPE = JSON_MAPPER.getTypeFactory().constructType(EntityFile.class);
 
     public DefaultJsonEntitySerializer()

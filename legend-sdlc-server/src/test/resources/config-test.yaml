@@ -36,6 +36,8 @@ server:
 
 filterPriorities:
   GitLab: 1
+  org.pac4j.jee.filter.CallbackFilter: 2
+  org.pac4j.jee.filter.SecurityFilter: 3
   CORS: 4
 
 pac4j:

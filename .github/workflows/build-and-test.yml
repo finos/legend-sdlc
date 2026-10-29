@@ -20,7 +20,8 @@
 # The build always runs on JDK 25 and compiles to Java 11 bytecode
 # (maven.compiler.release), except legend-sdlc-server and
 # legend-sdlc-server-shared, which compile to Java 17. Only the forked test
-# JVM changes between legs, so the JDK 11 leg excludes those two modules.
+# JVM changes between legs, so the JDK 11 leg excludes every module above
+# release 11, as derived from the poms by jdk11-leg-excludes.py.
 name: Build and Test
 
 on:
@@ -89,6 +90,11 @@ jobs:
           else
             echo 'jdks=[25, 11]' >> "$GITHUB_OUTPUT"
           fi
+
+      - name: Test CI helper scripts and check the release boundary
+        run: |
+          python3 -B -m unittest discover -s .github/scripts -p 'test_*.py'
+          python3 -B .github/scripts/bytecode-boundary.py boundary .
 
       - name: Cache Maven dependencies
         uses: actions/cache@v5
@@ -229,26 +235,21 @@ jobs:
           mkdir -p ~/.m2/repository/org/finos/legend
           cp -r project-artifacts ~/.m2/repository/org/finos/legend/sdlc
 
-      - name: Verify JDK-11 exclusion list matches the release-17 tier
-        # EXCLUDES in the Test step stays hand-maintained; this fails if it
-        # drifts from the modules that compile to release 17.
-        if: matrix.jdk == 11
-        run: python3 .github/scripts/check-ci-jdk11-exclusions.py
-
       - name: Test
         env:
           MAVEN_OPTS: -XX:MaxRAMPercentage=25.0
         run: |
           # Maven runs on 25 in every leg; each leg just points Surefire's
-          # forked test JVM at the matrix JDK's install. legend-sdlc-server and
-          # legend-sdlc-server-shared compile to release 17, so they can't run
-          # on the JDK 11 leg.
+          # forked test JVM at the matrix JDK's install. Modules above release
+          # 11 can't run on the JDK 11 leg; jdk11-leg-excludes.py lists them
+          # from the poms and fails the step if a release won't resolve.
           export JAVA_HOME="$JAVA_HOME_25_X64"
           test_jvm_home="JAVA_HOME_${{ matrix.jdk }}_X64"
           TEST_JVM="${!test_jvm_home}/bin/java"
           EXCLUDES=""
           if [ "${{ matrix.jdk }}" = "11" ]; then
-            EXCLUDES="-pl !legend-sdlc-server,!legend-sdlc-server-shared"
+            EXCLUDES="$(python3 .github/scripts/jdk11-leg-excludes.py)"
+            echo "Excluded from the JDK 11 leg: ${EXCLUDES:-nothing}"
           fi
           mvn -B -e surefire:test ${EXCLUDES} -Djvm="${TEST_JVM}" -DargLine="-XX:MaxRAMPercentage=50.0" -DforkCount=1
 

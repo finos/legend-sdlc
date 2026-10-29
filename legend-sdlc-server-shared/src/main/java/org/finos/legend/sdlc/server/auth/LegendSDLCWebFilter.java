@@ -20,6 +20,7 @@ import org.finos.legend.server.pac4j.sessionutil.SessionToken;
 import org.pac4j.core.context.WebContext;
 import org.pac4j.core.context.WebContextHelper;
 import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.core.profile.AnonymousProfile;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.profile.ProfileManager;
 import org.pac4j.core.profile.UserProfile;
@@ -84,6 +85,9 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
             httpResponse.sendError(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
             return;
         }
+        // pac4j's AnonymousProfile (AnonymousClient, or one persisted with alwaysUseSessionStorage) authenticates
+        // nobody: treat it as no profile, so the request is served unauthenticated rather than rejected.
+        rawProfiles.removeIf(AnonymousProfile.class::isInstance);
         if (rawProfiles.isEmpty())
         {
             LOGGER.debug("No authentication profiles found. Passing through.");
@@ -169,7 +173,10 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
 
         if (session == null)
         {
-            LOGGER.warn("No session created");
+            // Fail closed, as for narrowing: passing through would serve this authenticated request as anonymous,
+            // and returning without a status would answer it with an empty 200.
+            LOGGER.warn("No session created from profile type(s) {}; rejecting", profiles.stream().map(p -> p.getClass().getName()).distinct().collect(Collectors.toList()));
+            httpResponse.sendError(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
@@ -209,7 +216,10 @@ public abstract class LegendSDLCWebFilter<P extends CommonProfile> implements Fi
     {
         try
         {
-            return httpRequest.getSession();
+            // Never create one: a caller without a cookie jar (a token-authenticated script) would get a new
+            // HttpSession on every request, and HttpSessions don't expire by default. A browser login already has
+            // one, which pac4j's indirect clients create.
+            return httpRequest.getSession(false);
         }
         catch (Exception e)
         {

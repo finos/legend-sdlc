@@ -1,0 +1,38 @@
+# pac4j.mongoUri is overridden by the test
+applicationName: Legend SDLC
+
+server:
+  applicationConnectors:
+    - type: http
+      port: 0
+  adminConnectors:
+    - type: http
+      port: 0
+  requestLog:
+    appenders: []
+  rootPath: /api
+
+pac4j:
+  clients:
+    - org.finos.legend.server.pac4j.kerberos.LocalKerberosClient: {}
+  mongoUri: mongodb://localhost:1
+  mongoDb: sessions
+  mongoSession:
+    enabled: true
+    collection: userSessions
+  bypassBranches:
+    - /api
+
+backend:
+  type: inMemory
+
+logging:
+  level: OFF
+  appenders:
+    - type: console
+
+swagger:
+  resourcePackage: org.finos.legend.sdlc.server.resources
+  title: Legend SDLC
+  version: local-snapshot
+  schemes: []
