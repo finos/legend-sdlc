@@ -15,7 +15,6 @@
 package org.finos.legend.sdlc.server.resources.auth;
 
 import org.finos.legend.sdlc.backend.api.spi.Backend;
-import org.finos.legend.sdlc.error.LegendSDLCException;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.guice.UserContext;
@@ -34,7 +33,6 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.Path;
 import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.Response.Status;
 
 import static org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter.SESSION_ATTRIBUTE;
 
@@ -87,15 +85,7 @@ public class AuthCheckResource extends BaseResource
                 }
                 else
                 {
-                    // An unreadable session store has not said "not authorized"; report it as retryable
-                    try
-                    {
-                        session = this.sessionProvider.getSessionFromSessionStore(this.httpRequest, this.httpResponse);
-                    }
-                    catch (RuntimeException e)
-                    {
-                        throw new LegendSDLCException("Session store is currently unreachable", Status.SERVICE_UNAVAILABLE.getStatusCode(), e);
-                    }
+                    session = this.sessionProvider.getSessionFromSessionStore(this.httpRequest, this.httpResponse);
                 }
                 this.httpRequest.setAttribute(SESSION_ATTRIBUTE, session);
             }

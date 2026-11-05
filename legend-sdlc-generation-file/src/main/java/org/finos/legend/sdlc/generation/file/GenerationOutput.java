@@ -15,13 +15,15 @@
 package org.finos.legend.sdlc.generation.file;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.StreamReadConstraints;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.apache.commons.text.StringEscapeUtils;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
-import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 
 import java.io.IOException;
 import java.util.Objects;
@@ -63,15 +65,25 @@ public class GenerationOutput
     {
         if ("json".equals(this.format))
         {
-            // Built per call: the protocol extensions it loads depend on the current thread's context class loader.
-            // Not JsonNode.toPrettyString(): that writes through Jackson's own mapper, which keeps the default write
-            // nesting limit.
-            JsonMapper jsonMapper = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+            // Writes the same text as JsonNode.toPrettyString(), which isn't used because it writes through Jackson's
+            // own mapper, which keeps the default write nesting limit.
+            JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
                     .enable(SerializationFeature.INDENT_OUTPUT)
                     .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                     .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                     .serializationInclusion(JsonInclude.Include.NON_NULL)
-                    .build()));
+                    .build());
+            // generated JSON has no size we can bound, so lift every Jackson stream limit, as UnlimitedStreamConstraints does
+            JsonFactory jsonFactory = jsonMapper.getFactory();
+            jsonFactory.setStreamReadConstraints(StreamReadConstraints.builder()
+                    .maxNestingDepth(Integer.MAX_VALUE)
+                    .maxDocumentLength(-1L)
+                    .maxTokenCount(-1L)
+                    .maxNumberLength(Integer.MAX_VALUE)
+                    .maxStringLength(Integer.MAX_VALUE)
+                    .maxNameLength(Integer.MAX_VALUE)
+                    .build());
+            jsonFactory.setStreamWriteConstraints(StreamWriteConstraints.builder().maxNestingDepth(Integer.MAX_VALUE).build());
             JsonNode node = jsonMapper.readTree(this.content);
             // empty or blank content reads as a MissingNode, which toPrettyString() wrote as "" but the mapper writes as null
             return node.isMissingNode() ? "" : jsonMapper.writeValueAsString(node);

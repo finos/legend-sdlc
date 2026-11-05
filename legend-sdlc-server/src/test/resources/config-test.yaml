@@ -30,14 +30,13 @@ server:
       - POST
   requestLog:
     type: classic
-    # An empty appender list disables request logging.
-    appenders: []
+    appenders:
+      - type: console
+        logFormat: "OFF"
   rootPath: /api
 
 filterPriorities:
   GitLab: 1
-  org.pac4j.jee.filter.CallbackFilter: 2
-  org.pac4j.jee.filter.SecurityFilter: 3
   CORS: 4
 
 pac4j:

@@ -18,6 +18,3 @@ Thumbs.db
 /logs
 /.run/
 /temp/
-
-# Python
-__pycache__/

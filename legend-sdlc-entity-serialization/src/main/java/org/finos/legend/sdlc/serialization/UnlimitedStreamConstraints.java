@@ -20,8 +20,9 @@ import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Entities (deeply nested lambdas) and execution plans have no size we can bound, and existing entity files can
- * exceed Jackson's default stream limits, so every limit is lifted, not only nesting depth.
+ * Jackson had no stream limits before 2.15, and the JSON SDLC reads and writes (entities with deeply nested lambdas,
+ * request bodies, depot responses) has no size we can bound, so every limit is lifted, not only nesting depth: the
+ * document length and token count limits too, although Jackson leaves those unlimited by default today.
  * <p>
  * Applied per mapper, never to the JVM-wide defaults, so it cannot leak into other Maven plugins sharing the JVM.
  */

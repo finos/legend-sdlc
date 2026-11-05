@@ -22,6 +22,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.servlet.RequestScoped;
 import io.dropwizard.jackson.Jackson;
+import org.eclipse.collections.api.factory.Maps;
 import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
 import org.finos.legend.sdlc.server.BaseServer.ServerInfo;
 import org.finos.legend.sdlc.server.config.LegendSDLCServerConfiguration;
@@ -237,6 +238,12 @@ import org.finos.legend.sdlc.server.resources.workspace.project.user.WorkspacesR
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
+import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
+import org.pac4j.core.context.session.SessionStore;
+import org.pac4j.jax.rs.pac4j.JaxRsContext;
+import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
+import org.pac4j.jee.context.JEEContext;
+import org.pac4j.jee.context.session.JEESessionStore;
 import ru.vyarus.dropwizard.guice.module.support.DropwizardAwareModule;
 
 import java.util.Collections;
@@ -274,7 +281,7 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         binder.bind(LegendPac4jConfiguration.class).toProvider(this::getLegendPac4jConfiguration);
         binder.bind(BackgroundTaskProcessor.class).toProvider(this.server::getBackgroundTaskProcessor);
         binder.bind(ProjectStructurePlatformExtensions.class).toInstance(buildProjectStructurePlatformExtensions());
-        binder.bind(SessionProvider.class).toInstance(new SessionProvider());
+        binder.bind(SessionProvider.class).toProvider(this::getSessionProvider);
 
         bindResources(binder);
     }
@@ -709,6 +716,25 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
             }
         }
         return builder -> builder;
+    }
+
+    private SessionProvider getSessionProvider()
+    {
+        LegendPac4jConfiguration config = configuration().getPac4jConfiguration();
+        return new SessionProvider(getSessionStoreFromConfig(config));
+    }
+
+    private SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
+    {
+        if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
+        {
+            return new HazelcastSessionStore(
+                    config.getHazelcastSession().getConfigFilePath(),
+                    Maps.immutable.with(
+                            JEEContext.class, new JEESessionStore(),
+                            JaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(), config.getSessionTokenName() != null ? config.getSessionTokenName() : "LegendSSO");
+        }
+        return null;
     }
 
     @Provides

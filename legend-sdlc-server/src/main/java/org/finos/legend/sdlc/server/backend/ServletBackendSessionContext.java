@@ -29,7 +29,6 @@ import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.auth.StateSession;
 import org.finos.legend.sdlc.server.guice.UserContext;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenProfile;
-import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.oidc.profile.OidcProfile;
 
@@ -67,8 +66,6 @@ public class ServletBackendSessionContext implements BackendSessionContext
         if (session instanceof StateSession)
         {
             StateSession stateSession = (StateSession) session;
-            // Resolved once, not per put(): GitLabTokenManager.writeState() calls put() several times per token save
-            SessionStore sessionStore = LegendSDLCWebFilter.getSessionStore(this.userContext.getHttpRequest());
             return new BackendSessionStateStore()
             {
                 @Override
@@ -81,7 +78,7 @@ public class ServletBackendSessionContext implements BackendSessionContext
                 public void put(String key, String value)
                 {
                     stateSession.putState(key, value);
-                    LegendSDLCWebFilter.setSessionCookie(ServletBackendSessionContext.this.userContext.getHttpResponse(), stateSession, sessionStore);
+                    LegendSDLCWebFilter.setSessionCookie(ServletBackendSessionContext.this.userContext.getHttpResponse(), stateSession);
                 }
             };
         }

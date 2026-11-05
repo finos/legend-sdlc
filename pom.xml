@@ -86,9 +86,9 @@
         <publish.server.id>central</publish.server.id>
 
         <!-- Legend dependency versions -->
-        <legend.engine.version>5.0.3</legend.engine.version>
+        <legend.engine.version>5.0.5</legend.engine.version>
         <legend.pure.version>5.110.0</legend.pure.version>
-        <legend.shared.version>1.0.2</legend.shared.version>
+        <legend.shared.version>1.0.3</legend.shared.version>
 
         <!-- Dependency versions -->
         <commons-codec.version>1.15</commons-codec.version>
@@ -105,7 +105,7 @@
         <freemarker.version>2.3.35</freemarker.version>
         <gitlab4j.version>6.0.0</gitlab4j.version>
         <guava.version>31.1-jre</guava.version>
-        <guice.version>7.0.0</guice.version>
+        <guice.version>6.0.0</guice.version>
         <hibernate-validator.version>8.0.3.Final</hibernate-validator.version>
         <hk2.version>3.0.6</hk2.version>
         <jackson.version>2.21.8</jackson.version>
@@ -127,8 +127,6 @@
         <mockito.version>3.5.10</mockito.version>
         <hazelcast.version>5.3.1</hazelcast.version>
         <mongo.driver.version>5.3.1</mongo.driver.version>
-        <mongo.server.version>1.46.0</mongo.server.version>
-        <spring.test.version>6.2.19</spring.test.version>
         <maven.version>3.9.2</maven.version>
         <pac4j.version>6.5.8</pac4j.version>
         <pac4j.jax-rs.version>7.0.1</pac4j.jax-rs.version>
@@ -150,7 +148,6 @@
         <maven.compiler.plugin.version>3.11.0</maven.compiler.plugin.version>
         <maven.dependency.plugin.version>3.6.1</maven.dependency.plugin.version>
         <maven.enforcer.plugin.version>3.5.0</maven.enforcer.plugin.version>
-        <extra-enforcer-rules.version>1.12.0</extra-enforcer-rules.version>
         <maven.failsafe.plugin.version>3.1.0</maven.failsafe.plugin.version>
         <maven.jar.plugin.version>3.3.0</maven.jar.plugin.version>
         <maven.javadoc.plugin.version>3.5.0</maven.javadoc.plugin.version>
@@ -363,13 +360,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
-                <dependencies>
-                    <dependency>
-                        <groupId>org.codehaus.mojo</groupId>
-                        <artifactId>extra-enforcer-rules</artifactId>
-                        <version>${extra-enforcer-rules.version}</version>
-                    </dependency>
-                </dependencies>
                 <configuration>
                     <rules>
                         <requireJavaVersion>
@@ -391,19 +381,6 @@
                                 <include>org.slf4j:jul-to-slf4j:${slf4j.version}:jar:test</include>
                             </includes>
                         </bannedDependencies>
-                        <!-- Test scope is not published; the CI JDK matrix covers test bytecode. -->
-                        <enforceBytecodeVersion>
-                            <maxJdkVersion>${maven.compiler.release}</maxJdkVersion>
-                            <ignoredScopes>
-                                <ignoredScope>test</ignoredScope>
-                            </ignoredScopes>
-                            <!-- Java 17 bytecode whatever the target: the driver loads it
-                                 reflectively and tolerates UnsupportedClassVersionError on older
-                                 JVMs. -->
-                            <excludes>
-                                <exclude>org.mongodb:bson-record-codec</exclude>
-                            </excludes>
-                        </enforceBytecodeVersion>
                     </rules>
                 </configuration>
                 <executions>
@@ -1182,6 +1159,17 @@
             </dependency>
 
             <dependency>
+                <groupId>com.google.inject</groupId>
+                <artifactId>guice</artifactId>
+                <version>${guice.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.google.inject.extensions</groupId>
+                <artifactId>guice-servlet</artifactId>
+                <version>${guice.version}</version>
+            </dependency>
+
+            <dependency>
                 <groupId>com.nimbusds</groupId>
                 <artifactId>nimbus-jose-jwt</artifactId>
                 <version>${nimbus-jose-jwt.version}</version>
@@ -1393,44 +1381,6 @@
                 <groupId>org.mongodb</groupId>
                 <artifactId>bson</artifactId>
                 <version>${mongo.driver.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.bwaldvogel</groupId>
-                <artifactId>mongo-java-server-core</artifactId>
-                <version>${mongo.server.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>de.bwaldvogel</groupId>
-                <artifactId>mongo-java-server-memory-backend</artifactId>
-                <version>${mongo.server.version}</version>
-            </dependency>
-            <!-- spring-jcl is excluded as pac4j's parent pom excludes it from spring-core, which
-                 pac4j-oidc brings onto the runtime classpath: being the nearer path to
-                 spring-core, these test-scoped artifacts would otherwise carry spring-jcl past
-                 that exclusion into legend-sdlc-server-shared's runtime classpath. -->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-test</artifactId>
-                <version>${spring.test.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-jcl</artifactId>
-                    </exclusion>
-                </exclusions>
-            </dependency>
-            <!-- spring-test 6's MockHttpServletResponse statically initialises
-                 org.springframework.http.MediaType, which lives in spring-web. -->
-            <dependency>
-                <groupId>org.springframework</groupId>
-                <artifactId>spring-web</artifactId>
-                <version>${spring.test.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>org.springframework</groupId>
-                        <artifactId>spring-jcl</artifactId>
-                    </exclusion>
-                </exclusions>
             </dependency>
 
             <dependency>
@@ -1705,11 +1655,6 @@
                 <groupId>org.jboss.logging</groupId>
                 <artifactId>jboss-logging</artifactId>
                 <version>3.6.1.Final</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.errorprone</groupId>
-                <artifactId>error_prone_annotations</artifactId>
-                <version>2.49.0</version>
             </dependency>
             <dependency>
                 <groupId>jakarta.el</groupId>

@@ -14,13 +14,7 @@
 
 package org.finos.legend.sdlc.server;
 
-import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.deser.DeserializationProblemHandler;
 import com.fasterxml.jackson.databind.jsontype.NamedType;
-import io.dropwizard.configuration.DefaultConfigurationFactoryFactory;
 import io.dropwizard.lifecycle.Managed;
 import io.dropwizard.lifecycle.setup.LifecycleEnvironment;
 import io.dropwizard.core.setup.Bootstrap;
@@ -37,15 +31,12 @@ import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
-import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
 import ru.vyarus.dropwizard.guice.hook.GuiceyConfigurationHook;
 import ru.vyarus.dropwizard.guice.module.installer.InstallersOptions;
 
-import java.io.IOException;
 import java.util.EnumSet;
 import java.util.ServiceLoader;
 import java.util.concurrent.TimeUnit;
@@ -88,10 +79,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public void initialize(Bootstrap<T> bootstrap)
     {
         super.initialize(bootstrap);
-
-        // Deployed configurations carry keys that were never real properties (e.g. server.requestLog.level), so an
-        // unknown key is logged and skipped rather than failing startup.
-        bootstrap.setConfigurationFactoryFactory(new UnknownPropertyTolerantConfigurationFactoryFactory<>());
 
         configureApis(bootstrap);
 
@@ -142,7 +129,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public void run(T configuration, Environment environment)
     {
         super.run(configuration, environment);
-        doNotPersistPersonalAccessTokenProfiles(configuration.getPac4jConfiguration());
         environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
         environment.jersey().register(new AuthorizationRequiredExceptionMapper());
         // StaleAuthorizationExceptionMapper is Guice-bound (it needs the request through a lazy provider) and
@@ -179,45 +165,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         });
     }
 
-    static class UnknownPropertyTolerantConfigurationFactoryFactory<C> extends DefaultConfigurationFactoryFactory<C>
-    {
-        @Override
-        protected ObjectMapper configureObjectMapper(ObjectMapper objectMapper)
-        {
-            return super.configureObjectMapper(objectMapper).addHandler(new DeserializationProblemHandler()
-            {
-                @Override
-                public boolean handleUnknownProperty(DeserializationContext context, JsonParser parser, JsonDeserializer<?> deserializer, Object beanOrClass, String propertyName) throws IOException
-                {
-                    String path = parser.getParsingContext().pathAsPointer().toString();
-                    String type = (beanOrClass instanceof Class) ? ((Class<?>) beanOrClass).getName() : ((beanOrClass == null) ? null : beanOrClass.getClass().getName());
-                    LOGGER.warn("Ignoring unknown configuration property \"{}\" at {} (for {})", propertyName, path, type);
-                    parser.skipChildren();
-                    return true;
-                }
-            });
-        }
-    }
-
     public String getMode()
     {
         return this.mode;
-    }
-
-    /**
-     * Deliberately overrides the saveProfileInSession flag the pac4j bundle set: a personal-access-token profile
-     * carries the GitLab token itself, and once persisted it is honoured through the session cookie alone, so a
-     * revoked token would keep working until the session expires.
-     */
-    static void doNotPersistPersonalAccessTokenProfiles(LegendPac4jConfiguration pac4jConfiguration)
-    {
-        if ((pac4jConfiguration == null) || (pac4jConfiguration.getClients() == null))
-        {
-            return;
-        }
-        pac4jConfiguration.getClients().stream()
-                .filter(c -> c instanceof GitlabPersonalAccessTokenClient)
-                .forEach(c -> ((GitlabPersonalAccessTokenClient) c).setSaveProfileInSession(false));
     }
 
     /**

@@ -30,21 +30,18 @@
     <properties>
         <!-- Dropwizard 5, Jetty 12 and pac4j 6 ship Java 17 bytecode. -->
         <maven.compiler.release>17</maven.compiler.release>
+        <!-- Guice 7 (jakarta.inject) for guicey; the other modules keep the root pom's Guice 6. -->
+        <guice.version>7.0.0</guice.version>
     </properties>
 
     <dependencyManagement>
         <dependencies>
-            <!-- Guice 7 (jakarta.inject) for guicey; only this module needs it. The maven plugin
-                 modules keep the Guice 5 that maven-core brings. -->
+            <!-- The error_prone_annotations Dropwizard 5's caffeine needs, for the server modules only: the
+                 rest of the build keeps the version Guava brings. -->
             <dependency>
-                <groupId>com.google.inject</groupId>
-                <artifactId>guice</artifactId>
-                <version>${guice.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>com.google.inject.extensions</groupId>
-                <artifactId>guice-servlet</artifactId>
-                <version>${guice.version}</version>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.49.0</version>
             </dependency>
             <dependency>
                 <groupId>ru.vyarus</groupId>
@@ -241,7 +238,6 @@
         <dependency>
             <groupId>org.pac4j.jax-rs</groupId>
             <artifactId>core</artifactId>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.pac4j</groupId>
@@ -397,16 +393,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>

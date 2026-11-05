@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.generation.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -44,7 +45,6 @@ import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.finos.legend.sdlc.language.pure.compiler.toPureGraph.PureModelBuilder;
 import org.finos.legend.sdlc.protocol.pure.v1.EntityToPureConverter;
 import org.finos.legend.sdlc.serialization.EntityLoader;
-import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 import org.finos.legend.sdlc.tools.entity.EntityPaths;
 
 import java.io.File;
@@ -244,15 +244,16 @@ public class ServicesGenerationMojo extends AbstractMojo
             getLog().info(Lists.mutable.withAll(functionJarsByPath.keySet()).toSortedList().makeString("Found " + (functionJarsByPath.size()) + " function jars for generation: ", ", ", ""));
         }
 
-        // The plugin decides how plans are written. Plans have no depth we can bound, so lift Jackson's stream limits.
-        JsonMapper jsonMapper = UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                 .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
                 .disable(StreamWriteFeature.AUTO_CLOSE_TARGET)
                 .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
-                .build()));
+                .build());
+        // plans have no depth we can bound, so lift Jackson's default write nesting limit
+        jsonMapper.getFactory().setStreamWriteConstraints(StreamWriteConstraints.builder().maxNestingDepth(Integer.MAX_VALUE).build());
 
         ForkJoinPool pool;
         // We only create a pool if parallelism level is greater than 1 and we expect to generate multiple plans, which

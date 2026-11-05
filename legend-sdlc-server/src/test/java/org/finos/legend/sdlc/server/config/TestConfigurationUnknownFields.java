@@ -14,6 +14,7 @@
 
 package org.finos.legend.sdlc.server.config;
 
+import io.dropwizard.configuration.ConfigurationException;
 import io.dropwizard.configuration.ConfigurationFactory;
 import io.dropwizard.configuration.FileConfigurationSourceProvider;
 import io.dropwizard.core.setup.Bootstrap;
@@ -30,8 +31,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Dropwizard rejects unknown configuration keys by default, but deployed configurations carry keys that were never
- * real properties, such as {@code server.requestLog.level} and the authorizers' {@code id}.
+ * Configuration loading is strict: an unknown key, such as a misspelt or retired setting, fails startup rather than
+ * being ignored.
  */
 public class TestConfigurationUnknownFields
 {
@@ -45,25 +46,31 @@ public class TestConfigurationUnknownFields
     }
 
     @Test
-    public void aRequestLogLevelIsTolerated() throws Exception
+    public void aRequestLogLevelIsRejected() throws Exception
     {
         String config = Files.readString(testConfig()).replace("  requestLog:\n    type: classic\n", "  requestLog:\n    type: classic\n    level: OFF\n");
-        Assertions.assertTrue(config.contains("level: OFF\n    # An empty"), config);
-        Assertions.assertNotNull(parse(config));
+        Assertions.assertTrue(config.contains("level: OFF\n    appenders:"), config);
+        assertRejected(config, "level");
     }
 
     @Test
-    public void anAuthorizerIdIsTolerated() throws Exception
+    public void anAuthorizerIdIsRejected() throws Exception
     {
         String config = Files.readString(testConfig()).replace("  bypassPaths:\n", "  authorizers:\n    - id: isAuthenticated\n      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer\n  bypassPaths:\n");
         Assertions.assertTrue(config.contains("id: isAuthenticated"), config);
-        Assertions.assertNotNull(parse(config));
+        assertRejected(config, "id");
     }
 
     @Test
-    public void anUnknownTopLevelKeyIsTolerated() throws Exception
+    public void anUnknownTopLevelKeyIsRejected() throws Exception
     {
-        Assertions.assertNotNull(parse(Files.readString(testConfig()) + "\nsomeRetiredSetting: true\n"));
+        assertRejected(Files.readString(testConfig()) + "\nsomeRetiredSetting: true\n", "someRetiredSetting");
+    }
+
+    private void assertRejected(String yaml, String key)
+    {
+        ConfigurationException e = Assertions.assertThrows(ConfigurationException.class, () -> parse(yaml));
+        Assertions.assertTrue(e.getMessage().contains(key), e::getMessage);
     }
 
     private LegendSDLCServerConfiguration parse(String yaml) throws Exception

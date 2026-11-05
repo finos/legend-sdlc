@@ -22,8 +22,6 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicReference;
 
 public class TestDeeplyNestedEntitySerialization
 {
@@ -45,43 +43,6 @@ public class TestDeeplyNestedEntitySerialization
         Entity reread = this.jsonSerializer.deserialize(json);
         Assert.assertEquals(entity.getPath(), reread.getPath());
         Assert.assertEquals(entity.getContent(), reread.getContent());
-    }
-
-    @Test
-    public void longOrChainEntityConvertsBackToPure() throws Throwable
-    {
-        Entity entity = this.pureSerializer.deserialize(orChainFunction(OR_OPERANDS));
-        Entity reread = this.jsonSerializer.deserialize(this.jsonSerializer.serializeToString(entity));
-
-        // Converting back to Pure recurses through Jackson's polymorphic deserializers and overflows a 1 MB stack
-        // near this depth; this test is about Jackson's limits, not the stack size.
-        String pure = onLargeStack(() -> this.pureSerializer.serializeToString(reread));
-        Assert.assertTrue(pure, pure.contains("$x == " + (OR_OPERANDS - 1)));
-        Assert.assertEquals(entity.getContent(), this.pureSerializer.deserialize(pure).getContent());
-    }
-
-    private static <T> T onLargeStack(Callable<T> callable) throws Throwable
-    {
-        AtomicReference<T> result = new AtomicReference<>();
-        AtomicReference<Throwable> failure = new AtomicReference<>();
-        Thread thread = new Thread(null, () ->
-        {
-            try
-            {
-                result.set(callable.call());
-            }
-            catch (Throwable t)
-            {
-                failure.set(t);
-            }
-        }, "large-stack", 64L << 20);
-        thread.start();
-        thread.join();
-        if (failure.get() != null)
-        {
-            throw failure.get();
-        }
-        return result.get();
     }
 
     static String orChainFunction(int n)

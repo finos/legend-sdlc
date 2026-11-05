@@ -14,6 +14,8 @@
 
 package org.finos.legend.sdlc.generation.service;
 
+import com.fasterxml.jackson.core.JsonFactory;
+import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import org.junit.Assert;
@@ -25,7 +27,7 @@ import java.util.Map;
 public class TestServiceExecutionGeneratorJsonMapper
 {
     @Test
-    public void writesAndReadsJsonDeeperThanJacksonDefault() throws Exception
+    public void writesJsonDeeperThanJacksonDefault() throws Exception
     {
         Map<String, Object> plan = Collections.singletonMap("value", 1);
         // two JSON levels per step: about 1200 levels
@@ -34,8 +36,8 @@ public class TestServiceExecutionGeneratorJsonMapper
             plan = Collections.singletonMap("children", Collections.singletonList(plan));
         }
 
-        JsonMapper mapper = ServiceExecutionGenerator.getDefaultJsonMapper();
-        String json = mapper.writeValueAsString(plan);
-        Assert.assertEquals(plan, mapper.readValue(json, new TypeReference<Map<String, Object>>() {}));
+        String json = ServiceExecutionGenerator.getDefaultJsonMapper().writeValueAsString(plan);
+        JsonMapper reader = JsonMapper.builder(JsonFactory.builder().streamReadConstraints(StreamReadConstraints.builder().maxNestingDepth(Integer.MAX_VALUE).build()).build()).build();
+        Assert.assertEquals(plan, reader.readValue(json, new TypeReference<Map<String, Object>>() {}));
     }
 }

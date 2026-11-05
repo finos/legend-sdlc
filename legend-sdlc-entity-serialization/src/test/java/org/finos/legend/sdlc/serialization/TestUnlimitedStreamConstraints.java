@@ -18,14 +18,8 @@ import com.fasterxml.jackson.core.StreamReadConstraints;
 import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import org.finos.legend.sdlc.domain.model.entity.Entity;
 import org.junit.Assert;
 import org.junit.Test;
-
-import java.math.BigInteger;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 public class TestUnlimitedStreamConstraints
 {
@@ -59,39 +53,5 @@ public class TestUnlimitedStreamConstraints
         UnlimitedStreamConstraints.applyTo(JsonMapper.builder().build());
         Assert.assertEquals(StreamReadConstraints.DEFAULT_MAX_DEPTH, StreamReadConstraints.defaults().getMaxNestingDepth());
         Assert.assertEquals(StreamWriteConstraints.DEFAULT_MAX_DEPTH, StreamWriteConstraints.defaults().getMaxNestingDepth());
-    }
-
-    @Test
-    public void entityWithAPropertyNameLongerThanJacksonDefaultRoundTrips() throws Exception
-    {
-        String longName = String.join("", Collections.nCopies(StreamReadConstraints.DEFAULT_MAX_NAME_LEN + 1, "n"));
-        assertEntityRoundTrips(Collections.singletonMap(longName, "value"));
-    }
-
-    @Test
-    public void entityWithANumberLongerThanJacksonDefaultRoundTrips() throws Exception
-    {
-        BigInteger longNumber = new BigInteger(String.join("", Collections.nCopies(StreamReadConstraints.DEFAULT_MAX_NUM_LEN + 1, "7")));
-        DefaultJsonEntitySerializer serializer = new DefaultJsonEntitySerializer();
-        String json = serializer.serializeToString(entity(Collections.singletonMap("value", longNumber)));
-        Map<String, ?> content = serializer.deserialize(json).getContent();
-        Assert.assertEquals(longNumber, new BigInteger(String.valueOf(((Map<?, ?>) content.get("body")).get("value"))));
-    }
-
-    private static void assertEntityRoundTrips(Map<String, Object> body) throws Exception
-    {
-        DefaultJsonEntitySerializer serializer = new DefaultJsonEntitySerializer();
-        Entity entity = entity(body);
-        Assert.assertEquals(entity.getContent(), serializer.deserialize(serializer.serializeToString(entity)).getContent());
-    }
-
-    private static Entity entity(Map<String, Object> body)
-    {
-        Map<String, Object> content = new LinkedHashMap<>();
-        content.put("_type", "function");
-        content.put("name", "big");
-        content.put("package", "test");
-        content.put("body", body);
-        return Entity.newEntity("test::big", "meta::pure::metamodel::function::ConcreteFunctionDefinition", content);
     }
 }

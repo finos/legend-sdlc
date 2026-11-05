@@ -32,6 +32,29 @@ public class TestGenerationOutput
     }
 
     @Test
+    public void jsonOfEveryShapeIsFormattedAsJsonNodeToPrettyString() throws Exception
+    {
+        String[] inputs = {
+                "[1,2,[3,[4,[]]],{}]",
+                "\"text\"",
+                "42",
+                "true",
+                "{}",
+                "[]",
+                "  {\"a\" : 1}  ",
+                "{\"z\":1,\"a\":2,\"m\":{\"y\":null,\"b\":[null,null]}}",
+                "{\"dup\":1,\"dup\":2}",
+                "{\"u\":\"caf\\u00e9 \\ud83d\\ude00 \\u0000 \\t\\n\\\"\\\\/ </script>\",\"cjk\":\"漢字\"}",
+                "[-0.0,0.1,1.0,1E10,1e400,3.141592653589793238462643383279,123456789012345678901234567890]",
+                "{\"_type\":\"class\",\"name\":\"A\",\"package\":\"x\",\"properties\":[]}"
+        };
+        for (String json : inputs)
+        {
+            Assert.assertEquals(json, new ObjectMapper().readTree(json).toPrettyString(), new GenerationOutput(json, "schema.json", "json").extractFileContent());
+        }
+    }
+
+    @Test
     public void jsonDeeperThanJacksonDefaultLimitIsExtracted() throws Exception
     {
         int depth = 1200;

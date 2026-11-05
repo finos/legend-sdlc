@@ -49,17 +49,6 @@ public class SessionProvider
 
     private final SessionStore sessionStore;
 
-    /**
-     * Reads the session store pac4j writes, which {@code LegendPac4jBundle} publishes on the servlet context.
-     */
-    public SessionProvider()
-    {
-        this(null);
-    }
-
-    /**
-     * @param sessionStore a fixed session store, or null to use the one published on the servlet context
-     */
     public SessionProvider(SessionStore sessionStore)
     {
         this.sessionStore = sessionStore;
@@ -67,7 +56,6 @@ public class SessionProvider
 
     public Session getSessionFromSessionStore(HttpServletRequest httpRequest, HttpServletResponse httpResponse)
     {
-        SessionStore sessionStore = (this.sessionStore == null) ? LegendSDLCWebFilter.getSessionStore(httpRequest) : this.sessionStore;
         if (sessionStore != null)
         {
             WebContext context = new JEEContext(httpRequest, httpResponse);
