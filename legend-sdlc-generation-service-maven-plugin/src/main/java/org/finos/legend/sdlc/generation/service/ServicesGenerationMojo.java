@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.generation.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -251,6 +252,8 @@ public class ServicesGenerationMojo extends AbstractMojo
                 .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
                 .build());
+        // plans have no depth we can bound, so lift Jackson's default write nesting limit
+        jsonMapper.getFactory().setStreamWriteConstraints(StreamWriteConstraints.builder().maxNestingDepth(Integer.MAX_VALUE).build());
 
         ForkJoinPool pool;
         // We only create a pool if parallelism level is greater than 1 and we expect to generate multiple plans, which

@@ -1,0 +1,92 @@
+// Copyright 2026 Goldman Sachs
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//      http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+package org.finos.legend.sdlc.server.config;
+
+import io.dropwizard.configuration.ConfigurationException;
+import io.dropwizard.configuration.ConfigurationFactory;
+import io.dropwizard.configuration.FileConfigurationSourceProvider;
+import io.dropwizard.core.setup.Bootstrap;
+import io.dropwizard.testing.ResourceHelpers;
+import org.finos.legend.sdlc.server.BaseLegendSDLCServer;
+import org.finos.legend.sdlc.server.LegendSDLCServer;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
+/**
+ * Configuration loading is strict: an unknown key, such as a misspelt or retired setting, fails startup rather than
+ * being ignored.
+ */
+public class TestConfigurationUnknownFields
+{
+    @TempDir
+    Path tempDir;
+
+    @Test
+    public void theTestConfigurationParses() throws Exception
+    {
+        Assertions.assertNotNull(parse(Files.readString(testConfig())));
+    }
+
+    @Test
+    public void aRequestLogLevelIsRejected() throws Exception
+    {
+        String config = Files.readString(testConfig()).replace("  requestLog:\n    type: classic\n", "  requestLog:\n    type: classic\n    level: OFF\n");
+        Assertions.assertTrue(config.contains("level: OFF\n    appenders:"), config);
+        assertRejected(config, "level");
+    }
+
+    @Test
+    public void anAuthorizerIdIsRejected() throws Exception
+    {
+        String config = Files.readString(testConfig()).replace("  bypassPaths:\n", "  authorizers:\n    - id: isAuthenticated\n      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer\n  bypassPaths:\n");
+        Assertions.assertTrue(config.contains("id: isAuthenticated"), config);
+        assertRejected(config, "id");
+    }
+
+    @Test
+    public void anUnknownTopLevelKeyIsRejected() throws Exception
+    {
+        assertRejected(Files.readString(testConfig()) + "\nsomeRetiredSetting: true\n", "someRetiredSetting");
+    }
+
+    private void assertRejected(String yaml, String key)
+    {
+        ConfigurationException e = Assertions.assertThrows(ConfigurationException.class, () -> parse(yaml));
+        Assertions.assertTrue(e.getMessage().contains(key), e::getMessage);
+    }
+
+    private LegendSDLCServerConfiguration parse(String yaml) throws Exception
+    {
+        Path file = this.tempDir.resolve("config.yaml");
+        Files.write(file, yaml.getBytes(StandardCharsets.UTF_8));
+        LegendSDLCServer server = new LegendSDLCServer(BaseLegendSDLCServer.GITLAB_MODE);
+        Bootstrap<LegendSDLCServerConfiguration> bootstrap = new Bootstrap<>(server);
+        server.initialize(bootstrap);
+        ConfigurationFactory<LegendSDLCServerConfiguration> factory = bootstrap.getConfigurationFactoryFactory()
+                .create(LegendSDLCServerConfiguration.class, bootstrap.getValidatorFactory().getValidator(), bootstrap.getObjectMapper(), "dw");
+        return factory.build(new FileConfigurationSourceProvider(), file.toString());
+    }
+
+    private static Path testConfig()
+    {
+        return Paths.get(ResourceHelpers.resourceFilePath("config-test.yaml"));
+    }
+}

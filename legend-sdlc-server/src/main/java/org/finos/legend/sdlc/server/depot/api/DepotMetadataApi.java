@@ -25,6 +25,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.message.BasicNameValuePair;
 import org.eclipse.collections.api.factory.Lists;
 import org.finos.legend.sdlc.domain.model.entity.Entity;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 import org.finos.legend.sdlc.server.depot.DepotConfiguration;
 import org.finos.legend.sdlc.server.depot.DepotServerInfo;
 import org.finos.legend.sdlc.server.depot.model.DepotProjectId;
@@ -43,7 +44,7 @@ import java.util.Set;
 public class DepotMetadataApi extends BaseDepotApi implements MetadataApi
 {
     private static final Logger LOGGER = LoggerFactory.getLogger(DepotMetadataApi.class);
-    private final JsonMapper jsonMapper = JsonMapper.builder().addMixIn(Entity.class, EntityMixIn.class).build();
+    private final JsonMapper jsonMapper = UnlimitedStreamConstraints.applyTo(JsonMapper.builder().addMixIn(Entity.class, EntityMixIn.class).build());
 
     private static final String GET_ENTITIES_PATH = "/api/projects/%s/%s/versions/%s";
     private static final String GET_DEPENDENCIES_PATH = "/api/projects/%s/%s/versions/%s/projectDependencies";

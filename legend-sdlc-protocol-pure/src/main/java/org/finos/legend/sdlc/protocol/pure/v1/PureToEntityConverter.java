@@ -22,6 +22,7 @@ import org.finos.legend.engine.protocol.pure.m3.PackageableElement;
 import org.finos.legend.engine.protocol.pure.v1.ProtocolToClassifierPathLoader;
 import org.finos.legend.engine.protocol.pure.v1.PureProtocolObjectMapperFactory;
 import org.finos.legend.sdlc.protocol.ProtocolToEntityConverter;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 
 import java.util.Map;
 
@@ -33,7 +34,7 @@ public class PureToEntityConverter extends ProtocolToEntityConverter<Packageable
 
     public PureToEntityConverter()
     {
-        super(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder().serializationInclusion(JsonInclude.Include.NON_NULL).build()));
+        super(UnlimitedStreamConstraints.applyTo(PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder().serializationInclusion(JsonInclude.Include.NON_NULL).build())));
     }
 
     @Override
