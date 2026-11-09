@@ -34,11 +34,6 @@ import jakarta.servlet.http.Cookie;
  */
 public class StateSessionWebFilter extends LegendSDLCWebFilter<CommonProfile>
 {
-    public StateSessionWebFilter()
-    {
-        super(CommonProfile.class);
-    }
-
     @Override
     public void init(FilterConfig filterConfig)
     {

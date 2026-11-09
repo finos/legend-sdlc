@@ -30,7 +30,26 @@
     <properties>
         <!-- Dropwizard 5, Jetty 12 and pac4j 6 ship Java 17 bytecode. -->
         <maven.compiler.release>17</maven.compiler.release>
+        <!-- Guice 7 (jakarta.inject) for guicey; the other modules keep the root pom's Guice 6. -->
+        <guice.version>7.0.0</guice.version>
     </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- The error_prone_annotations Dropwizard 5's caffeine needs, for the server modules only: the
+                 rest of the build keeps the version Guava brings. -->
+            <dependency>
+                <groupId>com.google.errorprone</groupId>
+                <artifactId>error_prone_annotations</artifactId>
+                <version>2.49.0</version>
+            </dependency>
+            <dependency>
+                <groupId>ru.vyarus</groupId>
+                <artifactId>dropwizard-guicey</artifactId>
+                <version>${dropwizard-guicey.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <build>
         <plugins>
@@ -263,19 +282,6 @@
         </dependency>
 
         <dependency>
-            <groupId>com.hazelcast</groupId>
-            <artifactId>hazelcast</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>bson</artifactId>
-        </dependency>
-
-        <dependency>
             <groupId>jakarta.inject</groupId>
             <artifactId>jakarta.inject-api</artifactId>
         </dependency>
@@ -387,16 +393,6 @@
             <scope>test</scope>
         </dependency>
 
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-core</artifactId>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>de.bwaldvogel</groupId>
-            <artifactId>mongo-java-server-memory-backend</artifactId>
-            <scope>test</scope>
-        </dependency>
 
         <dependency>
             <groupId>org.finos.legend.sdlc</groupId>

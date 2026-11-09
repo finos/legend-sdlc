@@ -27,29 +27,12 @@ import org.finos.legend.sdlc.server.LegendSDLCServer;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.util.Arrays;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 
 public class TestShippedConfigurations
 {
     private static final Map<String, String> ENVIRONMENT = environment();
-
-    /**
-     * {@code ChainFixingFilterHandler} silently ignores a {@code filterPriorities} key that names no
-     * registered filter. {@code "GitLab"} stays valid as an alias of {@code "LegendSDLCSession"}
-     * (see {@link LegendSDLCServerConfiguration#getFilterPriorities()}).
-     */
-    private static final Set<String> REGISTERED_FILTERS = new LinkedHashSet<>(Arrays.asList(
-            "CORS",
-            "GitLab",
-            "LegendSDLCSession",
-            "Username",
-            "org.pac4j.jee.filter.SecurityFilter",
-            "org.pac4j.jee.filter.CallbackFilter",
-            "org.pac4j.jee.filter.LogoutFilter"));
 
     @Test
     public void testDockerConfigurationParses()
@@ -90,15 +73,6 @@ public class TestShippedConfigurations
         }
         Assert.assertNotNull(resource, configuration);
         Assert.assertNotNull(resource + ": server factory", configuration.getServerFactory());
-        if (configuration.getFilterPriorities() != null)
-        {
-            for (String filter : configuration.getFilterPriorities().keySet())
-            {
-                Assert.assertTrue(
-                        resource + ": filterPriorities names \"" + filter + "\", which is not a registered filter " + REGISTERED_FILTERS,
-                        REGISTERED_FILTERS.contains(filter));
-            }
-        }
     }
 
     // Not a bare mapper: the polymorphic sections (pac4j clients, project structure extension

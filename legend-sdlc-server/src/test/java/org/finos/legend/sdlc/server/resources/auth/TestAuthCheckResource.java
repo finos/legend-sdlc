@@ -14,166 +14,79 @@
 
 package org.finos.legend.sdlc.server.resources.auth;
 
-import org.finos.legend.sdlc.error.LegendSDLCException;
-import org.finos.legend.sdlc.server.tools.SessionProvider;
+import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.backend.api.spi.BackendSession;
+import org.finos.legend.sdlc.server.auth.CommonProfileSession;
+import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.junit.Assert;
-import org.junit.Before;
 import org.junit.Test;
-import org.pac4j.core.client.Client;
+import org.pac4j.core.profile.CommonProfile;
 import org.pac4j.core.util.Pac4jConstants;
 
-import java.util.Arrays;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import static org.finos.legend.sdlc.server.auth.LegendSDLCWebFilter.SESSION_ATTRIBUTE;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/**
- * Must choose the same client as legend-shared's {@code LegendClientFinder}, which reads only
- * {@code client_name} and deliberately ignores pac4j's {@code force_client}. No token header is
- * ever present, so the chosen client shows only in which header is looked up.
- */
 public class TestAuthCheckResource
 {
-    private static final String CLIENT_A = "patClientA";
-    private static final String HEADER_A = "X-Token-A";
-    private static final String CLIENT_B = "patClientB";
-    private static final String HEADER_B = "X-Token-B";
-
-    private HttpServletRequest request;
-    private HttpServletResponse response;
-    private SessionProvider sessionProvider;
-    private AuthCheckResource resource;
-
-    @Before
-    public void setUp()
+    @Test
+    public void testKerberosSessionIsNotAuthorizedForGitlabClient()
     {
-        this.request = mock(HttpServletRequest.class);
-        this.response = mock(HttpServletResponse.class);
-        this.sessionProvider = mock(SessionProvider.class);
-        LegendPac4jConfiguration pac4jConfiguration = new LegendPac4jConfiguration();
-        pac4jConfiguration.setClients(Arrays.<Client>asList(newClient(CLIENT_A, HEADER_A), newClient(CLIENT_B, HEADER_B)));
-        this.resource = new AuthCheckResource(this.request, this.response, null, pac4jConfiguration, this.sessionProvider);
+        // Studio asks with client_name=gitlab; pac4j refuses that client on a Kerberos login, so true would strand it
+        Assert.assertFalse(isAuthorized(sessionFromClient("KerberosClient"), "gitlab"));
     }
 
     @Test
-    public void clientNameAloneSelectsThatClient()
+    public void testSessionIsAuthorizedForItsOwnClient()
     {
-        givenParameters(null, CLIENT_A);
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.request).getHeader(HEADER_A);
-        verify(this.request, never()).getHeader(HEADER_B);
+        Assert.assertTrue(isAuthorized(sessionFromClient("gitlab"), "gitlab"));
+        Assert.assertTrue(isAuthorized(sessionFromClient("gitlab"), "GITLAB"));
+        Assert.assertTrue(isAuthorized(sessionFromClient("KerberosClient"), "KerberosClient"));
     }
 
     @Test
-    public void forceClientAloneIsIgnored()
+    public void testNoClientNamedKeepsTheBackendAnswer()
     {
-        givenParameters(CLIENT_B, null);
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.request, never()).getHeader(anyString());
-        verify(this.sessionProvider).getSessionFromSessionStore(this.request, this.response);
+        Assert.assertTrue(isAuthorized(sessionFromClient("KerberosClient"), null));
+        Assert.assertTrue(isAuthorized(sessionFromClient("KerberosClient"), ""));
     }
 
     @Test
-    public void clientNameDecidesWhenForceClientIsAlsoPresent()
+    public void testSessionWithoutClientNameKeepsTheBackendAnswer()
     {
-        givenParameters(CLIENT_B, CLIENT_A);
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.request).getHeader(HEADER_A);
-        verify(this.request, never()).getHeader(HEADER_B);
+        // e.g. a personal access token session built outside pac4j, whose profile has no client name
+        Assert.assertTrue(isAuthorized(sessionFromClient(null), "gitlabPAToken"));
+        Assert.assertTrue(AuthCheckResource.isFromClient(mock(Session.class), "gitlab"));
     }
 
-    @Test
-    public void anUnknownForceClientIsIgnored()
+    private static boolean isAuthorized(Session session, String clientName)
     {
-        givenParameters("noSuchClient", CLIENT_A);
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getAttribute(SESSION_ATTRIBUTE)).thenReturn(session);
+        when(request.getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER)).thenReturn(clientName);
 
-        Assert.assertFalse(this.resource.isAuthorized());
+        BackendSession backendSession = mock(BackendSession.class);
+        when(backendSession.isAuthorized()).thenReturn(true);
+        Backend backend = mock(Backend.class);
+        when(backend.newSession(any())).thenReturn(backendSession);
 
-        verify(this.request).getHeader(HEADER_A);
-        verify(this.request, never()).getHeader(HEADER_B);
+        AuthCheckResource resource = new AuthCheckResource(request, mock(HttpServletResponse.class), () -> backend, new LegendPac4jConfiguration(), null);
+        return resource.isAuthorized();
     }
 
-    @Test
-    public void noClientNameFallsBackToTheSessionStore()
+    @SuppressWarnings("unchecked")
+    private static Session sessionFromClient(String clientName)
     {
-        givenParameters(null, null);
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.request, never()).getHeader(anyString());
-        verify(this.sessionProvider).getSessionFromSessionStore(this.request, this.response);
-    }
-
-    @Test
-    public void anUnknownClientNameFallsBackToTheSessionStore()
-    {
-        givenParameters(null, "noSuchClient");
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.request, never()).getHeader(anyString());
-        verify(this.sessionProvider).getSessionFromSessionStore(this.request, this.response);
-    }
-
-    @Test
-    public void aSelectedClientWithoutItsHeaderFallsBackToTheSessionStore()
-    {
-        givenParameters(null, CLIENT_A);
-        // HEADER_A is never stubbed, so request.getHeader(HEADER_A) returns null.
-
-        Assert.assertFalse(this.resource.isAuthorized());
-
-        verify(this.sessionProvider).getSessionFromSessionStore(this.request, this.response);
-    }
-
-    @Test
-    public void aSessionStoreFailureIsA503RatherThanFalse()
-    {
-        givenParameters(null, null);
-        when(this.sessionProvider.getSessionFromSessionStore(any(), any())).thenThrow(new IllegalStateException("store unreachable"));
-
-        LegendSDLCException e = Assert.assertThrows(LegendSDLCException.class, () -> this.resource.isAuthorized());
-
-        Assert.assertEquals(HttpServletResponse.SC_SERVICE_UNAVAILABLE, e.getStatusCode());
-        Assert.assertTrue(e.getCause() instanceof IllegalStateException);
-    }
-
-    @Test
-    public void forceClientIsNeverRead()
-    {
-        givenParameters(CLIENT_B, CLIENT_A);
-
-        this.resource.isAuthorized();
-
-        verify(this.request).getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER);
-        verify(this.request, never()).getParameter(Pac4jConstants.DEFAULT_FORCE_CLIENT_PARAMETER);
-    }
-
-    private void givenParameters(String forceClient, String clientName)
-    {
-        when(this.request.getParameter(Pac4jConstants.DEFAULT_FORCE_CLIENT_PARAMETER)).thenReturn(forceClient);
-        when(this.request.getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER)).thenReturn(clientName);
-    }
-
-    private static GitlabPersonalAccessTokenClient newClient(String name, String header)
-    {
-        GitlabPersonalAccessTokenClient client = new GitlabPersonalAccessTokenClient();
-        client.setName(name);
-        client.headerTokenName = header;
-        return client;
+        CommonProfile profile = new CommonProfile();
+        profile.setId("user");
+        profile.setClientName(clientName);
+        CommonProfileSession<CommonProfile> session = mock(CommonProfileSession.class);
+        when(session.getProfile()).thenReturn(profile);
+        return session;
     }
 }

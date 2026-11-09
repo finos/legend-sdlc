@@ -239,21 +239,12 @@ import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
 import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.hazelcaststore.HazelcastSessionStore;
-import org.finos.legend.server.pac4j.mongostore.MongoDbSessionStore;
-import org.finos.legend.server.pac4j.sessionutil.SessionToken;
 import org.pac4j.core.context.session.SessionStore;
 import org.pac4j.jax.rs.pac4j.JaxRsContext;
-import org.pac4j.jax.rs.servlet.pac4j.ServletJaxRsContext;
 import org.pac4j.jax.rs.servlet.pac4j.ServletSessionStore;
 import org.pac4j.jee.context.JEEContext;
 import org.pac4j.jee.context.session.JEESessionStore;
 import ru.vyarus.dropwizard.guice.module.support.DropwizardAwareModule;
-
-import com.mongodb.client.MongoClient;
-import com.mongodb.client.MongoClients;
-import com.mongodb.client.MongoCollection;
-import com.mongodb.client.MongoDatabase;
-import org.bson.Document;
 
 import java.util.Collections;
 import java.util.List;
@@ -733,45 +724,15 @@ public abstract class AbstractBaseModule extends DropwizardAwareModule<LegendSDL
         return new SessionProvider(getSessionStoreFromConfig(config));
     }
 
-    /**
-     * Must mirror {@code LegendPac4jBundle}'s session-store construction, so that {@link SessionProvider} reads the
-     * same store pac4j writes.
-     */
-    static SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
+    private SessionStore getSessionStoreFromConfig(LegendPac4jConfiguration config)
     {
-        String sessionTokenName = config.getSessionTokenName() != null ? config.getSessionTokenName() : "LegendSSO";
-        String sameSitePolicy = SessionToken.sameSitePolicy(config.getSessionTokenSameSite());
         if (config.getHazelcastSession() != null && config.getHazelcastSession().isEnabled())
         {
-            HazelcastSessionStore sessionStore = new HazelcastSessionStore(
+            return new HazelcastSessionStore(
                     config.getHazelcastSession().getConfigFilePath(),
                     Maps.immutable.with(
                             JEEContext.class, new JEESessionStore(),
-                            JaxRsContext.class, ServletSessionStore.INSTANCE,
-                            ServletJaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(), sessionTokenName);
-            sessionStore.setSameSitePolicy(sameSitePolicy);
-            return sessionStore;
-        }
-        if (config.getMongoSession() != null && config.getMongoSession().isEnabled())
-        {
-            if ((config.getMongoUri() == null) || config.getMongoUri().isEmpty() || (config.getMongoDb() == null) || config.getMongoDb().isEmpty())
-            {
-                throw new RuntimeException("MongoDB needs to be configured if MongoSession is used");
-            }
-            MongoClient client = MongoClients.create(config.getMongoUri());
-            MongoDatabase database = client.getDatabase(config.getMongoDb());
-            MongoCollection<Document> userSessions = database.getCollection(config.getMongoSession().getCollection());
-            MongoDbSessionStore sessionStore = new MongoDbSessionStore(
-                    config.getMongoSession().getCryptoAlgorithm(),
-                    config.getMongoSession().getMaxSessionLength(),
-                    userSessions,
-                    Maps.immutable.with(
-                            JEEContext.class, new JEESessionStore(),
-                            JaxRsContext.class, ServletSessionStore.INSTANCE,
-                            ServletJaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(),
-                    config.getTrustedPackages(), sessionTokenName);
-            sessionStore.setSameSitePolicy(sameSitePolicy);
-            return sessionStore;
+                            JaxRsContext.class, ServletSessionStore.INSTANCE).castToMap(), config.getSessionTokenName() != null ? config.getSessionTokenName() : "LegendSSO");
         }
         return null;
     }

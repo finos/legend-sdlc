@@ -30,11 +30,12 @@ import org.finos.legend.sdlc.server.guice.AbstractBaseModule;
 import org.finos.legend.sdlc.server.guice.BaseModule;
 import org.finos.legend.sdlc.server.project.config.ProjectStructureConfiguration;
 import org.finos.legend.sdlc.backend.api.tools.BackgroundTaskProcessor;
-import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
-import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
+import org.finos.legend.sdlc.serialization.UnlimitedStreamConstraints;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.dropwizard.guice.GuiceBundle;
+import ru.vyarus.dropwizard.guice.hook.GuiceyConfigurationHook;
+import ru.vyarus.dropwizard.guice.module.installer.InstallersOptions;
 
 import java.util.EnumSet;
 import java.util.ServiceLoader;
@@ -82,6 +83,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         configureApis(bootstrap);
 
         // SDLC specific initialization
+        // Jersey reads and writes entities with this mapper; lift Jackson's stream limits, as the entity serializers
+        // do, so large and deeply nested entities still round-trip.
+        UnlimitedStreamConstraints.applyTo(bootstrap.getObjectMapper());
         ProjectStructureConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         DepotConfiguration.configureObjectMapper(bootstrap.getObjectMapper());
         PureProtocolObjectMapperFactory.withPureProtocolExtensions(bootstrap.getObjectMapper());
@@ -99,6 +103,9 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
         });
 
         // Guice bootstrapping..
+        // Hooks run in GuiceBundle.Builder.build(), so resources stay per request even for a subclass that builds
+        // its own bundle instead of calling buildGuiceBundle()'s
+        ((GuiceyConfigurationHook) builder -> builder.option(InstallersOptions.ForceSingletonForJerseyExtensions, false)).register();
         bootstrap.addBundle(buildGuiceBundle());
     }
 
@@ -106,6 +113,10 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     {
         return GuiceBundle.builder()
                 .modules(buildBaseModule())
+                // Resources consume request-scoped state (the backend session, per-user apis, the servlet
+                // request); guicey's default would make each one a singleton that answers every caller as the
+                // first.
+                .option(InstallersOptions.ForceSingletonForJerseyExtensions, false)
                 .build();
     }
 
@@ -118,7 +129,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public void run(T configuration, Environment environment)
     {
         super.run(configuration, environment);
-        doNotPersistPersonalAccessTokenProfiles(configuration.getPac4jConfiguration());
         environment.jersey().register(new UnsupportedCapabilityExceptionMapper());
         environment.jersey().register(new AuthorizationRequiredExceptionMapper());
         // StaleAuthorizationExceptionMapper is Guice-bound (it needs the request through a lazy provider) and
@@ -158,22 +168,6 @@ public abstract class BaseLegendSDLCServer<T extends LegendSDLCServerConfigurati
     public String getMode()
     {
         return this.mode;
-    }
-
-    /**
-     * Deliberately overrides the saveProfileInSession flag the pac4j bundle set: a personal-access-token profile
-     * carries the GitLab token itself, and once persisted it is honoured through the session cookie alone, so a
-     * revoked token would keep working until the session expires.
-     */
-    static void doNotPersistPersonalAccessTokenProfiles(LegendPac4jConfiguration pac4jConfiguration)
-    {
-        if ((pac4jConfiguration == null) || (pac4jConfiguration.getClients() == null))
-        {
-            return;
-        }
-        pac4jConfiguration.getClients().stream()
-                .filter(c -> c instanceof GitlabPersonalAccessTokenClient)
-                .forEach(c -> ((GitlabPersonalAccessTokenClient) c).setSaveProfileInSession(false));
     }
 
     /**

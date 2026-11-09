@@ -30,8 +30,9 @@ server:
       - POST
   requestLog:
     type: classic
-    # An empty appender list disables request logging.
-    appenders: []
+    appenders:
+      - type: console
+        logFormat: "OFF"
   rootPath: /api
 
 filterPriorities:

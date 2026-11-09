@@ -39,8 +39,8 @@ public class TestDefaultProjectStructureFactory
         ProjectStructureFactory factory = ProjectStructureFactory.getDefaultFactory();
         Assert.assertSame(factory, ProjectStructureFactory.getDefaultFactory());
         Assert.assertSame(factory, ProjectStructure.getDefaultProjectStructureFactory());
-        Assert.assertEquals(13, factory.getLatestVersion());
-        for (int version : new int[]{0, 11, 12, 13})
+        Assert.assertEquals(14, factory.getLatestVersion());
+        for (int version : new int[]{0, 11, 12, 13, 14})
         {
             Assert.assertTrue("expected support for version " + version, factory.supportsVersion(version));
             Assert.assertNotNull(factory.getVersionFactory(version));
@@ -56,7 +56,7 @@ public class TestDefaultProjectStructureFactory
         try
         {
             ProjectStructureFactory factory = ProjectStructureFactory.getDefaultFactory();
-            Assert.assertEquals(13, factory.getLatestVersion());
+            Assert.assertEquals(14, factory.getLatestVersion());
             Assert.assertNotNull(ProjectStructure.getProjectStructure(SimpleProjectConfiguration.newConfiguration(
                     "test-project", ProjectStructureVersion.newProjectStructureVersion(13), "org.test", "test-artifact", null, null, null)));
         }

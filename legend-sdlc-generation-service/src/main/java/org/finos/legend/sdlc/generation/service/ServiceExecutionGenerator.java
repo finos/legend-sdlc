@@ -16,6 +16,7 @@ package org.finos.legend.sdlc.generation.service;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.StreamReadFeature;
+import com.fasterxml.jackson.core.StreamWriteConstraints;
 import com.fasterxml.jackson.core.StreamWriteFeature;
 import com.fasterxml.jackson.databind.MapperFeature;
 import com.fasterxml.jackson.databind.SerializationFeature;
@@ -696,9 +697,9 @@ public class ServiceExecutionGenerator
         return builder.append(string, start, string.length());
     }
 
-    private static JsonMapper getDefaultJsonMapper()
+    static JsonMapper getDefaultJsonMapper()
     {
-        return PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
+        JsonMapper jsonMapper = PureProtocolObjectMapperFactory.withPureProtocolExtensions(JsonMapper.builder()
                 .enable(SerializationFeature.INDENT_OUTPUT)
                 .enable(SerializationFeature.ORDER_MAP_ENTRIES_BY_KEYS)
                 .enable(MapperFeature.SORT_PROPERTIES_ALPHABETICALLY)
@@ -706,6 +707,9 @@ public class ServiceExecutionGenerator
                 .disable(StreamReadFeature.AUTO_CLOSE_SOURCE)
                 .serializationInclusion(JsonInclude.Include.NON_NULL)
                 .build());
+        // plans have no depth we can bound, so lift Jackson's default write nesting limit
+        jsonMapper.getFactory().setStreamWriteConstraints(StreamWriteConstraints.builder().maxNestingDepth(Integer.MAX_VALUE).build());
+        return jsonMapper;
     }
 
     private static Service validateService(Service service)

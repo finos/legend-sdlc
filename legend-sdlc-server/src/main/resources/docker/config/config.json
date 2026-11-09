@@ -24,7 +24,12 @@
     },
     "requestLog": {
       "type": "classic",
-      "appenders": []
+      "appenders": [
+        {
+          "type": "console",
+          "logFormat": "OFF"
+        }
+      ]
     },
     "rootPath": "/api"
   },

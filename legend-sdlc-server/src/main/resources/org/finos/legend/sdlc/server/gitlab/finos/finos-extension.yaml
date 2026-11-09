@@ -14,3 +14,7 @@
   extensions:
     - files:
         .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
+- projectStructureVersion: 14
+  extensions:
+    - files:
+        .gitlab-ci.yml: org/finos/legend/sdlc/server/gitlab/finos/gitlab-ci-2.yml
