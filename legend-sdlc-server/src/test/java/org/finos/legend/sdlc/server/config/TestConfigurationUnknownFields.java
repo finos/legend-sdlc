@@ -25,6 +25,7 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,13 +43,13 @@ public class TestConfigurationUnknownFields
     @Test
     public void theTestConfigurationParses() throws Exception
     {
-        Assertions.assertNotNull(parse(Files.readString(testConfig())));
+        Assertions.assertNotNull(parse(testConfigText()));
     }
 
     @Test
     public void aRequestLogLevelIsRejected() throws Exception
     {
-        String config = Files.readString(testConfig()).replace("  requestLog:\n    type: classic\n", "  requestLog:\n    type: classic\n    level: OFF\n");
+        String config = testConfigText().replace("  requestLog:\n    type: classic\n", "  requestLog:\n    type: classic\n    level: OFF\n");
         Assertions.assertTrue(config.contains("level: OFF\n    appenders:"), config);
         assertRejected(config, "level");
     }
@@ -56,7 +57,7 @@ public class TestConfigurationUnknownFields
     @Test
     public void anAuthorizerIdIsRejected() throws Exception
     {
-        String config = Files.readString(testConfig()).replace("  bypassPaths:\n", "  authorizers:\n    - id: isAuthenticated\n      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer\n  bypassPaths:\n");
+        String config = testConfigText().replace("  bypassPaths:\n", "  authorizers:\n    - id: isAuthenticated\n      class: org.pac4j.core.authorization.authorizer.IsAuthenticatedAuthorizer\n  bypassPaths:\n");
         Assertions.assertTrue(config.contains("id: isAuthenticated"), config);
         assertRejected(config, "id");
     }
@@ -64,7 +65,7 @@ public class TestConfigurationUnknownFields
     @Test
     public void anUnknownTopLevelKeyIsRejected() throws Exception
     {
-        assertRejected(Files.readString(testConfig()) + "\nsomeRetiredSetting: true\n", "someRetiredSetting");
+        assertRejected(testConfigText() + "\nsomeRetiredSetting: true\n", "someRetiredSetting");
     }
 
     private void assertRejected(String yaml, String key)
@@ -85,8 +86,9 @@ public class TestConfigurationUnknownFields
         return factory.build(new FileConfigurationSourceProvider(), file.toString());
     }
 
-    private static Path testConfig()
+    // A Windows checkout (core.autocrlf) has CRLF line endings; the edits above match LF ones
+    private static String testConfigText() throws IOException
     {
-        return Paths.get(ResourceHelpers.resourceFilePath("config-test.yaml"));
+        return Files.readString(Paths.get(ResourceHelpers.resourceFilePath("config-test.yaml"))).replace("\r\n", "\n");
     }
 }

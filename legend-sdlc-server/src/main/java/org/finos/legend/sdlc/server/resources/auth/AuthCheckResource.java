@@ -15,6 +15,7 @@
 package org.finos.legend.sdlc.server.resources.auth;
 
 import org.finos.legend.sdlc.backend.api.spi.Backend;
+import org.finos.legend.sdlc.server.auth.CommonProfileSession;
 import org.finos.legend.sdlc.server.auth.Session;
 import org.finos.legend.sdlc.server.backend.ServletBackendSessionContext;
 import org.finos.legend.sdlc.server.guice.UserContext;
@@ -23,6 +24,8 @@ import org.finos.legend.sdlc.server.tools.SessionProvider;
 import org.finos.legend.server.pac4j.LegendPac4jConfiguration;
 import org.finos.legend.server.pac4j.gitlab.GitlabPersonalAccessTokenClient;
 import org.pac4j.core.client.Client;
+import org.pac4j.core.profile.CommonProfile;
+import org.pac4j.core.util.CommonHelper;
 import org.pac4j.core.util.Pac4jConstants;
 
 import jakarta.inject.Inject;
@@ -74,10 +77,10 @@ public class AuthCheckResource extends BaseResource
         return executeWithLogging("checking authorization", () ->
         {
             Session session = SessionProvider.findSession(this.httpRequest);
+            String clientName = this.httpRequest.getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER);
 
             if (session == null)
             {
-                String clientName = this.httpRequest.getParameter(Pac4jConstants.DEFAULT_CLIENT_NAME_PARAMETER);
                 GitlabPersonalAccessTokenClient client = getGitlabPersonalAccessTokenClient(this.legendPac4jConfiguration, clientName);
                 if ((client != null) && (this.httpRequest.getHeader(client.headerTokenName) != null))
                 {
@@ -94,8 +97,30 @@ public class AuthCheckResource extends BaseResource
             {
                 return false;
             }
+            if (!isFromClient(session, clientName))
+            {
+                // This path bypasses pac4j, but a request naming another client goes through it, and pac4j refuses that
+                // client on a session it didn't log in: saying true here leaves the caller (e.g. Studio) stuck on 401s.
+                getLogger().debug("Session was not logged in by the requested client {}: not authorized", clientName);
+                return false;
+            }
             return this.backendProvider.get().newSession(new ServletBackendSessionContext(new UserContext(this.httpRequest, this.httpResponse))).isAuthorized();
         });
+    }
+
+    /**
+     * Whether the session was logged in by the client the request names (pac4j matches client names ignoring case).
+     * No client named, or a session whose client isn't known, keeps the previous answer.
+     */
+    static boolean isFromClient(Session session, String requestedClientName)
+    {
+        if (CommonHelper.isBlank(requestedClientName) || !(session instanceof CommonProfileSession))
+        {
+            return true;
+        }
+        CommonProfile profile = ((CommonProfileSession<?>) session).getProfile();
+        String sessionClientName = (profile == null) ? null : profile.getClientName();
+        return CommonHelper.isBlank(sessionClientName) || CommonHelper.areEqualsIgnoreCaseAndTrim(sessionClientName, requestedClientName);
     }
 
     private GitlabPersonalAccessTokenClient getGitlabPersonalAccessTokenClient(LegendPac4jConfiguration configuration, String requestClientName)

@@ -20,6 +20,7 @@ import org.finos.legend.sdlc.project.structure.ProjectStructureV0Factory;
 import org.finos.legend.sdlc.project.structure.ProjectStructureV11Factory;
 import org.finos.legend.sdlc.project.structure.ProjectStructureV12Factory;
 import org.finos.legend.sdlc.project.structure.ProjectStructureV13Factory;
+import org.finos.legend.sdlc.project.structure.ProjectStructureV14Factory;
 
 import org.eclipse.collections.api.IntIterable;
 import org.eclipse.collections.api.LazyIntIterable;
@@ -31,9 +32,9 @@ import org.junit.Test;
 public class TestProjectStructureFactory
 {
     @Test
-    public void testFactoryWithV0_V11_V12_V13()
+    public void testFactoryWithV0_V11_V12_V13_V14()
     {
-        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory(), new ProjectStructureV12Factory(), new ProjectStructureV13Factory())));
+        assertFactoryWithV0(ProjectStructureFactory.newFactory(Lists.mutable.with(new ProjectStructureV0Factory(), new ProjectStructureV11Factory(), new ProjectStructureV12Factory(), new ProjectStructureV13Factory(), new ProjectStructureV14Factory())));
     }
 
     @Test
@@ -75,7 +76,7 @@ public class TestProjectStructureFactory
 
     private void assertFactoryWithV0(ProjectStructureFactory factory)
     {
-        assertSupportsVersions(factory, 0, 11, 12, 13);
+        assertSupportsVersions(factory, 0, 11, 12, 13, 14);
 
         ProjectStructure structure = factory.newProjectStructure(null, null);
         Assert.assertEquals(0, structure.getVersion());
