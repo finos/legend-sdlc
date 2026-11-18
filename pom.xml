@@ -104,7 +104,7 @@
         <findbugs.version>3.0.0</findbugs.version>
         <freemarker.version>2.3.35</freemarker.version>
         <gitlab4j.version>6.0.0</gitlab4j.version>
-        <guava.version>31.1-jre</guava.version>
+        <guava.version>33.7.1-jre</guava.version>
         <guice.version>6.0.0</guice.version>
         <hibernate-validator.version>8.0.3.Final</hibernate-validator.version>
         <hk2.version>3.0.6</hk2.version>
