@@ -28,6 +28,10 @@ on:
       releaseVersion:
         description: "New release version"
         required: true
+      fullStackVersion:
+        description: "Full stack release: MAJOR.MINOR of the full stack version (e.g. 5.3). Creates branch legend-release-<version> once the release completes. Leave empty for a regular release."
+        required: false
+        default: ""
       logLevel:
         type: choice
         description: Choose logging level
@@ -70,6 +74,21 @@ jobs:
           tip="$(git ls-remote origin "refs/heads/${GITHUB_REF_NAME}" | cut -f1)"
           if [ "${tip}" != "${GITHUB_SHA}" ]; then
             echo "::error::${GITHUB_REF_NAME} moved from ${GITHUB_SHA} to ${tip} after this run was dispatched. Nothing has been published; dispatch the release again."
+            exit 1
+          fi
+
+      - name: Check full stack version and release branch
+        env:
+          FULL_STACK_VERSION: ${{ github.event.inputs.fullStackVersion }}
+        run: |
+          [ -n "${FULL_STACK_VERSION}" ] || exit 0
+          if ! [[ "${FULL_STACK_VERSION}" =~ ^[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::fullStackVersion must be MAJOR.MINOR; got '${FULL_STACK_VERSION}'."
+            exit 1
+          fi
+          BRANCH="legend-release-${FULL_STACK_VERSION}"
+          if git ls-remote --exit-code --heads origin "refs/heads/${BRANCH}" > /dev/null 2>&1; then
+            echo "::error::Branch ${BRANCH} already exists; full stack version ${FULL_STACK_VERSION} already has a release branch."
             exit 1
           fi
 
@@ -204,6 +223,21 @@ jobs:
           set -euo pipefail
           git tag "${TAG}"
           git push origin "refs/tags/${TAG}"
+
+      - name: Create full stack release branch
+        if: ${{ github.event.inputs.fullStackVersion != '' }}
+        env:
+          BRANCH_NAME: legend-release-${{ github.event.inputs.fullStackVersion }}
+          GH_TOKEN: ${{ secrets.FINOS_GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          git push origin "${GITHUB_SHA}:refs/heads/${BRANCH_NAME}"
+          gh label create "backport ${BRANCH_NAME}" \
+            --repo "${{ github.repository }}" \
+            --color "0E8A16" \
+            --description "Apply to a PR to auto-open a backport PR against ${BRANCH_NAME} when merged" \
+            --force \
+            || echo "::warning::Could not create label 'backport ${BRANCH_NAME}' - create it manually"
 
       - name: Compute and set next SNAPSHOT
         env:
